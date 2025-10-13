@@ -14,17 +14,30 @@ export const list = query({
     )),
   },
   handler: async (ctx, args) => {
-    let query = ctx.db.query("classes");
-    
     if (args.teacherId) {
-      query = query.withIndex("by_teacher", (q) => q.eq("teacherId", args.teacherId));
+      return await ctx.db
+        .query("classes")
+        .withIndex("by_teacher", (q) => q.eq("teacherId", args.teacherId!))
+        .order("desc")
+        .collect();
     } else if (args.schoolId) {
-      query = query.withIndex("by_school", (q) => q.eq("schoolId", args.schoolId));
+      return await ctx.db
+        .query("classes")
+        .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId!))
+        .order("desc")
+        .collect();
     } else if (args.status) {
-      query = query.withIndex("by_status", (q) => q.eq("status", args.status));
+      return await ctx.db
+        .query("classes")
+        .withIndex("by_status", (q) => q.eq("status", args.status!))
+        .order("desc")
+        .collect();
     }
-    
-    return await query.order("desc").collect();
+
+    return await ctx.db
+      .query("classes")
+      .order("desc")
+      .collect();
   },
 });
 
@@ -62,14 +75,14 @@ export const book = mutation({
       scheduledDate: args.scheduledDate,
       createdAt: Date.now(),
     });
-    
+
     // Get the school to find the moderator
     const school = await ctx.db.get(args.schoolId);
-    
+
     if (school && school.moderatorId) {
       // Get teacher information
       const teacher = await ctx.db.get(args.teacherId);
-      
+
       // Create notification for moderator
       await ctx.db.insert("notifications", {
         title: `New Class Booking: ${args.title}`,
@@ -82,7 +95,7 @@ export const book = mutation({
         createdAt: Date.now(),
       });
     }
-    
+
     return classId;
   },
 });
@@ -94,18 +107,18 @@ export const acknowledge = mutation({
   },
   handler: async (ctx, args) => {
     const classData = await ctx.db.get(args.classId);
-    
+
     if (!classData) {
       throw new Error("Class not found");
     }
-    
+
     await ctx.db.patch(args.classId, {
       status: "acknowledged",
     });
-    
+
     // Notify the teacher
     const teacher = await ctx.db.get(classData.teacherId);
-    
+
     if (teacher) {
       await ctx.db.insert("notifications", {
         title: `Class Acknowledged: ${classData.title}`,
@@ -118,7 +131,7 @@ export const acknowledge = mutation({
         createdAt: Date.now(),
       });
     }
-    
+
     return { success: true };
   },
 });
@@ -130,15 +143,15 @@ export const approve = mutation({
   },
   handler: async (ctx, args) => {
     const classData = await ctx.db.get(args.classId);
-    
+
     if (!classData) {
       throw new Error("Class not found");
     }
-    
+
     await ctx.db.patch(args.classId, {
       status: "approved",
     });
-    
+
     // Notify the teacher
     await ctx.db.insert("notifications", {
       title: `Class Approved: ${classData.title}`,
@@ -150,7 +163,7 @@ export const approve = mutation({
       read: false,
       createdAt: Date.now(),
     });
-    
+
     return { success: true };
   },
 });
@@ -164,15 +177,15 @@ export const reject = mutation({
   },
   handler: async (ctx, args) => {
     const classData = await ctx.db.get(args.classId);
-    
+
     if (!classData) {
       throw new Error("Class not found");
     }
-    
+
     await ctx.db.patch(args.classId, {
       status: "rejected",
     });
-    
+
     // Notify the teacher
     await ctx.db.insert("notifications", {
       title: `Class Rejected: ${classData.title}`,
@@ -184,7 +197,7 @@ export const reject = mutation({
       read: false,
       createdAt: Date.now(),
     });
-    
+
     return { success: true };
   },
 });
