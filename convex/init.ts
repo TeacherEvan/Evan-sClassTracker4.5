@@ -1,4 +1,4 @@
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 
 // Helper function for password hashing (same as in users.ts)
 function hashPassword(password: string): string {
@@ -98,7 +98,7 @@ export const initializeDatabase = mutation({
 });
 
 // Query to check if database is initialized
-export const isInitialized = mutation({
+export const isInitialized = query({
   args: {},
   handler: async (ctx) => {
     const admin = await ctx.db
