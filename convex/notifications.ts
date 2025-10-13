@@ -4,7 +4,7 @@ import { mutation, query } from "./_generated/server";
 // Query to get all notifications
 export const list = query({
   args: {
-    userId: v.optional(v.string()),
+    userId: v.optional(v.union(v.string(), v.id("users"))),
   },
   handler: async (ctx, args) => {
     const notifications = args.userId
@@ -26,7 +26,7 @@ export const list = query({
 // Query to get unread notifications count
 export const unreadCount = query({
   args: {
-    userId: v.optional(v.string()),
+    userId: v.optional(v.union(v.string(), v.id("users"))),
   },
   handler: async (ctx, args) => {
     const notifications = args.userId
@@ -57,7 +57,7 @@ export const create = mutation({
       v.literal("warning"),
       v.literal("error")
     ),
-    userId: v.optional(v.string()),
+    userId: v.optional(v.union(v.string(), v.id("users"))),
   },
   handler: async (ctx, args) => {
     const notificationId = await ctx.db.insert("notifications", {
@@ -88,7 +88,7 @@ export const markAsRead = mutation({
 // Mutation to mark all notifications as read
 export const markAllAsRead = mutation({
   args: {
-    userId: v.optional(v.string()),
+    userId: v.optional(v.union(v.string(), v.id("users"))),
   },
   handler: async (ctx, args) => {
     const notifications = args.userId
