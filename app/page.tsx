@@ -15,7 +15,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { useQuery } from "convex/react";
 import { Bell, Building2, Calendar, CalendarDays, LogOut, Users } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 type User = {
   _id: Id<"users">;
@@ -37,8 +37,31 @@ export default function Home() {
   const needsInit = users !== undefined && users.length === 0;
   const isLoading = users === undefined;
 
+  // Restore user session from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedUser = localStorage.getItem("currentUser");
+      if (savedUser) {
+        try {
+          const parsedUser = JSON.parse(savedUser);
+          setUser(parsedUser);
+          if (parsedUser.requirePasswordChange) {
+            setShowPasswordChange(true);
+          }
+        } catch (e) {
+          console.error("Failed to parse saved user:", e);
+          localStorage.removeItem("currentUser");
+        }
+      }
+    }
+  }, []);
+
   const handleLoginSuccess = (loggedInUser: User) => {
     setUser(loggedInUser);
+    // Save to localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("currentUser", JSON.stringify(loggedInUser));
+    }
     if (loggedInUser.requirePasswordChange) {
       setShowPasswordChange(true);
     }
@@ -47,7 +70,12 @@ export default function Home() {
   const handlePasswordChanged = () => {
     setShowPasswordChange(false);
     if (user) {
-      setUser({ ...user, requirePasswordChange: false });
+      const updatedUser = { ...user, requirePasswordChange: false };
+      setUser(updatedUser);
+      // Update localStorage
+      if (typeof window !== "undefined") {
+        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
+      }
     }
   };
 
@@ -55,6 +83,10 @@ export default function Home() {
     setUser(null);
     setShowPasswordChange(false);
     setActiveTab("notifications");
+    // Clear localStorage
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("currentUser");
+    }
   };
 
   // Show loading state while checking database
