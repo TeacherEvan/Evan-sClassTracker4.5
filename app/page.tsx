@@ -7,12 +7,14 @@ import { LoginForm } from "@/components/login-form";
 import { NotificationForm } from "@/components/notification-form";
 import { NotificationList } from "@/components/notification-list";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
+import { SchoolManagement } from "@/components/school-management";
 import { UserManagement } from "@/components/user-management";
+import { WeeklyCalendar } from "@/components/weekly-calendar";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { useQuery } from "convex/react";
-import { Bell, Calendar, LogOut, Users } from "lucide-react";
+import { Bell, Building2, Calendar, CalendarDays, LogOut, Users } from "lucide-react";
 import { useState } from "react";
 
 type User = {
@@ -29,7 +31,7 @@ export default function Home() {
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes">("notifications");
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools">("calendar");
 
   // Check if database needs initialization
   const needsInit = users !== undefined && users.length === 0;
@@ -106,46 +108,78 @@ export default function Home() {
       </header>
 
       {/* Tab Navigation */}
-      <div className="max-w-4xl mx-auto mb-6">
-        <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+      <div className="max-w-7xl mx-auto mb-6">
+        <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab("calendar")}
+            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "calendar"
+              ? "border-blue-500 text-blue-600 dark:text-blue-400"
+              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+              }`}
+          >
+            <CalendarDays className="w-5 h-5" />
+            {t("Calendar", "ปฏิทิน")}
+          </button>
+
+          <button
+            onClick={() => setActiveTab("classes")}
+            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "classes"
+              ? "border-blue-500 text-blue-600 dark:text-blue-400"
+              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+              }`}
+          >
+            <Calendar className="w-5 h-5" />
+            {t("Class Bookings", "การจองชั้นเรียน")}
+          </button>
+
           <button
             onClick={() => setActiveTab("notifications")}
-            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${activeTab === "notifications"
-                ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "notifications"
+              ? "border-blue-500 text-blue-600 dark:text-blue-400"
+              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
               }`}
           >
             <Bell className="w-5 h-5" />
             {t("Notifications", "การแจ้งเตือน")}
           </button>
 
-          <button
-            onClick={() => setActiveTab("classes")}
-            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${activeTab === "classes"
-                ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-              }`}
-          >
-            <Calendar className="w-5 h-5" />
-            {t("Classes", "ชั้นเรียน")}
-          </button>
-
           {user.role === "admin" && (
-            <button
-              onClick={() => setActiveTab("users")}
-              className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${activeTab === "users"
+            <>
+              <button
+                onClick={() => setActiveTab("schools")}
+                className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "schools"
                   ? "border-blue-500 text-blue-600 dark:text-blue-400"
                   : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                }`}
-            >
-              <Users className="w-5 h-5" />
-              {t("Users", "ผู้ใช้")}
-            </button>
+                  }`}
+              >
+                <Building2 className="w-5 h-5" />
+                {t("Schools", "โรงเรียน")}
+              </button>
+
+              <button
+                onClick={() => setActiveTab("users")}
+                className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "users"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <Users className="w-5 h-5" />
+                {t("Users", "ผู้ใช้")}
+              </button>
+            </>
           )}
         </div>
       </div>
 
       {/* Tab Content */}
+      {activeTab === "calendar" && (
+        <WeeklyCalendar currentUser={user} />
+      )}
+
+      {activeTab === "classes" && (
+        <ClassBooking userId={user._id} userRole={user.role} />
+      )}
+
       {activeTab === "notifications" && (
         <>
           {user.role === "admin" && <NotificationForm />}
@@ -153,8 +187,8 @@ export default function Home() {
         </>
       )}
 
-      {activeTab === "classes" && (
-        <ClassBooking userId={user._id} userRole={user.role} />
+      {activeTab === "schools" && user.role === "admin" && (
+        <SchoolManagement />
       )}
 
       {activeTab === "users" && user.role === "admin" && (

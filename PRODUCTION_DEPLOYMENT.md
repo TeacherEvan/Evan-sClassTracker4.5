@@ -30,7 +30,7 @@
 
 ### Environment Variables (Vercel)
 
-```
+```env
 NEXT_PUBLIC_CONVEX_URL=https://resolute-basilisk-801.convex.cloud
 ```
 
@@ -90,7 +90,7 @@ vercel
 
 ## 🏗️ Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────┐
 │                   End Users                          │
 │  (Teachers, Moderators, Administrators)              │
@@ -138,7 +138,7 @@ vercel
 
 ## 🔐 Security Notes
 
-### Environment Variables
+### Environment Variables Security
 
 - ✅ `NEXT_PUBLIC_CONVEX_URL` - Safe to expose (public)
 - ⚠️ `CONVEX_DEPLOY_KEY` - Keep secret (for CI/CD only)
@@ -161,7 +161,7 @@ vercel
 
 ## 🛠️ Monitoring & Maintenance
 
-### Vercel Dashboard
+### Vercel Monitoring
 
 - View deployment logs
 - Monitor build times
@@ -243,6 +243,8 @@ For issues or questions:
 
 ---
 
-**Deployment completed successfully! 🎉**
+## ✅ Deployment Complete
+
+Deployment completed successfully! 🎉
 
 Your Class Tracker application is now live and accessible to users worldwide!

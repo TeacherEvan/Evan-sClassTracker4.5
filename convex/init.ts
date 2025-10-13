@@ -61,7 +61,7 @@ export const initializeDatabase = mutation({
 
     // Create sample teacher
     const teacherPassword = hashPassword("TeacherEvan");
-    const evanId = await ctx.db.insert("users", {
+    await ctx.db.insert("users", {
       username: "Evan",
       passwordHash: teacherPassword,
       role: "teacher",

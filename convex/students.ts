@@ -51,17 +51,34 @@ export const getByStudentId = query({
   },
 });
 
+// Query to get students by guardian
+export const getByGuardian = query({
+  args: {
+    guardianName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("students")
+      .withIndex("by_guardian", (q) => q.eq("guardianName", args.guardianName))
+      .collect();
+  },
+});
+
 // Mutation to create a new student
 export const create = mutation({
   args: {
     firstName: v.string(),
     lastName: v.string(),
-    schoolId: v.id("schools"),
+    schoolId: v.optional(v.id("schools")), // Now optional
     grade: v.string(),
+    guardianName: v.optional(v.string()),
+    guardianPhone: v.optional(v.string()),
+    guardianEmail: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Generate unique student ID
-    let studentId = generateStudentId(args.firstName, args.lastName, args.schoolId);
+    const schoolIdForHash = args.schoolId || "GUARDIAN";
+    let studentId = generateStudentId(args.firstName, args.lastName, schoolIdForHash);
 
     // Check for duplicates and regenerate if necessary
     let attempts = 0;
@@ -78,7 +95,7 @@ export const create = mutation({
       }
 
       // Regenerate with new random component
-      studentId = generateStudentId(args.firstName, args.lastName, args.schoolId);
+      studentId = generateStudentId(args.firstName, args.lastName, schoolIdForHash);
       attempts++;
     }
 
@@ -92,6 +109,9 @@ export const create = mutation({
       studentId,
       schoolId: args.schoolId,
       grade: args.grade,
+      guardianName: args.guardianName,
+      guardianPhone: args.guardianPhone,
+      guardianEmail: args.guardianEmail,
       createdAt: Date.now(),
     });
 
@@ -106,6 +126,9 @@ export const update = mutation({
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
     grade: v.optional(v.string()),
+    guardianName: v.optional(v.string()),
+    guardianPhone: v.optional(v.string()),
+    guardianEmail: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
@@ -129,5 +152,64 @@ export const remove = mutation({
     await ctx.db.delete(args.id);
 
     return { success: true };
+  },
+});
+
+// Mutation to duplicate a student (for guardian-linked students)
+export const duplicate = mutation({
+  args: {
+    id: v.id("students"),
+  },
+  handler: async (ctx, args) => {
+    const originalStudent = await ctx.db.get(args.id);
+
+    if (!originalStudent) {
+      throw new Error("Student not found");
+    }
+
+    // Only allow duplication for guardian-linked students
+    if (originalStudent.schoolId) {
+      throw new Error("Can only duplicate guardian-linked students");
+    }
+
+    // Generate new unique student ID
+    const schoolIdForHash = "GUARDIAN";
+    let studentId = generateStudentId(originalStudent.firstName, originalStudent.lastName, schoolIdForHash);
+
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (attempts < maxAttempts) {
+      const existing = await ctx.db
+        .query("students")
+        .withIndex("by_student_id", (q) => q.eq("studentId", studentId))
+        .first();
+
+      if (!existing) {
+        break;
+      }
+
+      studentId = generateStudentId(originalStudent.firstName, originalStudent.lastName, schoolIdForHash);
+      attempts++;
+    }
+
+    if (attempts === maxAttempts) {
+      throw new Error("Failed to generate unique student ID after multiple attempts");
+    }
+
+    // Create duplicate with new ID
+    const newId = await ctx.db.insert("students", {
+      firstName: originalStudent.firstName,
+      lastName: originalStudent.lastName,
+      studentId,
+      schoolId: originalStudent.schoolId,
+      grade: originalStudent.grade,
+      guardianName: originalStudent.guardianName,
+      guardianPhone: originalStudent.guardianPhone,
+      guardianEmail: originalStudent.guardianEmail,
+      createdAt: Date.now(),
+    });
+
+    return { id: newId, studentId };
   },
 });

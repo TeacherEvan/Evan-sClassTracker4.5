@@ -50,12 +50,16 @@ export default defineSchema({
     firstName: v.string(),
     lastName: v.string(),
     studentId: v.string(), // Unique identifier
-    schoolId: v.id("schools"),
+    schoolId: v.optional(v.id("schools")), // Now optional - null if linked to guardian
     grade: v.string(),
+    guardianName: v.optional(v.string()), // Guardian name if no school
+    guardianPhone: v.optional(v.string()), // Guardian contact
+    guardianEmail: v.optional(v.string()), // Guardian email
     createdAt: v.number(),
   })
     .index("by_student_id", ["studentId"])
-    .index("by_school", ["schoolId"]),
+    .index("by_school", ["schoolId"])
+    .index("by_guardian", ["guardianName"]),
 
   notifications: defineTable({
     title: v.string(),

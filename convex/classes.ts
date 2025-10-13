@@ -51,6 +51,47 @@ export const getById = query({
   },
 });
 
+// Query to get classes by date range (for calendar view)
+export const getByDateRange = query({
+  args: {
+    startDate: v.number(),
+    endDate: v.number(),
+    schoolId: v.optional(v.id("schools")),
+    teacherId: v.optional(v.id("users")),
+  },
+  handler: async (ctx, args) => {
+    const query = ctx.db.query("classes");
+
+    // Filter by school if provided
+    if (args.schoolId) {
+      const classes = await query
+        .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId!))
+        .collect();
+
+      return classes.filter(
+        (c) => c.scheduledDate >= args.startDate && c.scheduledDate <= args.endDate
+      );
+    }
+
+    // Filter by teacher if provided
+    if (args.teacherId) {
+      const classes = await query
+        .withIndex("by_teacher", (q) => q.eq("teacherId", args.teacherId!))
+        .collect();
+
+      return classes.filter(
+        (c) => c.scheduledDate >= args.startDate && c.scheduledDate <= args.endDate
+      );
+    }
+
+    // Otherwise return all classes in range
+    const allClasses = await query.collect();
+    return allClasses.filter(
+      (c) => c.scheduledDate >= args.startDate && c.scheduledDate <= args.endDate
+    );
+  },
+});
+
 // Mutation to book a new class
 export const book = mutation({
   args: {

@@ -32,7 +32,7 @@ export const create = mutation({
       moderatorId: args.moderatorId,
       createdAt: Date.now(),
     });
-    
+
     return schoolId;
   },
 });
@@ -47,7 +47,19 @@ export const updateModerator = mutation({
     await ctx.db.patch(args.schoolId, {
       moderatorId: args.moderatorId,
     });
-    
+
+    return { success: true };
+  },
+});
+
+// Mutation to delete a school
+export const remove = mutation({
+  args: {
+    id: v.id("schools"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+
     return { success: true };
   },
 });
