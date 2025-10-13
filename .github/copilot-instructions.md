@@ -1,7 +1,7 @@
 # Evan's Class Tracker 4.5 - AI Coding Instructions
 
 ## Project Overview
-Bilingual (English/Thai) notification system for teachers and schools, built with Next.js 15, React 19, and Convex real-time backend. This is a full-stack TypeScript application using App Router and React Server Components.
+Bilingual (English/Thai) class tracking system with user authentication, class booking, student management, and real-time notifications for teachers and schools. Built with Next.js 15, React 19, and Convex real-time backend. This is a full-stack TypeScript application using App Router and client-side rendering.
 
 ## Architecture & Key Patterns
 
@@ -26,22 +26,48 @@ ALL user-facing content requires both English and Thai versions:
 ### Convex Backend Integration
 - **Location**: All backend code lives in `convex/` directory
 - **Schema**: Defined in `convex/schema.ts` with validation using `v.*` validators
-- **API**: Export `query` and `mutation` functions from `convex/notifications.ts`
+- **API Files**: 
+  - `convex/users.ts` - Authentication & user management
+  - `convex/schools.ts` - School CRUD operations
+  - `convex/classes.ts` - Class booking workflow
+  - `convex/students.ts` - Student management with unique ID generation
+  - `convex/notifications.ts` - Real-time notifications
+  - `convex/init.ts` - Database initialization helper
 - **Client usage**: 
   ```tsx
   import { useQuery, useMutation } from "convex/react";
   import { api } from "@/convex/_generated/api";
   
-  const notifications = useQuery(api.notifications.list, { userId });
-  const createNotification = useMutation(api.notifications.create);
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const login = useMutation(api.users.login);
+  const classes = useQuery(api.classes.list);
   ```
 - **Generated code**: Never edit files in `convex/_generated/` - they auto-regenerate on schema changes
 
-### Database Indexing Strategy
-The `notifications` table uses three indexes for performance:
-- `by_user`: For user-specific queries (`userId`)
-- `by_created_at`: For chronological sorting (default desc order)
-- `by_read`: For filtering unread notifications
+### Database Schema & Indexing Strategy
+The system uses 5 interconnected tables:
+
+1. **users** - User authentication & role-based access
+   - Indexes: `by_username`, `by_school`, `by_role`
+   - Roles: `admin`, `moderator`, `teacher`
+   - Password security: Base64 encoded (upgradeable to bcrypt)
+
+2. **schools** - School management
+   - Index: `by_created_at`
+   - Links to users (moderators) and classes
+
+3. **classes** - Class booking workflow
+   - Indexes: `by_teacher`, `by_school`, `by_status`, `by_created_at`
+   - Status flow: `pending` → `acknowledged` → `approved`/`rejected`
+   - Automatically triggers notifications
+
+4. **students** - Student records
+   - Indexes: `by_school`, `by_class`, `by_unique_id`
+   - Unique ID format: `{SchoolHash}-{NameHash}-{Timestamp}-{Random}`
+
+5. **notifications** - Real-time alerts
+   - Indexes: `by_user`, `by_created_at`, `by_read`
+   - Auto-generated for class workflow events
 
 When adding queries, use `.withIndex()` to leverage these indexes.
 
@@ -71,6 +97,30 @@ Components using hooks MUST have `"use client"`:
 - Any component using `useLanguage()`, `useQuery()`, `useMutation()`
 - All components in `components/` directory
 - Event handlers (onClick, onChange, etc.)
+
+### Authentication Flow
+The app uses session-based authentication with `sessionStorage`:
+```tsx
+// Check current user
+const currentUser = useQuery(api.users.getCurrentUser);
+
+// Login pattern
+const login = useMutation(api.users.login);
+await login({ username, password });
+
+// First-time password change required
+if (currentUser?.requirePasswordChange) {
+  // Show PasswordChangeDialog component
+}
+```
+
+### Key Components
+- **LoginForm** - Handles authentication with bilingual UI
+- **PasswordChangeDialog** - Forced password change for new users
+- **UserManagement** - Admin interface for creating users (password: `Teacher{username}`)
+- **ClassBooking** - Class booking workflow with approval states
+- **DatabaseInit** - First-time setup (creates admin account)
+- **NotificationForm/List** - Real-time notification system
 
 ### Notification Type System
 Strict union type with four values:
@@ -117,14 +167,35 @@ See `components/notification-form.tsx` for standard approach:
 ## Common Tasks
 
 ### Adding a New Feature
-1. If it needs data: Update `convex/schema.ts` and add query/mutation to `convex/notifications.ts`
+1. If it needs data: Update `convex/schema.ts` and add query/mutation to appropriate file in `convex/`
 2. If it has UI: Create component in `components/` with `"use client"`
 3. Add bilingual strings using `t()` helper throughout
 4. Test in both English and Thai language modes
+5. For workflow features: Add notification triggers (see `convex/classes.ts` for examples)
+
+### User Authentication Pattern
+Default user creation follows this pattern:
+```typescript
+// Admin creates user with username
+username: "Evan"
+password: "TeacherEvan" // Auto-generated: Teacher{username}
+requirePasswordChange: true // Forced on first login
+```
+
+### Class Booking Workflow
+Standard approval flow:
+1. Teacher books class → Status: `pending`, Notification sent to moderator
+2. Moderator acknowledges → Status: `acknowledged`
+3. Moderator approves/rejects → Status: `approved`/`rejected`, Notification sent to teacher
+
+### Student Unique ID Generation
+Format: `{SchoolHash}-{NameHash}-{Timestamp}-{Random}`
+- See `convex/students.ts` for implementation
+- System retries on collision (max 10 attempts)
 
 ### Adding Database Fields
 1. Update schema in `convex/schema.ts`
-2. Add fields to mutations in `convex/notifications.ts`
+2. Add fields to mutations in `convex/notifications.ts` or relevant file
 3. Update TypeScript types (auto-generated in `convex/_generated/`)
 4. For bilingual fields: Add both `field` and `fieldTh` versions
 
@@ -141,6 +212,16 @@ See `components/notification-form.tsx` for standard approach:
 1. Deploy Convex: `npx convex deploy` (get production URL)
 2. Set Vercel env var: `NEXT_PUBLIC_CONVEX_URL=<production-url>`
 3. Deploy to Vercel (auto-deploys on push to main)
+
+**Environment Variables**:
+- `NEXT_PUBLIC_CONVEX_URL` - Convex deployment URL (required)
+- `CONVEX_DEPLOY_KEY` - For CI/CD automation (keep secret)
+
+**First-Time Setup**:
+1. Navigate to deployed app
+2. Click "Initialize Database" button
+3. Default admin account created (check console/logs for credentials)
+4. Login and change password immediately
 
 See `DEPLOYMENT.md` for detailed steps.
 
