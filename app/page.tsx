@@ -1,32 +1,146 @@
 "use client";
 
+import { useState } from "react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { NotificationForm } from "@/components/notification-form";
 import { NotificationList } from "@/components/notification-list";
+import { LoginForm } from "@/components/login-form";
+import { PasswordChangeDialog } from "@/components/password-change-dialog";
+import { UserManagement } from "@/components/user-management";
+import { ClassBooking } from "@/components/class-booking";
 import { useLanguage } from "@/lib/language-context";
+import { LogOut, Users, Calendar, Bell } from "lucide-react";
 
 export default function Home() {
   const { t } = useLanguage();
+  const [user, setUser] = useState<any>(null);
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes">("notifications");
+
+  const handleLoginSuccess = (loggedInUser: any) => {
+    setUser(loggedInUser);
+    if (loggedInUser.requirePasswordChange) {
+      setShowPasswordChange(true);
+    }
+  };
+
+  const handlePasswordChanged = () => {
+    setShowPasswordChange(false);
+    if (user) {
+      setUser({ ...user, requirePasswordChange: false });
+    }
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setShowPasswordChange(false);
+    setActiveTab("notifications");
+  };
+
+  if (!user) {
+    return <LoginForm onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <div className="min-h-screen p-8">
+      {showPasswordChange && (
+        <PasswordChangeDialog
+          userId={user._id}
+          onPasswordChanged={handlePasswordChanged}
+          canSkip={false}
+        />
+      )}
+
       <header className="max-w-4xl mx-auto mb-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">
-            {t("Class Tracker", "ติดตามชั้นเรียน")}
-          </h1>
-          <LanguageSwitcher />
+          <div>
+            <h1 className="text-3xl font-bold">
+              {t("Class Tracker", "ติดตามชั้นเรียน")}
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">
+              {t(`Welcome, ${user.username}`, `ยินดีต้อนรับ, ${user.username}`)}
+              {" · "}
+              {t(
+                user.role.charAt(0).toUpperCase() + user.role.slice(1),
+                user.role === "teacher"
+                  ? "ครู"
+                  : user.role === "moderator"
+                  ? "ผู้ดูแล"
+                  : "ผู้จัดการ"
+              )}
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher />
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+              {t("Logout", "ออกจากระบบ")}
+            </button>
+          </div>
         </div>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          {t(
-            "Bilingual notification system for teachers and schools",
-            "ระบบแจ้งเตือนสองภาษาสำหรับครูและโรงเรียน"
-          )}
-        </p>
       </header>
 
-      <NotificationForm />
-      <NotificationList />
+      {/* Tab Navigation */}
+      <div className="max-w-4xl mx-auto mb-6">
+        <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
+          <button
+            onClick={() => setActiveTab("notifications")}
+            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
+              activeTab === "notifications"
+                ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+            }`}
+          >
+            <Bell className="w-5 h-5" />
+            {t("Notifications", "การแจ้งเตือน")}
+          </button>
+
+          <button
+            onClick={() => setActiveTab("classes")}
+            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
+              activeTab === "classes"
+                ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+            }`}
+          >
+            <Calendar className="w-5 h-5" />
+            {t("Classes", "ชั้นเรียน")}
+          </button>
+
+          {user.role === "admin" && (
+            <button
+              onClick={() => setActiveTab("users")}
+              className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
+                activeTab === "users"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              {t("Users", "ผู้ใช้")}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === "notifications" && (
+        <>
+          {user.role === "admin" && <NotificationForm />}
+          <NotificationList />
+        </>
+      )}
+
+      {activeTab === "classes" && (
+        <ClassBooking userId={user._id} userRole={user.role} />
+      )}
+
+      {activeTab === "users" && user.role === "admin" && (
+        <UserManagement />
+      )}
     </div>
   );
 }
