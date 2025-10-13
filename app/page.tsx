@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { NotificationForm } from "@/components/notification-form";
 import { NotificationList } from "@/components/notification-list";
@@ -8,14 +8,21 @@ import { LoginForm } from "@/components/login-form";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
 import { UserManagement } from "@/components/user-management";
 import { ClassBooking } from "@/components/class-booking";
+import { DatabaseInit } from "@/components/database-init";
 import { useLanguage } from "@/lib/language-context";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { LogOut, Users, Calendar, Bell } from "lucide-react";
 
 export default function Home() {
   const { t } = useLanguage();
+  const users = useQuery(api.users.list);
   const [user, setUser] = useState<any>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes">("notifications");
+
+  // Check if database needs initialization
+  const needsInit = users !== undefined && users.length === 0;
 
   const handleLoginSuccess = (loggedInUser: any) => {
     setUser(loggedInUser);
@@ -36,6 +43,11 @@ export default function Home() {
     setShowPasswordChange(false);
     setActiveTab("notifications");
   };
+
+  // Show init screen if no users exist
+  if (needsInit) {
+    return <DatabaseInit />;
+  }
 
   if (!user) {
     return <LoginForm onLoginSuccess={handleLoginSuccess} />;
