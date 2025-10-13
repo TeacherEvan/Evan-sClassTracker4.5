@@ -35,6 +35,7 @@ export default function Home() {
 
   // Check if database needs initialization
   const needsInit = users !== undefined && users.length === 0;
+  const isLoading = users === undefined;
 
   const handleLoginSuccess = (loggedInUser: User) => {
     setUser(loggedInUser);
@@ -55,6 +56,20 @@ export default function Home() {
     setShowPasswordChange(false);
     setActiveTab("notifications");
   };
+
+  // Show loading state while checking database
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">
+            {t("Loading...", "กำลังโหลด...")}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Show init screen if no users exist
   if (needsInit) {
