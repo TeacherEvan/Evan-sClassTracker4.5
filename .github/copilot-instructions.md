@@ -80,10 +80,13 @@ npx convex dev       # Start Convex backend (required first)
 npm run dev          # Start Next.js with Turbopack
 ```
 
+**Note**: These commands are for **local development only**. In production, Convex runs as a cloud service and Vercel handles the Next.js build automatically.
+
 ### Environment Setup
 - Convex setup creates `.env.local` with `NEXT_PUBLIC_CONVEX_URL`
 - Never commit `.env.local` (already in `.gitignore`)
-- For production: Run `npx convex deploy` to get production URL
+- For production: Your Convex deployment is already running at the production URL
+- Vercel reads environment variables from its dashboard settings
 
 ### Build Commands
 - Dev: `npm run dev` (uses Turbopack via `--turbopack` flag)
@@ -207,20 +210,28 @@ Format: `{SchoolHash}-{NameHash}-{Timestamp}-{Random}`
 
 ## Deployment
 
-**Production Stack**: Vercel (frontend) + Convex (backend)
+**Production Stack**: Vercel (frontend) + Convex (backend - already deployed)
 
-1. Deploy Convex: `npx convex deploy` (get production URL)
-2. Set Vercel env var: `NEXT_PUBLIC_CONVEX_URL=<production-url>`
-3. Deploy to Vercel (auto-deploys on push to main)
+**Convex Backend**: Already running at `https://resolute-basilisk-801.convex.cloud`
+- No manual deployment needed - it's a persistent cloud service
+- Manages real-time database, queries, and mutations
+- Automatically handles scaling and uptime
+
+**Vercel Frontend Deployment**:
+1. Install Vercel CLI: `npm install -g vercel`
+2. Deploy: `vercel` (follow prompts to link GitHub repo)
+3. Set environment variable in Vercel dashboard:
+   - `NEXT_PUBLIC_CONVEX_URL=https://resolute-basilisk-801.convex.cloud`
+4. Future deploys: Auto-deploy on push to main branch
 
 **Environment Variables**:
-- `NEXT_PUBLIC_CONVEX_URL` - Convex deployment URL (required)
-- `CONVEX_DEPLOY_KEY` - For CI/CD automation (keep secret)
+- `NEXT_PUBLIC_CONVEX_URL` - Convex deployment URL (required in Vercel settings)
+- `CONVEX_DEPLOY_KEY` - For CI/CD automation (keep secret, optional)
 
-**First-Time Setup**:
-1. Navigate to deployed app
+**First-Time Setup After Deployment**:
+1. Navigate to deployed app URL
 2. Click "Initialize Database" button
-3. Default admin account created (check console/logs for credentials)
+3. Default admin account created (save credentials shown)
 4. Login and change password immediately
 
 See `DEPLOYMENT.md` for detailed steps.
