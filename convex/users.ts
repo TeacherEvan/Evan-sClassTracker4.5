@@ -25,7 +25,7 @@ export const getByUsername = query({
     if (!user) return null;
 
     // Don't return password hash to client
-    const { passwordHash, ...userWithoutPassword } = user;
+    const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
     return userWithoutPassword;
   },
 });
@@ -64,7 +64,7 @@ export const list = query({
       : await ctx.db.query("users").collect();
 
     // Don't return password hashes
-    return users.map(({ passwordHash, ...user }) => user);
+    return users.map(({ passwordHash: _passwordHash, ...user }) => user);
   },
 });
 
@@ -128,7 +128,7 @@ export const login = mutation({
     }
 
     // Return user without password hash
-    const { passwordHash, ...userWithoutPassword } = user;
+    const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
     return {
       ...userWithoutPassword,
       requirePasswordChange: user.requirePasswordChange,

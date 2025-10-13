@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useLanguage } from "@/lib/language-context";
-import { Database, CheckCircle } from "lucide-react";
 import { Id } from "@/convex/_generated/dataModel";
+import { useLanguage } from "@/lib/language-context";
+import { useMutation } from "convex/react";
+import { CheckCircle, Database } from "lucide-react";
+import { useState } from "react";
 
 type InitResult = {
   message: string;
@@ -23,7 +23,7 @@ type InitResult = {
 export function DatabaseInit() {
   const { t } = useLanguage();
   const initializeDatabase = useMutation(api.init.initializeDatabase);
-  
+
   const [result, setResult] = useState<InitResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -31,7 +31,7 @@ export function DatabaseInit() {
   const handleInitialize = async () => {
     setLoading(true);
     setError("");
-    
+
     try {
       const res = await initializeDatabase({});
       setResult(res);

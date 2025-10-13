@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { UserPlus, RefreshCw } from "lucide-react";
-import type { Id } from "@/convex/_generated/dataModel";
+import { RefreshCw, UserPlus } from "lucide-react";
+import { useState } from "react";
 
 export function UserManagement() {
   const { t } = useLanguage();
@@ -195,8 +195,8 @@ export function UserManagement() {
                     user.role === "teacher"
                       ? "ครู"
                       : user.role === "moderator"
-                      ? "ผู้ดูแล"
-                      : "ผู้จัดการ"
+                        ? "ผู้ดูแล"
+                        : "ผู้จัดการ"
                   )}
                   {user.requirePasswordChange && (
                     <span className="ml-2 text-yellow-600 dark:text-yellow-400">

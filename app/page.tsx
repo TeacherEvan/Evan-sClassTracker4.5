@@ -1,19 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { LanguageSwitcher } from "@/components/language-switcher";
-import { NotificationForm } from "@/components/notification-form";
-import { NotificationList } from "@/components/notification-list";
-import { LoginForm } from "@/components/login-form";
-import { PasswordChangeDialog } from "@/components/password-change-dialog";
-import { UserManagement } from "@/components/user-management";
 import { ClassBooking } from "@/components/class-booking";
 import { DatabaseInit } from "@/components/database-init";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { LoginForm } from "@/components/login-form";
+import { NotificationForm } from "@/components/notification-form";
+import { NotificationList } from "@/components/notification-list";
+import { PasswordChangeDialog } from "@/components/password-change-dialog";
+import { UserManagement } from "@/components/user-management";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { LogOut, Users, Calendar, Bell } from "lucide-react";
-import { Id } from "@/convex/_generated/dataModel";
+import { Bell, Calendar, LogOut, Users } from "lucide-react";
+import { useState } from "react";
 
 type User = {
   _id: Id<"users">;
@@ -87,8 +87,8 @@ export default function Home() {
                 user.role === "teacher"
                   ? "ครู"
                   : user.role === "moderator"
-                  ? "ผู้ดูแล"
-                  : "ผู้จัดการ"
+                    ? "ผู้ดูแล"
+                    : "ผู้จัดการ"
               )}
             </p>
           </div>
@@ -110,11 +110,10 @@ export default function Home() {
         <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setActiveTab("notifications")}
-            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
-              activeTab === "notifications"
+            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${activeTab === "notifications"
                 ? "border-blue-500 text-blue-600 dark:text-blue-400"
                 : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-            }`}
+              }`}
           >
             <Bell className="w-5 h-5" />
             {t("Notifications", "การแจ้งเตือน")}
@@ -122,11 +121,10 @@ export default function Home() {
 
           <button
             onClick={() => setActiveTab("classes")}
-            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
-              activeTab === "classes"
+            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${activeTab === "classes"
                 ? "border-blue-500 text-blue-600 dark:text-blue-400"
                 : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-            }`}
+              }`}
           >
             <Calendar className="w-5 h-5" />
             {t("Classes", "ชั้นเรียน")}
@@ -135,11 +133,10 @@ export default function Home() {
           {user.role === "admin" && (
             <button
               onClick={() => setActiveTab("users")}
-              className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
-                activeTab === "users"
+              className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${activeTab === "users"
                   ? "border-blue-500 text-blue-600 dark:text-blue-400"
                   : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-              }`}
+                }`}
             >
               <Users className="w-5 h-5" />
               {t("Users", "ผู้ใช้")}
