@@ -9,8 +9,8 @@ import type { Id } from "@/convex/_generated/dataModel";
 
 export function UserManagement() {
   const { t } = useLanguage();
-  const users = useQuery(api.users.list);
-  const schools = useQuery(api.schools.list);
+  const users = useQuery(api.users.list, {});
+  const schools = useQuery(api.schools.list, {});
   const createUser = useMutation(api.users.create);
   const resetPassword = useMutation(api.users.resetPassword);
 

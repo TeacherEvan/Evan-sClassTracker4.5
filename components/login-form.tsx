@@ -5,9 +5,19 @@ import { useLanguage } from "@/lib/language-context";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { AlertCircle } from "lucide-react";
+import { Id } from "@/convex/_generated/dataModel";
+
+type User = {
+  _id: Id<"users">;
+  username: string;
+  role: "teacher" | "moderator" | "admin";
+  schoolId?: Id<"schools">;
+  requirePasswordChange: boolean;
+  createdAt: number;
+};
 
 interface LoginFormProps {
-  onLoginSuccess: (user: any) => void;
+  onLoginSuccess: (user: User) => void;
 }
 
 export function LoginForm({ onLoginSuccess }: LoginFormProps) {

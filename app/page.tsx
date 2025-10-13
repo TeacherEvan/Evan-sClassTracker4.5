@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { NotificationForm } from "@/components/notification-form";
 import { NotificationList } from "@/components/notification-list";
@@ -13,18 +13,28 @@ import { useLanguage } from "@/lib/language-context";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { LogOut, Users, Calendar, Bell } from "lucide-react";
+import { Id } from "@/convex/_generated/dataModel";
+
+type User = {
+  _id: Id<"users">;
+  username: string;
+  role: "teacher" | "moderator" | "admin";
+  schoolId?: Id<"schools">;
+  requirePasswordChange: boolean;
+  createdAt: number;
+};
 
 export default function Home() {
   const { t } = useLanguage();
-  const users = useQuery(api.users.list);
-  const [user, setUser] = useState<any>(null);
+  const users = useQuery(api.users.list, {});
+  const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
   const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes">("notifications");
 
   // Check if database needs initialization
   const needsInit = users !== undefined && users.length === 0;
 
-  const handleLoginSuccess = (loggedInUser: any) => {
+  const handleLoginSuccess = (loggedInUser: User) => {
     setUser(loggedInUser);
     if (loggedInUser.requirePasswordChange) {
       setShowPasswordChange(true);

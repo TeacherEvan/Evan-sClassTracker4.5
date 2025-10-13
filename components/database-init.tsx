@@ -5,12 +5,26 @@ import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useLanguage } from "@/lib/language-context";
 import { Database, CheckCircle } from "lucide-react";
+import { Id } from "@/convex/_generated/dataModel";
+
+type InitResult = {
+  message: string;
+  credentials?: {
+    admin: { username: string; password: string };
+    moderator: { username: string; password: string };
+    teacher: { username: string; password: string };
+  };
+  schools?: Array<{
+    id: Id<"schools">;
+    name: string;
+  }>;
+};
 
 export function DatabaseInit() {
   const { t } = useLanguage();
   const initializeDatabase = useMutation(api.init.initializeDatabase);
   
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<InitResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -78,7 +92,7 @@ export function DatabaseInit() {
                   {t("Sample Schools Created:", "โรงเรียนตัวอย่างที่สร้าง:")}
                 </p>
                 <ul className="list-disc list-inside text-sm space-y-1">
-                  {result.schools?.map((school: any, i: number) => (
+                  {result.schools?.map((school, i: number) => (
                     <li key={i}>{school.name}</li>
                   ))}
                 </ul>
