@@ -4,7 +4,8 @@ import { mutation, query } from "./_generated/server";
 // Simple password hashing (in production, use bcrypt or similar)
 function hashPassword(password: string): string {
   // This is a simple hash for demonstration. In production, use proper hashing
-  return Buffer.from(password).toString("base64");
+  // Using btoa for browser-compatible base64 encoding (works in Convex runtime)
+  return btoa(password);
 }
 
 function verifyPassword(password: string, hash: string): boolean {

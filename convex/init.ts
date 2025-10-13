@@ -1,9 +1,9 @@
-import { v } from "convex/values";
 import { mutation } from "./_generated/server";
 
 // Helper function for password hashing (same as in users.ts)
 function hashPassword(password: string): string {
-  return Buffer.from(password).toString("base64");
+  // Using btoa for browser-compatible base64 encoding (works in Convex runtime)
+  return btoa(password);
 }
 
 // Mutation to initialize the database with sample data
@@ -15,7 +15,7 @@ export const initializeDatabase = mutation({
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", "admin"))
       .first();
-    
+
     if (existingAdmin) {
       return { message: "Database already initialized" };
     }
@@ -105,7 +105,7 @@ export const isInitialized = mutation({
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", "admin"))
       .first();
-    
+
     return !!admin;
   },
 });
