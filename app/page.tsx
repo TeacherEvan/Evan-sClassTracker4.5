@@ -1,9 +1,12 @@
 "use client";
 
+import { AdminContactButton } from "@/components/admin-contact-button";
 import { ClassBooking } from "@/components/class-booking";
 import { DatabaseInit } from "@/components/database-init";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LoginForm } from "@/components/login-form";
+import { MessagingHub } from "@/components/messaging-hub";
+import { ModeratorListView } from "@/components/moderator-list-view";
 import { NotificationForm } from "@/components/notification-form";
 import { NotificationList } from "@/components/notification-list";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
@@ -11,11 +14,13 @@ import { SchoolManagement } from "@/components/school-management";
 import { StudentManagement } from "@/components/student-management";
 import { UserManagement } from "@/components/user-management";
 import { WeeklyCalendar } from "@/components/weekly-calendar";
+import { ToastContainer, type ToastNotification } from "@/components/desktop-notification-toast";
 import { api } from "@/convex/_generated/api";
 import { useLanguage } from "@/lib/language-context";
+import { isDesktopDevice } from "@/lib/device-detection";
 import type { User } from "@/lib/types";
 import { useQuery } from "convex/react";
-import { Bell, Building2, Calendar, CalendarDays, GraduationCap, LogOut, Users } from "lucide-react";
+import { Bell, Building2, Calendar, CalendarDays, GraduationCap, LogOut, Users, MessageSquare, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -23,7 +28,14 @@ export default function Home() {
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students">("calendar");
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators">("calendar");
+  const [toasts, setToasts] = useState<ToastNotification[]>([]);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  // Check device type on mount
+  useEffect(() => {
+    setIsDesktop(isDesktopDevice());
+  }, []);
 
   // Check if database needs initialization
   const needsInit = users !== undefined && users.length === 0;
@@ -74,12 +86,43 @@ export default function Home() {
   const handleLogout = () => {
     setUser(null);
     setShowPasswordChange(false);
-    setActiveTab("notifications");
+    setActiveTab("calendar");
     // Clear localStorage
     if (typeof window !== "undefined") {
       localStorage.removeItem("currentUser");
     }
   };
+
+  const addToast = (notification: Omit<ToastNotification, "id">) => {
+    const toast: ToastNotification = {
+      ...notification,
+      id: Date.now().toString() + Math.random().toString(36),
+    };
+    setToasts((prev) => [...prev, toast]);
+  };
+
+  const dismissToast = (id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
+
+  // Example: Show desktop notification on important events
+  useEffect(() => {
+    if (user && isDesktop) {
+      // This is an example - you can trigger toasts on various events
+      // For now, we'll show a welcome toast
+      const hasShownWelcome = sessionStorage.getItem("welcomeToastShown");
+      if (!hasShownWelcome) {
+        addToast({
+          title: "Welcome!",
+          titleTh: "ยินดีต้อนรับ!",
+          message: "You're now connected to the Class Tracker system.",
+          messageTh: "คุณเชื่อมต่อกับระบบติดตามชั้นเรียนแล้ว",
+          type: "success",
+        });
+        sessionStorage.setItem("welcomeToastShown", "true");
+      }
+    }
+  }, [user, isDesktop]);
 
   // Show loading state while checking database
   if (isLoading) {
@@ -106,6 +149,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen p-8">
+      {/* Toast Notifications */}
+      <ToastContainer notifications={toasts} onDismiss={dismissToast} />
+
       {showPasswordChange && (
         <PasswordChangeDialog
           userId={user._id}
@@ -134,6 +180,10 @@ export default function Home() {
             </p>
           </div>
           <div className="flex items-center gap-4">
+            {/* Admin Contact Button for non-admin users */}
+            {user.role !== "admin" && (
+              <AdminContactButton currentUserId={user._id} />
+            )}
             <LanguageSwitcher />
             <button
               onClick={handleLogout}
@@ -172,6 +222,17 @@ export default function Home() {
           </button>
 
           <button
+            onClick={() => setActiveTab("messages")}
+            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "messages"
+              ? "border-blue-500 text-blue-600 dark:text-blue-400"
+              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+              }`}
+          >
+            <MessageSquare className="w-5 h-5" />
+            {t("Messages", "ข้อความ")}
+          </button>
+
+          <button
             onClick={() => setActiveTab("notifications")}
             className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "notifications"
               ? "border-blue-500 text-blue-600 dark:text-blue-400"
@@ -207,6 +268,17 @@ export default function Home() {
               </button>
 
               <button
+                onClick={() => setActiveTab("moderators")}
+                className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "moderators"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <Shield className="w-5 h-5" />
+                {t("Moderators", "ผู้ดูแล")}
+              </button>
+
+              <button
                 onClick={() => setActiveTab("users")}
                 className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "users"
                   ? "border-blue-500 text-blue-600 dark:text-blue-400"
@@ -230,6 +302,10 @@ export default function Home() {
         <ClassBooking userId={user._id} userRole={user.role} />
       )}
 
+      {activeTab === "messages" && (
+        <MessagingHub currentUser={user} />
+      )}
+
       {activeTab === "notifications" && (
         <>
           {user.role === "admin" && <NotificationForm />}
@@ -243,6 +319,10 @@ export default function Home() {
 
       {activeTab === "students" && user.role === "admin" && (
         <StudentManagement />
+      )}
+
+      {activeTab === "moderators" && user.role === "admin" && (
+        <ModeratorListView />
       )}
 
       {activeTab === "users" && user.role === "admin" && (
