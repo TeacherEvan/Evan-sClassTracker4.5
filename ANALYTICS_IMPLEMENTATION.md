@@ -3,48 +3,58 @@
 ## ✅ Completed Tasks
 
 ### 1. Fixed Code Errors
+
 - **Removed orphaned file**: `components/conversation-list.tsx` was already deleted (VS Code cache issue)
 - **Verified device-context.tsx**: File exists and is properly configured
 - **Fixed TypeScript errors**: Resolved Convex query calling issues in analytics.ts
 
 ### 2. Created Teacher Analytics Backend (`convex/analytics.ts`)
+
 Implemented 5 comprehensive analytics queries:
 
 #### `getTeacherAnalytics`
+
 - Returns detailed statistics for each teacher at a school
 - Metrics: total classes, pending, acknowledged, approved, rejected, approval rate
 - Supports date range filtering
 
 #### `getSchoolAnalytics`
+
 - Provides school-wide aggregate statistics
 - Overall approval rates and status breakdowns
 - Tracks unique active teachers
 
 #### `getClassTrends`
+
 - Time-series data for trend visualization
 - Supports daily, weekly, or monthly intervals
 - Shows approved/rejected/pending distribution over time
 
 #### `getTeacherRanking`
+
 - Ranks teachers by approval rate
 - Sorts by approval rate first, then by total classes
 - Configurable result limit
 
 #### `getResponseTimeAnalytics`
+
 - Placeholder for future response time tracking
 - Currently returns diagnostic info about pending classes
 
 ### 3. Created Teacher Analytics Component (`components/teacher-analytics.tsx`)
+
 Comprehensive React component with:
 
-#### Visual Features:
+#### Visual Features
+
 - **Stat Cards**: Color-coded metrics (total, approved, rejected, approval rate, etc.)
 - **Top Teachers Ranking**: Medal-style display with gold/silver/bronze badges
 - **All Teachers Table**: Complete performance table with color-coded approval rates
   - Green (≥80%), Yellow (60-79%), Red (<60%)
 - **Trend Chart**: Horizontal bar visualization showing class status over time
 
-#### Functionality:
+#### Functionality
+
 - **Date Range Filters**: 7 days, 30 days, 90 days, all time
 - **Real-time Updates**: Leverages Convex subscriptions
 - **Bilingual Support**: Full English/Thai translations
@@ -52,19 +62,22 @@ Comprehensive React component with:
 - **Dark Mode**: Complete dark mode support
 
 ### 4. Integrated into Main App (`app/page.tsx`)
+
 - Added "Analytics" tab to moderator navigation
 - Only visible for moderators with assigned schools
 - Icon: BarChart3 from lucide-react
 - Proper access control and routing
 
 ### 5. Updated Documentation
+
 - **TEACHER_ANALYTICS.md**: Comprehensive feature documentation
 - **.github/copilot-instructions.md**: Added analytics references
 - Documented architecture, usage, and future enhancements
 
 ## 📊 Analytics Features Summary
 
-### For Moderators:
+### For Moderators
+
 1. **View Performance Metrics**
    - Total classes booked at their school
    - Approval/rejection rates
@@ -84,7 +97,8 @@ Comprehensive React component with:
    - Visual trend charts
    - Date-based filtering
 
-### Technical Implementation:
+### Technical Implementation
+
 - **Backend**: Convex queries with optimized indexing
 - **Frontend**: React with real-time data sync
 - **Styling**: Tailwind CSS v4 with dark mode
@@ -92,18 +106,21 @@ Comprehensive React component with:
 
 ## 🎨 Key Design Decisions
 
-### Query Optimization:
+### Query Optimization
+
 - Uses indexed queries (`by_school`, `by_school_and_date`)
 - Compound indexes for efficient date range queries
 - In-memory filtering for flexibility
 
-### Data Flow:
+### Data Flow
+
 ```
 User selects date range → State updates → Convex queries re-execute
 → Real-time subscription updates → UI re-renders
 ```
 
-### Component Architecture:
+### Component Architecture
+
 - Separate StatCard component for reusability
 - Self-contained analytics logic
 - No prop drilling or complex state management
@@ -111,6 +128,7 @@ User selects date range → State updates → Convex queries re-execute
 ## 🔧 Build Status
 
 ### ✅ Build Successful
+
 ```
 ✓ Compiled successfully in 25.2s
 ✓ Linting and checking validity of types
@@ -118,7 +136,8 @@ User selects date range → State updates → Convex queries re-execute
 ✓ Generating static pages (5/5)
 ```
 
-### Files Changed:
+### Files Changed
+
 1. **New Files**:
    - `convex/analytics.ts` (270 lines)
    - `components/teacher-analytics.tsx` (421 lines)
@@ -128,21 +147,25 @@ User selects date range → State updates → Convex queries re-execute
    - `app/page.tsx` (added analytics tab)
    - `.github/copilot-instructions.md` (updated docs)
 
-### No Breaking Changes:
+### No Breaking Changes
+
 - All existing functionality preserved
 - Backward compatible
 - No database schema changes required
 
 ## 🚀 Usage Instructions
 
-### For Moderators:
+### For Moderators
+
 1. Login with moderator credentials
 2. Click the "Analytics" (การวิเคราะห์) tab
 3. Use date filters to focus on specific periods
 4. Review metrics, rankings, and trends
 
-### For Developers:
+### For Developers
+
 To extend analytics:
+
 ```typescript
 // Add new query in convex/analytics.ts
 export const newMetric = query({
@@ -182,6 +205,7 @@ const data = useQuery(api.analytics.newMetric, { schoolId });
 ## ✅ Testing Checklist
 
 Manual testing recommended:
+
 - [ ] Analytics tab appears for moderators
 - [ ] Tab hidden for teachers and admins
 - [ ] Date filters work correctly
