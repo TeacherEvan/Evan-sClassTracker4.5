@@ -133,7 +133,7 @@ export default function Home() {
   // Show loading state while checking database
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-[100dvh] flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">
@@ -154,7 +154,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-[100dvh] p-4 md:p-8">
       {/* Toast Notifications */}
       <ToastContainer notifications={toasts} onDismiss={dismissToast} />
 
@@ -166,13 +166,13 @@ export default function Home() {
         />
       )}
 
-      <header className="max-w-4xl mx-auto mb-8">
-        <div className="flex items-center justify-between">
+      <header className="max-w-4xl mx-auto mb-4 md:mb-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-2xl md:text-3xl font-bold">
               {t("Class Tracker", "ติดตามชั้นเรียน")}
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1">
               {t(`Welcome, ${user.username}`, `ยินดีต้อนรับ, ${user.username}`)}
               {" · "}
               {t(
@@ -185,7 +185,7 @@ export default function Home() {
               )}
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto">
             {/* Admin Contact Button for non-admin users */}
             {user.role !== "admin" && (
               <AdminContactButton currentUserId={user._id} />
@@ -193,59 +193,59 @@ export default function Home() {
             <LanguageSwitcher />
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
-              <LogOut className="w-5 h-5" />
-              {t("Logout", "ออกจากระบบ")}
+              <LogOut className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="hidden sm:inline">{t("Logout", "ออกจากระบบ")}</span>
             </button>
           </div>
         </div>
       </header>
 
       {/* Tab Navigation */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+      <div className="max-w-7xl mx-auto mb-4 md:mb-6">
+        <div className="flex gap-1 md:gap-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
           <button
             onClick={() => setActiveTab("calendar")}
-            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "calendar"
+            className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "calendar"
               ? "border-blue-500 text-blue-600 dark:text-blue-400"
               : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
               }`}
           >
-            <CalendarDays className="w-5 h-5" />
+            <CalendarDays className="w-4 h-4 md:w-5 md:h-5" />
             {t("Calendar", "ปฏิทิน")}
           </button>
 
           <button
             onClick={() => setActiveTab("classes")}
-            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "classes"
+            className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "classes"
               ? "border-blue-500 text-blue-600 dark:text-blue-400"
               : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
               }`}
           >
-            <Calendar className="w-5 h-5" />
+            <Calendar className="w-4 h-4 md:w-5 md:h-5" />
             {t("Class Bookings", "การจองชั้นเรียน")}
           </button>
 
           <button
             onClick={() => setActiveTab("messages")}
-            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "messages"
+            className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "messages"
               ? "border-blue-500 text-blue-600 dark:text-blue-400"
               : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
               }`}
           >
-            <MessageSquare className="w-5 h-5" />
+            <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
             {t("Messages", "ข้อความ")}
           </button>
 
           <button
             onClick={() => setActiveTab("notifications")}
-            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "notifications"
+            className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "notifications"
               ? "border-blue-500 text-blue-600 dark:text-blue-400"
               : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
               }`}
           >
-            <Bell className="w-5 h-5" />
+            <Bell className="w-4 h-4 md:w-5 md:h-5" />
             {t("Notifications", "การแจ้งเตือน")}
           </button>
 
@@ -253,45 +253,45 @@ export default function Home() {
             <>
               <button
                 onClick={() => setActiveTab("schools")}
-                className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "schools"
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "schools"
                   ? "border-blue-500 text-blue-600 dark:text-blue-400"
                   : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                   }`}
               >
-                <Building2 className="w-5 h-5" />
+                <Building2 className="w-4 h-4 md:w-5 md:h-5" />
                 {t("Schools", "โรงเรียน")}
               </button>
 
               <button
                 onClick={() => setActiveTab("students")}
-                className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "students"
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "students"
                   ? "border-blue-500 text-blue-600 dark:text-blue-400"
                   : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                   }`}
               >
-                <GraduationCap className="w-5 h-5" />
+                <GraduationCap className="w-4 h-4 md:w-5 md:h-5" />
                 {t("Students", "นักเรียน")}
               </button>
 
               <button
                 onClick={() => setActiveTab("moderators")}
-                className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "moderators"
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "moderators"
                   ? "border-blue-500 text-blue-600 dark:text-blue-400"
                   : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                   }`}
               >
-                <Shield className="w-5 h-5" />
+                <Shield className="w-4 h-4 md:w-5 md:h-5" />
                 {t("Moderators", "ผู้ดูแล")}
               </button>
 
               <button
                 onClick={() => setActiveTab("users")}
-                className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "users"
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "users"
                   ? "border-blue-500 text-blue-600 dark:text-blue-400"
                   : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                   }`}
               >
-                <Users className="w-5 h-5" />
+                <Users className="w-4 h-4 md:w-5 md:h-5" />
                 {t("Users", "ผู้ใช้")}
               </button>
             </>

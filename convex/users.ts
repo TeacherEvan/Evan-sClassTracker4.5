@@ -160,9 +160,9 @@ export const changePassword = mutation({
     newPassword: v.string(),
   },
   handler: async (ctx, args) => {
-    // Validate password strength
-    if (args.newPassword.length < 8) {
-      throw new Error("Password must be at least 8 characters");
+    // Validate password is not empty
+    if (!args.newPassword || args.newPassword.length < 1) {
+      throw new Error("Password cannot be empty");
     }
 
     const user = await ctx.db.get(args.userId);

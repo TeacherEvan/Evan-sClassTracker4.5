@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { AlertCircle, Info } from "lucide-react";
-import type { Id } from "@/convex/_generated/dataModel";
+import { useState } from "react";
 
 interface PasswordChangeDialogProps {
   userId: Id<"users">;
@@ -64,7 +64,7 @@ export function PasswordChangeDialog({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 md:p-8 w-full max-w-md max-h-[90dvh] overflow-y-auto">
         <h2 className="text-2xl font-bold mb-4">
           {t("Change Password", "เปลี่ยนรหัสผ่าน")}
         </h2>

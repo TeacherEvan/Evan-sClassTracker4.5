@@ -1,13 +1,20 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { ConvexClientProvider } from "@/lib/convex-provider";
-import { LanguageProvider } from "@/lib/language-context";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { ConvexClientProvider } from "@/lib/convex-provider";
 import { DeviceProvider } from "@/lib/device-context";
+import { LanguageProvider } from "@/lib/language-context";
+import type { Metadata, Viewport } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Class Tracker - Notification System",
   description: "Bilingual English/Thai class tracker for teachers and schools",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
