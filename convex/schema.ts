@@ -83,4 +83,22 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_created_at", ["createdAt"])
     .index("by_read", ["read"]),
+
+  messages: defineTable({
+    senderId: v.id("users"),
+    recipientId: v.optional(v.id("users")), // Optional - null for group messages
+    schoolId: v.optional(v.id("schools")), // For school-specific group chats
+    content: v.string(),
+    contentTh: v.string(),
+    isGroupMessage: v.boolean(),
+    read: v.boolean(),
+    acknowledged: v.boolean(), // For acknowledgment messages
+    createdAt: v.number(),
+  })
+    .index("by_sender", ["senderId"])
+    .index("by_recipient", ["recipientId"])
+    .index("by_school", ["schoolId"])
+    .index("by_created_at", ["createdAt"])
+    .index("by_conversation", ["senderId", "recipientId"])
+    .index("by_school_and_date", ["schoolId", "createdAt"]),
 });
