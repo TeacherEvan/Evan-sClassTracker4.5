@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useLanguage } from "@/lib/language-context";
-import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Calendar, Check, X } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
+import { useLanguage } from "@/lib/language-context";
 import type { UserRole } from "@/lib/types";
+import { useMutation, useQuery } from "convex/react";
+import { Calendar, Check, X } from "lucide-react";
+import { useState } from "react";
 
 interface ClassBookingProps {
   userId: Id<"users">;
@@ -24,16 +24,21 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   const acknowledgeClass = useMutation(api.classes.acknowledge);
   const approveClass = useMutation(api.classes.approve);
   const rejectClass = useMutation(api.classes.reject);
+  const addLocationToSchool = useMutation(api.schools.addLocation);
 
   const [showForm, setShowForm] = useState(false);
-  const [title, setTitle] = useState("");
-  const [titleTh, setTitleTh] = useState("");
-  const [description, setDescription] = useState("");
-  const [descriptionTh, setDescriptionTh] = useState("");
+  const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
+  const [newLocation, setNewLocation] = useState("");
+  const [showAddLocation, setShowAddLocation] = useState(false);
   const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
   const [scheduledDate, setScheduledDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Get locations for selected school
+  const selectedSchool = schools?.find(s => s._id === schoolId);
+  const availableLocations = selectedSchool?.locations || [];
 
   const handleBookClass = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,27 +49,58 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
       if (!schoolId) {
         throw new Error("Please select a school");
       }
+      if (!location) {
+        throw new Error("Please select a location");
+      }
 
       await bookClass({
         teacherId: userId,
         schoolId,
-        title,
-        titleTh,
-        description,
-        descriptionTh,
+        name,
+        location,
         scheduledDate: new Date(scheduledDate).getTime(),
       });
 
       // Reset form
-      setTitle("");
-      setTitleTh("");
-      setDescription("");
-      setDescriptionTh("");
+      setName("");
+      setLocation("");
+      setNewLocation("");
       setSchoolId("");
       setScheduledDate("");
       setShowForm(false);
+      setShowAddLocation(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to book class");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddLocation = async () => {
+    if (!schoolId) {
+      setError("Please select a school first");
+      return;
+    }
+    if (!newLocation.trim()) {
+      setError("Please enter a location name");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      await addLocationToSchool({
+        schoolId,
+        location: newLocation.trim(),
+      });
+
+      // Set the newly added location as selected
+      setLocation(newLocation.trim());
+      setNewLocation("");
+      setShowAddLocation(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add location");
     } finally {
       setLoading(false);
     }
@@ -142,68 +178,19 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
           </h3>
 
           <form onSubmit={handleBookClass} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="title" className="block text-sm font-medium mb-2">
-                  {t("Title (English)", "ชื่อ (อังกฤษ)")}
-                </label>
-                <input
-                  type="text"
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                  required
-                  disabled={loading}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="titleTh" className="block text-sm font-medium mb-2">
-                  {t("Title (Thai)", "ชื่อ (ไทย)")}
-                </label>
-                <input
-                  type="text"
-                  id="titleTh"
-                  value={titleTh}
-                  onChange={(e) => setTitleTh(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="description" className="block text-sm font-medium mb-2">
-                  {t("Description (English)", "คำอธิบาย (อังกฤษ)")}
-                </label>
-                <textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                  rows={3}
-                  required
-                  disabled={loading}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="descriptionTh" className="block text-sm font-medium mb-2">
-                  {t("Description (Thai)", "คำอธิบาย (ไทย)")}
-                </label>
-                <textarea
-                  id="descriptionTh"
-                  value={descriptionTh}
-                  onChange={(e) => setDescriptionTh(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                  rows={3}
-                  required
-                  disabled={loading}
-                />
-              </div>
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium mb-2">
+                {t("Name", "ชื่อ")}
+              </label>
+              <input
+                type="text"
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                required
+                disabled={loading}
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -214,7 +201,10 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                 <select
                   id="school"
                   value={schoolId}
-                  onChange={(e) => setSchoolId(e.target.value as Id<"schools"> | "")}
+                  onChange={(e) => {
+                    setSchoolId(e.target.value as Id<"schools"> | "");
+                    setLocation(""); // Reset location when school changes
+                  }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
                   required
                   disabled={loading}
@@ -241,6 +231,77 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                   required
                   disabled={loading}
                 />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="location" className="block text-sm font-medium mb-2">
+                {t("Location", "สถานที่")}
+              </label>
+              <div className="space-y-2">
+                <select
+                  id="location"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                  required
+                  disabled={loading || !schoolId}
+                >
+                  <option value="">
+                    {schoolId
+                      ? t("Select a location", "เลือกสถานที่")
+                      : t("Select a school first", "เลือกโรงเรียนก่อน")
+                    }
+                  </option>
+                  {availableLocations.map((loc, index) => (
+                    <option key={index} value={loc}>
+                      {loc}
+                    </option>
+                  ))}
+                </select>
+
+                {schoolId && !showAddLocation && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddLocation(true)}
+                    className="text-sm text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
+                    disabled={loading}
+                  >
+                    + {t("Add new location", "เพิ่มสถานที่ใหม่")}
+                  </button>
+                )}
+
+                {showAddLocation && (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newLocation}
+                      onChange={(e) => setNewLocation(e.target.value)}
+                      placeholder={t("Enter new location", "ป้อนสถานที่ใหม่")}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                      disabled={loading}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddLocation}
+                      className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+                      disabled={loading}
+                    >
+                      {t("Add", "เพิ่ม")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddLocation(false);
+                        setNewLocation("");
+                      }}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      disabled={loading}
+                    >
+                      {t("Cancel", "ยกเลิก")}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -281,9 +342,9 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
-                <h3 className="text-xl font-semibold">{classItem.title}</h3>
+                <h3 className="text-xl font-semibold">{classItem.name}</h3>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  {classItem.description}
+                  {t("Location:", "สถานที่:")} {classItem.location}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
                   {t("Scheduled:", "กำหนดการ:")} {new Date(classItem.scheduledDate).toLocaleString()}

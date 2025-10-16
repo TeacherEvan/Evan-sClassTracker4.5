@@ -7,6 +7,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 
 // User types
 export type UserRole = "teacher" | "moderator" | "admin";
+export type DeviceType = "mobile" | "tablet" | "desktop";
 
 export type User = {
   _id: Id<"users">;
@@ -15,6 +16,9 @@ export type User = {
   schoolId?: Id<"schools">;
   requirePasswordChange: boolean;
   createdAt: number;
+  deviceType?: DeviceType;
+  lastDeviceUpdate?: number;
+  pushSubscription?: string;
 };
 
 // Notification types
@@ -40,10 +44,8 @@ export type ClassData = {
   _id: Id<"classes">;
   teacherId: Id<"users">;
   schoolId: Id<"schools">;
-  title: string;
-  titleTh: string;
-  description: string;
-  descriptionTh: string;
+  name: string;          // Updated to match new schema
+  location: string;      // Updated to match new schema
   status: ClassStatus;
   scheduledDate: number;
   createdAt: number;
@@ -69,5 +71,31 @@ export type Student = {
   guardianName?: string;
   guardianPhone?: string;
   guardianEmail?: string;
+  createdAt: number;
+};
+
+// Message types
+export type MessageType = "user" | "system" | "acknowledgment";
+
+export type Message = {
+  _id: Id<"messages">;
+  conversationId: Id<"conversations">;
+  senderId: Id<"users"> | "system";
+  content: string;
+  readBy: Id<"users">[];
+  messageType?: MessageType;
+  createdAt: number;
+};
+
+// Push Subscription types
+export type PushSubscription = {
+  _id: Id<"pushSubscriptions">;
+  userId: Id<"users">;
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+  deviceInfo?: string;
   createdAt: number;
 };

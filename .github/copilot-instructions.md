@@ -1,18 +1,24 @@
 # Evan's Class Tracker 4.5 - AI Coding Instructions
 
 ## Project Overview
-Bilingual (English/Thai) class tracking system with user authentication, class booking, student management, and real-time notifications for teachers and schools. Built with Next.js 15, React 19, and Convex real-time backend. This is a full-stack TypeScript application using App Router and client-side rendering.
+Bilingual (English/Thai) class tracking system with user authentication, class booking, student management, real-time messaging, and notifications for teachers and schools. Built with Next.js 15, React 19, and Convex real-time backend. This is a full-stack TypeScript application using App Router and client-side rendering.
 
 ## Architecture & Key Patterns
 
 ### Three-Layer Provider Architecture
 The app uses a nested provider pattern in `app/layout.tsx`:
 ```tsx
-<ConvexClientProvider>
-  <LanguageProvider>{children}</LanguageProvider>
-</ConvexClientProvider>
+<ErrorBoundary>
+  <ConvexClientProvider>
+    <DeviceProvider userId={currentUser?._id}>
+      <LanguageProvider>{children}</LanguageProvider>
+    </DeviceProvider>
+  </ConvexClientProvider>
+</ErrorBoundary>
 ```
+- **ErrorBoundary** (`components/error-boundary.tsx`): Catches and displays client-side exceptions gracefully
 - **ConvexClientProvider** (`lib/convex-provider.tsx`): Wraps the app to enable real-time data sync
+- **DeviceProvider** (`lib/device-context.tsx`): Detects device type (mobile/tablet/desktop) and syncs to database
 - **LanguageProvider** (`lib/language-context.tsx`): Manages bilingual state with `t()` helper function
 - All client components must use `"use client"` directive when accessing these contexts
 
@@ -32,6 +38,10 @@ ALL user-facing content requires both English and Thai versions:
   - `convex/classes.ts` - Class booking workflow
   - `convex/students.ts` - Student management with unique ID generation
   - `convex/notifications.ts` - Real-time notifications
+  - `convex/conversations.ts` - Messaging conversation management
+  - `convex/messages.ts` - Chat message handling
+  - `convex/pushNotifications.ts` - Push notification subscription management
+  - `convex/crons.ts` - Scheduled background jobs (message cleanup, subscription cleanup)
   - `convex/init.ts` - Database initialization helper
 - **Client usage**: 
   ```tsx
@@ -40,34 +50,60 @@ ALL user-facing content requires both English and Thai versions:
   
   const currentUser = useQuery(api.users.getCurrentUser);
   const login = useMutation(api.users.login);
-  const classes = useQuery(api.classes.list);
+  const conversations = useQuery(api.conversations.list, { userId });
   ```
 - **Generated code**: Never edit files in `convex/_generated/` - they auto-regenerate on schema changes
+- **Query vs Mutation**: Use `query` for read-only operations, `mutation` for writes. Mismatching types causes runtime errors (see `convex/init.ts` for example)
 
 ### Database Schema & Indexing Strategy
-The system uses 5 interconnected tables:
+The system uses 8 interconnected tables:
 
 1. **users** - User authentication & role-based access
    - Indexes: `by_username`, `by_school`, `by_role`
    - Roles: `admin`, `moderator`, `teacher`
    - Password security: Base64 encoded (upgradeable to bcrypt)
+   - Device tracking: `deviceType`, `lastDeviceUpdate`
+   - Push notifications: Optional `pushSubscription` field
 
 2. **schools** - School management
-   - Index: `by_created_at`
+   - Indexes: `by_moderator`, `by_created_at`
    - Links to users (moderators) and classes
+   - Contains `locations` array for class location management
 
 3. **classes** - Class booking workflow
-   - Indexes: `by_teacher`, `by_school`, `by_status`, `by_created_at`
+   - Indexes: `by_teacher`, `by_school`, `by_status`, `by_scheduled_date`, `by_school_and_date`, `by_teacher_and_date`
    - Status flow: `pending` → `acknowledged` → `approved`/`rejected`
+   - Schema uses `name` and `location` (not `title`/`description` - this was refactored)
    - Automatically triggers notifications
 
 4. **students** - Student records
-   - Indexes: `by_school`, `by_class`, `by_unique_id`
+   - Indexes: `by_student_id`, `by_school`, `by_guardian`
    - Unique ID format: `{SchoolHash}-{NameHash}-{Timestamp}-{Random}`
+   - Supports both school-linked and guardian-linked students
 
 5. **notifications** - Real-time alerts
    - Indexes: `by_user`, `by_created_at`, `by_read`
    - Auto-generated for class workflow events
+   - Type union: `"info" | "success" | "warning" | "error"`
+
+6. **conversations** - Messaging conversations
+   - Indexes: `by_last_message`, `by_school`, `by_created_at`
+   - Type: `"direct"` (2 participants) or `"group"` (2+ participants)
+   - Participants array stores user IDs
+   - Auto-inserts acknowledgment message on creation
+
+7. **messages** - Chat messages
+   - Indexes: `by_conversation`, `by_sender`, `by_created_at`
+   - Read tracking via `readBy` array of user IDs
+   - Linked to conversation via `conversationId`
+   - Supports `senderId: "system"` for system messages
+   - Message types: `"normal" | "acknowledgment"` (acknowledgments preserved during cleanup)
+
+8. **pushSubscriptions** - Web Push notification subscriptions
+   - Indexes: `by_user`, `by_endpoint`, `by_created_at`
+   - Stores Web Push API subscription data
+   - Includes device information for targeted notifications
+   - Auto-cleanup of expired subscriptions via cron job
 
 When adding queries, use `.withIndex()` to leverage these indexes.
 
@@ -117,6 +153,21 @@ if (currentUser?.requirePasswordChange) {
 }
 ```
 
+### Error Handling Pattern
+All Convex mutations should handle errors gracefully:
+```tsx
+try {
+  await mutation({ field: value });
+  // Clear form or update UI
+} catch (err) {
+  setError(err instanceof Error ? err.message : "Operation failed");
+}
+```
+- Convex mutations can throw errors (e.g., validation failures in backend)
+- Use try-catch blocks when calling mutations from UI components
+- Display user-friendly error messages in both languages
+- ErrorBoundary catches unhandled client-side exceptions at app level
+
 ### Key Components
 - **LoginForm** - Handles authentication with bilingual UI
 - **PasswordChangeDialog** - Forced password change for new users
@@ -124,6 +175,15 @@ if (currentUser?.requirePasswordChange) {
 - **ClassBooking** - Class booking workflow with approval states
 - **DatabaseInit** - First-time setup (creates admin account)
 - **NotificationForm/List** - Real-time notification system
+- **MessagingHub** - Enhanced messaging interface with 5 category buttons (Available Users, Groups, Moderators, Admin, Messages)
+- **ConversationList** - Shows all user conversations with unread counts
+- **MessageThread** - Chat interface with real-time updates and auto-scroll
+- **NewConversationDialog** - Modal for starting new direct/group conversations
+- **DesktopNotificationToast** - Desktop-only corner notifications with auto-dismiss
+- **WeeklyCalendar** - Calendar view using `name` and `location` fields (not title/description)
+- **StudentManagement** - CRUD operations for students with guardian support
+- **SchoolManagement** - School management with location arrays
+- **ErrorBoundary** - Client-side exception handler with recovery options
 
 ### Notification Type System
 Strict union type with four values:
@@ -138,6 +198,187 @@ See `components/notification-form.tsx` for standard approach:
 2. Call Convex mutation in `handleSubmit`
 3. Clear form fields after successful submission
 4. No manual loading states needed (Convex handles optimistic updates)
+
+### Real-Time Data Pattern
+Convex automatically subscribes to queries and updates components:
+```tsx
+// Component automatically re-renders when data changes
+const messages = useQuery(api.messages.list, { conversationId });
+const unreadCount = useQuery(api.messages.getUnreadCount, { userId });
+
+// Mutations trigger automatic re-queries
+const sendMessage = useMutation(api.messages.send);
+await sendMessage({ conversationId, content }); // UI updates automatically
+```
+- No manual polling or WebSocket setup needed
+- Use `useQuery` for read operations (auto-subscribes to changes)
+- Use `useMutation` for write operations (auto-triggers re-queries)
+- Loading states: Check if query result is `undefined` (means loading)
+
+### Messaging System Architecture
+Four-component pattern for chat features:
+1. **Hub** (`messaging-hub.tsx`): Enhanced messaging interface with category buttons (Available Users, Groups, Moderators, Admin, Messages)
+2. **List** (`conversation-list.tsx`): Display conversations with unread counts
+3. **Thread** (`message-thread.tsx`): Display and send messages with auto-scroll
+4. **Dialog** (`new-conversation-dialog.tsx`): Create new conversations
+
+Key patterns:
+- Auto-scroll to bottom on new messages using `scrollIntoView()`
+- Mark messages as read when conversation is viewed
+- Prevent duplicate direct conversations with `findDirect` query
+- Update `lastMessageAt` timestamp on conversation when new message sent
+
+#### Messaging Hub Category Views
+The messaging hub provides 5 category buttons for different user access patterns:
+
+1. **Available Users** - Two-step flow:
+   - Step 1: Select school from list
+   - Step 2: View users from selected school, click to message
+   - Query: `api.conversations.getUsersBySchool(schoolId, currentUserId)`
+
+2. **Groups** - Group conversations:
+   - Shows all group conversations user is part of
+   - Displays member count and last message date
+   - Query: `api.conversations.getGroupConversations(userId)`
+
+3. **Moderators** - Contact moderators:
+   - Lists all moderators in the system
+   - Shows moderator name with message button
+   - Query: `api.conversations.getModerators(currentUserId)`
+
+4. **Admin** - Contact system administrator:
+   - Special card design for admin contact
+   - Direct line to Evan for urgent issues
+   - Query: `api.conversations.getAdmin()`
+
+5. **Messages** - All conversations (default view):
+   - Shows all user's conversations (direct + group)
+   - Uses existing ConversationList component
+
+Pattern for starting conversations from categories:
+```tsx
+const findOrCreate = useMutation(api.conversations.findOrCreate);
+
+const handleStartChat = async (otherUserId: Id<"users">) => {
+  const conversationId = await findOrCreate({
+    participants: [userId, otherUserId],
+  });
+  setSelectedConversationId(conversationId);
+  setViewMode("all-messages");
+};
+```
+
+### Device Detection Pattern
+The app detects device type (mobile/tablet/desktop) using multi-signal detection:
+
+**Detection Utility** (`lib/device-detection.ts`):
+- Combines User Agent, touch capability, screen size, and orientation
+- Caches result in localStorage for 24 hours
+- Provides: `detectDevice()`, `isMobileDevice()`, `isDesktopDevice()`
+
+**Device Context** (`lib/device-context.tsx`):
+- Auto-detects on component mount
+- Re-detects on window resize (debounced 500ms)
+- Updates user.deviceType in database via `api.users.updateDeviceType`
+- Provides hooks: `useDevice()`, `useDeviceType()`, `useIsMobile()`, `useIsDesktop()`
+
+**Usage:**
+```tsx
+import { useIsMobile, useIsDesktop } from "@/lib/device-context";
+
+const isMobile = useIsMobile();
+const isDesktop = useIsDesktop();
+
+// Conditional rendering
+{isDesktop && <DesktopNotificationToast />}
+```
+
+### Push Notifications Setup
+Web Push API integration for mobile notifications:
+
+**Service Worker** (`public/sw.js`):
+- Handles push events and displays notifications
+- Click handler opens app to specific conversation
+- Auto-renews expired subscriptions
+
+**Client Utilities** (`lib/push-notifications.ts`):
+- `requestNotificationPermission()` - Ask user for permission
+- `subscribeToPushNotifications()` - Create subscription
+- `unsubscribeFromPushNotifications()` - Remove subscription
+- `saveSubscriptionToDatabase()` - Persist to Convex
+
+**Backend API** (`convex/pushNotifications.ts`):
+- `subscribe(userId, subscription, deviceInfo)` - Save subscription
+- `unsubscribe(userId, endpoint)` - Remove subscription
+- `sendNotification(userId, title, body, url, data)` - Send push (internal)
+- `cleanupExpiredSubscriptions()` - Cron job removes expired subscriptions
+
+**VAPID Keys Required:**
+```env
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=<your_public_key>
+VAPID_PRIVATE_KEY=<your_private_key>
+VAPID_SUBJECT=mailto:evan@example.com
+```
+
+Generate with: `npx web-push generate-vapid-keys`
+
+### Message Retention Policy
+Automated message cleanup system:
+
+**Retention Rules:**
+- Messages older than 14 days are auto-deleted
+- System messages and acknowledgments are preserved
+- Runs daily at 2AM UTC via cron job
+
+**Acknowledgment System:**
+- Auto-inserted on new conversation creation
+- Message: "Messages will be cleared from the server automatically every 2 weeks"
+- Type: `messageType: "acknowledgment"`, `senderId: "system"`
+- Never deleted by cleanup job
+
+**Cron Jobs** (`convex/crons.ts`):
+```typescript
+crons.daily("clean-old-messages", { hourUTC: 2 }, cleanupOldMessages);
+crons.weekly("clean-expired-push-subscriptions", { 
+  dayOfWeek: "sunday", 
+  hourUTC: 3 
+}, cleanupExpiredSubscriptions);
+```
+
+### Desktop Notification Toast
+Desktop-only corner notifications for new messages:
+
+**Component** (`components/desktop-notification-toast.tsx`):
+- Fixed bottom-right positioning
+- Auto-dismisses after 5 seconds with progress bar
+- Click to navigate to conversation
+- Manual dismiss button (X icon)
+- Only renders on desktop devices (`useIsDesktop()` check)
+- Supports multiple notifications (stacked)
+
+**Usage:**
+```tsx
+const [notifications, setNotifications] = useState<NotificationData[]>([]);
+
+<DesktopNotificationToast
+  notifications={notifications}
+  onDismiss={(id) => setNotifications(prev => prev.filter(n => n.id !== id))}
+  onNavigate={(conversationId) => {
+    setSelectedConversation(conversationId);
+  }}
+/>
+```
+
+**Notification Data:**
+```typescript
+interface NotificationData {
+  id: string;
+  conversationId: Id<"conversations">;
+  senderName: string;
+  message: string;
+  timestamp: number;
+}
+```
 
 ## Styling Conventions
 
@@ -207,6 +448,15 @@ Format: `{SchoolHash}-{NameHash}-{Timestamp}-{Random}`
 - Verify `NEXT_PUBLIC_CONVEX_URL` in `.env.local`
 - Ensure `npx convex dev` is running during development
 - Check browser console for real-time connection issues
+- **Type mismatches**: Common if schema changed but types not regenerated - run `npx convex dev` and save any file
+- **Query vs Mutation errors**: Read-only operations must use `query`, write operations use `mutation`
+- **Loading states**: Always check if `useQuery` returns `undefined` before accessing data
+
+### Common Pitfalls
+- **Schema field changes**: If you change schema fields (e.g., `title` → `name`), update ALL components using those fields. Check `lib/types.ts` for TypeScript definitions
+- **Missing indexes**: Adding `.withIndex()` to queries requires corresponding index in schema
+- **Session persistence**: App uses `localStorage` for sessions (not secure for production - documented for future enhancement)
+- **Build-time vs runtime**: Environment variables prefixed with `NEXT_PUBLIC_` are embedded at build time
 
 ## Deployment
 

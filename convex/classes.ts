@@ -67,8 +67,8 @@ export const getByDateRange = query({
         .query("classes")
         .withIndex("by_school_and_date", (q) =>
           q.eq("schoolId", args.schoolId!)
-           .gte("scheduledDate", args.startDate)
-           .lte("scheduledDate", args.endDate)
+            .gte("scheduledDate", args.startDate)
+            .lte("scheduledDate", args.endDate)
         )
         .collect();
       return classes;
@@ -79,8 +79,8 @@ export const getByDateRange = query({
         .query("classes")
         .withIndex("by_teacher_and_date", (q) =>
           q.eq("teacherId", args.teacherId!)
-           .gte("scheduledDate", args.startDate)
-           .lte("scheduledDate", args.endDate)
+            .gte("scheduledDate", args.startDate)
+            .lte("scheduledDate", args.endDate)
         )
         .collect();
       return classes;
@@ -91,7 +91,7 @@ export const getByDateRange = query({
       .query("classes")
       .withIndex("by_scheduled_date", (q) =>
         q.gte("scheduledDate", args.startDate)
-         .lte("scheduledDate", args.endDate)
+          .lte("scheduledDate", args.endDate)
       )
       .collect();
     return classes;
@@ -103,19 +103,17 @@ export const book = mutation({
   args: {
     teacherId: v.id("users"),
     schoolId: v.id("schools"),
-    title: v.string(),
-    titleTh: v.string(),
-    description: v.string(),
-    descriptionTh: v.string(),
+    name: v.string(),
+    location: v.string(),
     scheduledDate: v.number(),
   },
   handler: async (ctx, args) => {
     // Validate inputs
-    if (!args.title.trim() || !args.titleTh.trim()) {
-      throw new Error("Title is required in both languages");
+    if (!args.name.trim()) {
+      throw new Error("Name is required");
     }
-    if (!args.description.trim() || !args.descriptionTh.trim()) {
-      throw new Error("Description is required in both languages");
+    if (!args.location.trim()) {
+      throw new Error("Location is required");
     }
     if (args.scheduledDate < Date.now()) {
       throw new Error("Cannot schedule a class in the past");
@@ -125,10 +123,8 @@ export const book = mutation({
     const classId = await ctx.db.insert("classes", {
       teacherId: args.teacherId,
       schoolId: args.schoolId,
-      title: args.title,
-      titleTh: args.titleTh,
-      description: args.description,
-      descriptionTh: args.descriptionTh,
+      name: args.name,
+      location: args.location,
       status: "pending",
       scheduledDate: args.scheduledDate,
       createdAt: Date.now(),
@@ -143,8 +139,8 @@ export const book = mutation({
 
       // Create notification for moderator
       await ctx.db.insert("notifications", {
-        title: `New Class Booking: ${args.title}`,
-        titleTh: `การจองชั้นเรียนใหม่: ${args.titleTh}`,
+        title: `New Class Booking: ${args.name}`,
+        titleTh: `การจองชั้นเรียนใหม่: ${args.name}`,
         message: `Teacher ${teacher?.username || "Unknown"} has booked a class at your school. Please review and acknowledge.`,
         messageTh: `ครู ${teacher?.username || "ไม่ทราบ"} ได้จองชั้นเรียนที่โรงเรียนของคุณ กรุณาตรวจสอบและรับทราบ`,
         type: "warning",
@@ -179,8 +175,8 @@ export const acknowledge = mutation({
 
     if (teacher) {
       await ctx.db.insert("notifications", {
-        title: `Class Acknowledged: ${classData.title}`,
-        titleTh: `รับทราบชั้นเรียน: ${classData.titleTh}`,
+        title: `Class Acknowledged: ${classData.name}`,
+        titleTh: `รับทราบชั้นเรียน: ${classData.name}`,
         message: `Your class booking has been acknowledged by the moderator.`,
         messageTh: `การจองชั้นเรียนของคุณได้รับการรับทราบจากผู้ดูแล`,
         type: "success",
@@ -212,8 +208,8 @@ export const approve = mutation({
 
     // Notify the teacher
     await ctx.db.insert("notifications", {
-      title: `Class Approved: ${classData.title}`,
-      titleTh: `อนุมัติชั้นเรียน: ${classData.titleTh}`,
+      title: `Class Approved: ${classData.name}`,
+      titleTh: `อนุมัติชั้นเรียน: ${classData.name}`,
       message: `Your class booking has been approved!`,
       messageTh: `การจองชั้นเรียนของคุณได้รับการอนุมัติแล้ว!`,
       type: "success",
@@ -246,8 +242,8 @@ export const reject = mutation({
 
     // Notify the teacher
     await ctx.db.insert("notifications", {
-      title: `Class Rejected: ${classData.title}`,
-      titleTh: `ปฏิเสธชั้นเรียน: ${classData.titleTh}`,
+      title: `Class Rejected: ${classData.name}`,
+      titleTh: `ปฏิเสธชั้นเรียน: ${classData.name}`,
       message: args.reason || `Your class booking has been rejected.`,
       messageTh: args.reasonTh || `การจองชั้นเรียนของคุณถูกปฏิเสธ`,
       type: "error",

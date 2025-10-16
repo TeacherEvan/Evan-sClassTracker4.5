@@ -35,10 +35,59 @@ export const create = mutation({
       name: args.name,
       nameTh: args.nameTh,
       moderatorId: args.moderatorId,
+      locations: [], // Initialize with empty locations array
       createdAt: Date.now(),
     });
 
     return schoolId;
+  },
+});
+
+// Mutation to add a location to a school
+export const addLocation = mutation({
+  args: {
+    schoolId: v.id("schools"),
+    location: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (!args.location.trim()) {
+      throw new Error("Location cannot be empty");
+    }
+
+    const school = await ctx.db.get(args.schoolId);
+    if (!school) {
+      throw new Error("School not found");
+    }
+
+    const currentLocations = school.locations || [];
+
+    // Check if location already exists (case-insensitive)
+    const locationExists = currentLocations.some(
+      loc => loc.toLowerCase() === args.location.trim().toLowerCase()
+    );
+
+    if (locationExists) {
+      throw new Error("This location already exists for this school");
+    }
+
+    const updatedLocations = [...currentLocations, args.location.trim()];
+
+    await ctx.db.patch(args.schoolId, {
+      locations: updatedLocations,
+    });
+
+    return { success: true, locations: updatedLocations };
+  },
+});
+
+// Query to get locations for a specific school
+export const getLocations = query({
+  args: {
+    schoolId: v.id("schools"),
+  },
+  handler: async (ctx, args) => {
+    const school = await ctx.db.get(args.schoolId);
+    return school?.locations || [];
   },
 });
 

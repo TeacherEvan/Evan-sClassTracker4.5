@@ -19,19 +19,24 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     const schools = useQuery(api.schools.list, {});
     const users = useQuery(api.users.list, {});
     const bookClass = useMutation(api.classes.book);
+    const addLocationToSchool = useMutation(api.schools.addLocation);
 
     const [currentDate, setCurrentDate] = useState(new Date());
     const [showAddDialog, setShowAddDialog] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedSchoolId, setSelectedSchoolId] = useState<Id<"schools"> | "">("");
 
-    // Form fields
-    const [title, setTitle] = useState("");
-    const [titleTh, setTitleTh] = useState("");
-    const [description, setDescription] = useState("");
-    const [descriptionTh, setDescriptionTh] = useState("");
+    // Form fields (updated to match new schema)
+    const [name, setName] = useState("");
+    const [location, setLocation] = useState("");
+    const [newLocation, setNewLocation] = useState("");
+    const [showAddLocation, setShowAddLocation] = useState(false);
     const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
     const [error, setError] = useState("");
+
+    // Get locations for selected school
+    const selectedSchool = schools?.find(s => s._id === schoolId);
+    const availableLocations = selectedSchool?.locations || [];
 
     // Memoize week range calculations
     const weekStart = useMemo(() => getWeekStart(currentDate), [currentDate]);
@@ -103,13 +108,18 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
         e.preventDefault();
         setError("");
 
-        if (!title.trim() || !titleTh.trim() || !description.trim() || !descriptionTh.trim()) {
-            setError(t("Please fill in all fields in both languages", "กรุณากรอกข้อมูลทุกช่องทั้งสองภาษา"));
+        if (!name.trim()) {
+            setError(t("Please enter a class name", "กรุณากรอกชื่อคลาส"));
             return;
         }
 
         if (!schoolId) {
             setError(t("Please select a school", "กรุณาเลือกโรงเรียน"));
+            return;
+        }
+
+        if (!location) {
+            setError(t("Please select a location", "กรุณาเลือกสถานที่"));
             return;
         }
 
@@ -121,21 +131,19 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
             await bookClass({
                 teacherId: currentUser._id,
                 schoolId: schoolId as Id<"schools">,
-                title,
-                titleTh,
-                description,
-                descriptionTh,
+                name,
+                location,
                 scheduledDate: selectedDate.getTime(),
             });
 
             // Reset form
-            setTitle("");
-            setTitleTh("");
-            setDescription("");
-            setDescriptionTh("");
+            setName("");
+            setLocation("");
+            setNewLocation("");
             setSchoolId("");
             setShowAddDialog(false);
             setSelectedDate(null);
+            setShowAddLocation(false);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to create class");
         }
@@ -275,9 +283,12 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                                 className={`text-xs p-2 rounded border ${getClassStatusColor(classItem.status)}`}
                                             >
                                                 <div className="font-semibold truncate">
-                                                    {language === "en" ? classItem.title : classItem.titleTh}
+                                                    {classItem.name}
                                                 </div>
                                                 <div className="text-gray-600 dark:text-gray-300 truncate">
+                                                    {classItem.location}
+                                                </div>
+                                                <div className="text-gray-500 dark:text-gray-400 text-[10px] truncate">
                                                     {teacher?.username}
                                                 </div>
                                                 {school && (
@@ -362,7 +373,10 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                     <select
                                         id="schoolSelect"
                                         value={schoolId}
-                                        onChange={(e) => setSchoolId(e.target.value as Id<"schools"> | "")}
+                                        onChange={(e) => {
+                                            setSchoolId(e.target.value as Id<"schools"> | "");
+                                            setLocation(""); // Reset location when school changes
+                                        }}
                                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
                                         disabled={currentUser.role === "moderator"}
                                         required
@@ -376,64 +390,96 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                     </select>
                                 </div>
 
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label htmlFor="titleEn" className="block text-sm font-medium mb-2">
-                                            {t("Title (English)", "หัวข้อ (อังกฤษ)")}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="titleEn"
-                                            value={title}
-                                            onChange={(e) => setTitle(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="titleTh" className="block text-sm font-medium mb-2">
-                                            {t("Title (Thai)", "หัวข้อ (ไทย)")}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="titleTh"
-                                            value={titleTh}
-                                            onChange={(e) => setTitleTh(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-                                            required
-                                        />
-                                    </div>
+                                <div>
+                                    <label htmlFor="name" className="block text-sm font-medium mb-2">
+                                        {t("Class Name", "ชื่อคลาส")}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="name"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                        placeholder={t("e.g., Math 101", "เช่น คณิตศาสตร์ 101")}
+                                        required
+                                    />
                                 </div>
 
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label htmlFor="descEn" className="block text-sm font-medium mb-2">
-                                            {t("Description (English)", "รายละเอียด (อังกฤษ)")}
-                                        </label>
-                                        <textarea
-                                            id="descEn"
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
-                                            rows={4}
-                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-                                            required
-                                        />
-                                    </div>
+                                <div>
+                                    <label htmlFor="location" className="block text-sm font-medium mb-2">
+                                        {t("Location", "สถานที่")}
+                                    </label>
+                                    <select
+                                        id="location"
+                                        value={location}
+                                        onChange={(e) => setLocation(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                        disabled={!schoolId}
+                                        required
+                                    >
+                                        <option value="">
+                                            {schoolId
+                                                ? t("-- Select Location --", "-- เลือกสถานที่ --")
+                                                : t("-- Select a school first --", "-- เลือกโรงเรียนก่อน --")}
+                                        </option>
+                                        {availableLocations.map((loc) => (
+                                            <option key={loc} value={loc}>
+                                                {loc}
+                                            </option>
+                                        ))}
+                                    </select>
 
-                                    <div>
-                                        <label htmlFor="descTh" className="block text-sm font-medium mb-2">
-                                            {t("Description (Thai)", "รายละเอียด (ไทย)")}
-                                        </label>
-                                        <textarea
-                                            id="descTh"
-                                            value={descriptionTh}
-                                            onChange={(e) => setDescriptionTh(e.target.value)}
-                                            rows={4}
-                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-                                            required
-                                        />
-                                    </div>
+                                    {schoolId && !showAddLocation && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAddLocation(true)}
+                                            className="mt-2 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                                        >
+                                            + {t("Add new location", "เพิ่มสถานที่ใหม่")}
+                                        </button>
+                                    )}
+
+                                    {showAddLocation && (
+                                        <div className="mt-2 flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={newLocation}
+                                                onChange={(e) => setNewLocation(e.target.value)}
+                                                placeholder={t("New location name", "ชื่อสถานที่ใหม่")}
+                                                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 text-sm"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={async () => {
+                                                    if (!newLocation.trim() || !schoolId) return;
+                                                    try {
+                                                        await addLocationToSchool({
+                                                            schoolId: schoolId as Id<"schools">,
+                                                            location: newLocation.trim(),
+                                                        });
+                                                        setLocation(newLocation.trim());
+                                                        setNewLocation("");
+                                                        setShowAddLocation(false);
+                                                    } catch (err) {
+                                                        setError(err instanceof Error ? err.message : "Failed to add location");
+                                                    }
+                                                }}
+                                                className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                                            >
+                                                {t("Add", "เพิ่ม")}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowAddLocation(false);
+                                                    setNewLocation("");
+                                                }}
+                                                className="px-3 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors text-sm"
+                                            >
+                                                {t("Cancel", "ยกเลิก")}
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex gap-3 pt-4">

@@ -211,3 +211,21 @@ export const resetPassword = mutation({
     return { success: true };
   },
 });
+
+// Mutation to update device type
+export const updateDeviceType = mutation({
+  args: {
+    userId: v.id("users"),
+    deviceType: v.union(
+      v.literal("mobile"),
+      v.literal("tablet"),
+      v.literal("desktop")
+    ),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.userId, {
+      deviceType: args.deviceType,
+      lastDeviceUpdate: Date.now(),
+    });
+  },
+});

@@ -4,6 +4,7 @@ import { ClassBooking } from "@/components/class-booking";
 import { DatabaseInit } from "@/components/database-init";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LoginForm } from "@/components/login-form";
+import { Messaging } from "@/components/messaging";
 import { NotificationForm } from "@/components/notification-form";
 import { NotificationList } from "@/components/notification-list";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
@@ -15,7 +16,7 @@ import { api } from "@/convex/_generated/api";
 import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
 import { useQuery } from "convex/react";
-import { Bell, Building2, Calendar, CalendarDays, GraduationCap, LogOut, Users } from "lucide-react";
+import { Bell, Building2, Calendar, CalendarDays, GraduationCap, LogOut, MessageCircle, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -23,7 +24,7 @@ export default function Home() {
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students">("calendar");
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages">("calendar");
 
   // Check if database needs initialization
   const needsInit = users !== undefined && users.length === 0;
@@ -182,6 +183,17 @@ export default function Home() {
             {t("Notifications", "การแจ้งเตือน")}
           </button>
 
+          <button
+            onClick={() => setActiveTab("messages")}
+            className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "messages"
+              ? "border-blue-500 text-blue-600 dark:text-blue-400"
+              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+              }`}
+          >
+            <MessageCircle className="w-5 h-5" />
+            {t("Messages", "ข้อความ")}
+          </button>
+
           {user.role === "admin" && (
             <>
               <button
@@ -235,6 +247,10 @@ export default function Home() {
           {user.role === "admin" && <NotificationForm />}
           <NotificationList />
         </>
+      )}
+
+      {activeTab === "messages" && (
+        <Messaging userId={user._id} />
       )}
 
       {activeTab === "schools" && user.role === "admin" && (
