@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 
 // Query to list messages for a user (both direct and group messages)
 export const list = query({
@@ -26,11 +26,11 @@ export const list = query({
     // Get group messages for user's school
     const groupMessages = args.schoolId
       ? await ctx.db
-          .query("messages")
-          .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId))
-          .filter((q) => q.eq(q.field("isGroupMessage"), true))
-          .order("desc")
-          .collect()
+        .query("messages")
+        .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId))
+        .filter((q) => q.eq(q.field("isGroupMessage"), true))
+        .order("desc")
+        .collect()
       : [];
 
     // Combine and sort by creation time
@@ -161,6 +161,42 @@ export const sendDirectMessage = mutation({
       throw new Error("Message content cannot be empty");
     }
 
+    // Check if this is the first message between these users
+    const existingMessages = await ctx.db
+      .query("messages")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("isGroupMessage"), false),
+          q.or(
+            q.and(
+              q.eq(q.field("senderId"), args.senderId),
+              q.eq(q.field("recipientId"), args.recipientId)
+            ),
+            q.and(
+              q.eq(q.field("senderId"), args.recipientId),
+              q.eq(q.field("recipientId"), args.senderId)
+            )
+          )
+        )
+      )
+      .collect();
+
+    const isFirstMessage = existingMessages.length === 0;
+
+    // If first message, send acknowledgement
+    if (isFirstMessage) {
+      await ctx.db.insert("messages", {
+        senderId: args.senderId,
+        recipientId: args.recipientId,
+        content: "⚠️ Messages will be cleared from the server automatically every 2 weeks.",
+        contentTh: "⚠️ ข้อความจะถูกลบออกจากเซิร์ฟเวอร์โดยอัตโนมัติทุก 2 สัปดาห์",
+        isGroupMessage: false,
+        read: false,
+        acknowledged: true,
+        createdAt: Date.now(),
+      });
+    }
+
     const messageId = await ctx.db.insert("messages", {
       senderId: args.senderId,
       recipientId: args.recipientId,
@@ -248,9 +284,9 @@ export const getAvailableUsers = query({
     // Get all users from the same school or all users if admin
     const allUsers = args.schoolId
       ? await ctx.db
-          .query("users")
-          .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId))
-          .collect()
+        .query("users")
+        .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId))
+        .collect()
       : await ctx.db.query("users").collect();
 
     // Filter out current user and return without password hash
@@ -258,5 +294,33 @@ export const getAvailableUsers = query({
       .filter((user) => user._id !== args.currentUserId)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .map(({ passwordHash: _passwordHash, ...user }) => user);
+  },
+});
+
+// Internal mutation to delete old messages (called by cron job)
+export const deleteOldMessages = internalMutation({
+  handler: async (ctx) => {
+    const twoWeeksAgo = Date.now() - (14 * 24 * 60 * 60 * 1000);
+
+    const oldMessages = await ctx.db
+      .query("messages")
+      .withIndex("by_created_at", (q) =>
+        q.lt("createdAt", twoWeeksAgo)
+      )
+      .collect();
+
+    // Delete in batches to avoid timeout
+    let deletedCount = 0;
+    for (const message of oldMessages) {
+      await ctx.db.delete(message._id);
+      deletedCount++;
+    }
+
+    console.log(`Auto-deleted ${deletedCount} messages older than 14 days`);
+
+    return {
+      deleted: deletedCount,
+      timestamp: Date.now(),
+    };
   },
 });

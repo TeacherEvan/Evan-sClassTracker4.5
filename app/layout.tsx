@@ -3,6 +3,7 @@ import "./globals.css";
 import { ConvexClientProvider } from "@/lib/convex-provider";
 import { LanguageProvider } from "@/lib/language-context";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { DeviceProvider } from "@/lib/device-context";
 
 export const metadata: Metadata = {
   title: "Class Tracker - Notification System",
@@ -19,7 +20,9 @@ export default function RootLayout({
       <body className="antialiased">
         <ErrorBoundary>
           <ConvexClientProvider>
-            <LanguageProvider>{children}</LanguageProvider>
+            <DeviceProvider>
+              <LanguageProvider>{children}</LanguageProvider>
+            </DeviceProvider>
           </ConvexClientProvider>
         </ErrorBoundary>
       </body>

@@ -6,6 +6,17 @@
 export type DeviceType = "mobile" | "tablet" | "desktop";
 
 /**
+ * Device information object
+ */
+export interface DeviceInfo {
+  deviceType: DeviceType;
+  screenWidth: number;
+  screenHeight: number;
+  isTouchEnabled: boolean;
+  supportsNotifications: boolean;
+}
+
+/**
  * Detects the device type based on user agent and screen width
  */
 export function getDeviceType(): DeviceType {
@@ -23,6 +34,29 @@ export function getDeviceType(): DeviceType {
   } else {
     return "desktop";
   }
+}
+
+/**
+ * Detects full device information including type, screen dimensions, and capabilities
+ */
+export function detectDevice(): DeviceInfo {
+  if (typeof window === "undefined") {
+    return {
+      deviceType: "desktop",
+      screenWidth: 1920,
+      screenHeight: 1080,
+      isTouchEnabled: false,
+      supportsNotifications: false,
+    };
+  }
+
+  return {
+    deviceType: getDeviceType(),
+    screenWidth: window.innerWidth,
+    screenHeight: window.innerHeight,
+    isTouchEnabled: supportsTouchScreen(),
+    supportsNotifications: supportsPushNotifications(),
+  };
 }
 
 /**

@@ -1,7 +1,8 @@
 "use client";
 
+import { useDevice } from "@/lib/device-context";
 import { useLanguage } from "@/lib/language-context";
-import { Bell, CheckCircle, AlertTriangle, XCircle, X } from "lucide-react";
+import { AlertTriangle, Bell, CheckCircle, X, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export type ToastType = "info" | "success" | "warning" | "error";
@@ -27,6 +28,7 @@ export function DesktopNotificationToast({
   duration = 5000,
 }: DesktopNotificationToastProps) {
   const { t, language } = useLanguage();
+  const { isDesktop } = useDevice();
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
@@ -39,6 +41,11 @@ export function DesktopNotificationToast({
       return () => clearTimeout(timer);
     }
   }, [duration, notification.id, onDismiss]);
+
+  // Only show on desktop devices
+  if (!isDesktop) {
+    return null;
+  }
 
   const getIcon = () => {
     switch (notification.type) {
@@ -74,11 +81,10 @@ export function DesktopNotificationToast({
 
   return (
     <div
-      className={`${getStyles()} ${
-        isVisible
+      className={`${getStyles()} ${isVisible
           ? "opacity-100 translate-x-0"
           : "opacity-0 translate-x-full"
-      } max-w-md p-4`}
+        } max-w-md p-4`}
     >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>

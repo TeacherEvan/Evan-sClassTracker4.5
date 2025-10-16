@@ -13,10 +13,19 @@ export default defineSchema({
     schoolId: v.optional(v.id("schools")),
     requirePasswordChange: v.boolean(),
     createdAt: v.number(),
+    // Device detection fields
+    deviceType: v.optional(v.union(
+      v.literal("mobile"),
+      v.literal("tablet"),
+      v.literal("desktop")
+    )),
+    lastDeviceUpdate: v.optional(v.number()),
+    pushSubscription: v.optional(v.string()), // JSON stringified PushSubscription
   })
     .index("by_username", ["username"])
     .index("by_school", ["schoolId"])
-    .index("by_role", ["role"]),
+    .index("by_role", ["role"])
+    .index("by_device_type", ["deviceType"]),
 
   schools: defineTable({
     name: v.string(),
@@ -88,6 +97,7 @@ export default defineSchema({
     senderId: v.id("users"),
     recipientId: v.optional(v.id("users")), // Optional - null for group messages
     schoolId: v.optional(v.id("schools")), // For school-specific group chats
+    groupId: v.optional(v.id("groups")), // For custom moderator-created groups
     content: v.string(),
     contentTh: v.string(),
     isGroupMessage: v.boolean(),
@@ -98,7 +108,20 @@ export default defineSchema({
     .index("by_sender", ["senderId"])
     .index("by_recipient", ["recipientId"])
     .index("by_school", ["schoolId"])
+    .index("by_group", ["groupId"])
     .index("by_created_at", ["createdAt"])
     .index("by_conversation", ["senderId", "recipientId"])
     .index("by_school_and_date", ["schoolId", "createdAt"]),
+
+  groups: defineTable({
+    name: v.string(),
+    nameTh: v.string(),
+    schoolId: v.id("schools"),
+    creatorId: v.id("users"), // Moderator who created the group
+    memberIds: v.array(v.id("users")), // Array of user IDs in the group
+    createdAt: v.number(),
+  })
+    .index("by_school", ["schoolId"])
+    .index("by_creator", ["creatorId"])
+    .index("by_created_at", ["createdAt"]),
 });

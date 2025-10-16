@@ -211,3 +211,79 @@ export const resetPassword = mutation({
     return { success: true };
   },
 });
+
+// Mutation to update device type
+export const updateDeviceType = mutation({
+  args: {
+    userId: v.id("users"),
+    deviceType: v.union(
+      v.literal("mobile"),
+      v.literal("tablet"),
+      v.literal("desktop")
+    ),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    await ctx.db.patch(args.userId, {
+      deviceType: args.deviceType,
+      lastDeviceUpdate: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+// Mutation to update push subscription
+export const updatePushSubscription = mutation({
+  args: {
+    userId: v.id("users"),
+    pushSubscription: v.string(), // JSON stringified PushSubscription
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    await ctx.db.patch(args.userId, {
+      pushSubscription: args.pushSubscription,
+    });
+
+    return { success: true };
+  },
+});
+
+// Mutation to remove push subscription
+export const removePushSubscription = mutation({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    await ctx.db.patch(args.userId, {
+      pushSubscription: undefined,
+    });
+
+    return { success: true };
+  },
+});
+
+// Query to get current user (includes device info)
+export const getCurrentUser = query({
+  handler: async () => {
+    // This would require authentication setup
+    // For now, returning null as a placeholder
+    return null;
+  },
+});

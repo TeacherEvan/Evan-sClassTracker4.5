@@ -3,6 +3,7 @@
 import { AdminContactButton } from "@/components/admin-contact-button";
 import { ClassBooking } from "@/components/class-booking";
 import { DatabaseInit } from "@/components/database-init";
+import { ToastContainer, type ToastNotification } from "@/components/desktop-notification-toast";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LoginForm } from "@/components/login-form";
 import { MessagingHub } from "@/components/messaging-hub";
@@ -14,13 +15,13 @@ import { SchoolManagement } from "@/components/school-management";
 import { StudentManagement } from "@/components/student-management";
 import { UserManagement } from "@/components/user-management";
 import { WeeklyCalendar } from "@/components/weekly-calendar";
-import { ToastContainer, type ToastNotification } from "@/components/desktop-notification-toast";
 import { api } from "@/convex/_generated/api";
-import { useLanguage } from "@/lib/language-context";
 import { isDesktopDevice } from "@/lib/device-detection";
+import { initServiceWorker } from "@/lib/init-sw";
+import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
 import { useQuery } from "convex/react";
-import { Bell, Building2, Calendar, CalendarDays, GraduationCap, LogOut, Users, MessageSquare, Shield } from "lucide-react";
+import { Bell, Building2, Calendar, CalendarDays, GraduationCap, LogOut, MessageSquare, Shield, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -35,6 +36,11 @@ export default function Home() {
   // Check device type on mount
   useEffect(() => {
     setIsDesktop(isDesktopDevice());
+  }, []);
+
+  // Register service worker for push notifications
+  useEffect(() => {
+    initServiceWorker();
   }, []);
 
   // Check if database needs initialization
@@ -302,7 +308,7 @@ export default function Home() {
         <ClassBooking userId={user._id} userRole={user.role} />
       )}
 
-      {activeTab === "messages" && (
+      {activeTab === "messages" && user && (
         <MessagingHub currentUser={user} />
       )}
 
