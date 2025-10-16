@@ -109,6 +109,18 @@ Added validation to all Convex mutations:
 ### 2. Password Security Documentation
 Added comprehensive TODO comments for bcrypt implementation in production with specific migration path.
 
+## Convex-Specific Optimizations
+
+### Query Deduplication
+Convex automatically deduplicates identical queries across components. Multiple components calling `api.schools.list` or `api.users.list` share a single subscription, so there's no performance penalty for using the same query in multiple components.
+
+**Current Architecture**: 
+- `schools.list` called in 4 components
+- `users.list` called in 4 components
+- All share the same underlying subscription (optimized by Convex)
+
+**No action needed**: This is optimal with Convex's reactive architecture.
+
 ## Bundle Size Impact
 
 ### Code Reduction
