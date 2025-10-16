@@ -32,6 +32,7 @@ ALL user-facing content requires both English and Thai versions:
   - `convex/classes.ts` - Class booking workflow
   - `convex/students.ts` - Student management with unique ID generation
   - `convex/notifications.ts` - Real-time notifications
+  - `convex/messages.ts` - Direct and group messaging system
   - `convex/init.ts` - Database initialization helper
 - **Client usage**: 
   ```tsx
@@ -45,7 +46,7 @@ ALL user-facing content requires both English and Thai versions:
 - **Generated code**: Never edit files in `convex/_generated/` - they auto-regenerate on schema changes
 
 ### Database Schema & Indexing Strategy
-The system uses 5 interconnected tables:
+The system uses 6 interconnected tables:
 
 1. **users** - User authentication & role-based access
    - Indexes: `by_username`, `by_school`, `by_role`
@@ -68,6 +69,11 @@ The system uses 5 interconnected tables:
 5. **notifications** - Real-time alerts
    - Indexes: `by_user`, `by_created_at`, `by_read`
    - Auto-generated for class workflow events
+
+6. **messages** - Direct and group messaging
+   - Indexes: `by_sender`, `by_recipient`, `by_school`, `by_created_at`, `by_conversation`
+   - Supports both 1-on-1 and school-wide group messages
+   - Bilingual content with acknowledgment tracking
 
 When adding queries, use `.withIndex()` to leverage these indexes.
 
@@ -124,6 +130,10 @@ if (currentUser?.requirePasswordChange) {
 - **ClassBooking** - Class booking workflow with approval states
 - **DatabaseInit** - First-time setup (creates admin account)
 - **NotificationForm/List** - Real-time notification system
+- **MessagingHub** - Direct and group messaging interface
+- **DesktopNotificationToast** - Toast notifications for desktop
+- **ModeratorListView** - Directory of school moderators
+- **AdminContactButton** - Quick contact button for admin
 
 ### Notification Type System
 Strict union type with four values:
