@@ -124,4 +124,23 @@ export default defineSchema({
     .index("by_school", ["schoolId"])
     .index("by_creator", ["creatorId"])
     .index("by_created_at", ["createdAt"]),
+
+  teacherResources: defineTable({
+    title: v.string(),
+    titleTh: v.string(),
+    description: v.string(),
+    descriptionTh: v.string(),
+    url: v.string(),
+    category: v.string(),
+    categoryTh: v.string(),
+    order: v.number(), // Display order (1, 2, 3, etc.)
+    isActive: v.boolean(), // Enable/disable without deleting
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    createdBy: v.id("users"), // Admin who created it
+  })
+    .index("by_order", ["order"])
+    .index("by_active", ["isActive"])
+    .index("by_category", ["category"])
+    .index("by_created_at", ["createdAt"]),
 });

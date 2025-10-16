@@ -22,6 +22,7 @@ import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
 import type * as schools from "../schools.js";
 import type * as students from "../students.js";
+import type * as teacherResources from "../teacherResources.js";
 import type * as users from "../users.js";
 
 /**
@@ -42,6 +43,7 @@ declare const fullApi: ApiFromModules<{
   notifications: typeof notifications;
   schools: typeof schools;
   students: typeof students;
+  teacherResources: typeof teacherResources;
   users: typeof users;
 }>;
 export declare const api: FilterApi<
