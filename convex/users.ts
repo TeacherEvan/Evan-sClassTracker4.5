@@ -2,9 +2,15 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 // Simple password hashing (in production, use bcrypt or similar)
+// TODO: Replace with bcrypt for production use
+// This is a simple hash for demonstration. In production, use proper hashing
 function hashPassword(password: string): string {
-  // This is a simple hash for demonstration. In production, use proper hashing
   // Using btoa for browser-compatible base64 encoding (works in Convex runtime)
+  // SECURITY WARNING: This is NOT secure for production use
+  // Install and use bcrypt: `npm install bcrypt` then:
+  // import bcrypt from 'bcrypt';
+  // const saltRounds = 10;
+  // return await bcrypt.hash(password, saltRounds);
   return btoa(password);
 }
 
@@ -84,6 +90,11 @@ export const create = mutation({
     schoolId: v.optional(v.id("schools")),
   },
   handler: async (ctx, args) => {
+    // Validate username
+    if (!args.username.trim() || args.username.length < 3) {
+      throw new Error("Username must be at least 3 characters");
+    }
+
     // Check if username already exists
     const existingUser = await ctx.db
       .query("users")
@@ -149,6 +160,11 @@ export const changePassword = mutation({
     newPassword: v.string(),
   },
   handler: async (ctx, args) => {
+    // Validate password strength
+    if (args.newPassword.length < 8) {
+      throw new Error("Password must be at least 8 characters");
+    }
+
     const user = await ctx.db.get(args.userId);
 
     if (!user) {

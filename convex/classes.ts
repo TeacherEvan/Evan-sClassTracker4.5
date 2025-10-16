@@ -52,6 +52,7 @@ export const getById = query({
 });
 
 // Query to get classes by date range (for calendar view)
+// Optimized to use compound indexes for better performance
 export const getByDateRange = query({
   args: {
     startDate: v.number(),
@@ -60,35 +61,40 @@ export const getByDateRange = query({
     teacherId: v.optional(v.id("users")),
   },
   handler: async (ctx, args) => {
-    const query = ctx.db.query("classes");
-
-    // Filter by school if provided
+    // Use compound indexes for efficient range queries
     if (args.schoolId) {
-      const classes = await query
-        .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId!))
+      const classes = await ctx.db
+        .query("classes")
+        .withIndex("by_school_and_date", (q) =>
+          q.eq("schoolId", args.schoolId!)
+           .gte("scheduledDate", args.startDate)
+           .lte("scheduledDate", args.endDate)
+        )
         .collect();
-
-      return classes.filter(
-        (c) => c.scheduledDate >= args.startDate && c.scheduledDate <= args.endDate
-      );
+      return classes;
     }
 
-    // Filter by teacher if provided
     if (args.teacherId) {
-      const classes = await query
-        .withIndex("by_teacher", (q) => q.eq("teacherId", args.teacherId!))
+      const classes = await ctx.db
+        .query("classes")
+        .withIndex("by_teacher_and_date", (q) =>
+          q.eq("teacherId", args.teacherId!)
+           .gte("scheduledDate", args.startDate)
+           .lte("scheduledDate", args.endDate)
+        )
         .collect();
-
-      return classes.filter(
-        (c) => c.scheduledDate >= args.startDate && c.scheduledDate <= args.endDate
-      );
+      return classes;
     }
 
-    // Otherwise return all classes in range
-    const allClasses = await query.collect();
-    return allClasses.filter(
-      (c) => c.scheduledDate >= args.startDate && c.scheduledDate <= args.endDate
-    );
+    // For all classes, use the scheduled_date index
+    const classes = await ctx.db
+      .query("classes")
+      .withIndex("by_scheduled_date", (q) =>
+        q.gte("scheduledDate", args.startDate)
+         .lte("scheduledDate", args.endDate)
+      )
+      .collect();
+    return classes;
   },
 });
 
@@ -104,6 +110,17 @@ export const book = mutation({
     scheduledDate: v.number(),
   },
   handler: async (ctx, args) => {
+    // Validate inputs
+    if (!args.title.trim() || !args.titleTh.trim()) {
+      throw new Error("Title is required in both languages");
+    }
+    if (!args.description.trim() || !args.descriptionTh.trim()) {
+      throw new Error("Description is required in both languages");
+    }
+    if (args.scheduledDate < Date.now()) {
+      throw new Error("Cannot schedule a class in the past");
+    }
+
     // Create the class
     const classId = await ctx.db.insert("classes", {
       teacherId: args.teacherId,
@@ -131,7 +148,7 @@ export const book = mutation({
         message: `Teacher ${teacher?.username || "Unknown"} has booked a class at your school. Please review and acknowledge.`,
         messageTh: `ครู ${teacher?.username || "ไม่ทราบ"} ได้จองชั้นเรียนที่โรงเรียนของคุณ กรุณาตรวจสอบและรับทราบ`,
         type: "warning",
-        userId: school.moderatorId.toString(),
+        userId: school.moderatorId,
         read: false,
         createdAt: Date.now(),
       });
@@ -167,7 +184,7 @@ export const acknowledge = mutation({
         message: `Your class booking has been acknowledged by the moderator.`,
         messageTh: `การจองชั้นเรียนของคุณได้รับการรับทราบจากผู้ดูแล`,
         type: "success",
-        userId: classData.teacherId.toString(),
+        userId: classData.teacherId,
         read: false,
         createdAt: Date.now(),
       });
@@ -200,7 +217,7 @@ export const approve = mutation({
       message: `Your class booking has been approved!`,
       messageTh: `การจองชั้นเรียนของคุณได้รับการอนุมัติแล้ว!`,
       type: "success",
-      userId: classData.teacherId.toString(),
+      userId: classData.teacherId,
       read: false,
       createdAt: Date.now(),
     });
@@ -234,7 +251,7 @@ export const reject = mutation({
       message: args.reason || `Your class booking has been rejected.`,
       messageTh: args.reasonTh || `การจองชั้นเรียนของคุณถูกปฏิเสธ`,
       type: "error",
-      userId: classData.teacherId.toString(),
+      userId: classData.teacherId,
       read: false,
       createdAt: Date.now(),
     });

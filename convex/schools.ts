@@ -26,6 +26,11 @@ export const create = mutation({
     moderatorId: v.optional(v.id("users")),
   },
   handler: async (ctx, args) => {
+    // Validate inputs
+    if (!args.name.trim() || !args.nameTh.trim()) {
+      throw new Error("School name is required in both languages");
+    }
+
     const schoolId = await ctx.db.insert("schools", {
       name: args.name,
       nameTh: args.nameTh,

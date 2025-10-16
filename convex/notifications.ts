@@ -60,6 +60,14 @@ export const create = mutation({
     userId: v.optional(v.union(v.string(), v.id("users"))),
   },
   handler: async (ctx, args) => {
+    // Validate input
+    if (!args.title.trim() || !args.titleTh.trim()) {
+      throw new Error("Title is required in both languages");
+    }
+    if (!args.message.trim() || !args.messageTh.trim()) {
+      throw new Error("Message is required in both languages");
+    }
+
     const notificationId = await ctx.db.insert("notifications", {
       title: args.title,
       titleTh: args.titleTh,

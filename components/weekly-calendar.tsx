@@ -5,7 +5,9 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { useMutation, useQuery } from "convex/react";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { getWeekStart, isToday } from "@/lib/date-utils";
+import { getClassStatusColor } from "@/lib/constants";
 
 type ClassData = {
     _id: Id<"classes">;
@@ -48,18 +50,22 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
     const [error, setError] = useState("");
 
-    // Calculate week range
-    const getWeekStart = (date: Date) => {
-        const d = new Date(date);
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
-        return new Date(d.setDate(diff));
-    };
+    // Memoize week range calculations
+    const weekStart = useMemo(() => getWeekStart(currentDate), [currentDate]);
+    const weekEnd = useMemo(() => {
+        const end = new Date(weekStart);
+        end.setDate(weekStart.getDate() + 6);
+        end.setHours(23, 59, 59, 999);
+        return end;
+    }, [weekStart]);
 
-    const weekStart = getWeekStart(currentDate);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    weekEnd.setHours(23, 59, 59, 999);
+    // Memoize week days array
+    const weekDays = useMemo(() => 
+        Array.from({ length: 7 }, (_, i) => {
+            const day = new Date(weekStart);
+            day.setDate(weekStart.getDate() + i);
+            return day;
+        }), [weekStart]);
 
     // Get classes for current week
     const classes = useQuery(
@@ -70,12 +76,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
             schoolId: currentUser.role === "moderator" ? currentUser.schoolId : selectedSchoolId || undefined,
             teacherId: currentUser.role === "teacher" ? currentUser._id : undefined,
         }
-    ) as ClassData[] | undefined;    // Generate week days
-    const weekDays = Array.from({ length: 7 }, (_, i) => {
-        const day = new Date(weekStart);
-        day.setDate(weekStart.getDate() + i);
-        return day;
-    });
+    ) as ClassData[] | undefined;
 
     const goToPreviousWeek = () => {
         const newDate = new Date(currentDate);
@@ -155,30 +156,6 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
 
         return classes.filter(
             (c) => c.scheduledDate >= dayStart.getTime() && c.scheduledDate <= dayEnd.getTime()
-        );
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "approved":
-                return "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700";
-            case "pending":
-                return "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700";
-            case "acknowledged":
-                return "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700";
-            case "rejected":
-                return "bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700";
-            default:
-                return "bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600";
-        }
-    };
-
-    const isToday = (date: Date) => {
-        const today = new Date();
-        return (
-            date.getDate() === today.getDate() &&
-            date.getMonth() === today.getMonth() &&
-            date.getFullYear() === today.getFullYear()
         );
     };
 
@@ -301,7 +278,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                         return (
                                             <div
                                                 key={classItem._id}
-                                                className={`text-xs p-2 rounded border ${getStatusColor(classItem.status)}`}
+                                                className={`text-xs p-2 rounded border ${getClassStatusColor(classItem.status)}`}
                                             >
                                                 <div className="font-semibold truncate">
                                                     {language === "en" ? classItem.title : classItem.titleTh}

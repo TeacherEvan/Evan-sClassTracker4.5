@@ -24,7 +24,8 @@ export default defineSchema({
     moderatorId: v.optional(v.id("users")),
     createdAt: v.number(),
   })
-    .index("by_moderator", ["moderatorId"]),
+    .index("by_moderator", ["moderatorId"])
+    .index("by_created_at", ["createdAt"]),
 
   classes: defineTable({
     teacherId: v.id("users"),
@@ -44,7 +45,10 @@ export default defineSchema({
   })
     .index("by_teacher", ["teacherId"])
     .index("by_school", ["schoolId"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_scheduled_date", ["scheduledDate"])
+    .index("by_school_and_date", ["schoolId", "scheduledDate"])
+    .index("by_teacher_and_date", ["teacherId", "scheduledDate"]),
 
   students: defineTable({
     firstName: v.string(),
