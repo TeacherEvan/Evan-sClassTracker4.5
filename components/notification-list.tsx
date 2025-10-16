@@ -8,19 +8,7 @@ import { X, Bell, CheckCheck } from "lucide-react";
 import { formatRelativeTime } from "@/lib/date-utils";
 import { getNotificationTypeColor, getNotificationTypeTextColor } from "@/lib/constants";
 import { memo } from "react";
-
-interface Notification {
-  _id: Id<"notifications">;
-  _creationTime: number;
-  title: string;
-  titleTh: string;
-  message: string;
-  messageTh: string;
-  type: "info" | "success" | "warning" | "error";
-  userId?: string;
-  read: boolean;
-  createdAt: number;
-}
+import type { Notification } from "@/lib/types";
 
 // Memoized notification item component for better performance
 const NotificationItem = memo(({ 

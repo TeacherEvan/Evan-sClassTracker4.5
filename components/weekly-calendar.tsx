@@ -8,27 +8,10 @@ import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import { useState, useMemo } from "react";
 import { getWeekStart, isToday } from "@/lib/date-utils";
 import { getClassStatusColor } from "@/lib/constants";
-
-type ClassData = {
-    _id: Id<"classes">;
-    teacherId: Id<"users">;
-    schoolId: Id<"schools">;
-    title: string;
-    titleTh: string;
-    description: string;
-    descriptionTh: string;
-    status: "pending" | "acknowledged" | "approved" | "rejected";
-    scheduledDate: number;
-    createdAt: number;
-};
+import type { ClassData, User } from "@/lib/types";
 
 type WeeklyCalendarProps = {
-    currentUser: {
-        _id: Id<"users">;
-        username: string;
-        role: "teacher" | "moderator" | "admin";
-        schoolId?: Id<"schools">;
-    };
+    currentUser: User;
 };
 
 export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {

@@ -6,10 +6,11 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Calendar, Check, X } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
+import type { UserRole } from "@/lib/types";
 
 interface ClassBookingProps {
   userId: Id<"users">;
-  userRole: "teacher" | "moderator" | "admin";
+  userRole: UserRole;
 }
 
 export function ClassBooking({ userId, userRole }: ClassBookingProps) {

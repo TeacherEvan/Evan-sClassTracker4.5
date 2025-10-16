@@ -11,20 +11,11 @@ import { SchoolManagement } from "@/components/school-management";
 import { UserManagement } from "@/components/user-management";
 import { WeeklyCalendar } from "@/components/weekly-calendar";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { useQuery } from "convex/react";
 import { Bell, Building2, Calendar, CalendarDays, LogOut, Users } from "lucide-react";
 import { useState, useEffect } from "react";
-
-type User = {
-  _id: Id<"users">;
-  username: string;
-  role: "teacher" | "moderator" | "admin";
-  schoolId?: Id<"schools">;
-  requirePasswordChange: boolean;
-  createdAt: number;
-};
+import type { User } from "@/lib/types";
 
 export default function Home() {
   const { t } = useLanguage();
