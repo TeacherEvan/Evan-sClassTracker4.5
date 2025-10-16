@@ -56,14 +56,13 @@ export function detectDevice(): DeviceInfo {
     const hasTouch =
         "ontouchstart" in window ||
         navigator.maxTouchPoints > 0 ||
-        // @ts-ignore - for older browsers
+        // @ts-expect-error - for older browsers that may have msMaxTouchPoints
         (navigator.msMaxTouchPoints && navigator.msMaxTouchPoints > 0);
 
     // Screen size detection (Tailwind breakpoints)
     // sm: 640px, md: 768px, lg: 1024px, xl: 1280px
     const isSmallScreen = screenWidth < 768; // below md
     const isMediumScreen = screenWidth >= 768 && screenWidth < 1024; // md to lg
-    const isLargeScreen = screenWidth >= 1024; // lg and above
 
     // Device orientation API
     const hasOrientation = "orientation" in window || "onorientationchange" in window;

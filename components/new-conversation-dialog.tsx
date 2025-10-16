@@ -19,16 +19,16 @@ export function NewConversationDialog({
     onConversationCreated,
 }: NewConversationDialogProps) {
     const { t } = useLanguage();
+    const [selectedUserId, setSelectedUserId] = useState<Id<"users"> | "">("");
+    const [creating, setCreating] = useState(false);
+    const [error, setError] = useState("");
+    
     const users = useQuery(api.users.list, {});
     const createConversation = useMutation(api.conversations.create);
     const findDirect = useQuery(api.conversations.findDirect, {
         userId1: currentUserId,
         userId2: selectedUserId || currentUserId, // Fallback to avoid error
     });
-
-    const [selectedUserId, setSelectedUserId] = useState<Id<"users"> | "">("");
-    const [creating, setCreating] = useState(false);
-    const [error, setError] = useState("");
 
     // Filter out current user from list
     const availableUsers = users?.filter((user) => user._id !== currentUserId) || [];

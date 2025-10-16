@@ -7,12 +7,21 @@ import { useLanguage } from "@/lib/language-context";
 import { useQuery } from "convex/react";
 import { MessageCircle, Users as UsersIcon } from "lucide-react";
 
+interface Conversation {
+    _id: Id<"conversations">;
+    type: "direct" | "group";
+    name?: string;
+    nameTh?: string;
+    participants: Id<"users">[];
+    lastMessageAt: number;
+}
+
 interface ConversationItemProps {
-    conversation: any;
+    conversation: Conversation;
     userId: Id<"users">;
     isSelected: boolean;
     onSelect: () => void;
-    getConversationName: (conv: any) => string;
+    getConversationName: (conv: Conversation) => string;
 }
 
 function ConversationItem({
@@ -86,9 +95,10 @@ export function ConversationList({
         name?: string;
         nameTh?: string;
         participants: Id<"users">[];
-    }) => {
+    }): string => {
         if (conv.type === "group") {
-            return language === "en" ? conv.name : conv.nameTh;
+            const groupName = language === "en" ? conv.name : conv.nameTh;
+            return groupName || t("Unnamed Group", "กลุ่มไม่มีชื่อ");
         }
 
         // For direct conversations, show the other participant's name

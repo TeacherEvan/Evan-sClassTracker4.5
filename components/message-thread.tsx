@@ -78,21 +78,25 @@ export function MessageThread({ conversationId, userId }: MessageThreadProps) {
                     </div>
                 ) : (
                     messages.map((message) => {
-                        const sender = getUserById(message.senderId);
+                        const sender = message.senderId === "system" ? null : getUserById(message.senderId);
                         const isOwnMessage = message.senderId === userId;
+                        const isSystemMessage = message.senderId === "system";
 
                         return (
                             <div
                                 key={message._id}
-                                className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}
+                                className={`flex ${isOwnMessage ? "justify-end" : isSystemMessage ? "justify-center" : "justify-start"}`}
                             >
                                 <div
-                                    className={`max-w-[70%] rounded-lg p-3 ${isOwnMessage
+                                    className={`max-w-[70%] rounded-lg p-3 ${
+                                        isSystemMessage
+                                            ? "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 italic text-sm"
+                                            : isOwnMessage
                                             ? "bg-blue-600 text-white"
                                             : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                         }`}
                                 >
-                                    {!isOwnMessage && (
+                                    {!isOwnMessage && !isSystemMessage && (
                                         <div className="text-xs font-semibold mb-1 opacity-75">
                                             {sender?.username || t("Unknown", "ไม่ทราบ")}
                                         </div>

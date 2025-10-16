@@ -80,7 +80,7 @@ export const unsubscribe = mutation({
             // Unsubscribe specific endpoint
             const subscription = await ctx.db
                 .query("pushSubscriptions")
-                .withIndex("by_endpoint", (q) => q.eq("endpoint", args.endpoint))
+                .withIndex("by_endpoint", (q) => q.eq("endpoint", args.endpoint!))
                 .first();
 
             if (subscription) {
@@ -202,19 +202,15 @@ export const testNotification = mutation({
         }
 
         // Send test notification
-        return await ctx.runMutation(internalMutation({
-            handler: async (ctx) => {
-                return await ctx.db.insert("notifications", {
-                    userId: args.userId,
-                    title: "Test Notification",
-                    titleTh: "การแจ้งเตือนทดสอบ",
-                    message: "This is a test push notification",
-                    messageTh: "นี่คือการแจ้งเตือนแบบพุชทดสอบ",
-                    type: "info",
-                    read: false,
-                    createdAt: Date.now(),
-                });
-            },
-        }));
+        return await ctx.db.insert("notifications", {
+            userId: args.userId,
+            title: "Test Notification",
+            titleTh: "การแจ้งเตือนทดสอบ",
+            message: "This is a test push notification",
+            messageTh: "นี่คือการแจ้งเตือนแบบพุชทดสอบ",
+            type: "info",
+            read: false,
+            createdAt: Date.now(),
+        });
     },
 });

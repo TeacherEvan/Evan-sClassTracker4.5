@@ -121,7 +121,7 @@ export async function subscribeToPushNotifications(): Promise<PushSubscription> 
     try {
         subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
         });
 
         console.log('[Push] New subscription created');
@@ -191,7 +191,6 @@ export async function showTestNotification(): Promise<void> {
         icon: '/icon-192.png',
         badge: '/badge-72.png',
         tag: 'test',
-        vibrate: [200, 100, 200],
     });
 }
 

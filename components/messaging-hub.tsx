@@ -46,14 +46,12 @@ export function MessagingHub({ userId }: MessagingHubProps) {
     const admin = useQuery(api.conversations.getAdmin);
     const groupConversations = useQuery(api.conversations.getGroupConversations, { userId });
     const usersBySchool = useQuery(
-        selectedSchoolId
-            ? api.conversations.getUsersBySchool
-            : "skip",
+        api.conversations.getUsersBySchool,
         selectedSchoolId ? { schoolId: selectedSchoolId, currentUserId: userId } : "skip"
     );
 
     // Mutations
-    const findOrCreate = useMutation(api.conversations.findOrCreate);
+    const createConversation = useMutation(api.conversations.create);
 
     const handleCategoryClick = (mode: ViewMode) => {
         setViewMode(mode);
@@ -69,8 +67,10 @@ export function MessagingHub({ userId }: MessagingHubProps) {
 
     const handleStartChat = async (otherUserId: Id<"users">) => {
         try {
-            const conversationId = await findOrCreate({
+            const conversationId = await createConversation({
                 participants: [userId, otherUserId],
+                type: "direct",
+                createdBy: userId,
             });
             setSelectedConversationId(conversationId);
             setViewMode("all-messages");
@@ -239,7 +239,7 @@ export function MessagingHub({ userId }: MessagingHubProps) {
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1">
                                                         <div className="font-medium">
-                                                            {user.fullName || user.username}
+                                                            {user.username}
                                                         </div>
                                                         <div className="text-sm text-gray-600 dark:text-gray-400">
                                                             {user.role}
@@ -323,7 +323,7 @@ export function MessagingHub({ userId }: MessagingHubProps) {
                                                 <div className="flex items-start justify-between">
                                                     <div className="flex-1">
                                                         <div className="font-medium">
-                                                            {moderator.fullName || moderator.username}
+                                                            {moderator.username}
                                                         </div>
                                                         <div className="text-sm text-gray-600 dark:text-gray-400">
                                                             {t("Moderator", "ผู้ดูแล")}
@@ -357,7 +357,7 @@ export function MessagingHub({ userId }: MessagingHubProps) {
                                             <ShieldCheck className="w-8 h-8 text-red-500" />
                                             <div className="flex-1">
                                                 <div className="font-semibold text-lg">
-                                                    {admin.fullName || admin.username}
+                                                    {admin.username}
                                                 </div>
                                                 <div className="text-sm text-gray-600 dark:text-gray-400">
                                                     {t("System Administrator", "ผู้ดูแลระบบ")}

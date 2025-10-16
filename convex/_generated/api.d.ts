@@ -14,8 +14,12 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as classes from "../classes.js";
+import type * as conversations from "../conversations.js";
+import type * as crons from "../crons.js";
 import type * as init from "../init.js";
+import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
+import type * as pushNotifications from "../pushNotifications.js";
 import type * as schools from "../schools.js";
 import type * as students from "../students.js";
 import type * as users from "../users.js";
@@ -30,8 +34,12 @@ import type * as users from "../users.js";
  */
 declare const fullApi: ApiFromModules<{
   classes: typeof classes;
+  conversations: typeof conversations;
+  crons: typeof crons;
   init: typeof init;
+  messages: typeof messages;
   notifications: typeof notifications;
+  pushNotifications: typeof pushNotifications;
   schools: typeof schools;
   students: typeof students;
   users: typeof users;
