@@ -5,14 +5,20 @@ Bilingual (English/Thai) class tracking system with user authentication, class b
 
 ## Architecture & Key Patterns
 
-### Three-Layer Provider Architecture
+### Four-Layer Provider Architecture
 The app uses a nested provider pattern in `app/layout.tsx`:
 ```tsx
-<ConvexClientProvider>
-  <LanguageProvider>{children}</LanguageProvider>
-</ConvexClientProvider>
+<ErrorBoundary>
+  <ConvexClientProvider>
+    <DeviceProvider>
+      <LanguageProvider>{children}</LanguageProvider>
+    </DeviceProvider>
+  </ConvexClientProvider>
+</ErrorBoundary>
 ```
-- **ConvexClientProvider** (`lib/convex-provider.tsx`): Wraps the app to enable real-time data sync
+- **ErrorBoundary** (`components/error-boundary.tsx`): Catches React errors globally
+- **ConvexClientProvider** (`lib/convex-provider.tsx`): Wraps the app to enable real-time data sync; throws config error at runtime if `NEXT_PUBLIC_CONVEX_URL` is missing
+- **DeviceProvider** (`lib/device-context.tsx`): Auto-detects device type (mobile/tablet/desktop) and syncs to database; re-detects on window resize
 - **LanguageProvider** (`lib/language-context.tsx`): Manages bilingual state with `t()` helper function
 - All client components must use `"use client"` directive when accessing these contexts
 
@@ -33,6 +39,9 @@ ALL user-facing content requires both English and Thai versions:
   - `convex/students.ts` - Student management with unique ID generation
   - `convex/notifications.ts` - Real-time notifications
   - `convex/messages.ts` - Direct and group messaging system
+  - `convex/groups.ts` - Custom moderator-created groups for messaging
+  - `convex/crons.ts` - Scheduled jobs (daily message cleanup)
+  - `convex/analytics.ts` - Teacher performance analytics and statistics
   - `convex/init.ts` - Database initialization helper
 - **Client usage**: 
   ```tsx
@@ -46,36 +55,47 @@ ALL user-facing content requires both English and Thai versions:
 - **Generated code**: Never edit files in `convex/_generated/` - they auto-regenerate on schema changes
 
 ### Database Schema & Indexing Strategy
-The system uses 6 interconnected tables:
+The system uses 8 interconnected tables:
 
 1. **users** - User authentication & role-based access
-   - Indexes: `by_username`, `by_school`, `by_role`
+   - Indexes: `by_username`, `by_school`, `by_role`, `by_device_type`
    - Roles: `admin`, `moderator`, `teacher`
    - Password security: Base64 encoded (upgradeable to bcrypt)
+   - Device tracking: `deviceType`, `lastDeviceUpdate`, `pushSubscription`
 
 2. **schools** - School management
-   - Index: `by_created_at`
+   - Indexes: `by_moderator`, `by_created_at`
    - Links to users (moderators) and classes
 
 3. **classes** - Class booking workflow
-   - Indexes: `by_teacher`, `by_school`, `by_status`, `by_created_at`
+   - Indexes: `by_teacher`, `by_school`, `by_status`, `by_scheduled_date`, `by_school_and_date`, `by_teacher_and_date`
    - Status flow: `pending` → `acknowledged` → `approved`/`rejected`
    - Automatically triggers notifications
+   - Uses compound indexes for efficient date range queries
 
 4. **students** - Student records
-   - Indexes: `by_school`, `by_class`, `by_unique_id`
+   - Indexes: `by_student_id`, `by_school`, `by_guardian`
    - Unique ID format: `{SchoolHash}-{NameHash}-{Timestamp}-{Random}`
+   - Supports both school-linked and guardian-linked students (schoolId is optional)
 
 5. **notifications** - Real-time alerts
    - Indexes: `by_user`, `by_created_at`, `by_read`
    - Auto-generated for class workflow events
 
 6. **messages** - Direct and group messaging
-   - Indexes: `by_sender`, `by_recipient`, `by_school`, `by_created_at`, `by_conversation`
+   - Indexes: `by_sender`, `by_recipient`, `by_school`, `by_group`, `by_created_at`, `by_conversation`, `by_school_and_date`
    - Supports both 1-on-1 and school-wide group messages
    - Bilingual content with acknowledgment tracking
+   - Auto-deleted after 14 days via cron job (`convex/crons.ts`)
 
-When adding queries, use `.withIndex()` to leverage these indexes.
+7. **groups** - Custom moderator-created groups
+   - Indexes: `by_school`, `by_creator`, `by_created_at`
+   - Allows moderators to create custom message groups with specific members
+
+8. **Cron Jobs** (`convex/crons.ts`)
+   - Daily cleanup at 2:00 AM UTC: `deleteOldMessages` removes messages >14 days old
+
+When adding queries, use `.withIndex()` to leverage these indexes. For date ranges, prefer compound indexes like `by_school_and_date`.
 
 ## Development Workflow
 
@@ -96,7 +116,7 @@ npm run dev          # Start Next.js with Turbopack
 
 ### Build Commands
 - Dev: `npm run dev` (uses Turbopack via `--turbopack` flag)
-- Build: `npm run build` (also uses Turbopack)
+- Build: `npm run build` (also uses Turbopack - **required**, builds fail without it)
 - Lint: `npm run lint` (uses ESLint 9 with flat config)
 
 ## Component Patterns
@@ -130,10 +150,12 @@ if (currentUser?.requirePasswordChange) {
 - **ClassBooking** - Class booking workflow with approval states
 - **DatabaseInit** - First-time setup (creates admin account)
 - **NotificationForm/List** - Real-time notification system
-- **MessagingHub** - Direct and group messaging interface
+- **MessagingHub** - Direct and group messaging interface with dual chat modes
 - **DesktopNotificationToast** - Toast notifications for desktop
 - **ModeratorListView** - Directory of school moderators
 - **AdminContactButton** - Quick contact button for admin
+- **WeeklyCalendar** - Calendar view for class scheduling with date range optimization
+- **TeacherAnalytics** - Performance metrics dashboard for moderators (approval rates, trends, rankings)
 
 ### Notification Type System
 Strict union type with four values:
@@ -148,6 +170,16 @@ See `components/notification-form.tsx` for standard approach:
 2. Call Convex mutation in `handleSubmit`
 3. Clear form fields after successful submission
 4. No manual loading states needed (Convex handles optimistic updates)
+
+### Messaging System Pattern
+The messaging hub supports two modes (see `components/messaging-hub.tsx`):
+1. **Direct Mode**: 1-on-1 conversations between users
+   - Uses `sendDirectMessage` mutation with `recipientId`
+   - Queries via `getConversation` for specific user pairs
+2. **Group Mode**: School-wide or custom group messaging
+   - Uses `sendGroupMessage` mutation with `schoolId` or `groupId`
+   - Queries via `getGroupMessages` for all school members
+   - Auto-cleanup: Messages deleted after 14 days (cron job)
 
 ## Styling Conventions
 

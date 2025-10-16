@@ -13,6 +13,7 @@ import { NotificationList } from "@/components/notification-list";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
 import { SchoolManagement } from "@/components/school-management";
 import { StudentManagement } from "@/components/student-management";
+import { TeacherAnalytics } from "@/components/teacher-analytics";
 import { UserManagement } from "@/components/user-management";
 import { WeeklyCalendar } from "@/components/weekly-calendar";
 import { api } from "@/convex/_generated/api";
@@ -21,7 +22,7 @@ import { initServiceWorker } from "@/lib/init-sw";
 import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
 import { useQuery } from "convex/react";
-import { Bell, Building2, Calendar, CalendarDays, GraduationCap, LogOut, MessageSquare, Shield, Users } from "lucide-react";
+import { BarChart3, Bell, Building2, Calendar, CalendarDays, GraduationCap, LogOut, MessageSquare, Shield, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -29,7 +30,7 @@ export default function Home() {
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators">("calendar");
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics">("calendar");
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -238,6 +239,20 @@ export default function Home() {
             {t("Messages", "ข้อความ")}
           </button>
 
+          {/* Analytics tab for moderators */}
+          {user.role === "moderator" && user.schoolId && (
+            <button
+              onClick={() => setActiveTab("analytics")}
+              className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "analytics"
+                ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                }`}
+            >
+              <BarChart3 className="w-4 h-4 md:w-5 md:h-5" />
+              {t("Analytics", "การวิเคราะห์")}
+            </button>
+          )}
+
           <button
             onClick={() => setActiveTab("notifications")}
             className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "notifications"
@@ -310,6 +325,10 @@ export default function Home() {
 
       {activeTab === "messages" && user && (
         <MessagingHub currentUser={user} />
+      )}
+
+      {activeTab === "analytics" && user.role === "moderator" && user.schoolId && (
+        <TeacherAnalytics schoolId={user.schoolId} />
       )}
 
       {activeTab === "notifications" && (
