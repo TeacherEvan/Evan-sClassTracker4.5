@@ -2,13 +2,13 @@
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { getClassStatusColor } from "@/lib/constants";
+import { getWeekStart, isToday } from "@/lib/date-utils";
 import { useLanguage } from "@/lib/language-context";
+import type { ClassData, User } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
-import { useState, useMemo } from "react";
-import { getWeekStart, isToday } from "@/lib/date-utils";
-import { getClassStatusColor } from "@/lib/constants";
-import type { ClassData, User } from "@/lib/types";
+import { useMemo, useState } from "react";
 
 type WeeklyCalendarProps = {
     currentUser: User;
@@ -43,12 +43,23 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     }, [weekStart]);
 
     // Memoize week days array
-    const weekDays = useMemo(() => 
+    const weekDays = useMemo(() =>
         Array.from({ length: 7 }, (_, i) => {
             const day = new Date(weekStart);
             day.setDate(weekStart.getDate() + i);
             return day;
         }), [weekStart]);
+
+    // Create lookup maps for better performance (O(1) instead of O(n))
+    const usersMap = useMemo(() => {
+        if (!users) return new Map();
+        return new Map(users.map(u => [u._id, u]));
+    }, [users]);
+
+    const schoolsMap = useMemo(() => {
+        if (!schools) return new Map();
+        return new Map(schools.map(s => [s._id, s]));
+    }, [schools]);
 
     // Get classes for current week
     const classes = useQuery(
@@ -255,8 +266,8 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
 
                                 <div className="space-y-1">
                                     {dayClasses.map((classItem) => {
-                                        const teacher = users?.find((u) => u._id === classItem.teacherId);
-                                        const school = schools?.find((s) => s._id === classItem.schoolId);
+                                        const teacher = usersMap.get(classItem.teacherId);
+                                        const school = schoolsMap.get(classItem.schoolId);
 
                                         return (
                                             <div

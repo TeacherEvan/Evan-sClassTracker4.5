@@ -8,21 +8,22 @@ import { NotificationForm } from "@/components/notification-form";
 import { NotificationList } from "@/components/notification-list";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
 import { SchoolManagement } from "@/components/school-management";
+import { StudentManagement } from "@/components/student-management";
 import { UserManagement } from "@/components/user-management";
 import { WeeklyCalendar } from "@/components/weekly-calendar";
 import { api } from "@/convex/_generated/api";
 import { useLanguage } from "@/lib/language-context";
-import { useQuery } from "convex/react";
-import { Bell, Building2, Calendar, CalendarDays, LogOut, Users } from "lucide-react";
-import { useState, useEffect } from "react";
 import type { User } from "@/lib/types";
+import { useQuery } from "convex/react";
+import { Bell, Building2, Calendar, CalendarDays, GraduationCap, LogOut, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const { t } = useLanguage();
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools">("calendar");
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students">("calendar");
 
   // Check if database needs initialization
   const needsInit = users !== undefined && users.length === 0;
@@ -195,6 +196,17 @@ export default function Home() {
               </button>
 
               <button
+                onClick={() => setActiveTab("students")}
+                className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "students"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <GraduationCap className="w-5 h-5" />
+                {t("Students", "นักเรียน")}
+              </button>
+
+              <button
                 onClick={() => setActiveTab("users")}
                 className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors whitespace-nowrap ${activeTab === "users"
                   ? "border-blue-500 text-blue-600 dark:text-blue-400"
@@ -227,6 +239,10 @@ export default function Home() {
 
       {activeTab === "schools" && user.role === "admin" && (
         <SchoolManagement />
+      )}
+
+      {activeTab === "students" && user.role === "admin" && (
+        <StudentManagement />
       )}
 
       {activeTab === "users" && user.role === "admin" && (

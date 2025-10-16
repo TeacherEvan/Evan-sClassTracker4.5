@@ -5,7 +5,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { useMutation, useQuery } from "convex/react";
 import { Building2, Pencil, Plus, Trash2, UserCheck } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 export function SchoolManagement() {
     const { t } = useLanguage();
@@ -25,6 +25,12 @@ export function SchoolManagement() {
 
     // Filter moderators from user list
     const moderators = users?.filter((u) => u.role === "moderator") || [];
+
+    // Create user lookup map for better performance
+    const usersMap = useMemo(() => {
+        if (!users) return new Map();
+        return new Map(users.map(u => [u._id, u]));
+    }, [users]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -236,7 +242,7 @@ export function SchoolManagement() {
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                             {schools?.map((school) => {
-                                const moderator = users?.find((u) => u._id === school.moderatorId);
+                                const moderator = usersMap.get(school.moderatorId);
                                 return (
                                     <tr key={school._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                                         <td className="px-6 py-4 whitespace-nowrap">
