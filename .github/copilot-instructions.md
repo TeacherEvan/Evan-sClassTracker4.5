@@ -40,8 +40,16 @@ ALL user-facing content requires both English and Thai versions:
   - `convex/notifications.ts` - Real-time notifications
   - `convex/messages.ts` - Direct and group messaging system
   - `convex/groups.ts` - Custom moderator-created groups for messaging
+  - `convex/locations.ts` - Location/classroom management per school
+  - `convex/teacherResources.ts` - Resource management for teachers (URLs, materials)
+  - `convex/teacherLogs.ts` - Teacher activity audit trail
+  - `convex/cancellationRequests.ts` - Class cancellation workflow
+  - `convex/simpleAnalytics.ts` - Teacher performance analytics and statistics
+  - `convex/search.ts` - Bilingual search across all entities
+  - `convex/pagination.ts` - Paginated queries for large datasets
+  - `convex/exports.ts` - CSV/Excel export functionality
+  - `convex/bulkOperations.ts` - Bulk create/update/delete operations
   - `convex/crons.ts` - Scheduled jobs (daily message cleanup)
-  - `convex/analytics.ts` - Teacher performance analytics and statistics
   - `convex/init.ts` - Database initialization helper
 - **Client usage**: 
   ```tsx
@@ -55,7 +63,7 @@ ALL user-facing content requires both English and Thai versions:
 - **Generated code**: Never edit files in `convex/_generated/` - they auto-regenerate on schema changes
 
 ### Database Schema & Indexing Strategy
-The system uses 8 interconnected tables:
+The system uses 11 interconnected tables:
 
 1. **users** - User authentication & role-based access
    - Indexes: `by_username`, `by_school`, `by_role`, `by_device_type`
@@ -92,10 +100,34 @@ The system uses 8 interconnected tables:
    - Indexes: `by_school`, `by_creator`, `by_created_at`
    - Allows moderators to create custom message groups with specific members
 
-8. **Cron Jobs** (`convex/crons.ts`)
-   - Daily cleanup at 2:00 AM UTC: `deleteOldMessages` removes messages >14 days old
+8. **locations** - Location/classroom management
+   - Indexes: `by_school`, `by_active`, `by_created_at`
+   - Bilingual names for each location
+   - Soft delete via `isActive` flag (never hard delete)
 
-When adding queries, use `.withIndex()` to leverage these indexes. For date ranges, prefer compound indexes like `by_school_and_date`.
+9. **teacherResources** - Resource management for teachers
+   - Indexes: `by_order`, `by_active`, `by_category`, `by_created_at`
+   - URL-based resources with categories
+   - Soft delete via `isActive` flag
+   - Display order controlled by `order` field
+
+10. **cancellationRequests** - Class cancellation workflow
+    - Indexes: `by_class`, `by_teacher`, `by_school`, `by_status`, `by_created_at`
+    - Status flow: `pending` → `approved`/`rejected`
+    - Links to original class via `classId`
+
+11. **teacherLogs** - Teacher activity audit trail
+    - Indexes: `by_teacher`, `by_school`, `by_action`, `by_created_at`, `by_teacher_and_date`, `by_school_and_date`
+    - Bilingual action descriptions
+    - Optional relations to classes/students
+
+**Indexing Best Practices:**
+- Always use `.withIndex()` to leverage database indexes
+- For date ranges, prefer compound indexes like `by_school_and_date` or `by_teacher_and_date`
+- Use soft deletes (`isActive: false`) instead of hard deletes for data integrity
+
+**Cron Jobs** (`convex/crons.ts`):
+- Daily cleanup at 2:00 AM UTC: `deleteOldMessages` removes messages >14 days old
 
 ## Development Workflow
 
@@ -155,7 +187,12 @@ if (currentUser?.requirePasswordChange) {
 - **ModeratorListView** - Directory of school moderators
 - **AdminContactButton** - Quick contact button for admin
 - **WeeklyCalendar** - Calendar view for class scheduling with date range optimization
-- **TeacherAnalytics** - Performance metrics dashboard for moderators (approval rates, trends, rankings)
+- **SimpleAnalytics** - Performance metrics dashboard for moderators (approval rates, trends, rankings)
+- **LocationManagement** - Manage school locations/classrooms with soft delete
+- **StudentManagement** - Student CRUD with unique ID generation
+- **SchoolManagement** - School CRUD and moderator assignment
+- **TeacherHelper** - Teacher resource management interface (admin)
+- **TeacherActivityDashboard** - Audit log viewer for teacher actions
 
 ### Notification Type System
 Strict union type with four values:

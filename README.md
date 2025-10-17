@@ -15,6 +15,11 @@ Bilingual English/Thai class tracker for teachers and schools - Built with Conve
 - ⚡ **Real-time Updates** - Powered by Convex backend
 - 🎨 **Modern UI** - Built with Next.js 15 and Tailwind CSS
 - 🌙 **Dark Mode** - Automatic dark mode support
+- 🔍 **Advanced Search** - Bilingual search across students, classes, users, and schools
+- 📊 **Analytics & Reporting** - Teacher performance metrics, trends, and statistics
+- 📄 **Data Export** - CSV/Excel export for classes, students, and analytics
+- 🚀 **Bulk Operations** - Import/create multiple students or users at once
+- 📑 **Pagination** - Efficient handling of large datasets with pagination support
 
 ## User Roles
 
