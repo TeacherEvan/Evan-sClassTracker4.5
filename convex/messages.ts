@@ -157,8 +157,8 @@ export const sendDirectMessage = mutation({
     contentTh: v.string(),
   },
   handler: async (ctx, args) => {
-    if (!args.content.trim() || !args.contentTh.trim()) {
-      throw new Error("Message content cannot be empty");
+    if (!args.content.trim() && !args.contentTh.trim()) {
+      throw new Error("Message content cannot be empty in both languages");
     }
 
     // Check if this is the first message between these users
@@ -221,8 +221,8 @@ export const sendGroupMessage = mutation({
     contentTh: v.string(),
   },
   handler: async (ctx, args) => {
-    if (!args.content.trim() || !args.contentTh.trim()) {
-      throw new Error("Message content cannot be empty");
+    if (!args.content.trim() && !args.contentTh.trim()) {
+      throw new Error("Message content cannot be empty in both languages");
     }
 
     const messageId = await ctx.db.insert("messages", {

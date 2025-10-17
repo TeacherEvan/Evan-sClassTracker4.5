@@ -9,15 +9,15 @@ export const list = query({
   handler: async (ctx, args) => {
     const notifications = args.userId
       ? await ctx.db
-          .query("notifications")
-          .withIndex("by_user", (q) => q.eq("userId", args.userId))
-          .order("desc")
-          .collect()
+        .query("notifications")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
+        .order("desc")
+        .collect()
       : await ctx.db
-          .query("notifications")
-          .withIndex("by_created_at")
-          .order("desc")
-          .collect();
+        .query("notifications")
+        .withIndex("by_created_at")
+        .order("desc")
+        .collect();
 
     return notifications;
   },
@@ -31,14 +31,14 @@ export const unreadCount = query({
   handler: async (ctx, args) => {
     const notifications = args.userId
       ? await ctx.db
-          .query("notifications")
-          .withIndex("by_user", (q) => q.eq("userId", args.userId))
-          .filter((q) => q.eq(q.field("read"), false))
-          .collect()
+        .query("notifications")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
+        .filter((q) => q.eq(q.field("read"), false))
+        .collect()
       : await ctx.db
-          .query("notifications")
-          .withIndex("by_read", (q) => q.eq("read", false))
-          .collect();
+        .query("notifications")
+        .withIndex("by_read", (q) => q.eq("read", false))
+        .collect();
 
     return notifications.length;
   },
@@ -61,11 +61,11 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     // Validate input
-    if (!args.title.trim() || !args.titleTh.trim()) {
-      throw new Error("Title is required in both languages");
+    if (!args.title.trim() && !args.titleTh.trim()) {
+      throw new Error("Title is required in at least one language");
     }
-    if (!args.message.trim() || !args.messageTh.trim()) {
-      throw new Error("Message is required in both languages");
+    if (!args.message.trim() && !args.messageTh.trim()) {
+      throw new Error("Message is required in at least one language");
     }
 
     const notificationId = await ctx.db.insert("notifications", {
@@ -101,14 +101,14 @@ export const markAllAsRead = mutation({
   handler: async (ctx, args) => {
     const notifications = args.userId
       ? await ctx.db
-          .query("notifications")
-          .withIndex("by_user", (q) => q.eq("userId", args.userId))
-          .filter((q) => q.eq(q.field("read"), false))
-          .collect()
+        .query("notifications")
+        .withIndex("by_user", (q) => q.eq("userId", args.userId))
+        .filter((q) => q.eq(q.field("read"), false))
+        .collect()
       : await ctx.db
-          .query("notifications")
-          .withIndex("by_read", (q) => q.eq("read", false))
-          .collect();
+        .query("notifications")
+        .withIndex("by_read", (q) => q.eq("read", false))
+        .collect();
 
     await Promise.all(
       notifications.map((notification) =>

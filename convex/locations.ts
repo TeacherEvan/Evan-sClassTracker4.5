@@ -48,8 +48,8 @@ export const create = mutation({
     },
     handler: async (ctx, args) => {
         // Validate inputs
-        if (!args.name.trim() || !args.nameTh.trim()) {
-            throw new Error("Location name is required in both languages");
+        if (!args.name.trim() && !args.nameTh.trim()) {
+            throw new Error("Location name is required in at least one language");
         }
 
         const locationId = await ctx.db.insert("locations", {
@@ -74,8 +74,8 @@ export const update = mutation({
     },
     handler: async (ctx, args) => {
         // Validate inputs
-        if (!args.name.trim() || !args.nameTh.trim()) {
-            throw new Error("Location name is required in both languages");
+        if (!args.name.trim() && !args.nameTh.trim()) {
+            throw new Error("Location name is required in at least one language");
         }
 
         await ctx.db.patch(args.id, {
