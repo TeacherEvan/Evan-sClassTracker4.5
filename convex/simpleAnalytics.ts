@@ -84,7 +84,7 @@ export const getTeacherPerformance = query({
                     .withIndex("by_username")
                     .filter((q) => q.eq(q.field("_id"), teacherId))
                     .first();
-                
+
                 const processedClasses = stats.approved + stats.rejected;
                 const approvalRate = processedClasses > 0 ? (stats.approved / processedClasses) * 100 : 0;
 
@@ -167,7 +167,7 @@ export const getStudentStats = query({
         const averageClassesPerStudent =
             studentsWithClasses > 0
                 ? Object.values(studentClassCounts).reduce((sum, count) => sum + count, 0) /
-                  studentsWithClasses
+                studentsWithClasses
                 : 0;
 
         return {

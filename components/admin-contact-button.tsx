@@ -4,7 +4,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { useMutation, useQuery } from "convex/react";
-import { MessageCircle, X, Send } from "lucide-react";
+import { MessageCircle, Send, X } from "lucide-react";
 import { useState } from "react";
 
 interface AdminContactButtonProps {
@@ -27,7 +27,7 @@ export function AdminContactButton({
   const sendDirectMessage = useMutation(api.messages.sendDirectMessage);
 
   const handleSendToAdmin = async () => {
-    if (!messageContent.trim() || !messageContentTh.trim()) {
+    if (!messageContent.trim() && !messageContentTh.trim()) {
       return;
     }
 

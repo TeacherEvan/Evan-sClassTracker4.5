@@ -37,8 +37,8 @@ export function SchoolManagement() {
         setError("");
         setSuccess("");
 
-        if (!name.trim() || !nameTh.trim()) {
-            setError(t("Please fill in both name fields", "กรุณากรอกชื่อทั้งสองภาษา"));
+        if (!name.trim() && !nameTh.trim()) {
+            setError(t("Please fill at least one name field", "กรุณากรอกชื่ออย่างน้อยหนึ่งภาษา"));
             return;
         }
 
@@ -164,7 +164,6 @@ export function SchoolManagement() {
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700"
-                                    required
                                 />
                             </div>
 
@@ -178,7 +177,6 @@ export function SchoolManagement() {
                                     value={nameTh}
                                     onChange={(e) => setNameTh(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700"
-                                    required
                                 />
                             </div>
                         </div>

@@ -475,8 +475,8 @@ function ClassItemDisplay({
                 <div className="flex gap-2">
                   <button
                     onClick={() => {
-                      if (!cancelReason.trim() || !cancelReasonTh.trim()) {
-                        alert(t("Please provide reason in both languages", "กรุณาระบุเหตุผลทั้งสองภาษา"));
+                      if (!cancelReason.trim() && !cancelReasonTh.trim()) {
+                        alert(t("Please provide reason in at least one language", "กรุณาระบุเหตุผลอย่างน้อยหนึ่งภาษา"));
                         return;
                       }
                       onRequestCancellation(classItem._id, cancelReason, cancelReasonTh);

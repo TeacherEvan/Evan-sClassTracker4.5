@@ -80,7 +80,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
   }, [conversation, groupMessages]);
 
   const handleSendMessage = async () => {
-    if (!messageContent.trim() || !messageContentTh.trim()) return;
+    if (!messageContent.trim() && !messageContentTh.trim()) return;
 
     try {
       if (mode === "direct" && selectedUserId) {
@@ -159,8 +159,8 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
               <button
                 onClick={() => setMode("direct")}
                 className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 ${mode === "direct"
-                    ? "bg-white text-blue-600"
-                    : "text-white hover:bg-white/10"
+                  ? "bg-white text-blue-600"
+                  : "text-white hover:bg-white/10"
                   }`}
               >
                 <UserPlus className="w-4 h-4" />
@@ -169,8 +169,8 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
               <button
                 onClick={() => setMode("group")}
                 className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 ${mode === "group"
-                    ? "bg-white text-purple-600"
-                    : "text-white hover:bg-white/10"
+                  ? "bg-white text-purple-600"
+                  : "text-white hover:bg-white/10"
                   }`}
               >
                 <Users className="w-4 h-4" />
@@ -234,8 +234,8 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                         key={user._id}
                         onClick={() => setSelectedUserId(user._id)}
                         className={`w-full text-left p-3 rounded-lg transition-colors ${selectedUserId === user._id
-                            ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-500"
-                            : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                          ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-500"
+                          : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
                           }`}
                       >
                         <div className="font-medium text-gray-900 dark:text-white">
@@ -278,8 +278,8 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                         key={school._id}
                         onClick={() => setSelectedSchoolId(school._id)}
                         className={`w-full text-left p-3 rounded-lg transition-colors ${selectedSchoolId === school._id
-                            ? "bg-purple-100 dark:bg-purple-900/30 border border-purple-500"
-                            : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                          ? "bg-purple-100 dark:bg-purple-900/30 border border-purple-500"
+                          : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
                           }`}
                       >
                         <div className="flex items-center gap-2">
@@ -375,8 +375,8 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                     >
                       <div
                         className={`max-w-[70%] rounded-lg p-3 ${isOwnMessage
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
                           }`}
                       >
                         {!isOwnMessage && mode === "group" && (
@@ -459,7 +459,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                   </div>
                   <button
                     onClick={handleSendMessage}
-                    disabled={!messageContent.trim() || !messageContentTh.trim()}
+                    disabled={!messageContent.trim() && !messageContentTh.trim()}
                     className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                   >
                     <Send className="w-4 h-4" />

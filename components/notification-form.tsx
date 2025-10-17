@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { api } from "@/convex/_generated/api";
 import { useLanguage } from "@/lib/language-context";
 import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { useState } from "react";
 
 export function NotificationForm({ userId }: { userId?: string }) {
   const { t } = useLanguage();
@@ -49,7 +49,6 @@ export function NotificationForm({ userId }: { userId?: string }) {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
             />
           </div>
@@ -61,7 +60,6 @@ export function NotificationForm({ userId }: { userId?: string }) {
               type="text"
               value={titleTh}
               onChange={(e) => setTitleTh(e.target.value)}
-              required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
             />
           </div>
@@ -75,7 +73,6 @@ export function NotificationForm({ userId }: { userId?: string }) {
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              required
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
             />
@@ -87,7 +84,6 @@ export function NotificationForm({ userId }: { userId?: string }) {
             <textarea
               value={messageTh}
               onChange={(e) => setMessageTh(e.target.value)}
-              required
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
             />

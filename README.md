@@ -24,18 +24,21 @@ Bilingual English/Thai class tracker for teachers and schools - Built with Conve
 ## User Roles
 
 ### Admin
+
 - Create and manage users
 - Reset passwords (cannot view passwords)
 - Send notifications
 - Full system access
 
 ### Moderator
+
 - Receive notifications for class bookings at their school
 - Acknowledge class bookings
 - Approve or reject classes
 - View class schedules
 
 ### Teacher
+
 - Book classes at schools
 - Receive booking status notifications
 - View their booking history
@@ -45,16 +48,19 @@ Bilingual English/Thai class tracker for teachers and schools - Built with Conve
 ### First Time Setup
 
 1. **Install dependencies**:
+
 ```bash
 npm install
 ```
 
 2. **Set up Convex**:
+
 ```bash
 npx convex dev
 ```
 
 3. **Run the development server**:
+
 ```bash
 npm run dev
 ```
@@ -76,6 +82,7 @@ npm run dev
 ### Password System
 
 When creating a new user (e.g., "Evan"):
+
 - Default password is automatically set to `Teacher{username}` (e.g., `TeacherEvan`)
 - User is required to change password on first login
 - Admin can only reset passwords, **not view them**
@@ -92,9 +99,11 @@ When creating a new user (e.g., "Evan"):
 ### Student ID Generation
 
 Each student gets a unique identifier in format:
+
 ```
 {SchoolHash}-{NameHash}-{Timestamp}-{Random}
 ```
+
 Example: `BANG-EVTH-abc123-XY4Z`
 
 This ensures no duplicates and easy tracking.
@@ -167,6 +176,7 @@ The notification system allows administrators and the system to:
 ### User Management
 
 Admins can create users through the Users tab:
+
 1. Enter username (e.g., "Evan")
 2. Select role (teacher, moderator, admin)
 3. Optionally assign to a school
@@ -176,6 +186,7 @@ Admins can create users through the Users tab:
 ### Class Booking
 
 Teachers can book classes through the Classes tab:
+
 1. Fill in class details (English and Thai)
 2. Select school
 3. Set scheduled date
@@ -214,4 +225,3 @@ MIT
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
