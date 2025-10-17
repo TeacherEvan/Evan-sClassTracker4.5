@@ -7,8 +7,10 @@ import { ToastContainer, type ToastNotification } from "@/components/desktop-not
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LocationManagement } from "@/components/location-management";
 import { LoginForm } from "@/components/login-form";
+import { Logo } from "@/components/logo";
 import { MessagingHub } from "@/components/messaging-hub";
 import { ModeratorListView } from "@/components/moderator-list-view";
+import { ModeratorStudentApprovals } from "@/components/moderator-student-approvals";
 import { NotificationForm } from "@/components/notification-form";
 import { NotificationList } from "@/components/notification-list";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
@@ -18,6 +20,7 @@ import { StudentManagement } from "@/components/student-management";
 import { TeacherActivityDashboard } from "@/components/teacher-activity-dashboard";
 import { TeacherHelper } from "@/components/teacher-helper";
 import { TeacherHelperAdmin } from "@/components/teacher-helper-admin";
+import { TeacherStudentRequests } from "@/components/teacher-student-requests";
 import { UserManagement } from "@/components/user-management";
 import { WeeklyCalendar } from "@/components/weekly-calendar";
 import { api } from "@/convex/_generated/api";
@@ -26,7 +29,7 @@ import { initServiceWorker } from "@/lib/init-sw";
 import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
 import { useQuery } from "convex/react";
-import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, GraduationCap, LogOut, MapPin, MessageSquare, Shield, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, GraduationCap, LogOut, MapPin, MessageSquare, Shield, Users, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -34,7 +37,7 @@ export default function Home() {
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity">("calendar");
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "studentRequests">("calendar");
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -173,11 +176,9 @@ export default function Home() {
 
       <header className="max-w-4xl mx-auto mb-4 md:mb-8">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold">
-              {t("Class Tracker", "ติดตามชั้นเรียน")}
-            </h1>
-            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1">
+          <div className="flex-1">
+            <Logo size="sm" showSlogan={false} />
+            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-2">
               {t(`Welcome, ${user.username}`, `ยินดีต้อนรับ, ${user.username}`)}
               {" · "}
               {t(
@@ -257,9 +258,34 @@ export default function Home() {
             {t("Teacher's Helper", "ผู้ช่วยครู")}
           </button>
 
+          {/* Student Requests tab for teachers */}
+          {user.role === "teacher" && (
+            <button
+              onClick={() => setActiveTab("studentRequests")}
+              className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "studentRequests"
+                ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                }`}
+            >
+              <UserPlus className="w-4 h-4 md:w-5 md:h-5" />
+              {t("Add Student", "เพิ่มนักเรียน")}
+            </button>
+          )}
+
           {/* Analytics tab for moderators */}
           {user.role === "moderator" && user.schoolId && (
             <>
+              <button
+                onClick={() => setActiveTab("studentRequests")}
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "studentRequests"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <UserPlus className="w-4 h-4 md:w-5 md:h-5" />
+                {t("Student Approvals", "อนุมัติการเพิ่มนักเรียน")}
+              </button>
+
               <button
                 onClick={() => setActiveTab("analytics")}
                 className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "analytics"
@@ -395,6 +421,22 @@ export default function Home() {
           ) : (
             <TeacherHelper currentUser={user} />
           )}
+        </>
+      )}
+
+      {activeTab === "studentRequests" && user && (
+        <>
+          {user.role === "teacher" ? (
+            <TeacherStudentRequests
+              teacherId={user._id}
+              teacherSchoolId={user.schoolId}
+            />
+          ) : user.role === "moderator" && user.schoolId ? (
+            <ModeratorStudentApprovals
+              moderatorId={user._id}
+              schoolId={user.schoolId}
+            />
+          ) : null}
         </>
       )}
 

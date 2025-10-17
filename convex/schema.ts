@@ -193,4 +193,30 @@ export default defineSchema({
     .index("by_created_at", ["createdAt"])
     .index("by_teacher_and_date", ["teacherId", "createdAt"])
     .index("by_school_and_date", ["schoolId", "createdAt"]),
+
+  studentRequests: defineTable({
+    teacherId: v.id("users"), // Teacher requesting to add the student
+    schoolId: v.id("schools"), // School where the student should be added
+    firstName: v.string(),
+    lastName: v.string(),
+    grade: v.string(),
+    notes: v.string(), // Additional notes from teacher
+    notesTh: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected")
+    ),
+    createdStudentId: v.optional(v.id("students")), // If approved, link to created student
+    createdAt: v.number(),
+    resolvedAt: v.optional(v.number()),
+    resolvedBy: v.optional(v.id("users")), // Moderator who approved/rejected
+    rejectionReason: v.optional(v.string()), // If rejected
+    rejectionReasonTh: v.optional(v.string()),
+  })
+    .index("by_teacher", ["teacherId"])
+    .index("by_school", ["schoolId"])
+    .index("by_status", ["status"])
+    .index("by_created_at", ["createdAt"])
+    .index("by_school_and_status", ["schoolId", "status"]),
 });

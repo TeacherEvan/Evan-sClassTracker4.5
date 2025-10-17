@@ -6,6 +6,7 @@ import { useLanguage } from "@/lib/language-context";
 import { useMutation } from "convex/react";
 import { AlertCircle } from "lucide-react";
 import { useState } from "react";
+import { Logo } from "./logo";
 
 type User = {
   _id: Id<"users">;
@@ -48,9 +49,9 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     <div className="min-h-[100dvh] flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
       <div className="w-full max-w-md">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-8">
-          <h1 className="text-3xl font-bold text-center mb-2">
-            {t("Class Tracker", "ติดตามชั้นเรียน")}
-          </h1>
+          <div className="mb-8">
+            <Logo size="md" showSlogan={true} />
+          </div>
           <p className="text-gray-600 dark:text-gray-400 text-center mb-8">
             {t("Sign in to your account", "เข้าสู่ระบบบัญชีของคุณ")}
           </p>

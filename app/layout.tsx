@@ -6,8 +6,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Class Tracker - Notification System",
-  description: "Bilingual English/Thai class tracker for teachers and schools",
+  title: "Evan's ClassTracker - Built by teachers for Teachers",
+  description: "Bilingual English/Thai class tracker for teachers and schools - Built by teachers for Teachers",
 };
 
 export const viewport: Viewport = {
@@ -24,6 +24,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="antialiased">
         <ErrorBoundary>
           <ConvexClientProvider>
