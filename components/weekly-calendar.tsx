@@ -6,6 +6,7 @@ import { getClassStatusColor } from "@/lib/constants";
 import { getWeekStart, isToday } from "@/lib/date-utils";
 import { useLanguage } from "@/lib/language-context";
 import type { ClassData, User } from "@/lib/types";
+import { useSwipeGesture } from "@/lib/use-swipe-gesture";
 import { useMutation, useQuery } from "convex/react";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -86,6 +87,12 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
         setCurrentDate(newDate);
     };
 
+    // Swipe gestures for week navigation
+    useSwipeGesture({
+        onSwipeLeft: goToNextWeek,
+        onSwipeRight: goToPreviousWeek,
+    });
+
     const goToToday = () => {
         setCurrentDate(new Date());
     };
@@ -158,46 +165,46 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     };
 
     return (
-        <div className="w-full max-w-7xl mx-auto p-4">
+        <div className="w-full max-w-7xl mx-auto px-3 py-4 md:p-4">
             {/* Header */}
-            <div className="mb-6">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-semibold">
+            <div className="mb-4 md:mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 md:mb-4 gap-3">
+                    <h2 className="text-xl md:text-2xl font-semibold">
                         {t("Weekly Calendar", "ปฏิทินรายสัปดาห์")}
                     </h2>
                     <button
                         onClick={goToToday}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        className="px-4 py-2.5 md:py-2 bg-blue-600 text-white rounded-xl md:rounded-lg hover:bg-blue-700 active:scale-95 transition-all touch-manipulation shadow-lg shadow-blue-600/20 text-sm md:text-base font-medium w-full md:w-auto"
                     >
                         {t("Today", "วันนี้")}
                     </button>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
+                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
+                    <div className="flex items-center gap-2 justify-between md:justify-start">
                         <button
                             onClick={goToPreviousWeek}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                            className="p-2.5 md:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg active:scale-95 transition-all touch-manipulation"
                         >
-                            <ChevronLeft className="w-5 h-5" />
+                            <ChevronLeft className="w-6 h-6 md:w-5 md:h-5" />
                         </button>
-                        <span className="text-lg font-medium min-w-[200px] text-center">
+                        <span className="text-base md:text-lg font-medium flex-1 md:min-w-[200px] text-center">
                             {weekStart.toLocaleDateString(language === "en" ? "en-US" : "th-TH", {
-                                month: "long",
+                                month: "short",
                                 day: "numeric",
                             })}{" "}
                             -{" "}
                             {weekEnd.toLocaleDateString(language === "en" ? "en-US" : "th-TH", {
-                                month: "long",
+                                month: "short",
                                 day: "numeric",
                                 year: "numeric",
                             })}
                         </span>
                         <button
                             onClick={goToNextWeek}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                            className="p-2.5 md:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg active:scale-95 transition-all touch-manipulation"
                         >
-                            <ChevronRight className="w-5 h-5" />
+                            <ChevronRight className="w-6 h-6 md:w-5 md:h-5" />
                         </button>
                     </div>
 
@@ -206,7 +213,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                         <select
                             value={selectedSchoolId}
                             onChange={(e) => setSelectedSchoolId(e.target.value as Id<"schools"> | "")}
-                            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                            className="px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 touch-manipulation transition-shadow"
                         >
                             <option value="">{t("All Schools", "ทุกโรงเรียน")}</option>
                             {schools?.map((school) => (
@@ -220,22 +227,24 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
             </div>
 
             {/* Calendar Grid */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg overflow-hidden">
+                {/* Day headers - abbreviated on mobile */}
                 <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
                     {[
-                        t("Monday", "จันทร์"),
-                        t("Tuesday", "อังคาร"),
-                        t("Wednesday", "พุธ"),
-                        t("Thursday", "พฤหัสบดี"),
-                        t("Friday", "ศุกร์"),
-                        t("Saturday", "เสาร์"),
-                        t("Sunday", "อาทิตย์"),
+                        { full: t("Monday", "จันทร์"), short: t("Mon", "จ.") },
+                        { full: t("Tuesday", "อังคาร"), short: t("Tue", "อ.") },
+                        { full: t("Wednesday", "พุธ"), short: t("Wed", "พ.") },
+                        { full: t("Thursday", "พฤหัสบดี"), short: t("Thu", "พฤ.") },
+                        { full: t("Friday", "ศุกร์"), short: t("Fri", "ศ.") },
+                        { full: t("Saturday", "เสาร์"), short: t("Sat", "ส.") },
+                        { full: t("Sunday", "อาทิตย์"), short: t("Sun", "อา.") },
                     ].map((day, i) => (
                         <div
                             key={i}
-                            className="px-4 py-3 text-center font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700"
+                            className="px-1 md:px-4 py-2 md:py-3 text-center font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 text-xs md:text-base"
                         >
-                            {day}
+                            <span className="hidden md:inline">{day.full}</span>
+                            <span className="md:hidden">{day.short}</span>
                         </div>
                     ))}
                 </div>
@@ -248,11 +257,11 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                         return (
                             <div
                                 key={i}
-                                className={`min-h-[150px] p-2 ${today ? "bg-blue-50 dark:bg-blue-900/10" : ""}`}
+                                className={`min-h-[120px] md:min-h-[150px] p-1 md:p-2 ${today ? "bg-blue-50 dark:bg-blue-900/10" : ""}`}
                             >
-                                <div className="flex justify-between items-start mb-2">
+                                <div className="flex justify-between items-start mb-1 md:mb-2">
                                     <span
-                                        className={`text-sm font-medium ${today
+                                        className={`text-sm md:text-sm font-medium ${today
                                             ? "text-blue-600 dark:text-blue-400 font-bold"
                                             : "text-gray-700 dark:text-gray-300"
                                             }`}
@@ -261,10 +270,10 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                     </span>
                                     <button
                                         onClick={() => handleAddClass(day)}
-                                        className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+                                        className="p-1 md:p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded active:scale-95 transition-all touch-manipulation"
                                         title={t("Add class", "เพิ่มคลาส")}
                                     >
-                                        <Plus className="w-4 h-4" />
+                                        <Plus className="w-4 h-4 md:w-4 md:h-4" />
                                     </button>
                                 </div>
 
@@ -276,16 +285,16 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                         return (
                                             <div
                                                 key={classItem._id}
-                                                className={`text-xs p-2 rounded border ${getClassStatusColor(classItem.status)}`}
+                                                className={`text-xs p-1.5 md:p-2 rounded-lg md:rounded border ${getClassStatusColor(classItem.status)} active:scale-95 transition-transform touch-manipulation cursor-pointer`}
                                             >
-                                                <div className="font-semibold truncate">
+                                                <div className="font-semibold truncate text-[11px] md:text-xs">
                                                     {language === "en" ? classItem.title : classItem.titleTh}
                                                 </div>
-                                                <div className="text-gray-600 dark:text-gray-300 truncate">
+                                                <div className="text-gray-600 dark:text-gray-300 truncate text-[10px] md:text-xs">
                                                     {teacher?.username}
                                                 </div>
                                                 {school && (
-                                                    <div className="text-gray-500 dark:text-gray-400 text-[10px] truncate">
+                                                    <div className="text-gray-500 dark:text-gray-400 text-[9px] md:text-[10px] truncate hidden md:block">
                                                         {language === "en" ? school.name : school.nameTh}
                                                     </div>
                                                 )}

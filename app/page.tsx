@@ -25,8 +25,9 @@ import { isDesktopDevice } from "@/lib/device-detection";
 import { initServiceWorker } from "@/lib/init-sw";
 import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
+import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
 import { useQuery } from "convex/react";
-import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, GraduationCap, LogOut, MapPin, MessageSquare, Shield, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, GraduationCap, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -37,6 +38,16 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity">("calendar");
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
+
+  // Pull-to-refresh functionality
+  const handleRefresh = async () => {
+    // Simulate refresh by waiting a bit
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    // The useQuery hooks will automatically refetch when the component re-renders
+    window.location.reload();
+  };
+
+  const { isPulling, isRefreshing, pullDistance } = usePullToRefresh(handleRefresh);
 
   // Check device type on mount
   useEffect(() => {
@@ -159,7 +170,26 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-[100dvh] p-4 md:p-8">
+    <div className="min-h-[100dvh] pb-20 md:pb-0 md:p-8">
+      {/* Pull-to-Refresh Indicator - Mobile only */}
+      {!isDesktop && (
+        <div
+          className="fixed top-0 left-0 right-0 flex justify-center items-center transition-all duration-300 z-40"
+          style={{
+            height: `${pullDistance}px`,
+            opacity: pullDistance > 0 ? 1 : 0,
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          }}
+        >
+          <RefreshCw
+            className={`text-blue-600 dark:text-blue-400 transition-transform duration-300 ${isRefreshing || isPulling ? 'animate-spin' : ''}`}
+            style={{
+              transform: `rotate(${pullDistance * 3}deg) scale(${Math.min(pullDistance / 80, 1)})`,
+            }}
+          />
+        </div>
+      )}
+
       {/* Toast Notifications */}
       <ToastContainer notifications={toasts} onDismiss={dismissToast} />
 
@@ -171,13 +201,13 @@ export default function Home() {
         />
       )}
 
-      <header className="max-w-4xl mx-auto mb-4 md:mb-8">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold">
+      <header className="max-w-4xl mx-auto mb-3 md:mb-8 p-3 md:p-0">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-xl md:text-3xl font-bold truncate">
               {t("Class Tracker", "ติดตามชั้นเรียน")}
             </h1>
-            <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1">
+            <p className="text-xs md:text-base text-gray-600 dark:text-gray-400 mt-1 truncate">
               {t(`Welcome, ${user.username}`, `ยินดีต้อนรับ, ${user.username}`)}
               {" · "}
               {t(
@@ -190,7 +220,7 @@ export default function Home() {
               )}
             </p>
           </div>
-          <div className="flex items-center gap-2 md:gap-4 w-full md:w-auto">
+          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
             {/* Admin Contact Button for non-admin users */}
             {user.role !== "admin" && (
               <AdminContactButton currentUserId={user._id} />
@@ -198,17 +228,66 @@ export default function Home() {
             <LanguageSwitcher />
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2 text-sm md:text-base bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 md:py-2 text-sm md:text-base bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 active:scale-95 transition-all touch-manipulation"
             >
-              <LogOut className="w-4 h-4 md:w-5 md:h-5" />
+              <LogOut className="w-5 h-5 md:w-5 md:h-5" />
               <span className="hidden sm:inline">{t("Logout", "ออกจากระบบ")}</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Tab Navigation */}
-      <div className="max-w-7xl mx-auto mb-4 md:mb-6">
+      {/* Mobile Bottom Navigation - Hidden on desktop */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50 md:hidden safe-area-inset-bottom">
+        <div className="flex justify-around items-center h-16 px-2">
+          <button
+            onClick={() => setActiveTab("calendar")}
+            className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95 ${activeTab === "calendar"
+              ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+              : "text-gray-600 dark:text-gray-400"
+              }`}
+          >
+            <CalendarDays className="w-6 h-6" />
+            <span className="text-xs font-medium">{t("Calendar", "ปฏิทิน")}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("classes")}
+            className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95 ${activeTab === "classes"
+              ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+              : "text-gray-600 dark:text-gray-400"
+              }`}
+          >
+            <Calendar className="w-6 h-6" />
+            <span className="text-xs font-medium">{t("Classes", "ชั้นเรียน")}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("messages")}
+            className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95 ${activeTab === "messages"
+              ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+              : "text-gray-600 dark:text-gray-400"
+              }`}
+          >
+            <MessageSquare className="w-6 h-6" />
+            <span className="text-xs font-medium">{t("Messages", "ข้อความ")}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("notifications")}
+            className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95 ${activeTab === "notifications"
+              ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+              : "text-gray-600 dark:text-gray-400"
+              }`}
+          >
+            <Bell className="w-6 h-6" />
+            <span className="text-xs font-medium">{t("Alerts", "แจ้งเตือน")}</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* Desktop Tab Navigation - Hidden on mobile */}
+      <div className="max-w-7xl mx-auto mb-4 md:mb-6 hidden md:block">
         <div className="flex gap-1 md:gap-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
           <button
             onClick={() => setActiveTab("calendar")}
