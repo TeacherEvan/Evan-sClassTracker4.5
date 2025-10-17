@@ -134,18 +134,18 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
   );
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+    <div className="max-w-7xl mx-auto px-0 md:px-4">
+      <div className="bg-white dark:bg-gray-800 md:rounded-lg shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6">
-          <div className="flex items-center justify-between">
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 md:p-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
             <div>
-              <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                <MessageSquare className="w-6 h-6" />
+              <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 md:w-6 md:h-6" />
                 {t("Messaging Hub", "ศูนย์ข้อความ")}
               </h2>
               {unreadCount !== undefined && unreadCount > 0 && (
-                <p className="text-blue-100 mt-1">
+                <p className="text-blue-100 mt-1 text-sm md:text-base">
                   {t(
                     `${unreadCount} unread message${unreadCount > 1 ? "s" : ""}`,
                     `${unreadCount} ข้อความที่ยังไม่ได้อ่าน`
@@ -155,34 +155,34 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
             </div>
 
             {/* Mode Switcher */}
-            <div className="flex gap-2 bg-white/20 rounded-lg p-1">
+            <div className="flex gap-1 md:gap-2 bg-white/20 rounded-lg p-1 w-full md:w-auto">
               <button
                 onClick={() => setMode("direct")}
-                className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 ${mode === "direct"
-                  ? "bg-white text-blue-600"
+                className={`flex-1 md:flex-none px-3 md:px-4 py-2.5 md:py-2 rounded-md transition-all flex items-center justify-center gap-2 text-sm md:text-base touch-manipulation active:scale-95 ${mode === "direct"
+                  ? "bg-white text-blue-600 shadow-lg"
                   : "text-white hover:bg-white/10"
                   }`}
               >
                 <UserPlus className="w-4 h-4" />
-                {t("Direct", "ตรง")}
+                <span className="font-medium">{t("Direct", "ตรง")}</span>
               </button>
               <button
                 onClick={() => setMode("group")}
-                className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 ${mode === "group"
-                  ? "bg-white text-purple-600"
+                className={`flex-1 md:flex-none px-3 md:px-4 py-2.5 md:py-2 rounded-md transition-all flex items-center justify-center gap-2 text-sm md:text-base touch-manipulation active:scale-95 ${mode === "group"
+                  ? "bg-white text-purple-600 shadow-lg"
                   : "text-white hover:bg-white/10"
                   }`}
               >
                 <Users className="w-4 h-4" />
-                {t("Group", "กลุ่ม")}
+                <span className="font-medium">{t("Group", "กลุ่ม")}</span>
               </button>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 h-[600px]">
+        <div className="grid grid-cols-1 md:grid-cols-3 h-[calc(100dvh-280px)] md:h-[600px]">
           {/* Sidebar - User/School Selection */}
-          <div className="border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+          <div className="border-r border-gray-200 dark:border-gray-700 overflow-y-auto hidden md:block">
             <div className="p-4">
               <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">
                 {mode === "direct"
@@ -300,14 +300,48 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
 
           {/* Main Chat Area */}
           <div className="md:col-span-2 flex flex-col">
+            {/* Mobile User/School Selector - Shows on mobile only */}
+            <div className="md:hidden border-b border-gray-200 dark:border-gray-700 p-3 bg-gray-50 dark:bg-gray-800">
+              {mode === "direct" ? (
+                <select
+                  value={selectedUserId || ""}
+                  onChange={(e) => setSelectedUserId(e.target.value as Id<"users"> || null)}
+                  className="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white touch-manipulation transition-shadow"
+                >
+                  <option value="">{t("Select a user", "เลือกผู้ใช้")}</option>
+                  {availableUsers?.map((user: UserWithSchool) => (
+                    <option key={user._id} value={user._id}>
+                      {user.username} - {t(
+                        user.role.charAt(0).toUpperCase() + user.role.slice(1),
+                        user.role === "teacher" ? "ครู" : user.role === "moderator" ? "ผู้ดูแล" : "ผู้จัดการ"
+                      )}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <select
+                  value={selectedSchoolId || ""}
+                  onChange={(e) => setSelectedSchoolId(e.target.value as Id<"schools"> || null)}
+                  className="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white touch-manipulation transition-shadow"
+                >
+                  <option value="">{t("Select a school", "เลือกโรงเรียน")}</option>
+                  {schools?.map((school) => (
+                    <option key={school._id} value={school._id}>
+                      {language === "en" ? school.name : school.nameTh}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
             {/* Chat Header */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            <div className="p-3 md:p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
               {mode === "direct" && selectedUser ? (
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
+                  <h3 className="font-semibold text-base md:text-base text-gray-900 dark:text-white">
                     {selectedUser.username}
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
                     {t(
                       selectedUser.role.charAt(0).toUpperCase() +
                       selectedUser.role.slice(1),
@@ -321,18 +355,18 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                 </div>
               ) : mode === "group" && selectedSchool ? (
                 <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                  <h3 className="font-semibold text-base md:text-base text-gray-900 dark:text-white flex items-center gap-2">
                     <Building2 className="w-5 h-5" />
                     {language === "en"
                       ? selectedSchool.name
                       : selectedSchool.nameTh}
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400">
                     {t("Group Conversation", "การสนทนากลุ่ม")}
                   </p>
                 </div>
               ) : (
-                <div className="text-gray-500 dark:text-gray-400">
+                <div className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
                   {t(
                     mode === "direct"
                       ? "Select a user to start chatting"
@@ -346,15 +380,18 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 bg-gray-50/50 dark:bg-gray-900/50">
               {messages === undefined ? (
-                <p className="text-gray-500 text-center">
-                  {t("Loading messages...", "กำลังโหลดข้อความ...")}
-                </p>
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                  <p className="text-gray-500 text-sm md:text-base">
+                    {t("Loading messages...", "กำลังโหลดข้อความ...")}
+                  </p>
+                </div>
               ) : messages.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <MessageSquare className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>{t("No messages yet", "ยังไม่มีข้อความ")}</p>
+                <div className="text-center py-12 md:py-8 text-gray-500">
+                  <MessageSquare className="w-16 h-16 md:w-12 md:h-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-base md:text-base">{t("No messages yet", "ยังไม่มีข้อความ")}</p>
                   <p className="text-sm mt-1">
                     {t(
                       "Start the conversation!",
@@ -374,18 +411,18 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                       className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-[70%] rounded-lg p-3 ${isOwnMessage
+                        className={`max-w-[85%] md:max-w-[70%] rounded-2xl md:rounded-lg p-3 md:p-3 shadow-md ${isOwnMessage
                           ? "bg-blue-500 text-white"
-                          : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
+                          : "bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-600"
                           }`}
                       >
                         {!isOwnMessage && mode === "group" && (
-                          <p className="text-xs font-semibold mb-1 opacity-75">
+                          <p className="text-xs font-semibold mb-1.5 opacity-75">
                             {msg.senderUsername}
                           </p>
                         )}
-                        <p className="text-sm">{content}</p>
-                        <div className="flex items-center gap-2 mt-1">
+                        <p className="text-sm md:text-sm leading-relaxed break-words">{content}</p>
+                        <div className="flex items-center gap-2 mt-2">
                           <p className="text-xs opacity-75">
                             {new Date(msg.createdAt).toLocaleTimeString(
                               language === "en" ? "en-US" : "th-TH",
@@ -398,7 +435,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                           {!isOwnMessage && !msg.read && (
                             <button
                               onClick={() => handleMarkAsRead(msg._id)}
-                              className="text-xs hover:underline"
+                              className="text-xs hover:underline px-2 py-1 rounded touch-manipulation active:scale-95 transition-transform"
                             >
                               {t("Mark read", "อ่านแล้ว")}
                             </button>
@@ -406,14 +443,14 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                           {!isOwnMessage && !msg.acknowledged && (
                             <button
                               onClick={() => handleAcknowledge(msg._id)}
-                              className="text-xs hover:underline flex items-center gap-1"
+                              className="text-xs hover:underline flex items-center gap-1 px-2 py-1 rounded touch-manipulation active:scale-95 transition-transform"
                             >
                               <Check className="w-3 h-3" />
                               {t("Ack", "รับทราบ")}
                             </button>
                           )}
                           {msg.acknowledged && (
-                            <Check className="w-3 h-3 text-green-400" />
+                            <Check className="w-3.5 h-3.5 md:w-3 md:h-3 text-green-400" />
                           )}
                         </div>
                       </div>
@@ -425,11 +462,11 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
             </div>
 
             {/* Message Input */}
-            <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800">
+            <div className="border-t border-gray-200 dark:border-gray-700 p-3 md:p-4 bg-gray-50 dark:bg-gray-800">
               {(mode === "direct" && selectedUserId) ||
                 (mode === "group" && selectedSchoolId) ? (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2 md:space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <input
                       type="text"
                       value={messageContent}
@@ -441,7 +478,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                         "Type message (English)",
                         "พิมพ์ข้อความ (อังกฤษ)"
                       )}
-                      className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm"
+                      className="px-4 py-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-base md:text-sm touch-manipulation transition-shadow"
                     />
                     <input
                       type="text"
@@ -454,20 +491,20 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                         "Type message (Thai)",
                         "พิมพ์ข้อความ (ไทย)"
                       )}
-                      className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm"
+                      className="px-4 py-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-base md:text-sm touch-manipulation transition-shadow"
                     />
                   </div>
                   <button
                     onClick={handleSendMessage}
                     disabled={!messageContent.trim() && !messageContentTh.trim()}
-                    className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                    className="w-full bg-blue-500 text-white px-4 py-3.5 md:py-2.5 rounded-xl md:rounded-lg hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed active:scale-98 transition-all flex items-center justify-center gap-2 touch-manipulation shadow-lg shadow-blue-500/20 text-base md:text-sm font-medium"
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="w-5 h-5 md:w-4 md:h-4" />
                     {t("Send Message", "ส่งข้อความ")}
                   </button>
                 </div>
               ) : (
-                <p className="text-gray-500 text-center text-sm">
+                <p className="text-gray-500 text-center text-sm md:text-sm py-2">
                   {t(
                     mode === "direct"
                       ? "Select a user to send a message"
