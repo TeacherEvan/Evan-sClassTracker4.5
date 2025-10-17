@@ -5,5 +5,14 @@
     "cSpell.ignoreRegExpList": [
         // Ignore Thai Unicode characters (U+0E00 to U+0E7F)
         "[\\u0E00-\\u0E7F]+"
+    ],
+    "cSpell.words": [
+        "kbps",
+        "youtu",
+        "ytdl",
+        "checkmarks",
+        "oneline",
+        "Playfair",
+        "committerdate"
     ]
 }
