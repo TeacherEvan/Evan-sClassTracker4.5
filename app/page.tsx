@@ -4,6 +4,7 @@ import { AdminContactButton } from "@/components/admin-contact-button";
 import { ClassBooking } from "@/components/class-booking";
 import { DatabaseInit } from "@/components/database-init";
 import { ToastContainer, type ToastNotification } from "@/components/desktop-notification-toast";
+import DeviceTestingDashboard from "@/components/device-testing-dashboard";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LocationManagement } from "@/components/location-management";
 import { LoginForm } from "@/components/login-form";
@@ -27,7 +28,7 @@ import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
 import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
 import { useQuery } from "convex/react";
-import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, GraduationCap, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, FlaskConical, GraduationCap, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -35,7 +36,7 @@ export default function Home() {
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity">("calendar");
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "testing">("calendar");
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -441,6 +442,17 @@ export default function Home() {
                 <Users className="w-4 h-4 md:w-5 md:h-5" />
                 {t("Users", "ผู้ใช้")}
               </button>
+
+              <button
+                onClick={() => setActiveTab("testing")}
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "testing"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <FlaskConical className="w-4 h-4 md:w-5 md:h-5" />
+                {t("Testing", "ทดสอบ")}
+              </button>
             </>
           )}
         </div>
@@ -505,6 +517,10 @@ export default function Home() {
 
       {activeTab === "users" && user.role === "admin" && (
         <UserManagement />
+      )}
+
+      {activeTab === "testing" && user.role === "admin" && (
+        <DeviceTestingDashboard />
       )}
     </div>
   );
