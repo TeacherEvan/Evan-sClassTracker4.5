@@ -3,7 +3,7 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
-import type { User } from "@/lib/types";
+import type { User, UserWithSchool } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
 import {
   MessageSquare,
@@ -30,6 +30,9 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
   const [selectedSchoolId, setSelectedSchoolId] = useState<
     Id<"schools"> | null
   >(currentUser.schoolId || null);
+  const [filterSchoolId, setFilterSchoolId] = useState<Id<"schools"> | null>(
+    null
+  );
   const [messageContent, setMessageContent] = useState("");
   const [messageContentTh, setMessageContentTh] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -37,7 +40,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
   // Queries
   const availableUsers = useQuery(api.messages.getAvailableUsers, {
     currentUserId: currentUser._id,
-    schoolId: currentUser.schoolId,
+    filterSchoolId: filterSchoolId || undefined,
   });
 
   const schools = useQuery(api.schools.list, {});
@@ -189,6 +192,34 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                   : t("Schools", "โรงเรียน")}
               </h3>
 
+              {mode === "direct" && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t("Filter by School", "กรองตามโรงเรียน")}
+                  </label>
+                  <select
+                    value={filterSchoolId || "all"}
+                    onChange={(e) =>
+                      setFilterSchoolId(
+                        e.target.value === "all"
+                          ? null
+                          : (e.target.value as Id<"schools">)
+                      )
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm"
+                  >
+                    <option value="all">
+                      {t("All Schools", "โรงเรียนทั้งหมด")}
+                    </option>
+                    {schools?.map((school) => (
+                      <option key={school._id} value={school._id}>
+                        {language === "en" ? school.name : school.nameTh}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {mode === "direct" ? (
                 <div className="space-y-2">
                   {availableUsers === undefined ? (
@@ -200,7 +231,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                       {t("No users available", "ไม่มีผู้ใช้ที่พร้อมใช้งาน")}
                     </p>
                   ) : (
-                    availableUsers.map((user) => (
+                    availableUsers.map((user: UserWithSchool) => (
                       <button
                         key={user._id}
                         onClick={() => setSelectedUserId(user._id)}
@@ -223,6 +254,12 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                                 ? "ผู้ดูแล"
                                 : "ผู้จัดการ"
                           )}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                          <Building2 className="w-3 h-3" />
+                          {language === "en"
+                            ? user.schoolName
+                            : user.schoolNameTh}
                         </div>
                       </button>
                     ))

@@ -17,6 +17,11 @@ export type User = {
   createdAt: number;
 };
 
+export type UserWithSchool = User & {
+  schoolName: string;
+  schoolNameTh: string;
+};
+
 // Notification types
 export type NotificationType = "info" | "success" | "warning" | "error";
 

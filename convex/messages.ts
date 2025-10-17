@@ -278,22 +278,40 @@ export const remove = mutation({
 export const getAvailableUsers = query({
   args: {
     currentUserId: v.id("users"),
-    schoolId: v.optional(v.id("schools")),
+    filterSchoolId: v.optional(v.id("schools")),
   },
   handler: async (ctx, args) => {
-    // Get all users from the same school or all users if admin
-    const allUsers = args.schoolId
+    // Get users based on filter - if filterSchoolId provided, filter by school, otherwise get all
+    const allUsers = args.filterSchoolId
       ? await ctx.db
         .query("users")
-        .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId))
+        .withIndex("by_school", (q) => q.eq("schoolId", args.filterSchoolId))
         .collect()
       : await ctx.db.query("users").collect();
 
-    // Filter out current user and return without password hash
-    return allUsers
-      .filter((user) => user._id !== args.currentUserId)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .map(({ passwordHash: _passwordHash, ...user }) => user);
+    // Filter out current user
+    const filteredUsers = allUsers.filter(
+      (user) => user._id !== args.currentUserId
+    );
+
+    // Fetch school information for each user
+    const usersWithSchools = await Promise.all(
+      filteredUsers.map(async (user) => {
+        const school = user.schoolId 
+          ? await ctx.db.get(user.schoolId) 
+          : null;
+        
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
+        return {
+          ...userWithoutPassword,
+          schoolName: school?.name || "No School",
+          schoolNameTh: school?.nameTh || "ไม่มีโรงเรียน",
+        };
+      })
+    );
+
+    return usersWithSchools;
   },
 });
 

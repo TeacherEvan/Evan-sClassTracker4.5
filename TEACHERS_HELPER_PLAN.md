@@ -1,38 +1,41 @@
 # Teacher's Helper Feature - Implementation Plan
 
 ## Overview
+
 Add a "Teacher's Helper" tab that provides quick access to popular education resources. Admin users can manage these links through an administrative interface.
 
 ## Feature Requirements
 
 ### 1. User Access
+
 - **Teachers**: View and access resource links
 - **Moderators**: View and access resource links  
 - **Admin**: View, add, edit, and delete resource links
 
 ### 2. Default Resources (Based on Research)
+
 Based on best practices from leading educational platforms:
 
-1. **Teachers Pay Teachers** - https://www.teacherspayteachers.com/
+1. **Teachers Pay Teachers** - <https://www.teacherspayteachers.com/>
    - World's largest marketplace for teacher-created resources
    - Lesson plans, worksheets, activities
-   
-2. **Education.com** - https://www.education.com/worksheets/
+
+2. **Education.com** - <https://www.education.com/worksheets/>
    - 28,000+ worksheets, games, lesson plans
    - PreK-8th grade content
    - Interactive worksheets and guided lessons
 
-3. **ReadWorks** - https://www.readworks.org/
+3. **ReadWorks** - <https://www.readworks.org/>
    - FREE reading comprehension resources
    - 6,000+ articles aligned to science of reading
    - K-12 content with differentiation tools
 
-4. **CommonLit** - https://www.commonlit.org/
+4. **CommonLit** - <https://www.commonlit.org/>
    - FREE ELA curriculum for grades 6-12
    - Full-length texts with lesson materials
    - Benchmark assessments included
 
-5. **Khan Academy** - https://www.khanacademy.org/
+5. **Khan Academy** - <https://www.khanacademy.org/>
    - FREE comprehensive learning platform
    - Math, science, arts & humanities
    - Personalized learning dashboard
@@ -40,6 +43,7 @@ Based on best practices from leading educational platforms:
 ## Technical Architecture
 
 ### Database Schema
+
 New table: `teacherResources`
 
 ```typescript
@@ -66,6 +70,7 @@ teacherResources: defineTable({
 ### Backend Files (Convex)
 
 **convex/teacherResources.ts** - New file
+
 - `list()` - Query to get all active resources ordered by `order`
 - `listAll()` - Query for admin to see all resources (including inactive)
 - `create()` - Mutation for admin to add new resource
@@ -78,6 +83,7 @@ teacherResources: defineTable({
 ### Frontend Components
 
 **components/teacher-helper.tsx** - New file
+
 - Display grid/list of resource cards
 - Click to open in new tab
 - Bilingual display
@@ -86,6 +92,7 @@ teacherResources: defineTable({
 - Search functionality
 
 **components/teacher-helper-admin.tsx** - New file
+
 - Full CRUD interface for admin/Evan
 - Form to add/edit resources
 - Drag-and-drop reordering
@@ -97,12 +104,14 @@ teacherResources: defineTable({
 ### UI Integration
 
 **app/page.tsx** modifications:
+
 1. Add new tab state: `"resources"` to the activeTab union type
 2. Add new tab button in navigation (available to all users)
 3. Add conditional rendering for the tab content
 4. Icon: `BookOpen` or `Library` from lucide-react
 
 ### Tab Position Strategy
+
 - Place "Teacher's Helper" tab between "Messages" and "Notifications"
 - This makes it easily accessible to all users
 - Admin sees additional management button within the tab
@@ -110,12 +119,14 @@ teacherResources: defineTable({
 ## Implementation Phases
 
 ### Phase 1: Backend Setup
+
 1. ✅ Create schema in `convex/schema.ts`
 2. ✅ Create `convex/teacherResources.ts` with all queries/mutations
 3. ✅ Add initialization function to seed 5 default resources
 4. ✅ Test queries in Convex dashboard
 
 ### Phase 2: Teacher View Component
+
 1. ✅ Create `components/teacher-helper.tsx`
 2. ✅ Implement card-based layout with categories
 3. ✅ Add bilingual support
@@ -123,6 +134,7 @@ teacherResources: defineTable({
 5. ✅ Add loading and error states
 
 ### Phase 3: Admin Management Component
+
 1. ✅ Create `components/teacher-helper-admin.tsx`
 2. ✅ Implement CRUD forms
 3. ✅ Add reordering functionality
@@ -131,12 +143,14 @@ teacherResources: defineTable({
 6. ✅ Bilingual form support
 
 ### Phase 4: Integration
+
 1. ✅ Update `app/page.tsx` with new tab
 2. ✅ Add navigation button
 3. ✅ Connect components to backend
 4. ✅ Test all user roles (teacher, moderator, admin)
 
 ### Phase 5: Testing & Polish
+
 1. ✅ Test on mobile devices
 2. ✅ Test in both English and Thai
 3. ✅ Test all CRUD operations
@@ -145,7 +159,9 @@ teacherResources: defineTable({
 6. ✅ Add loading states and transitions
 
 ## Resource Categories
+
 Suggested categories for filtering:
+
 - Worksheets & Activities
 - Lesson Plans
 - Reading & Comprehension
@@ -160,6 +176,7 @@ Suggested categories for filtering:
 ## UI/UX Considerations
 
 ### Teacher View
+
 - **Card Layout**: Each resource as a card with icon, title, description
 - **Quick Access**: Large click targets for easy mobile use
 - **Visual Indicators**: Category badges, "New" badges
@@ -167,6 +184,7 @@ Suggested categories for filtering:
 - **Responsive Grid**: 1 column mobile, 2-3 columns tablet/desktop
 
 ### Admin View
+
 - **Split View**: Left side = management, right side = live preview
 - **Drag Handles**: Visual indicators for reordering
 - **Status Indicators**: Active (green), Inactive (gray)
@@ -216,6 +234,7 @@ Suggested categories for filtering:
 ## Testing Checklist
 
 ### Functional Tests
+
 - [ ] Teachers can view all active resources
 - [ ] Resources open in new tab
 - [ ] Admin can add new resources
@@ -229,6 +248,7 @@ Suggested categories for filtering:
 - [ ] Search functionality works (if implemented)
 
 ### Edge Cases
+
 - [ ] Empty state (no resources)
 - [ ] Single resource
 - [ ] Many resources (pagination?)
@@ -240,6 +260,7 @@ Suggested categories for filtering:
 - [ ] Concurrent edits by multiple admins
 
 ### Browser Compatibility
+
 - [ ] Chrome (latest)
 - [ ] Firefox (latest)
 - [ ] Safari (iOS)
@@ -270,6 +291,7 @@ Suggested categories for filtering:
 ## Documentation Updates
 
 After implementation, update:
+
 - [ ] `README.md` - Add Teacher's Helper feature description
 - [ ] `FEATURES.md` - Add detailed feature documentation
 - [ ] `copilot-instructions.md` - Add component patterns
@@ -280,6 +302,7 @@ After implementation, update:
 ## Ready to Implement?
 
 This plan provides a complete roadmap for the Teacher's Helper feature. The implementation follows all project patterns:
+
 - ✅ Bilingual support throughout
 - ✅ Convex real-time backend
 - ✅ Role-based access control

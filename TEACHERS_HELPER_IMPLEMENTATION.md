@@ -9,10 +9,12 @@ Successfully implemented a complete "Teacher's Helper" tab that provides teacher
 ### 1. Backend (Convex) ✅
 
 **File: `convex/schema.ts`**
+
 - Added new `teacherResources` table with bilingual support
 - Created indexes for efficient querying: `by_order`, `by_active`, `by_category`, `by_created_at`
 
 **File: `convex/teacherResources.ts` (NEW)**
+
 - `list()` - Query for active resources (teachers/moderators)
 - `listAll()` - Query for all resources (admin)
 - `create()` - Create new resource (admin)
@@ -26,6 +28,7 @@ Successfully implemented a complete "Teacher's Helper" tab that provides teacher
 
 **File: `components/teacher-helper.tsx` (NEW)**
 Teacher/Moderator View:
+
 - Clean card-based layout showing all active resources
 - Bilingual display (English/Thai)
 - External link indicators
@@ -36,6 +39,7 @@ Teacher/Moderator View:
 
 **File: `components/teacher-helper-admin.tsx` (NEW)**
 Admin Management Interface:
+
 - Full CRUD operations for resources
 - Bilingual form fields (English + Thai for all fields)
 - URL validation
@@ -50,6 +54,7 @@ Admin Management Interface:
 ### 3. Integration ✅
 
 **File: `app/page.tsx`**
+
 - Added `"resources"` to activeTab state
 - Added "Teacher's Helper" tab button with BookOpen icon
 - Positioned between "Messages" and "Notifications"
@@ -60,26 +65,26 @@ Admin Management Interface:
 
 Based on research from education.com, teacherspayteachers.com, readworks.org, and commonlit.org:
 
-1. **Teachers Pay Teachers** (https://www.teacherspayteachers.com/)
+1. **Teachers Pay Teachers** (<https://www.teacherspayteachers.com/>)
    - World's largest marketplace for teacher-created resources
    - Lesson plans, worksheets, activities
 
-2. **Education.com** (https://www.education.com/worksheets/)
+2. **Education.com** (<https://www.education.com/worksheets/>)
    - 28,000+ worksheets, games, lesson plans
    - PreK-8th grade content
    - Interactive worksheets and guided lessons
 
-3. **ReadWorks** (https://www.readworks.org/)
+3. **ReadWorks** (<https://www.readworks.org/>)
    - FREE reading comprehension resources
    - 6,000+ articles aligned to science of reading
    - K-12 content with differentiation tools
 
-4. **CommonLit** (https://www.commonlit.org/)
+4. **CommonLit** (<https://www.commonlit.org/>)
    - FREE ELA curriculum for grades 6-12
    - Full-length texts with lesson materials
    - Benchmark assessments included
 
-5. **Khan Academy** (https://www.khanacademy.org/)
+5. **Khan Academy** (<https://www.khanacademy.org/>)
    - FREE comprehensive learning platform
    - Math, science, arts, humanities
    - Personalized learning dashboard
@@ -109,14 +114,16 @@ teacherResources: defineTable({
 
 ## How It Works
 
-### For Teachers/Moderators:
+### For Teachers/Moderators
+
 1. Click "Teacher's Helper" tab (icon: BookOpen)
 2. View grid of resource cards
 3. Click any card to open resource in new tab
 4. See category badges and descriptions
 5. All resources are active and curated by admin
 
-### For Admin:
+### For Admin
+
 1. Click "Teacher's Helper" tab
 2. See full management interface
 3. First time: Click "Initialize Defaults" to add 5 popular resources
@@ -144,14 +151,16 @@ teacherResources: defineTable({
 
 ## File Changes Summary
 
-### New Files Created:
+### New Files Created
+
 - `convex/teacherResources.ts` - Backend API (276 lines)
 - `components/teacher-helper.tsx` - Teacher view (124 lines)
 - `components/teacher-helper-admin.tsx` - Admin management (553 lines)
 - `TEACHERS_HELPER_PLAN.md` - Implementation plan
 - `TEACHERS_HELPER_IMPLEMENTATION.md` - This file
 
-### Modified Files:
+### Modified Files
+
 - `convex/schema.ts` - Added teacherResources table
 - `app/page.tsx` - Integrated new tab and components
 
@@ -160,6 +169,7 @@ teacherResources: defineTable({
 ## Testing Checklist
 
 ### Functional Tests
+
 - ✅ Convex schema synced successfully
 - ✅ Dev server starts without errors
 - ✅ No TypeScript compilation errors
@@ -173,9 +183,10 @@ teacherResources: defineTable({
 - ⏳ Test bilingual display (requires running app)
 - ⏳ Test mobile responsive layout (requires running app)
 
-### User Flows to Test:
+### User Flows to Test
 
 **Admin First-Time Setup:**
+
 1. Login as admin
 2. Click "Teacher's Helper" tab
 3. Click "Initialize Defaults" button
@@ -184,6 +195,7 @@ teacherResources: defineTable({
 6. Switch language and verify translations
 
 **Admin CRUD Operations:**
+
 1. Click "Add Resource" button
 2. Fill in all fields (both English and Thai)
 3. Enter a valid URL
@@ -200,6 +212,7 @@ teacherResources: defineTable({
 14. Verify resource is removed
 
 **Teacher Experience:**
+
 1. Login as teacher
 2. Click "Teacher's Helper" tab
 3. Verify only active resources are shown
@@ -214,13 +227,14 @@ teacherResources: defineTable({
 Since the implementation is complete, you should:
 
 1. **Run the Application:**
+
    ```powershell
    npx convex dev  # Already running
    npm run dev      # Already running
    ```
 
 2. **Login as Admin:**
-   - Navigate to http://localhost:3000
+   - Navigate to <http://localhost:3000>
    - Login with admin credentials
 
 3. **Initialize Default Resources:**
@@ -254,6 +268,7 @@ Since the implementation is complete, you should:
 ✅ **Error Handling**: Validation and error states implemented
 
 The feature is ready for:
+
 - Local testing
 - User acceptance testing
 - Production deployment
@@ -275,6 +290,7 @@ The feature is ready for:
 ## Admin Quick Reference
 
 ### Initialize Default Resources
+
 ```
 1. Go to Teacher's Helper tab
 2. Click "Initialize Defaults" button
@@ -283,6 +299,7 @@ The feature is ready for:
 ```
 
 ### Add New Resource
+
 ```
 1. Click "Add Resource" button
 2. Fill in all fields:
@@ -297,6 +314,7 @@ The feature is ready for:
 ```
 
 ### Edit Resource
+
 ```
 1. Click edit icon (pencil)
 2. Modify fields in form
@@ -304,6 +322,7 @@ The feature is ready for:
 ```
 
 ### Toggle Active/Inactive
+
 ```
 1. Click eye icon
 2. Resource becomes inactive (grayed out)
@@ -312,6 +331,7 @@ The feature is ready for:
 ```
 
 ### Delete Resource
+
 ```
 1. Click trash icon
 2. Confirm deletion dialog
@@ -320,18 +340,21 @@ The feature is ready for:
 
 ## User Benefits
 
-### For Teachers:
+### For Teachers
+
 - ✅ Quick access to 5 top educational resources
 - ✅ No need to bookmark or remember URLs
 - ✅ Resources curated by admin
 - ✅ Clean, organized interface
 - ✅ Mobile-friendly access
 
-### For Moderators:
+### For Moderators
+
 - ✅ Same benefits as teachers
 - ✅ Access to quality teaching materials
 
-### For Admin:
+### For Admin
+
 - ✅ Complete control over resources
 - ✅ Easy to add/edit/remove resources
 - ✅ Can customize for school/region needs
@@ -341,6 +364,7 @@ The feature is ready for:
 ## Success Metrics
 
 Once deployed, measure:
+
 - Number of clicks on resources
 - Most popular resources
 - User feedback/satisfaction
@@ -354,6 +378,7 @@ Once deployed, measure:
 The feature is complete and ready to be committed to the repository. All files are implemented, tested for compilation, and follow project standards.
 
 **Suggested Commit Message:**
+
 ```
 feat: Add Teacher's Helper tab with editable resource links
 
