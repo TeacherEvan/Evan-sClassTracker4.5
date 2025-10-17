@@ -127,16 +127,16 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-4">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold">
+    <div className="w-full max-w-4xl mx-auto px-3 py-4 md:p-4">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 md:mb-6 gap-3">
+        <h2 className="text-xl md:text-2xl font-semibold">
           {userRole === "moderator" || userRole === "admin"
             ? t("Class Bookings", "การจองชั้นเรียน")
             : t("Class Requests", "คำขอชั้นเรียน")}
         </h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium flex items-center gap-2"
+          className="bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-95 transition-all font-medium flex items-center justify-center gap-2 touch-manipulation shadow-lg shadow-blue-500/20 w-full md:w-auto text-base md:text-sm"
         >
           <Calendar className="w-5 h-5" />
           {userRole === "moderator" || userRole === "admin"
@@ -147,8 +147,8 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
 
       {/* Booking Form */}
       {showForm && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-          <h3 className="text-xl font-semibold mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 mb-4 md:mb-6">
+          <h3 className="text-lg md:text-xl font-semibold mb-4">
             {userRole === "moderator" || userRole === "admin"
               ? t("Book a New Class", "จองชั้นเรียนใหม่")
               : t("Request a New Class", "ขอชั้นเรียนใหม่")}
@@ -164,7 +164,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                   id="student"
                   value={studentId}
                   onChange={(e) => setStudentId(e.target.value as Id<"students"> | "")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-shadow"
                   required
                   disabled={loading}
                 >
@@ -188,7 +188,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                     setSchoolId(e.target.value as Id<"schools"> | "");
                     setLocationId(""); // Reset location when school changes
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-shadow"
                   required
                   disabled={loading}
                 >
@@ -211,7 +211,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                   id="location"
                   value={locationId}
                   onChange={(e) => setLocationId(e.target.value as Id<"locations"> | "")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-shadow"
                   required
                   disabled={loading || !schoolId}
                 >
@@ -238,7 +238,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                   id="date"
                   value={scheduledDate}
                   onChange={(e) => setScheduledDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 touch-manipulation transition-shadow"
                   required
                   disabled={loading}
                 />
@@ -246,16 +246,16 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
             </div>
 
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-lg text-sm">
+              <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl md:rounded-lg text-sm">
                 {error}
               </div>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex flex-col md:flex-row gap-3">
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50"
+                className="flex-1 bg-blue-500 text-white py-3.5 md:py-2.5 px-4 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-98 transition-all font-medium disabled:opacity-50 touch-manipulation shadow-lg shadow-blue-500/20 text-base md:text-sm"
               >
                 {loading
                   ? userRole === "moderator" || userRole === "admin"
@@ -268,7 +268,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-3.5 md:py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-98 transition-all touch-manipulation text-base md:text-sm font-medium"
               >
                 {t("Cancel", "ยกเลิก")}
               </button>
@@ -295,10 +295,13 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
         })}
 
         {classes && classes.length === 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400">
-            {userRole === "moderator" || userRole === "admin"
-              ? t("No classes found", "ไม่พบชั้นเรียน")
-              : t("No class requests found", "ไม่พบคำขอชั้นเรียน")}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-8 md:p-6 text-center text-gray-500 dark:text-gray-400">
+            <Calendar className="w-16 h-16 md:w-12 md:h-12 mx-auto mb-3 opacity-50" />
+            <p className="text-base md:text-base">
+              {userRole === "moderator" || userRole === "admin"
+                ? t("No classes found", "ไม่พบชั้นเรียน")
+                : t("No class requests found", "ไม่พบคำขอชั้นเรียน")}
+            </p>
           </div>
         )}
       </div>
@@ -361,62 +364,65 @@ function ClassItemDisplay({
 
   if (!student || !location) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <p className="text-gray-500">{t("Loading...", "กำลังโหลด...")}</p>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6">
+        <div className="flex items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <p className="text-gray-500">{t("Loading...", "กำลังโหลด...")}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <div className="flex items-start justify-between mb-4">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 active:scale-[0.99] transition-transform">
+      <div className="flex flex-col md:flex-row items-start md:items-start justify-between mb-4 gap-3">
         <div className="flex-1">
-          <h3 className="text-xl font-semibold">
+          <h3 className="text-lg md:text-xl font-semibold">
             {student.firstName} {student.lastName}
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm md:text-base">
             {t("Location:", "สถานที่:")} {location.name}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
             {t("Scheduled:", "กำหนดการ:")} {new Date(classItem.scheduledDate).toLocaleString()}
           </p>
         </div>
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(classItem.status)}`}>
+        <span className={`px-3 py-1.5 rounded-xl md:rounded-full text-xs md:text-sm font-medium ${getStatusBadge(classItem.status)} whitespace-nowrap`}>
           {getStatusText(classItem.status)}
         </span>
       </div>
 
       {userRole === "moderator" && classItem.status === "pending" && (
-        <div className="flex gap-2 mt-4">
+        <div className="flex flex-col md:flex-row gap-2 mt-4">
           <button
             onClick={() => onAcknowledge(classItem._id)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-3 md:py-2 bg-blue-500 text-white rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-95 transition-all touch-manipulation shadow-lg shadow-blue-500/20 text-sm md:text-base font-medium"
           >
-            <Check className="w-4 h-4" />
+            <Check className="w-5 h-5 md:w-4 md:h-4" />
             {t("Acknowledge", "รับทราบ")}
           </button>
           <button
             onClick={() => onApprove(classItem._id)}
-            className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-3 md:py-2 bg-green-500 text-white rounded-xl md:rounded-lg hover:bg-green-600 active:scale-95 transition-all touch-manipulation shadow-lg shadow-green-500/20 text-sm md:text-base font-medium"
           >
-            <Check className="w-4 h-4" />
+            <Check className="w-5 h-5 md:w-4 md:h-4" />
             {t("Approve", "อนุมัติ")}
           </button>
           <button
             onClick={() => onReject(classItem._id)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-3 md:py-2 bg-red-500 text-white rounded-xl md:rounded-lg hover:bg-red-600 active:scale-95 transition-all touch-manipulation shadow-lg shadow-red-500/20 text-sm md:text-base font-medium"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5 md:w-4 md:h-4" />
             {t("Reject", "ปฏิเสธ")}
           </button>
         </div>
       )}
 
       {userRole === "moderator" && classItem.status === "acknowledged" && (
-        <div className="flex gap-2 mt-4">
+        <div className="flex flex-col md:flex-row gap-2 mt-4">
           <button
             onClick={() => onApprove(classItem._id)}
-            className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-3 md:py-2 bg-green-500 text-white rounded-xl md:rounded-lg hover:bg-green-600 active:scale-95 transition-all touch-manipulation shadow-lg shadow-green-500/20 text-sm md:text-base font-medium"
           >
             <Check className="w-4 h-4" />
             {t("Approve", "อนุมัติ")}
