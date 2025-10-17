@@ -6,6 +6,7 @@ import { getClassStatusColor } from "@/lib/constants";
 import { getWeekStart, isToday } from "@/lib/date-utils";
 import { useLanguage } from "@/lib/language-context";
 import type { ClassData, User } from "@/lib/types";
+import { useSwipeGesture } from "@/lib/use-swipe-gesture";
 import { useMutation, useQuery } from "convex/react";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -85,6 +86,12 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
         newDate.setDate(newDate.getDate() + 7);
         setCurrentDate(newDate);
     };
+
+    // Swipe gestures for week navigation
+    useSwipeGesture({
+        onSwipeLeft: goToNextWeek,
+        onSwipeRight: goToPreviousWeek,
+    });
 
     const goToToday = () => {
         setCurrentDate(new Date());

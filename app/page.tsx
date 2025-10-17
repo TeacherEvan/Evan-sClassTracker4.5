@@ -25,8 +25,9 @@ import { isDesktopDevice } from "@/lib/device-detection";
 import { initServiceWorker } from "@/lib/init-sw";
 import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
+import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
 import { useQuery } from "convex/react";
-import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, GraduationCap, LogOut, MapPin, MessageSquare, Shield, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, GraduationCap, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -37,6 +38,16 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity">("calendar");
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
+
+  // Pull-to-refresh functionality
+  const handleRefresh = async () => {
+    // Simulate refresh by waiting a bit
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    // The useQuery hooks will automatically refetch when the component re-renders
+    window.location.reload();
+  };
+
+  const { isPulling, isRefreshing, pullDistance } = usePullToRefresh(handleRefresh);
 
   // Check device type on mount
   useEffect(() => {
@@ -160,6 +171,25 @@ export default function Home() {
 
   return (
     <div className="min-h-[100dvh] pb-20 md:pb-0 md:p-8">
+      {/* Pull-to-Refresh Indicator - Mobile only */}
+      {!isDesktop && (
+        <div
+          className="fixed top-0 left-0 right-0 flex justify-center items-center transition-all duration-300 z-40"
+          style={{
+            height: `${pullDistance}px`,
+            opacity: pullDistance > 0 ? 1 : 0,
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          }}
+        >
+          <RefreshCw
+            className={`text-blue-600 dark:text-blue-400 transition-transform duration-300 ${isRefreshing || isPulling ? 'animate-spin' : ''}`}
+            style={{
+              transform: `rotate(${pullDistance * 3}deg) scale(${Math.min(pullDistance / 80, 1)})`,
+            }}
+          />
+        </div>
+      )}
+
       {/* Toast Notifications */}
       <ToastContainer notifications={toasts} onDismiss={dismissToast} />
 
