@@ -37,6 +37,7 @@ ALL user-facing content requires both English and Thai versions:
   - `convex/schools.ts` - School CRUD operations
   - `convex/classes.ts` - Class booking workflow
   - `convex/students.ts` - Student management with unique ID generation
+  - `convex/studentRequests.ts` - Teacher-initiated student addition requests (NEW)
   - `convex/notifications.ts` - Real-time notifications
   - `convex/messages.ts` - Direct and group messaging system
   - `convex/groups.ts` - Custom moderator-created groups for messaging
@@ -63,7 +64,7 @@ ALL user-facing content requires both English and Thai versions:
 - **Generated code**: Never edit files in `convex/_generated/` - they auto-regenerate on schema changes
 
 ### Database Schema & Indexing Strategy
-The system uses 11 interconnected tables:
+The system uses 12 interconnected tables:
 
 1. **users** - User authentication & role-based access
    - Indexes: `by_username`, `by_school`, `by_role`, `by_device_type`
@@ -121,6 +122,14 @@ The system uses 11 interconnected tables:
     - Bilingual action descriptions
     - Optional relations to classes/students
 
+12. **studentRequests** - Teacher-initiated student addition requests (NEW)
+    - Indexes: `by_teacher`, `by_school`, `by_status`, `by_created_at`, `by_school_and_status`
+    - Status flow: `pending` → `approved`/`rejected`
+    - Teachers request to add students, moderators approve/reject
+    - On approval, creates student record automatically
+    - Triggers notifications and logs actions
+    - Bilingual rejection reasons
+
 **Indexing Best Practices:**
 - Always use `.withIndex()` to leverage database indexes
 - For date ranges, prefer compound indexes like `by_school_and_date` or `by_teacher_and_date`
@@ -176,7 +185,8 @@ if (currentUser?.requirePasswordChange) {
 ```
 
 ### Key Components
-- **LoginForm** - Handles authentication with bilingual UI
+- **Logo** - Stoic, intellectual logo with animated gold slogan "Built by teachers - for Teachers" (NEW)
+- **LoginForm** - Handles authentication with bilingual UI and logo display
 - **PasswordChangeDialog** - Forced password change for new users
 - **UserManagement** - Admin interface for creating users (password: `Teacher{username}`)
 - **ClassBooking** - Class booking workflow with approval states
@@ -189,7 +199,9 @@ if (currentUser?.requirePasswordChange) {
 - **WeeklyCalendar** - Calendar view for class scheduling with date range optimization
 - **SimpleAnalytics** - Performance metrics dashboard for moderators (approval rates, trends, rankings)
 - **LocationManagement** - Manage school locations/classrooms with soft delete
-- **StudentManagement** - Student CRUD with unique ID generation
+- **StudentManagement** - Student CRUD with unique ID generation (admin only)
+- **TeacherStudentRequests** - Teachers request to add students with moderator approval (NEW)
+- **ModeratorStudentApprovals** - Moderators review and approve/reject student requests (NEW)
 - **SchoolManagement** - School CRUD and moderator assignment
 - **TeacherHelper** - Teacher resource management interface (admin)
 - **TeacherActivityDashboard** - Audit log viewer for teacher actions
@@ -219,6 +231,17 @@ The messaging hub supports two modes (see `components/messaging-hub.tsx`):
    - Auto-cleanup: Messages deleted after 14 days (cron job)
 
 ## Styling Conventions
+
+### Logo & Branding (NEW)
+- **Logo Component** (`components/logo.tsx`): Reusable branded logo with optional slogan
+- **Typography**: Uses "Playfair Display" serif font via Google Fonts for stoic, intellectual aesthetic
+- **Slogan**: "Built by teachers - for Teachers" in pulsating gold (#D4AF37)
+- **Animation**: CSS keyframe animation `pulse-gold` for 2s infinite loop
+- **Sizes**: `sm`, `md`, `lg` variants for different contexts
+- **Usage**: 
+  - Login page: Full logo with slogan (size: `md`)
+  - Main header: Compact logo without slogan (size: `sm`)
+  - Always bilingual: "Evan's ClassTracker" displayed in both languages
 
 ### Tailwind v4 Setup
 - Uses new `@tailwindcss/postcss` package (v4)
@@ -269,6 +292,23 @@ Standard approval flow:
 1. Teacher books class → Status: `pending`, Notification sent to moderator
 2. Moderator acknowledges → Status: `acknowledged`
 3. Moderator approves/rejects → Status: `approved`/`rejected`, Notification sent to teacher
+
+### Student Request Workflow (NEW)
+Teacher-initiated student addition with moderator approval:
+1. Teacher submits request via "Add Student" tab → Status: `pending`, Notification sent to moderator
+   - Must provide: firstName, lastName, grade, bilingual notes
+   - Request includes reason for addition
+2. Moderator reviews in "Student Approvals" tab
+3. Moderator approves → Status: `approved`
+   - Student record automatically created with unique ID
+   - Notification sent to teacher with success message
+   - Action logged in teacherLogs
+4. Moderator rejects → Status: `rejected`
+   - Must provide bilingual rejection reason
+   - Notification sent to teacher with reason
+   - Action logged in teacherLogs
+
+This workflow ensures all student additions are vetted by school administrators while empowering teachers to identify students who need to be added to the system.
 
 ### Student Unique ID Generation
 Format: `{SchoolHash}-{NameHash}-{Timestamp}-{Random}`
