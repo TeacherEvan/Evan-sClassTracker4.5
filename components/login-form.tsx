@@ -47,8 +47,8 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   return (
     <div className="min-h-[100dvh] flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 md:p-8">
-          <h1 className="text-3xl font-bold text-center mb-2">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-center mb-2">
             {t("Class Tracker", "ติดตามชั้นเรียน")}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-center mb-8">
@@ -68,9 +68,10 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 touch-manipulation transition-shadow"
                 required
                 disabled={loading}
+                autoComplete="username"
               />
             </div>
 
@@ -86,23 +87,24 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 touch-manipulation transition-shadow"
                 required
                 disabled={loading}
+                autoComplete="current-password"
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-3 rounded-lg flex items-center gap-2">
-                <AlertCircle className="w-5 h-5" />
-                <span>{error}</span>
+              <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
+                <span className="text-sm">{error}</span>
               </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-500 text-white py-3.5 md:py-2.5 px-4 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-98 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed text-base md:text-sm touch-manipulation shadow-lg shadow-blue-500/20"
             >
               {loading
                 ? t("Signing in...", "กำลังเข้าสู่ระบบ...")
