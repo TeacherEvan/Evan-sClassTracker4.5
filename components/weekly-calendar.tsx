@@ -26,12 +26,14 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     const [selectedSchoolId, setSelectedSchoolId] = useState<Id<"schools"> | "">("");
 
     // Form fields
-    const [title, setTitle] = useState("");
-    const [titleTh, setTitleTh] = useState("");
-    const [description, setDescription] = useState("");
-    const [descriptionTh, setDescriptionTh] = useState("");
     const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
+    const [studentId, setStudentId] = useState<Id<"students"> | "">("");
+    const [locationId, setLocationId] = useState<Id<"locations"> | "">("");
     const [error, setError] = useState("");
+
+    // Get students and locations for the form
+    const students = useQuery(api.students.list, {});
+    const locations = useQuery(api.locations.list, {});
 
     // Memoize week range calculations
     const weekStart = useMemo(() => getWeekStart(currentDate), [currentDate]);
@@ -103,13 +105,18 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
         e.preventDefault();
         setError("");
 
-        if (!title.trim() || !titleTh.trim() || !description.trim() || !descriptionTh.trim()) {
-            setError(t("Please fill in all fields in both languages", "กรุณากรอกข้อมูลทุกช่องทั้งสองภาษา"));
+        if (!schoolId) {
+            setError(t("Please select a school", "กรุณาเลือกโรงเรียน"));
             return;
         }
 
-        if (!schoolId) {
-            setError(t("Please select a school", "กรุณาเลือกโรงเรียน"));
+        if (!studentId) {
+            setError(t("Please select a student", "กรุณาเลือกนักเรียน"));
+            return;
+        }
+
+        if (!locationId) {
+            setError(t("Please select a location", "กรุณาเลือกสถานที่"));
             return;
         }
 
@@ -121,19 +128,16 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
             await bookClass({
                 teacherId: currentUser._id,
                 schoolId: schoolId as Id<"schools">,
-                title,
-                titleTh,
-                description,
-                descriptionTh,
+                studentId: studentId as Id<"students">,
+                locationId: locationId as Id<"locations">,
                 scheduledDate: selectedDate.getTime(),
+                bookedByUserId: currentUser._id,
             });
 
             // Reset form
-            setTitle("");
-            setTitleTh("");
-            setDescription("");
-            setDescriptionTh("");
             setSchoolId("");
+            setStudentId("");
+            setLocationId("");
             setShowAddDialog(false);
             setSelectedDate(null);
         } catch (err) {
@@ -376,64 +380,44 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                     </select>
                                 </div>
 
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label htmlFor="titleEn" className="block text-sm font-medium mb-2">
-                                            {t("Title (English)", "หัวข้อ (อังกฤษ)")}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="titleEn"
-                                            value={title}
-                                            onChange={(e) => setTitle(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="titleTh" className="block text-sm font-medium mb-2">
-                                            {t("Title (Thai)", "หัวข้อ (ไทย)")}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            id="titleTh"
-                                            value={titleTh}
-                                            onChange={(e) => setTitleTh(e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-                                            required
-                                        />
-                                    </div>
+                                <div>
+                                    <label htmlFor="studentSelect" className="block text-sm font-medium mb-2">
+                                        {t("Student", "นักเรียน")}
+                                    </label>
+                                    <select
+                                        id="studentSelect"
+                                        value={studentId}
+                                        onChange={(e) => setStudentId(e.target.value as Id<"students"> | "")}
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                        required
+                                    >
+                                        <option value="">{t("-- Select Student --", "-- เลือกนักเรียน --")}</option>
+                                        {students?.map((student) => (
+                                            <option key={student._id} value={student._id}>
+                                                {student.firstName} {student.lastName}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
 
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label htmlFor="descEn" className="block text-sm font-medium mb-2">
-                                            {t("Description (English)", "รายละเอียด (อังกฤษ)")}
-                                        </label>
-                                        <textarea
-                                            id="descEn"
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
-                                            rows={4}
-                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="descTh" className="block text-sm font-medium mb-2">
-                                            {t("Description (Thai)", "รายละเอียด (ไทย)")}
-                                        </label>
-                                        <textarea
-                                            id="descTh"
-                                            value={descriptionTh}
-                                            onChange={(e) => setDescriptionTh(e.target.value)}
-                                            rows={4}
-                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-                                            required
-                                        />
-                                    </div>
+                                <div>
+                                    <label htmlFor="locationSelect" className="block text-sm font-medium mb-2">
+                                        {t("Location", "สถานที่")}
+                                    </label>
+                                    <select
+                                        id="locationSelect"
+                                        value={locationId}
+                                        onChange={(e) => setLocationId(e.target.value as Id<"locations"> | "")}
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                        required
+                                    >
+                                        <option value="">{t("-- Select Location --", "-- เลือกสถานที่ --")}</option>
+                                        {locations?.filter(loc => loc.isActive).map((location) => (
+                                            <option key={location._id} value={location._id}>
+                                                {language === "en" ? location.name : location.nameTh}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 <div className="flex gap-3 pt-4">

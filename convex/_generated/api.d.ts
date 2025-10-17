@@ -13,7 +13,6 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
-import type * as analytics from "../analytics.js";
 import type * as cancellationRequests from "../cancellationRequests.js";
 import type * as classes from "../classes.js";
 import type * as crons from "../crons.js";
@@ -23,6 +22,7 @@ import type * as locations from "../locations.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
 import type * as schools from "../schools.js";
+import type * as simpleAnalytics from "../simpleAnalytics.js";
 import type * as students from "../students.js";
 import type * as teacherLogs from "../teacherLogs.js";
 import type * as teacherResources from "../teacherResources.js";
@@ -37,7 +37,6 @@ import type * as users from "../users.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  analytics: typeof analytics;
   cancellationRequests: typeof cancellationRequests;
   classes: typeof classes;
   crons: typeof crons;
@@ -47,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   notifications: typeof notifications;
   schools: typeof schools;
+  simpleAnalytics: typeof simpleAnalytics;
   students: typeof students;
   teacherLogs: typeof teacherLogs;
   teacherResources: typeof teacherResources;

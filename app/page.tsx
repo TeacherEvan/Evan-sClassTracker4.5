@@ -13,9 +13,9 @@ import { NotificationForm } from "@/components/notification-form";
 import { NotificationList } from "@/components/notification-list";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
 import { SchoolManagement } from "@/components/school-management";
+import { SimpleAnalytics } from "@/components/simple-analytics";
 import { StudentManagement } from "@/components/student-management";
 import { TeacherActivityDashboard } from "@/components/teacher-activity-dashboard";
-import { TeacherAnalytics } from "@/components/teacher-analytics";
 import { TeacherHelper } from "@/components/teacher-helper";
 import { TeacherHelperAdmin } from "@/components/teacher-helper-admin";
 import { UserManagement } from "@/components/user-management";
@@ -381,7 +381,7 @@ export default function Home() {
       )}
 
       {activeTab === "analytics" && user.role === "moderator" && user.schoolId && (
-        <TeacherAnalytics schoolId={user.schoolId} />
+        <SimpleAnalytics schoolId={user.schoolId} />
       )}
 
       {activeTab === "activity" && user.role === "moderator" && user.schoolId && (
