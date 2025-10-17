@@ -2,7 +2,8 @@
 
 ## Current State Analysis
 
-### Current Behavior:
+### Current Behavior
+
 1. **Direct Mode**: Shows only users from the same school as the current user
    - Uses `getAvailableUsers` query with `schoolId: currentUser.schoolId`
    - Filters to show only users from the logged-in user's school
@@ -12,21 +13,25 @@
    - User can select any school for group messaging
    - No restriction on which school groups to view
 
-### Problem:
+### Problem
+
 - Teachers cannot message users from other schools they teach at
 - No way to browse and filter users by different schools
 - Limited cross-school communication
 
 ## Proposed Solution
 
-### Feature Overview:
+### Feature Overview
+
 Add a school filter dropdown in Direct Mode that allows users to:
+
 1. View users from ANY school in the system (not just their assigned school)
 2. Filter the user list by selecting a specific school
 3. Default to "All Schools" to show all users
 4. Maintain proper role-based visibility (teachers can message moderators/admins from any school)
 
-### User Experience:
+### User Experience
+
 ```
 ┌─────────────────────────────────────┐
 │ Messaging Hub                       │
@@ -54,6 +59,7 @@ Add a school filter dropdown in Direct Mode that allows users to:
 ## Implementation Steps
 
 ### Step 1: Update Backend Query (`convex/messages.ts`)
+
 - Modify `getAvailableUsers` to:
   - Accept optional `filterSchoolId` parameter (separate from user's own schoolId)
   - If `filterSchoolId` is provided, filter users by that school
@@ -61,11 +67,13 @@ Add a school filter dropdown in Direct Mode that allows users to:
   - Include school information in the returned user data
 
 ### Step 2: Update Component State (`components/messaging-hub.tsx`)
+
 - Add new state: `selectedFilterSchoolId` (can be null for "All Schools")
 - Update `getAvailableUsers` query to pass `filterSchoolId`
 - Keep existing `selectedUserId` for conversation selection
 
 ### Step 3: Update UI (`components/messaging-hub.tsx`)
+
 - Add school filter dropdown above the user list in Direct Mode
 - Display "All Schools" as default option
 - Populate dropdown with all schools from `schools` query
@@ -73,6 +81,7 @@ Add a school filter dropdown in Direct Mode that allows users to:
 - Update styling to accommodate school labels
 
 ### Step 4: Enhanced User Display
+
 - Show school affiliation for each user in the list
 - Format: `{username} - {role} - {schoolName}`
 - Add visual indicator (school icon) for clarity
@@ -82,6 +91,7 @@ Add a school filter dropdown in Direct Mode that allows users to:
 ### 1. Backend Query Update (`convex/messages.ts`)
 
 **Current:**
+
 ```typescript
 export const getAvailableUsers = query({
   args: {
@@ -101,6 +111,7 @@ export const getAvailableUsers = query({
 ```
 
 **New:**
+
 ```typescript
 export const getAvailableUsers = query({
   args: {
@@ -145,11 +156,13 @@ export const getAvailableUsers = query({
 ### 2. Component State Update (`components/messaging-hub.tsx`)
 
 **Add new state:**
+
 ```typescript
 const [filterSchoolId, setFilterSchoolId] = useState<Id<"schools"> | null>(null);
 ```
 
 **Update query call:**
+
 ```typescript
 const availableUsers = useQuery(api.messages.getAvailableUsers, {
   currentUserId: currentUser._id,
@@ -160,6 +173,7 @@ const availableUsers = useQuery(api.messages.getAvailableUsers, {
 ### 3. UI Updates (`components/messaging-hub.tsx`)
 
 **Add school filter dropdown in Direct Mode sidebar:**
+
 ```tsx
 {mode === "direct" && (
   <div className="mb-4">
@@ -187,6 +201,7 @@ const availableUsers = useQuery(api.messages.getAvailableUsers, {
 ```
 
 **Update user card to show school:**
+
 ```tsx
 <button
   key={user._id}

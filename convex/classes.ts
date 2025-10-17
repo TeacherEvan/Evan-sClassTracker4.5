@@ -67,8 +67,8 @@ export const getByDateRange = query({
         .query("classes")
         .withIndex("by_school_and_date", (q) =>
           q.eq("schoolId", args.schoolId!)
-           .gte("scheduledDate", args.startDate)
-           .lte("scheduledDate", args.endDate)
+            .gte("scheduledDate", args.startDate)
+            .lte("scheduledDate", args.endDate)
         )
         .collect();
       return classes;
@@ -79,8 +79,8 @@ export const getByDateRange = query({
         .query("classes")
         .withIndex("by_teacher_and_date", (q) =>
           q.eq("teacherId", args.teacherId!)
-           .gte("scheduledDate", args.startDate)
-           .lte("scheduledDate", args.endDate)
+            .gte("scheduledDate", args.startDate)
+            .lte("scheduledDate", args.endDate)
         )
         .collect();
       return classes;
@@ -91,7 +91,7 @@ export const getByDateRange = query({
       .query("classes")
       .withIndex("by_scheduled_date", (q) =>
         q.gte("scheduledDate", args.startDate)
-         .lte("scheduledDate", args.endDate)
+          .lte("scheduledDate", args.endDate)
       )
       .collect();
     return classes;
@@ -103,33 +103,51 @@ export const book = mutation({
   args: {
     teacherId: v.id("users"),
     schoolId: v.id("schools"),
-    title: v.string(),
-    titleTh: v.string(),
-    description: v.string(),
-    descriptionTh: v.string(),
+    studentId: v.id("students"),
+    locationId: v.id("locations"),
     scheduledDate: v.number(),
+    bookedByUserId: v.id("users"), // ID of the user creating the booking
   },
   handler: async (ctx, args) => {
-    // Validate inputs
-    if (!args.title.trim() || !args.titleTh.trim()) {
-      throw new Error("Title is required in both languages");
-    }
-    if (!args.description.trim() || !args.descriptionTh.trim()) {
-      throw new Error("Description is required in both languages");
-    }
+    // Validate scheduled date
     if (args.scheduledDate < Date.now()) {
       throw new Error("Cannot schedule a class in the past");
     }
+
+    // Verify student exists
+    const student = await ctx.db.get(args.studentId);
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
+    // Verify location exists and is active
+    const location = await ctx.db.get(args.locationId);
+    if (!location) {
+      throw new Error("Location not found");
+    }
+    if (!location.isActive) {
+      throw new Error("Selected location is not available");
+    }
+
+    // Get the user who is booking to check their role
+    const bookingUser = await ctx.db.get(args.bookedByUserId);
+    if (!bookingUser) {
+      throw new Error("User not found");
+    }
+
+    // Determine status based on who is booking
+    // Moderators and admins can directly book (approved status)
+    // Teachers create requests (pending status)
+    const isModerator = bookingUser.role === "moderator" || bookingUser.role === "admin";
+    const status = isModerator ? "approved" : "pending";
 
     // Create the class
     const classId = await ctx.db.insert("classes", {
       teacherId: args.teacherId,
       schoolId: args.schoolId,
-      title: args.title,
-      titleTh: args.titleTh,
-      description: args.description,
-      descriptionTh: args.descriptionTh,
-      status: "pending",
+      studentId: args.studentId,
+      locationId: args.locationId,
+      status,
       scheduledDate: args.scheduledDate,
       createdAt: Date.now(),
     });
@@ -137,22 +155,36 @@ export const book = mutation({
     // Get the school to find the moderator
     const school = await ctx.db.get(args.schoolId);
 
-    if (school && school.moderatorId) {
+    // Only send notification if it's a teacher request (pending status)
+    if (!isModerator && school && school.moderatorId) {
       // Get teacher information
       const teacher = await ctx.db.get(args.teacherId);
 
       // Create notification for moderator
       await ctx.db.insert("notifications", {
-        title: `New Class Booking: ${args.title}`,
-        titleTh: `การจองชั้นเรียนใหม่: ${args.titleTh}`,
-        message: `Teacher ${teacher?.username || "Unknown"} has booked a class at your school. Please review and acknowledge.`,
-        messageTh: `ครู ${teacher?.username || "ไม่ทราบ"} ได้จองชั้นเรียนที่โรงเรียนของคุณ กรุณาตรวจสอบและรับทราบ`,
+        title: `New Class Request`,
+        titleTh: `คำขอชั้นเรียนใหม่`,
+        message: `Teacher ${teacher?.username || "Unknown"} has requested a class for ${student.firstName} ${student.lastName} at ${location.name}. Please review and acknowledge.`,
+        messageTh: `ครู ${teacher?.username || "ไม่ทราบ"} ได้ขอชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${location.nameTh} กรุณาตรวจสอบและรับทราบ`,
         type: "warning",
         userId: school.moderatorId,
         read: false,
         createdAt: Date.now(),
       });
     }
+
+    // Log the action
+    await ctx.db.insert("teacherLogs", {
+      teacherId: args.teacherId,
+      schoolId: args.schoolId,
+      action: isModerator ? "class_booked" : "class_requested",
+      actionTh: isModerator ? "จองชั้นเรียน" : "ขอชั้นเรียน",
+      details: `${isModerator ? "Booked" : "Requested"} class for ${student.firstName} ${student.lastName} at ${location.name} on ${new Date(args.scheduledDate).toLocaleDateString()}`,
+      detailsTh: `${isModerator ? "จอง" : "ขอ"}ชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${location.nameTh} วันที่ ${new Date(args.scheduledDate).toLocaleDateString("th-TH")}`,
+      relatedClassId: classId,
+      relatedStudentId: args.studentId,
+      createdAt: Date.now(),
+    });
 
     return classId;
   },
@@ -170,6 +202,10 @@ export const acknowledge = mutation({
       throw new Error("Class not found");
     }
 
+    // Get student and location info for notification
+    const student = await ctx.db.get(classData.studentId);
+    const location = await ctx.db.get(classData.locationId);
+
     await ctx.db.patch(args.classId, {
       status: "acknowledged",
     });
@@ -177,12 +213,12 @@ export const acknowledge = mutation({
     // Notify the teacher
     const teacher = await ctx.db.get(classData.teacherId);
 
-    if (teacher) {
+    if (teacher && student && location) {
       await ctx.db.insert("notifications", {
-        title: `Class Acknowledged: ${classData.title}`,
-        titleTh: `รับทราบชั้นเรียน: ${classData.titleTh}`,
-        message: `Your class booking has been acknowledged by the moderator.`,
-        messageTh: `การจองชั้นเรียนของคุณได้รับการรับทราบจากผู้ดูแล`,
+        title: `Class Acknowledged`,
+        titleTh: `รับทราบชั้นเรียน`,
+        message: `Your class request for ${student.firstName} ${student.lastName} at ${location.name} has been acknowledged by the moderator.`,
+        messageTh: `คำขอชั้นเรียนของคุณสำหรับ ${student.firstName} ${student.lastName} ที่ ${location.nameTh} ได้รับการรับทราบจากผู้ดูแล`,
         type: "success",
         userId: classData.teacherId,
         read: false,
@@ -206,21 +242,27 @@ export const approve = mutation({
       throw new Error("Class not found");
     }
 
+    // Get student and location info for notification
+    const student = await ctx.db.get(classData.studentId);
+    const location = await ctx.db.get(classData.locationId);
+
     await ctx.db.patch(args.classId, {
       status: "approved",
     });
 
     // Notify the teacher
-    await ctx.db.insert("notifications", {
-      title: `Class Approved: ${classData.title}`,
-      titleTh: `อนุมัติชั้นเรียน: ${classData.titleTh}`,
-      message: `Your class booking has been approved!`,
-      messageTh: `การจองชั้นเรียนของคุณได้รับการอนุมัติแล้ว!`,
-      type: "success",
-      userId: classData.teacherId,
-      read: false,
-      createdAt: Date.now(),
-    });
+    if (student && location) {
+      await ctx.db.insert("notifications", {
+        title: `Class Approved`,
+        titleTh: `อนุมัติชั้นเรียน`,
+        message: `Your class request for ${student.firstName} ${student.lastName} at ${location.name} has been approved!`,
+        messageTh: `คำขอชั้นเรียนของคุณสำหรับ ${student.firstName} ${student.lastName} ที่ ${location.nameTh} ได้รับการอนุมัติแล้ว!`,
+        type: "success",
+        userId: classData.teacherId,
+        read: false,
+        createdAt: Date.now(),
+      });
+    }
 
     return { success: true };
   },
@@ -240,21 +282,27 @@ export const reject = mutation({
       throw new Error("Class not found");
     }
 
+    // Get student and location info for notification
+    const student = await ctx.db.get(classData.studentId);
+    const location = await ctx.db.get(classData.locationId);
+
     await ctx.db.patch(args.classId, {
       status: "rejected",
     });
 
     // Notify the teacher
-    await ctx.db.insert("notifications", {
-      title: `Class Rejected: ${classData.title}`,
-      titleTh: `ปฏิเสธชั้นเรียน: ${classData.titleTh}`,
-      message: args.reason || `Your class booking has been rejected.`,
-      messageTh: args.reasonTh || `การจองชั้นเรียนของคุณถูกปฏิเสธ`,
-      type: "error",
-      userId: classData.teacherId,
-      read: false,
-      createdAt: Date.now(),
-    });
+    if (student && location) {
+      await ctx.db.insert("notifications", {
+        title: `Class Rejected`,
+        titleTh: `ปฏิเสธชั้นเรียน`,
+        message: args.reason || `Your class request for ${student.firstName} ${student.lastName} at ${location.name} has been rejected.`,
+        messageTh: args.reasonTh || `คำขอชั้นเรียนของคุณสำหรับ ${student.firstName} ${student.lastName} ที่ ${location.nameTh} ถูกปฏิเสธ`,
+        type: "error",
+        userId: classData.teacherId,
+        read: false,
+        createdAt: Date.now(),
+      });
+    }
 
     return { success: true };
   },

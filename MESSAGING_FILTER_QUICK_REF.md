@@ -5,12 +5,14 @@
 ### What Was Added
 
 **School Filter Dropdown in Messaging Hub**
+
 - Location: Direct Mode → Sidebar → Above user list
 - Default: "All Schools" (shows all users in system)
 - Options: Filter by any school in the database
 - Bilingual: English/Thai labels
 
 **Enhanced User Display**
+
 - Shows school name below user role
 - Format: `👤 Username → Role → 🏢 School Name`
 - Updates based on language preference
@@ -18,6 +20,7 @@
 ### Before vs After
 
 #### BEFORE
+
 ```
 Messaging Hub → Direct Mode
 │
@@ -29,6 +32,7 @@ Only users from YOUR school visible
 ```
 
 #### AFTER
+
 ```
 Messaging Hub → Direct Mode
 │
@@ -76,18 +80,21 @@ ALL users visible, filterable by school
 ## Technical Implementation
 
 ### Backend (`convex/messages.ts`)
+
 - Modified `getAvailableUsers` query
 - Added `filterSchoolId` parameter (optional)
 - Returns school name with each user
 - Uses efficient indexed queries
 
 ### Frontend (`components/messaging-hub.tsx`)
+
 - Added `filterSchoolId` state
 - New dropdown component for school selection
 - Enhanced user cards with school display
 - Proper TypeScript typing
 
 ### Types (`lib/types.ts`)
+
 - New `UserWithSchool` type
 - Extends base `User` with school fields
 - Type-safe implementation

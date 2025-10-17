@@ -297,10 +297,10 @@ export const getAvailableUsers = query({
     // Fetch school information for each user
     const usersWithSchools = await Promise.all(
       filteredUsers.map(async (user) => {
-        const school = user.schoolId 
-          ? await ctx.db.get(user.schoolId) 
+        const school = user.schoolId
+          ? await ctx.db.get(user.schoolId)
           : null;
-        
+
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
         return {

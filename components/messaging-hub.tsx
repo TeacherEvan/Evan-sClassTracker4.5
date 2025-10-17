@@ -6,14 +6,14 @@ import { useLanguage } from "@/lib/language-context";
 import type { User, UserWithSchool } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
 import {
-  MessageSquare,
-  Users,
-  Send,
-  Check,
-  UserPlus,
   Building2,
+  Check,
+  MessageSquare,
+  Send,
+  UserPlus,
+  Users,
 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface MessagingHubProps {
   currentUser: User;
@@ -49,9 +49,9 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
     api.messages.getConversation,
     mode === "direct" && selectedUserId
       ? {
-          userId1: currentUser._id,
-          userId2: selectedUserId,
-        }
+        userId1: currentUser._id,
+        userId2: selectedUserId,
+      }
       : "skip"
   );
 
@@ -59,8 +59,8 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
     api.messages.getGroupMessages,
     mode === "group" && selectedSchoolId
       ? {
-          schoolId: selectedSchoolId,
-        }
+        schoolId: selectedSchoolId,
+      }
       : "skip"
   );
 
@@ -158,22 +158,20 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
             <div className="flex gap-2 bg-white/20 rounded-lg p-1">
               <button
                 onClick={() => setMode("direct")}
-                className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 ${
-                  mode === "direct"
+                className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 ${mode === "direct"
                     ? "bg-white text-blue-600"
                     : "text-white hover:bg-white/10"
-                }`}
+                  }`}
               >
                 <UserPlus className="w-4 h-4" />
                 {t("Direct", "ตรง")}
               </button>
               <button
                 onClick={() => setMode("group")}
-                className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 ${
-                  mode === "group"
+                className={`px-4 py-2 rounded-md transition-colors flex items-center gap-2 ${mode === "group"
                     ? "bg-white text-purple-600"
                     : "text-white hover:bg-white/10"
-                }`}
+                  }`}
               >
                 <Users className="w-4 h-4" />
                 {t("Group", "กลุ่ม")}
@@ -235,11 +233,10 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                       <button
                         key={user._id}
                         onClick={() => setSelectedUserId(user._id)}
-                        className={`w-full text-left p-3 rounded-lg transition-colors ${
-                          selectedUserId === user._id
+                        className={`w-full text-left p-3 rounded-lg transition-colors ${selectedUserId === user._id
                             ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-500"
                             : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
-                        }`}
+                          }`}
                       >
                         <div className="font-medium text-gray-900 dark:text-white">
                           {user.username}
@@ -247,7 +244,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           {t(
                             user.role.charAt(0).toUpperCase() +
-                              user.role.slice(1),
+                            user.role.slice(1),
                             user.role === "teacher"
                               ? "ครู"
                               : user.role === "moderator"
@@ -280,11 +277,10 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                       <button
                         key={school._id}
                         onClick={() => setSelectedSchoolId(school._id)}
-                        className={`w-full text-left p-3 rounded-lg transition-colors ${
-                          selectedSchoolId === school._id
+                        className={`w-full text-left p-3 rounded-lg transition-colors ${selectedSchoolId === school._id
                             ? "bg-purple-100 dark:bg-purple-900/30 border border-purple-500"
                             : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center gap-2">
                           <Building2 className="w-4 h-4 text-gray-500" />
@@ -314,7 +310,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                   <p className="text-sm text-gray-500 dark:text-gray-400">
                     {t(
                       selectedUser.role.charAt(0).toUpperCase() +
-                        selectedUser.role.slice(1),
+                      selectedUser.role.slice(1),
                       selectedUser.role === "teacher"
                         ? "ครู"
                         : selectedUser.role === "moderator"
@@ -378,11 +374,10 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                       className={`flex ${isOwnMessage ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-[70%] rounded-lg p-3 ${
-                          isOwnMessage
+                        className={`max-w-[70%] rounded-lg p-3 ${isOwnMessage
                             ? "bg-blue-500 text-white"
                             : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
-                        }`}
+                          }`}
                       >
                         {!isOwnMessage && mode === "group" && (
                           <p className="text-xs font-semibold mb-1 opacity-75">
@@ -432,7 +427,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
             {/* Message Input */}
             <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-800">
               {(mode === "direct" && selectedUserId) ||
-              (mode === "group" && selectedSchoolId) ? (
+                (mode === "group" && selectedSchoolId) ? (
                 <div className="space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     <input

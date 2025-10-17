@@ -5,6 +5,7 @@ import { ClassBooking } from "@/components/class-booking";
 import { DatabaseInit } from "@/components/database-init";
 import { ToastContainer, type ToastNotification } from "@/components/desktop-notification-toast";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { LocationManagement } from "@/components/location-management";
 import { LoginForm } from "@/components/login-form";
 import { MessagingHub } from "@/components/messaging-hub";
 import { ModeratorListView } from "@/components/moderator-list-view";
@@ -13,6 +14,7 @@ import { NotificationList } from "@/components/notification-list";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
 import { SchoolManagement } from "@/components/school-management";
 import { StudentManagement } from "@/components/student-management";
+import { TeacherActivityDashboard } from "@/components/teacher-activity-dashboard";
 import { TeacherAnalytics } from "@/components/teacher-analytics";
 import { TeacherHelper } from "@/components/teacher-helper";
 import { TeacherHelperAdmin } from "@/components/teacher-helper-admin";
@@ -24,7 +26,7 @@ import { initServiceWorker } from "@/lib/init-sw";
 import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
 import { useQuery } from "convex/react";
-import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, GraduationCap, LogOut, MessageSquare, Shield, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, GraduationCap, LogOut, MapPin, MessageSquare, Shield, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -32,7 +34,7 @@ export default function Home() {
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources">("calendar");
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity">("calendar");
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -227,7 +229,9 @@ export default function Home() {
               }`}
           >
             <Calendar className="w-4 h-4 md:w-5 md:h-5" />
-            {t("Class Bookings", "การจองชั้นเรียน")}
+            {user.role === "teacher"
+              ? t("Class Requests", "คำขอชั้นเรียน")
+              : t("Class Bookings", "การจองชั้นเรียน")}
           </button>
 
           <button
@@ -255,16 +259,40 @@ export default function Home() {
 
           {/* Analytics tab for moderators */}
           {user.role === "moderator" && user.schoolId && (
-            <button
-              onClick={() => setActiveTab("analytics")}
-              className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "analytics"
-                ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                }`}
-            >
-              <BarChart3 className="w-4 h-4 md:w-5 md:h-5" />
-              {t("Analytics", "การวิเคราะห์")}
-            </button>
+            <>
+              <button
+                onClick={() => setActiveTab("analytics")}
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "analytics"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <BarChart3 className="w-4 h-4 md:w-5 md:h-5" />
+                {t("Analytics", "การวิเคราะห์")}
+              </button>
+
+              <button
+                onClick={() => setActiveTab("activity")}
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "activity"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <Shield className="w-4 h-4 md:w-5 md:h-5" />
+                {t("Activity", "กิจกรรม")}
+              </button>
+
+              <button
+                onClick={() => setActiveTab("locations")}
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "locations"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <MapPin className="w-4 h-4 md:w-5 md:h-5" />
+                {t("Locations", "สถานที่")}
+              </button>
+            </>
           )}
 
           <button
@@ -289,6 +317,17 @@ export default function Home() {
               >
                 <Building2 className="w-4 h-4 md:w-5 md:h-5" />
                 {t("Schools", "โรงเรียน")}
+              </button>
+
+              <button
+                onClick={() => setActiveTab("locations")}
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "locations"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <MapPin className="w-4 h-4 md:w-5 md:h-5" />
+                {t("Locations", "สถานที่")}
               </button>
 
               <button
@@ -345,6 +384,10 @@ export default function Home() {
         <TeacherAnalytics schoolId={user.schoolId} />
       )}
 
+      {activeTab === "activity" && user.role === "moderator" && user.schoolId && (
+        <TeacherActivityDashboard schoolId={user.schoolId} moderatorId={user._id} />
+      )}
+
       {activeTab === "resources" && user && (
         <>
           {user.role === "admin" ? (
@@ -364,6 +407,13 @@ export default function Home() {
 
       {activeTab === "schools" && user.role === "admin" && (
         <SchoolManagement />
+      )}
+
+      {activeTab === "locations" && (user.role === "admin" || user.role === "moderator") && (
+        <LocationManagement
+          userId={user._id}
+          schoolId={user.role === "moderator" ? user.schoolId : undefined}
+        />
       )}
 
       {activeTab === "students" && user.role === "admin" && (
