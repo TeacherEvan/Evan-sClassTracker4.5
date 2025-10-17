@@ -27,6 +27,7 @@ export function AdminContactButton({
   const sendDirectMessage = useMutation(api.messages.sendDirectMessage);
 
   const handleSendToAdmin = async () => {
+    // Allow sending if at least ONE language has content
     if (!messageContent.trim() && !messageContentTh.trim()) {
       return;
     }
@@ -164,8 +165,7 @@ export function AdminContactButton({
               <button
                 onClick={handleSendToAdmin}
                 disabled={
-                  !messageContent.trim() ||
-                  !messageContentTh.trim() ||
+                  (!messageContent.trim() && !messageContentTh.trim()) ||
                   isSending ||
                   !admins ||
                   admins.length === 0
