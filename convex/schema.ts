@@ -72,8 +72,8 @@ export default defineSchema({
     guardianName: v.optional(v.string()), // Guardian name if no school
     guardianPhone: v.optional(v.string()), // Guardian contact
     guardianEmail: v.optional(v.string()), // Guardian email
-    acknowledged: v.boolean(), // For guardian-acknowledged students
-    createdBy: v.id("users"), // Teacher who created the student
+    acknowledged: v.optional(v.boolean()), // For guardian-acknowledged students (optional for backward compatibility)
+    createdBy: v.optional(v.id("users")), // Teacher who created the student (optional for backward compatibility)
     createdAt: v.number(),
   })
     .index("by_student_id", ["studentId"])
@@ -157,7 +157,7 @@ export default defineSchema({
     nameTh: v.string(),
     schoolId: v.id("schools"),
     isActive: v.boolean(), // Enable/disable without deleting
-    isPending: v.boolean(), // For teacher-requested locations awaiting approval
+    isPending: v.optional(v.boolean()), // For teacher-requested locations awaiting approval (optional for backward compatibility)
     requestedBy: v.optional(v.id("users")), // Teacher who requested this location
     approvedBy: v.optional(v.id("users")), // Moderator who approved it
     createdAt: v.number(),
