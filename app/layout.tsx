@@ -1,5 +1,6 @@
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ConvexClientProvider } from "@/lib/convex-provider";
+import { DataProvider } from "@/lib/data-context";
 import { DeviceProvider } from "@/lib/device-context";
 import { LanguageProvider } from "@/lib/language-context";
 import type { Metadata, Viewport } from "next";
@@ -28,7 +29,9 @@ export default function RootLayout({
         <ErrorBoundary>
           <ConvexClientProvider>
             <DeviceProvider>
-              <LanguageProvider>{children}</LanguageProvider>
+              <DataProvider>
+                <LanguageProvider>{children}</LanguageProvider>
+              </DataProvider>
             </DeviceProvider>
           </ConvexClientProvider>
         </ErrorBoundary>

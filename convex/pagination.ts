@@ -1,7 +1,7 @@
-import { v } from "convex/values";
-import { query } from "./_generated/server";
 import { paginationOptsValidator } from "convex/server";
+import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
+import { query } from "./_generated/server";
 
 // ✅ PERFORMANCE FIX: Use Convex native pagination instead of loading all records
 // This provides efficient database-level pagination with cursor support
@@ -20,7 +20,7 @@ export const listPaginated = query({
                 .order("desc")
                 .paginate(args.paginationOpts);
         }
-        
+
         // For all students, use created_at index for consistent ordering
         return await ctx.db
             .query("students")
@@ -52,7 +52,7 @@ export const listClassesPaginated = query({
                 .order("desc")
                 .paginate(args.paginationOpts);
         }
-        
+
         if (args.schoolId) {
             return await ctx.db
                 .query("classes")
@@ -60,7 +60,7 @@ export const listClassesPaginated = query({
                 .order("desc")
                 .paginate(args.paginationOpts);
         }
-        
+
         if (args.status) {
             return await ctx.db
                 .query("classes")
@@ -68,7 +68,7 @@ export const listClassesPaginated = query({
                 .order("desc")
                 .paginate(args.paginationOpts);
         }
-        
+
         return await ctx.db
             .query("classes")
             .order("desc")
@@ -90,7 +90,7 @@ export const listNotificationsPaginated = query({
                 .order("desc")
                 .paginate(args.paginationOpts);
         }
-        
+
         return await ctx.db
             .query("notifications")
             .withIndex("by_created_at")
@@ -112,7 +112,7 @@ export const listMessagesPaginated = query({
         // Note: Convex pagination doesn't work well with filter() + or()
         // This is a limitation for complex message queries
         // TODO: Consider splitting into separate queries for direct vs group messages
-        
+
         // Get direct messages where user is sender or recipient
         const directMessages = await ctx.db
             .query("messages")
@@ -150,7 +150,7 @@ export const listMessagesPaginated = query({
                 .map(m => m.recipientId?.toString())
                 .filter((id): id is string => id !== undefined)
         );
-        
+
         const allUserIds = [...senderIds, ...recipientIds];
         const userPromises = allUserIds.map(async (id) => {
             const user = await ctx.db.get(id as Id<"users">);
@@ -163,7 +163,7 @@ export const listMessagesPaginated = query({
         const users = (await Promise.all(userPromises)).filter(
             (u): u is NonNullable<typeof u> => u !== null
         );
-        
+
         const userMap = new Map(
             users.map(u => [u._id.toString(), u])
         );
@@ -171,7 +171,7 @@ export const listMessagesPaginated = query({
         // Populate sender information using map lookup (no N+1)
         const messagesWithSenders = allMessages.map(message => {
             const sender = userMap.get(message.senderId.toString());
-            const recipient = message.recipientId 
+            const recipient = message.recipientId
                 ? userMap.get(message.recipientId.toString())
                 : null;
 
@@ -185,7 +185,7 @@ export const listMessagesPaginated = query({
         return {
             page: messagesWithSenders,
             isDone: messagesWithSenders.length < args.paginationOpts.numItems,
-            continueCursor: messagesWithSenders.length > 0 
+            continueCursor: messagesWithSenders.length > 0
                 ? messagesWithSenders[messagesWithSenders.length - 1].createdAt.toString()
                 : null,
         };
@@ -207,7 +207,7 @@ export const listTeacherLogsPaginated = query({
                 .order("desc")
                 .paginate(args.paginationOpts);
         }
-        
+
         if (args.schoolId) {
             return await ctx.db
                 .query("teacherLogs")
@@ -215,7 +215,7 @@ export const listTeacherLogsPaginated = query({
                 .order("desc")
                 .paginate(args.paginationOpts);
         }
-        
+
         return await ctx.db
             .query("teacherLogs")
             .order("desc")

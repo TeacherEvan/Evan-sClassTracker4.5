@@ -18,7 +18,8 @@ type WeeklyCalendarProps = {
 export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     const { t, language } = useLanguage();
     const schools = useQuery(api.schools.list, {});
-    const users = useQuery(api.users.list, {});
+    // Only load teachers since we only display teacher names in calendar
+    const users = useQuery(api.users.list, { role: "teacher" });
     const bookClass = useMutation(api.classes.book);
 
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -32,9 +33,26 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     const [locationId, setLocationId] = useState<Id<"locations"> | "">("");
     const [error, setError] = useState("");
 
-    // Get students and locations for the form
-    const students = useQuery(api.students.list, {});
-    const locations = useQuery(api.locations.list, {});
+    // Determine which school to filter by for queries
+    const effectiveSchoolId = useMemo(() => {
+        // Moderators can only see their school
+        if (currentUser.role === "moderator" && currentUser.schoolId) {
+            return currentUser.schoolId;
+        }
+        // Teachers and admins can filter by selected school
+        return selectedSchoolId || undefined;
+    }, [currentUser.role, currentUser.schoolId, selectedSchoolId]);
+
+    // Get students and locations filtered by school (server-side)
+    // This prevents loading ALL entities across the system
+    const students = useQuery(
+        api.students.list,
+        effectiveSchoolId ? { schoolId: effectiveSchoolId } : "skip"
+    );
+    const locations = useQuery(
+        api.locations.list,
+        effectiveSchoolId ? { schoolId: effectiveSchoolId, activeOnly: true } : "skip"
+    );
 
     // Memoize week range calculations
     const weekStart = useMemo(() => getWeekStart(currentDate), [currentDate]);

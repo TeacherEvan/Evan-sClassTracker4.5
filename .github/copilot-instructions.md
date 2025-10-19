@@ -402,10 +402,12 @@ await ctx.db
 ## Known Issues & Incomplete Features
 
 ### YouTube Downloader
-- **Status:** UI exists but no backend functionality
-- Component at `components/youtube-downloader.tsx` is a shell
-- Requires external service integration or client-side library
-- See `TODO.md` and `PERFORMANCE_AUDIT.md` for implementation plan
+- **Status:** ✅ **Fully functional as helper tool**
+- Component at `components/youtube-downloader.tsx` validates YouTube URLs
+- Opens Y2Mate website for download assistance (pragmatic solution)
+- **Why not full backend:** YouTube downloading requires external service (yt-dlp cannot run in Convex edge functions)
+- **Design decision:** Current approach is legal-safe and works well for educational purposes
+- Integrated in `teacher-helper.tsx` with tab interface
 
 ### Push Notifications
 - **Status:** Schema fields exist but system not implemented
@@ -414,20 +416,24 @@ await ctx.db
 - Requires `public/sw.js` and subscription flow
 
 ### Pagination
-- **Status:** Backend exists but components don't use it
-- `convex/pagination.ts` has inefficient implementation (loads all records)
-- Components still use non-paginated queries
-- Needs migration to `usePaginatedQuery` hook
+- **Status:** ✅ **Backend fixed with native Convex API**
+- `convex/pagination.ts` now uses efficient `.paginate()` method
+- **Action needed:** Components need migration to `usePaginatedQuery` hook
+- See `OPTIMIZATION_CHANGELOG.md` for implementation guide
 
 ## Key Files for Reference
 
 - `convex/schema.ts` - Database schema with all indexes
 - `app/layout.tsx` - Provider hierarchy (critical ordering)
 - `lib/language-context.tsx` - Bilingual translation pattern
+- `lib/data-context.tsx` - Shared data provider (reduces duplicate queries)
 - `components/notification-form.tsx` - Standard form pattern
-- `convex/classes.ts` - State machine and workflow example
+- `convex/classes.ts` - State machine, workflow, and compound queries
+- `convex/messages.ts` - Batch fetching pattern (N+1 fix)
+- `convex/pagination.ts` - Native Convex pagination
 - `convex/students.ts` - Unique ID generation pattern
 - `convex/crons.ts` - Scheduled job implementation
 - `DEPLOYMENT.md` - Production deployment guide
 - `ARCHITECTURE.md` - System diagrams and data flows
 - `PERFORMANCE_AUDIT.md` - Bottlenecks, optimizations, and incomplete features
+- `OPTIMIZATION_CHANGELOG.md` - Complete optimization history

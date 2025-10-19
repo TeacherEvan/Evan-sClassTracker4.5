@@ -13,6 +13,7 @@
 **Location:** `getConversations` query (lines 150-200)
 
 **Problem:**
+
 ```typescript
 for (const message of allMessages) {
   const partnerId = message.senderId === args.userId ? message.recipientId : message.senderId;
@@ -24,6 +25,7 @@ for (const message of allMessages) {
 **Impact:** For 100 messages, this makes 100+ separate database queries. With 1000 messages, that's 1000+ queries.
 
 **Solution:**
+
 ```typescript
 // 1. Collect all unique partner IDs first
 const partnerIds = new Set<string>();
@@ -60,6 +62,7 @@ for (const message of allMessages) {
 **Location:** `convex/pagination.ts` (all paginated queries)
 
 **Problem:**
+
 ```typescript
 // Loading ALL records, then slicing - defeats the purpose!
 const allStudents = await ctx.db.query("students").collect();
@@ -71,6 +74,7 @@ const page = students.slice(cursor, cursor + pageSize);
 
 **Solution:**
 Convex doesn't support offset-based pagination efficiently. Use cursor-based pagination with indexes:
+
 ```typescript
 export const listPaginated = query({
   args: {
@@ -104,6 +108,7 @@ export const listPaginated = query({
 **Location:** Multiple components
 
 **Problem in `components/class-booking.tsx`:**
+
 ```tsx
 // Inside ClassItem component (rendered for EACH class in list)
 const student = useQuery(api.students.getById, { id: classItem.studentId });
@@ -113,7 +118,9 @@ const location = useQuery(api.locations.getById, { id: classItem.locationId });
 **Impact:** Rendering 50 classes = 100 additional queries (50 students + 50 locations)
 
 **Solution:**
+
 1. **Backend:** Create compound query to return classes with joined data
+
 ```typescript
 export const listWithDetails = query({
   args: { teacherId: v.optional(v.id("users")) },
@@ -155,6 +162,7 @@ export const listWithDetails = query({
 **Location:** Multiple components
 
 **Problems:**
+
 ```tsx
 // weekly-calendar.tsx - loads ALL entities for entire system
 const schools = useQuery(api.schools.list, {});      // All schools
@@ -166,12 +174,14 @@ const locations = useQuery(api.locations.list, {}); // All locations
 const filteredStudents = students?.filter(s => s.schoolId === selectedSchool);
 ```
 
-**Impact:** 
+**Impact:**
+
 - 1000 users loaded when only need 10 teachers from one school
 - 5000 students loaded when only need 100 from current school
 - Wastes bandwidth and memory
 
 **Solution:**
+
 ```tsx
 // Only query what you need with proper filtering
 const schools = useQuery(api.schools.list, {});
@@ -194,12 +204,14 @@ const students = useQuery(api.students.list, {
 ### 1. Duplicate Queries Across Components
 
 **Problem:** Same queries repeated in multiple components:
+
 - `api.users.list` called in 8 different components
 - `api.schools.list` called in 10+ components
 - Each call re-fetches from database (Convex does cache, but still overhead)
 
 **Solution:**
 Create a shared data provider at app level:
+
 ```tsx
 // lib/data-context.tsx
 export function DataProvider({ children }) {
@@ -225,6 +237,7 @@ const { schools, users } = useDataContext(); // No additional query
 ### 2. Backup Files in Production
 
 **Files:**
+
 - `components/messaging-hub.tsx.backup`
 
 **Action:** Delete backup files or move to separate directory
@@ -236,6 +249,7 @@ const { schools, users } = useDataContext(); // No additional query
 **Problem:** Queries return full objects when only need specific fields
 
 **Example:**
+
 ```typescript
 // Returns entire user object with password hash, etc.
 const users = await ctx.db.query("users").collect();
@@ -243,6 +257,7 @@ const users = await ctx.db.query("users").collect();
 ```
 
 **Solution:**
+
 ```typescript
 const users = await ctx.db.query("users").collect();
 return users.map(u => ({
@@ -265,6 +280,7 @@ return users.map(u => ({
 **Status:** UI component exists, but no backend functionality
 
 **Missing:**
+
 - `convex/youtubeDownloads.ts` - Backend API file
 - Schema table for download history
 - Actual download logic
@@ -272,7 +288,9 @@ return users.map(u => ({
 **Current State:** The component shows error messages because there's no backend to call
 
 **To Complete:**
+
 1. Create schema entry:
+
 ```typescript
 youtubeDownloads: defineTable({
   userId: v.id("users"),
@@ -293,6 +311,7 @@ youtubeDownloads: defineTable({
    - Tracking download history
 
 **Note:** Actual video downloading requires:
+
 - External API service (yt-dlp can't run in Convex edge functions)
 - Storage solution (S3, Cloudflare R2, etc.)
 - Or client-side solution using youtube-dl-exec package
@@ -306,6 +325,7 @@ youtubeDownloads: defineTable({
 **Status:** `convex/pagination.ts` exists but components don't use it
 
 **Issue:** All components still use non-paginated queries:
+
 ```tsx
 // Current: Load everything
 const students = useQuery(api.students.list, {});
@@ -321,6 +341,7 @@ const { results, status, loadMore } = usePaginatedQuery(
 **Action Required:** Update all list components to use `usePaginatedQuery`
 
 **Affected Components:**
+
 - `student-management.tsx`
 - `class-booking.tsx` (class list)
 - `notification-list.tsx`
@@ -336,6 +357,7 @@ const { results, status, loadMore } = usePaginatedQuery(
 **Status:** Schema has `pushSubscription` field, but no actual push system
 
 **Missing:**
+
 - Service worker file (`public/sw.js`)
 - Push notification API integration
 - Subscription management UI
@@ -344,7 +366,9 @@ const { results, status, loadMore } = usePaginatedQuery(
 **Current:** `initServiceWorker()` is called but does nothing
 
 **To Complete:**
+
 1. Create `public/sw.js`:
+
 ```javascript
 self.addEventListener('push', (event) => {
   const data = event.data.json();
@@ -368,6 +392,7 @@ self.addEventListener('push', (event) => {
 **Status:** Backend exists, UI exists, but may not be fully connected
 
 **To Verify:**
+
 - Test guardian user flow end-to-end
 - Check if acknowledgement system works
 - Verify guardian-linked students display correctly
@@ -383,6 +408,7 @@ self.addEventListener('push', (event) => {
 **Status:** Backend supports pending locations, but workflow unclear
 
 **Missing:**
+
 - Moderator notification when teacher requests new location
 - UI indicator for pending location requests
 - Approval/rejection interface in location management
@@ -390,6 +416,7 @@ self.addEventListener('push', (event) => {
 **Current:** Teachers can request locations but moderators may not know
 
 **To Complete:**
+
 1. Add notification creation in `convex/locations.ts` when location requested
 2. Add pending requests section to `location-management.tsx`
 3. Display count of pending requests
@@ -440,12 +467,14 @@ self.addEventListener('push', (event) => {
 ## 📝 ACTION ITEMS
 
 ### Immediate (This Week)
+
 - [ ] Fix messages.ts N+1 query problem
 - [ ] Fix pagination.ts to use Convex native pagination
 - [ ] Add batch fetching for class list queries
 - [ ] Remove messaging-hub.tsx.backup
 
 ### Next Sprint
+
 - [ ] Implement shared data context provider
 - [ ] Update all components to use pagination
 - [ ] Create compound queries for list views
@@ -453,6 +482,7 @@ self.addEventListener('push', (event) => {
 - [ ] Add monitoring for slow queries
 
 ### Backlog
+
 - [ ] Implement push notification system
 - [ ] Add query result caching
 - [ ] Create data prefetching strategy

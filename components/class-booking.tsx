@@ -1,7 +1,8 @@
 "use client";
 
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Id, Doc } from "@/convex/_generated/dataModel";
+import { useDataContext } from "@/lib/data-context";
 import { useLanguage } from "@/lib/language-context";
 import type { UserRole } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
@@ -16,10 +17,10 @@ interface ClassBookingProps {
 
 export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   const { t, language } = useLanguage();
-  const schools = useQuery(api.schools.list);
+  const { schools } = useDataContext(); // Use shared context instead of individual query
   const students = useQuery(api.students.list, {});
   const classes = useQuery(
-    api.classes.list,
+    api.classes.listWithDetails,
     userRole === "teacher" ? { teacherId: userId } : {}
   );
   const bookClass = useMutation(api.classes.book);
@@ -486,6 +487,8 @@ function ClassItemDisplay({
     pendingLocationNameTh?: string;
     scheduledDate: number;
     status: "pending" | "acknowledged" | "approved" | "rejected";
+    student: Doc<"students"> | null; // Full student object from joined query
+    location: Doc<"locations"> | null; // Full location object from joined query
   };
   userRole: UserRole;
   onAcknowledge: (id: Id<"classes">) => void;
@@ -494,10 +497,6 @@ function ClassItemDisplay({
   onRequestCancellation: (id: Id<"classes">, reason: string, reasonTh: string) => void;
 }) {
   const { t, language } = useLanguage();
-  const student = useQuery(api.students.getById, { id: classItem.studentId });
-  const location = useQuery(api.locations.getById,
-    classItem.locationId ? { id: classItem.locationId } : "skip"
-  );
   const hasPendingRequest = useQuery(api.cancellationRequests.hasPendingRequest, {
     classId: classItem._id,
   });
@@ -526,12 +525,16 @@ function ClassItemDisplay({
     return texts[status as keyof typeof texts] || status;
   };
 
+  // Use joined data from query instead of loading indicator
+  const student = classItem.student;
+  const location = classItem.location;
+
   if (!student) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6">
         <div className="flex items-center gap-3">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <p className="text-gray-500">{t("Loading...", "กำลังโหลด...")}</p>
+          <p className="text-gray-500">{t("Student data not found", "ไม่พบข้อมูลนักเรียน")}</p>
         </div>
       </div>
     );

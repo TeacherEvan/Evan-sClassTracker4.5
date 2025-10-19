@@ -98,7 +98,73 @@ export const getByDateRange = query({
   },
 });
 
-// Mutation to book a new class
+// Query to list classes with joined student and location data
+// Eliminates N+1 query problem in components
+export const listWithDetails = query({
+  args: {
+    teacherId: v.optional(v.id("users")),
+    schoolId: v.optional(v.id("schools")),
+    status: v.optional(v.union(
+      v.literal("pending"),
+      v.literal("acknowledged"),
+      v.literal("approved"),
+      v.literal("rejected")
+    )),
+  },
+  handler: async (ctx, args) => {
+    // First, get all classes based on filter
+    let classes;
+    
+    if (args.teacherId) {
+      classes = await ctx.db
+        .query("classes")
+        .withIndex("by_teacher", (q) => q.eq("teacherId", args.teacherId!))
+        .order("desc")
+        .collect();
+    } else if (args.schoolId) {
+      classes = await ctx.db
+        .query("classes")
+        .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId!))
+        .order("desc")
+        .collect();
+    } else if (args.status) {
+      classes = await ctx.db
+        .query("classes")
+        .withIndex("by_status", (q) => q.eq("status", args.status!))
+        .order("desc")
+        .collect();
+    } else {
+      classes = await ctx.db
+        .query("classes")
+        .order("desc")
+        .collect();
+    }
+
+    // Batch fetch all related entities
+    const studentIds = [...new Set(classes.map(c => c.studentId))];
+    const locationIds = [...new Set(classes.map(c => c.locationId).filter(Boolean))];
+
+    const students = await Promise.all(studentIds.map(id => ctx.db.get(id)));
+    const locations = await Promise.all(locationIds.map(id => ctx.db.get(id!)));
+
+    // Create lookup maps
+    const studentMap = new Map(
+      students.filter((s): s is NonNullable<typeof s> => s !== null).map(s => [s._id, s])
+    );
+    const locationMap = new Map(
+      locations.filter((l): l is NonNullable<typeof l> => l !== null).map(l => [l._id, l])
+    );
+
+    // Return enriched data
+    return classes.map(c => ({
+      ...c,
+      student: studentMap.get(c.studentId) || null,
+      location: c.locationId ? locationMap.get(c.locationId) || null : null,
+    }));
+  },
+});
+
+// Mutation to book a class
 export const book = mutation({
   args: {
     teacherId: v.id("users"),
