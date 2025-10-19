@@ -3,10 +3,10 @@
 ## Project Overview
 Bilingual (English/Thai) class tracking system with user authentication, class booking, student management, and real-time notifications for teachers and schools. Built with Next.js 15, React 19, and Convex real-time backend. This is a full-stack TypeScript application using App Router and client-side rendering.
 
-## Architecture & Key Patterns
+## Critical Architecture Patterns
 
-### Four-Layer Provider Architecture
-The app uses a nested provider pattern in `app/layout.tsx`:
+### Four-Layer Provider Hierarchy (Non-Negotiable)
+The app uses a strict nested provider pattern in `app/layout.tsx`:
 ```tsx
 <ErrorBoundary>
   <ConvexClientProvider>
@@ -16,309 +16,418 @@ The app uses a nested provider pattern in `app/layout.tsx`:
   </ConvexClientProvider>
 </ErrorBoundary>
 ```
-- **ErrorBoundary** (`components/error-boundary.tsx`): Catches React errors globally
-- **ConvexClientProvider** (`lib/convex-provider.tsx`): Wraps the app to enable real-time data sync; throws config error at runtime if `NEXT_PUBLIC_CONVEX_URL` is missing
-- **DeviceProvider** (`lib/device-context.tsx`): Auto-detects device type (mobile/tablet/desktop) and syncs to database; re-detects on window resize
-- **LanguageProvider** (`lib/language-context.tsx`): Manages bilingual state with `t()` helper function
-- All client components must use `"use client"` directive when accessing these contexts
 
-### Bilingual Content Pattern
-ALL user-facing content requires both English and Thai versions:
-- Database schema (`convex/schema.ts`): Fields are paired (e.g., `title` + `titleTh`, `message` + `messageTh`)
-- Translation helper: Use `t("English text", "ข้อความไทย")` from `useLanguage()` hook
-- Forms: Always include parallel input fields for both languages (see `components/notification-form.tsx`)
-- Never add single-language content or UI text without both translations
+**Why this order matters:**
+1. **ErrorBoundary** (outermost) - Must catch errors from all inner providers
+2. **ConvexClientProvider** - Real-time database connection; throws runtime error if `NEXT_PUBLIC_CONVEX_URL` missing
+3. **DeviceProvider** - Reads/writes to Convex database, so needs ConvexClient
+4. **LanguageProvider** (innermost) - Pure UI state, no external dependencies
 
-### Convex Backend Integration
-- **Location**: All backend code lives in `convex/` directory
-- **Schema**: Defined in `convex/schema.ts` with validation using `v.*` validators
-- **API Files**: 
-  - `convex/users.ts` - Authentication & user management
-  - `convex/schools.ts` - School CRUD operations
-  - `convex/classes.ts` - Class booking workflow
-  - `convex/students.ts` - Student management with unique ID generation
-  - `convex/notifications.ts` - Real-time notifications
-  - `convex/messages.ts` - Direct and group messaging system
-  - `convex/groups.ts` - Custom moderator-created groups for messaging
-  - `convex/locations.ts` - Location/classroom management per school
-  - `convex/teacherResources.ts` - Resource management for teachers (URLs, materials)
-  - `convex/teacherLogs.ts` - Teacher activity audit trail
-  - `convex/cancellationRequests.ts` - Class cancellation workflow
-  - `convex/simpleAnalytics.ts` - Teacher performance analytics and statistics
-  - `convex/search.ts` - Bilingual search across all entities
-  - `convex/pagination.ts` - Paginated queries for large datasets
-  - `convex/exports.ts` - CSV/Excel export functionality
-  - `convex/bulkOperations.ts` - Bulk create/update/delete operations
-  - `convex/crons.ts` - Scheduled jobs (daily message cleanup)
-  - `convex/init.ts` - Database initialization helper
-- **Client usage**: 
-  ```tsx
-  import { useQuery, useMutation } from "convex/react";
-  import { api } from "@/convex/_generated/api";
-  
-  const currentUser = useQuery(api.users.getCurrentUser);
-  const login = useMutation(api.users.login);
-  const classes = useQuery(api.classes.list);
-  ```
-- **Generated code**: Never edit files in `convex/_generated/` - they auto-regenerate on schema changes
+**Breaking this order will cause runtime failures.** All child components require `"use client"` directive.
 
-### Database Schema & Indexing Strategy
-The system uses 11 interconnected tables:
+### Bilingual-First Development (Mandatory)
+Every piece of user-facing content requires dual English/Thai implementation:
 
-1. **users** - User authentication & role-based access
-   - Indexes: `by_username`, `by_school`, `by_role`, `by_device_type`
-   - Roles: `admin`, `moderator`, `teacher`
-   - Password security: Base64 encoded (upgradeable to bcrypt)
-   - Device tracking: `deviceType`, `lastDeviceUpdate`, `pushSubscription`
+**Database schema pattern** (`convex/schema.ts`):
+```typescript
+title: v.string(),      // English version
+titleTh: v.string(),    // Thai version
+```
 
-2. **schools** - School management
-   - Indexes: `by_moderator`, `by_created_at`
-   - Links to users (moderators) and classes
+**Component usage** (from `components/notification-form.tsx`):
+```tsx
+const { t } = useLanguage();
+// Always provide both languages
+<label>{t("Title (English)", "หัวข้อ (อังกฤษ)")}</label>
+<input value={title} ... />
+<input value={titleTh} ... />
+```
 
-3. **classes** - Class booking workflow
-   - Indexes: `by_teacher`, `by_school`, `by_status`, `by_scheduled_date`, `by_school_and_date`, `by_teacher_and_date`
-   - Status flow: `pending` → `acknowledged` → `approved`/`rejected`
-   - Automatically triggers notifications
-   - Uses compound indexes for efficient date range queries
+**Never ship single-language content.** Forms need parallel input fields for both languages.
 
-4. **students** - Student records
-   - Indexes: `by_student_id`, `by_school`, `by_guardian`
-   - Unique ID format: `{SchoolHash}-{NameHash}-{Timestamp}-{Random}`
-   - Supports both school-linked and guardian-linked students (schoolId is optional)
+### Convex Backend Architecture
+**Backend lives in `convex/` directory** - TypeScript functions that compile to edge functions.
 
-5. **notifications** - Real-time alerts
-   - Indexes: `by_user`, `by_created_at`, `by_read`
-   - Auto-generated for class workflow events
+**Schema-first design** (`convex/schema.ts`):
+```typescript
+users: defineTable({
+  username: v.string(),
+  passwordHash: v.string(),
+  role: v.union(v.literal("teacher"), v.literal("moderator"), v.literal("admin")),
+  // ...indexes define query performance
+}).index("by_username", ["username"])
+```
 
-6. **messages** - Direct and group messaging
-   - Indexes: `by_sender`, `by_recipient`, `by_school`, `by_group`, `by_created_at`, `by_conversation`, `by_school_and_date`
-   - Supports both 1-on-1 and school-wide group messages
-   - Bilingual content with acknowledgment tracking
-   - Auto-deleted after 14 days via cron job (`convex/crons.ts`)
+**Client usage pattern**:
+```tsx
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
-7. **groups** - Custom moderator-created groups
-   - Indexes: `by_school`, `by_creator`, `by_created_at`
-   - Allows moderators to create custom message groups with specific members
+const currentUser = useQuery(api.users.getCurrentUser); // Real-time query
+const login = useMutation(api.users.login); // Write operation
+await login({ username, password });
+```
 
-8. **locations** - Location/classroom management
-   - Indexes: `by_school`, `by_active`, `by_created_at`
-   - Bilingual names for each location
-   - Soft delete via `isActive` flag (never hard delete)
+**Never edit `convex/_generated/` files** - they auto-regenerate on schema changes.
 
-9. **teacherResources** - Resource management for teachers
-   - Indexes: `by_order`, `by_active`, `by_category`, `by_created_at`
-   - URL-based resources with categories
-   - Soft delete via `isActive` flag
-   - Display order controlled by `order` field
+## Database Design Principles
 
-10. **cancellationRequests** - Class cancellation workflow
-    - Indexes: `by_class`, `by_teacher`, `by_school`, `by_status`, `by_created_at`
-    - Status flow: `pending` → `approved`/`rejected`
-    - Links to original class via `classId`
+### Index-First Queries (Performance Critical)
+Always use `.withIndex()` for queries - table scans are slow at scale:
 
-11. **teacherLogs** - Teacher activity audit trail
-    - Indexes: `by_teacher`, `by_school`, `by_action`, `by_created_at`, `by_teacher_and_date`, `by_school_and_date`
-    - Bilingual action descriptions
-    - Optional relations to classes/students
+```typescript
+// CORRECT: Uses compound index for date range
+const classes = await ctx.db
+  .query("classes")
+  .withIndex("by_school_and_date", (q) =>
+    q.eq("schoolId", schoolId)
+      .gte("scheduledDate", startDate)
+      .lte("scheduledDate", endDate)
+  )
+  .collect();
 
-**Indexing Best Practices:**
-- Always use `.withIndex()` to leverage database indexes
-- For date ranges, prefer compound indexes like `by_school_and_date` or `by_teacher_and_date`
-- Use soft deletes (`isActive: false`) instead of hard deletes for data integrity
+// WRONG: Table scan without index
+const classes = await ctx.db.query("classes").collect();
+// Then filtering in memory - slow!
+```
 
-**Cron Jobs** (`convex/crons.ts`):
-- Daily cleanup at 2:00 AM UTC: `deleteOldMessages` removes messages >14 days old
+See `convex/classes.ts` `getByDateRange` for compound index usage.
+
+### Soft Deletes Only
+Never hard delete records - use `isActive: false` flag:
+```typescript
+// locations and teacherResources tables use this pattern
+isActive: v.boolean(),
+
+// To "delete"
+await ctx.db.patch(locationId, { isActive: false });
+
+// Query only active records
+.withIndex("by_active", (q) => q.eq("isActive", true))
+```
+
+Maintains data integrity and audit trails.
+
+### Unique ID Generation Pattern
+Students use deterministic collision-resistant IDs (`convex/students.ts`):
+```typescript
+// Format: {SchoolHash}-{NameHash}-{Timestamp}-{Random}
+// Example: AB12-JOSR-k9x2tz-X4J2
+function generateStudentId(firstName, lastName, schoolId) {
+  const schoolHash = schoolId.substring(0, 4).toUpperCase();
+  const nameHash = `${firstName.substring(0, 2)}${lastName.substring(0, 2)}`.toUpperCase();
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `${schoolHash}-${nameHash}-${timestamp}-${random}`;
+}
+```
+
+System retries on collision (max 10 attempts). Never use auto-increment or UUID.
+
+## Workflow State Machines
+
+### Class Booking State Flow
+Three-step approval workflow in `convex/classes.ts`:
+
+```
+Teacher books → pending → Moderator acknowledges → acknowledged 
+                                                  ↓
+                                    Moderator decides → approved/rejected
+```
+
+Each transition triggers notifications automatically. Status is union type - never use strings directly:
+```typescript
+status: v.union(
+  v.literal("pending"),
+  v.literal("acknowledged"),
+  v.literal("approved"),
+  v.literal("rejected")
+)
+```
+
+### Notification Type System
+Strict union with UI color mapping:
+```typescript
+type: "info" | "success" | "warning" | "error"
+// Maps to: blue / green / yellow / red
+```
+
+Always validate against this union, never free-form strings.
 
 ## Development Workflow
 
-### Local Development
+### Local Development Commands (PowerShell)
 ```powershell
 npm install          # Install dependencies
-npx convex dev       # Start Convex backend (required first)
+npx convex dev       # Start Convex backend FIRST (required for Next.js)
 npm run dev          # Start Next.js with Turbopack
 ```
 
-**Note**: These commands are for **local development only**. In production, Convex runs as a cloud service and Vercel handles the Next.js build automatically.
+**Critical:** Convex must be running before Next.js starts, or the app throws runtime errors.
 
-### Environment Setup
-- Convex setup creates `.env.local` with `NEXT_PUBLIC_CONVEX_URL`
-- Never commit `.env.local` (already in `.gitignore`)
-- For production: Your Convex deployment is already running at the production URL
-- Vercel reads environment variables from its dashboard settings
+### Turbopack Requirement (Build System)
+All npm scripts use `--turbopack` flag:
+```json
+"dev": "next dev --turbopack",
+"build": "next build --turbopack"  // Builds FAIL without this
+```
 
-### Build Commands
-- Dev: `npm run dev` (uses Turbopack via `--turbopack` flag)
-- Build: `npm run build` (also uses Turbopack - **required**, builds fail without it)
-- Lint: `npm run lint` (uses ESLint 9 with flat config)
+**Never remove `--turbopack`** - this is non-negotiable for this project.
 
-## Component Patterns
+### Environment Variables
+- `.env.local` contains `NEXT_PUBLIC_CONVEX_URL` (created by `npx convex dev`)
+- Already in `.gitignore` - never commit
+- Production: Set in Vercel dashboard, Convex runs as persistent cloud service
 
-### Client Component Requirements
-Components using hooks MUST have `"use client"`:
-- Any component using `useLanguage()`, `useQuery()`, `useMutation()`
-- All components in `components/` directory
-- Event handlers (onClick, onChange, etc.)
+## Component Development Patterns
 
-### Authentication Flow
-The app uses session-based authentication with `sessionStorage`:
+### Form Submission Pattern
+Standard approach from `components/notification-form.tsx`:
+
 ```tsx
-// Check current user
+const [title, setTitle] = useState("");
+const [titleTh, setTitleTh] = useState("");
+const createNotification = useMutation(api.notifications.create);
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  await createNotification({ title, titleTh, ... });
+  // Clear form after success
+  setTitle(""); setTitleTh("");
+};
+```
+
+**No loading states needed** - Convex provides optimistic updates automatically.
+
+### Authentication Pattern
+Session stored in `sessionStorage` (not localStorage):
+
+```tsx
 const currentUser = useQuery(api.users.getCurrentUser);
-
-// Login pattern
 const login = useMutation(api.users.login);
-await login({ username, password });
 
-// First-time password change required
+// Default password: Teacher{username}
+// First login requires password change
 if (currentUser?.requirePasswordChange) {
   // Show PasswordChangeDialog component
 }
 ```
 
-### Key Components
-- **LoginForm** - Handles authentication with bilingual UI
-- **PasswordChangeDialog** - Forced password change for new users
-- **UserManagement** - Admin interface for creating users (password: `Teacher{username}`)
-- **ClassBooking** - Class booking workflow with approval states
-- **DatabaseInit** - First-time setup (creates admin account)
-- **NotificationForm/List** - Real-time notification system
-- **MessagingHub** - Direct and group messaging interface with dual chat modes
-- **DesktopNotificationToast** - Toast notifications for desktop
-- **ModeratorListView** - Directory of school moderators
-- **AdminContactButton** - Quick contact button for admin
-- **WeeklyCalendar** - Calendar view for class scheduling with date range optimization
-- **SimpleAnalytics** - Performance metrics dashboard for moderators (approval rates, trends, rankings)
-- **LocationManagement** - Manage school locations/classrooms with soft delete
-- **StudentManagement** - Student CRUD with unique ID generation
-- **SchoolManagement** - School CRUD and moderator assignment
-- **TeacherHelper** - Teacher resource management interface (admin)
-- **TeacherActivityDashboard** - Audit log viewer for teacher actions
+See `components/password-change-dialog.tsx` for implementation.
 
-### Notification Type System
-Strict union type with four values:
-```typescript
-type: "info" | "success" | "warning" | "error"
-```
-Each maps to color-coded UI (blue/green/yellow/red). Always validate against this union.
+### Messaging System Dual Mode
+`components/messaging-hub.tsx` supports two distinct patterns:
 
-### Form Submission Pattern
-See `components/notification-form.tsx` for standard approach:
-1. Use controlled inputs with individual state variables
-2. Call Convex mutation in `handleSubmit`
-3. Clear form fields after successful submission
-4. No manual loading states needed (Convex handles optimistic updates)
+1. **Direct messaging**: `sendDirectMessage({ recipientId, ... })`
+2. **Group messaging**: `sendGroupMessage({ schoolId or groupId, ... })`
 
-### Messaging System Pattern
-The messaging hub supports two modes (see `components/messaging-hub.tsx`):
-1. **Direct Mode**: 1-on-1 conversations between users
-   - Uses `sendDirectMessage` mutation with `recipientId`
-   - Queries via `getConversation` for specific user pairs
-2. **Group Mode**: School-wide or custom group messaging
-   - Uses `sendGroupMessage` mutation with `schoolId` or `groupId`
-   - Queries via `getGroupMessages` for all school members
-   - Auto-cleanup: Messages deleted after 14 days (cron job)
+Messages auto-expire after 14 days via `convex/crons.ts` daily job at 2:00 AM UTC.
 
 ## Styling Conventions
 
-### Tailwind v4 Setup
-- Uses new `@tailwindcss/postcss` package (v4)
-- Dark mode: `dark:` variant automatically detects system preference
-- Responsive: Use `md:` prefix for tablet/desktop layouts
-- Forms: Standard pattern is `border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500`
+### Tailwind v4 (New Major Version)
+- Uses `@tailwindcss/postcss` package (not v3 config file)
+- Dark mode: `dark:` variant auto-detects system preference
+- Responsive: `md:` prefix for tablet/desktop (mobile-first default)
 
-### Color Coding for Notification Types
-- Info: `bg-blue-50 border-blue-200` (light), adjust for dark mode
-- Success: `bg-green-50 border-green-200`
-- Warning: `bg-yellow-50 border-yellow-200`
-- Error: `bg-red-50 border-red-200`
+**Standard form input pattern**:
+```tsx
+className="w-full px-3 py-2 border border-gray-300 rounded-lg 
+           focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+           dark:bg-gray-800 dark:border-gray-600"
+```
+
+### Notification Color Mapping
+```
+info    → bg-blue-50 border-blue-200    (light mode)
+success → bg-green-50 border-green-200
+warning → bg-yellow-50 border-yellow-200
+error   → bg-red-50 border-red-200
+```
 
 ## Critical Dependencies
 
-### Package Versions (see `package.json`)
-- Next.js 15.5.4 with App Router
-- React 19.1.0 (latest)
-- Convex 1.27.5 (real-time backend)
-- Tailwind CSS v4 (new major version)
-- Lucide React for icons
+### Key Packages (from `package.json`)
+- **Next.js 15.5.4** - App Router with Turbopack
+- **React 19.1.0** - Latest version (requires `@types/react@19`)
+- **Convex 1.28.0** - Real-time backend with edge functions
+- **Tailwind CSS v4** - New postcss-based architecture
+- **Lucide React** - Icon library
 
-### TypeScript Configuration
+### TypeScript Config
 - Strict mode enabled
-- Path alias: `@/` maps to project root
-- React 19 types required (`@types/react@19`)
+- Path alias: `@/` → project root
+- `convex/_generated/` excluded from git
 
-## Common Tasks
+## Deployment Architecture
 
-### Adding a New Feature
-1. If it needs data: Update `convex/schema.ts` and add query/mutation to appropriate file in `convex/`
-2. If it has UI: Create component in `components/` with `"use client"`
-3. Add bilingual strings using `t()` helper throughout
-4. Test in both English and Thai language modes
-5. For workflow features: Add notification triggers (see `convex/classes.ts` for examples)
+**Production Stack**: Vercel (frontend) + Convex (backend cloud service)
 
-### User Authentication Pattern
-Default user creation follows this pattern:
-```typescript
-// Admin creates user with username
-username: "Evan"
-password: "TeacherEvan" // Auto-generated: Teacher{username}
-requirePasswordChange: true // Forced on first login
-```
+**Convex**: Persistent cloud service at `https://resolute-basilisk-801.convex.cloud`
+- No manual deployment needed
+- Handles real-time database, queries, mutations, cron jobs
+- Auto-scales, always running
 
-### Class Booking Workflow
-Standard approval flow:
-1. Teacher books class → Status: `pending`, Notification sent to moderator
-2. Moderator acknowledges → Status: `acknowledged`
-3. Moderator approves/rejects → Status: `approved`/`rejected`, Notification sent to teacher
+**Vercel**: Auto-deploys on git push
+- Requires env var: `NEXT_PUBLIC_CONVEX_URL`
+- Turbopack used for production builds
 
-### Student Unique ID Generation
-Format: `{SchoolHash}-{NameHash}-{Timestamp}-{Random}`
-- See `convex/students.ts` for implementation
-- System retries on collision (max 10 attempts)
+**First deployment**: Navigate to deployed URL → Click "Initialize Database" → Creates admin account
 
-### Adding Database Fields
-1. Update schema in `convex/schema.ts`
-2. Add fields to mutations in `convex/notifications.ts` or relevant file
-3. Update TypeScript types (auto-generated in `convex/_generated/`)
-4. For bilingual fields: Add both `field` and `fieldTh` versions
+See `DEPLOYMENT.md` for complete guide.
 
-### Debugging Convex Issues
-- Check Convex dashboard: Database tables, function logs, errors
-- Verify `NEXT_PUBLIC_CONVEX_URL` in `.env.local`
-- Ensure `npx convex dev` is running during development
-- Check browser console for real-time connection issues
+## Common Debugging Scenarios
 
-## Deployment
+### Convex Connection Issues
+1. Check `NEXT_PUBLIC_CONVEX_URL` in `.env.local`
+2. Verify `npx convex dev` is running
+3. Browser console shows WebSocket connection status
+4. Convex dashboard shows function logs and errors
 
-**Production Stack**: Vercel (frontend) + Convex (backend - already deployed)
+### Build Failures
+1. Ensure `--turbopack` flag is present in build script
+2. Check TypeScript errors: `npx tsc --noEmit`
+3. Verify all `convex/` imports use `@/convex/_generated/api`
 
-**Convex Backend**: Already running at `https://resolute-basilisk-801.convex.cloud`
-- No manual deployment needed - it's a persistent cloud service
-- Manages real-time database, queries, and mutations
-- Automatically handles scaling and uptime
-
-**Vercel Frontend Deployment**:
-1. Install Vercel CLI: `npm install -g vercel`
-2. Deploy: `vercel` (follow prompts to link GitHub repo)
-3. Set environment variable in Vercel dashboard:
-   - `NEXT_PUBLIC_CONVEX_URL=https://resolute-basilisk-801.convex.cloud`
-4. Future deploys: Auto-deploy on push to main branch
-
-**Environment Variables**:
-- `NEXT_PUBLIC_CONVEX_URL` - Convex deployment URL (required in Vercel settings)
-- `CONVEX_DEPLOY_KEY` - For CI/CD automation (keep secret, optional)
-
-**First-Time Setup After Deployment**:
-1. Navigate to deployed app URL
-2. Click "Initialize Database" button
-3. Default admin account created (save credentials shown)
-4. Login and change password immediately
-
-See `DEPLOYMENT.md` for detailed steps.
+### Missing Bilingual Content
+1. Check schema has both `field` and `fieldTh`
+2. Forms have parallel inputs for both languages
+3. `t()` helper used consistently in UI
 
 ## Project-Specific Rules
 
-- **Never remove bilingual support**: Every feature must work in both languages
-- **Always use Convex for data**: No REST APIs, no direct database access
-- **Client components only**: This app uses client-side rendering for interactivity
-- **Turbopack is required**: Don't remove `--turbopack` from scripts (builds fail without it)
-- **Respect the provider hierarchy**: ConvexClientProvider must wrap LanguageProvider
+1. **Never remove bilingual support** - Every feature must work in both languages
+2. **Always use indexes** - No table scans without `.withIndex()`
+3. **Soft delete only** - Use `isActive: false`, never hard delete
+4. **Client components only** - All components need `"use client"` directive
+5. **Turbopack is required** - Don't remove `--turbopack` from npm scripts
+6. **Respect provider hierarchy** - Order in `app/layout.tsx` is load-bearing
+7. **No REST APIs** - All data operations go through Convex queries/mutations
+
+## Performance Optimization Guidelines
+
+### CRITICAL: Avoid N+1 Query Problems
+
+**Never do this:**
+```typescript
+// ❌ BAD: Database call inside loop
+for (const message of allMessages) {
+  const partner = await ctx.db.get(message.senderId); // DB call per iteration!
+}
+```
+
+**Always do this:**
+```typescript
+// ✅ GOOD: Batch fetch first, then use lookup
+const partnerIds = new Set(allMessages.map(m => m.senderId));
+const partners = await Promise.all(
+  Array.from(partnerIds).map(id => ctx.db.get(id))
+);
+const partnerMap = new Map(partners.map(p => [p._id, p]));
+// Now use map for instant lookups
+```
+
+See `PERFORMANCE_AUDIT.md` for identified bottlenecks and fixes.
+
+### Pagination Best Practices
+
+**Use Convex native pagination:**
+```typescript
+// ✅ Efficient: Uses database-level pagination
+export const list = query({
+  args: { paginationOpts: paginationOptsValidator },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("students")
+      .withIndex("by_created_at")
+      .order("desc")
+      .paginate(args.paginationOpts);
+  },
+});
+
+// Frontend usage
+const { results, status, loadMore } = usePaginatedQuery(
+  api.students.list,
+  {},
+  { initialNumItems: 20 }
+);
+```
+
+**Don't do this:**
+```typescript
+// ❌ Inefficient: Loads everything, then slices
+const all = await ctx.db.query("students").collect();
+return all.slice(cursor, cursor + pageSize);
+```
+
+### Query Optimization Rules
+
+1. **Filter server-side, not client-side:**
+```typescript
+// ❌ BAD: Loads all, filters in memory
+const allUsers = useQuery(api.users.list, {});
+const teachers = allUsers?.filter(u => u.role === "teacher");
+
+// ✅ GOOD: Filter at database level
+const teachers = useQuery(api.users.list, { role: "teacher" });
+```
+
+2. **Batch related queries:**
+```typescript
+// ❌ BAD: Separate query per item in list
+{classes.map(c => {
+  const student = useQuery(api.students.getById, { id: c.studentId });
+  // Creates N queries for N classes!
+})}
+
+// ✅ GOOD: Single compound query
+const classesWithDetails = useQuery(api.classes.listWithDetails, { teacherId });
+```
+
+3. **Use compound indexes for multi-field queries:**
+```typescript
+// Schema must have compound index
+.index("by_school_and_date", ["schoolId", "scheduledDate"])
+
+// Query uses both fields efficiently
+await ctx.db
+  .query("classes")
+  .withIndex("by_school_and_date", (q) =>
+    q.eq("schoolId", schoolId)
+     .gte("scheduledDate", startDate)
+  )
+  .collect();
+```
+
+## Known Issues & Incomplete Features
+
+### YouTube Downloader
+- **Status:** UI exists but no backend functionality
+- Component at `components/youtube-downloader.tsx` is a shell
+- Requires external service integration or client-side library
+- See `TODO.md` and `PERFORMANCE_AUDIT.md` for implementation plan
+
+### Push Notifications
+- **Status:** Schema fields exist but system not implemented
+- `pushSubscription` field in users table is placeholder
+- Service worker registration exists but no actual worker file
+- Requires `public/sw.js` and subscription flow
+
+### Pagination
+- **Status:** Backend exists but components don't use it
+- `convex/pagination.ts` has inefficient implementation (loads all records)
+- Components still use non-paginated queries
+- Needs migration to `usePaginatedQuery` hook
+
+## Key Files for Reference
+
+- `convex/schema.ts` - Database schema with all indexes
+- `app/layout.tsx` - Provider hierarchy (critical ordering)
+- `lib/language-context.tsx` - Bilingual translation pattern
+- `components/notification-form.tsx` - Standard form pattern
+- `convex/classes.ts` - State machine and workflow example
+- `convex/students.ts` - Unique ID generation pattern
+- `convex/crons.ts` - Scheduled job implementation
+- `DEPLOYMENT.md` - Production deployment guide
+- `ARCHITECTURE.md` - System diagrams and data flows
+- `PERFORMANCE_AUDIT.md` - Bottlenecks, optimizations, and incomplete features

@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 
 // Query to list messages for a user (both direct and group messages)
 export const list = query({
@@ -168,6 +169,35 @@ export const getConversations = query({
       )
       .collect();
 
+    // ✅ PERFORMANCE FIX: Batch fetch all unique partner IDs first
+    const partnerIds = new Set<string>();
+    for (const message of allMessages) {
+      const partnerId = message.senderId === args.userId
+        ? message.recipientId
+        : message.senderId;
+      if (partnerId) {
+        partnerIds.add(partnerId.toString());
+      }
+    }
+
+    // Batch fetch all partners in parallel (instead of in loop)
+    const partnerPromises = Array.from(partnerIds).map(async (id) => {
+      const partner = await ctx.db.get(id as Id<"users">);
+      // Type guard to ensure we only return users
+      if (partner && "_id" in partner && "username" in partner) {
+        return partner as { _id: Id<"users">; username: string };
+      }
+      return null;
+    });
+    const partners = (await Promise.all(partnerPromises)).filter(
+      (p): p is NonNullable<typeof p> => p !== null
+    );
+
+    // Create lookup map for O(1) access
+    const partnerMap = new Map(
+      partners.map(p => [p._id.toString(), p])
+    );
+
     // Group messages by conversation partner
     const conversationMap = new Map<string, {
       partnerId: string;
@@ -189,7 +219,8 @@ export const getConversations = query({
       const partnerIdString = partnerId.toString();
 
       if (!conversationMap.has(partnerIdString)) {
-        const partner = await ctx.db.get(partnerId);
+        // Use pre-fetched partner from map (no DB call!)
+        const partner = partnerMap.get(partnerIdString);
         conversationMap.set(partnerIdString, {
           partnerId: partnerIdString,
           partnerUsername: partner?.username || "Unknown",
