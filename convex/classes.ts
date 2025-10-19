@@ -104,7 +104,9 @@ export const book = mutation({
     teacherId: v.id("users"),
     schoolId: v.id("schools"),
     studentId: v.id("students"),
-    locationId: v.id("locations"),
+    locationId: v.optional(v.id("locations")),
+    pendingLocationName: v.optional(v.string()),
+    pendingLocationNameTh: v.optional(v.string()),
     scheduledDate: v.number(),
     bookedByUserId: v.id("users"), // ID of the user creating the booking
   },
@@ -114,19 +116,26 @@ export const book = mutation({
       throw new Error("Cannot schedule a class in the past");
     }
 
+    // Validate location - either locationId or pending location names must be provided
+    if (!args.locationId && (!args.pendingLocationName || !args.pendingLocationNameTh)) {
+      throw new Error("Must provide either a location or pending location names");
+    }
+
     // Verify student exists
     const student = await ctx.db.get(args.studentId);
     if (!student) {
       throw new Error("Student not found");
     }
 
-    // Verify location exists and is active
-    const location = await ctx.db.get(args.locationId);
-    if (!location) {
-      throw new Error("Location not found");
-    }
-    if (!location.isActive) {
-      throw new Error("Selected location is not available");
+    // Verify location exists and is active (if locationId is provided)
+    if (args.locationId) {
+      const location = await ctx.db.get(args.locationId);
+      if (!location) {
+        throw new Error("Location not found");
+      }
+      if (!location.isActive) {
+        throw new Error("Selected location is not available");
+      }
     }
 
     // Get the user who is booking to check their role
@@ -147,6 +156,8 @@ export const book = mutation({
       schoolId: args.schoolId,
       studentId: args.studentId,
       locationId: args.locationId,
+      pendingLocationName: args.pendingLocationName,
+      pendingLocationNameTh: args.pendingLocationNameTh,
       status,
       scheduledDate: args.scheduledDate,
       createdAt: Date.now(),
@@ -154,6 +165,11 @@ export const book = mutation({
 
     // Get the school to find the moderator
     const school = await ctx.db.get(args.schoolId);
+
+    // Get location info for notifications (if provided)
+    const location = args.locationId ? await ctx.db.get(args.locationId) : null;
+    const locationText = location?.name || args.pendingLocationName || "Unknown location";
+    const locationTextTh = location?.nameTh || args.pendingLocationNameTh || "ไม่ทราบสถานที่";
 
     // Only send notification if it's a teacher request (pending status)
     if (!isModerator && school && school.moderatorId) {
@@ -164,8 +180,8 @@ export const book = mutation({
       await ctx.db.insert("notifications", {
         title: `New Class Request`,
         titleTh: `คำขอชั้นเรียนใหม่`,
-        message: `Teacher ${teacher?.username || "Unknown"} has requested a class for ${student.firstName} ${student.lastName} at ${location.name}. Please review and acknowledge.`,
-        messageTh: `ครู ${teacher?.username || "ไม่ทราบ"} ได้ขอชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${location.nameTh} กรุณาตรวจสอบและรับทราบ`,
+        message: `Teacher ${teacher?.username || "Unknown"} has requested a class for ${student.firstName} ${student.lastName} at ${locationText}. Please review and acknowledge.`,
+        messageTh: `ครู ${teacher?.username || "ไม่ทราบ"} ได้ขอชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} กรุณาตรวจสอบและรับทราบ`,
         type: "warning",
         userId: school.moderatorId,
         read: false,
@@ -179,8 +195,8 @@ export const book = mutation({
       schoolId: args.schoolId,
       action: isModerator ? "class_booked" : "class_requested",
       actionTh: isModerator ? "จองชั้นเรียน" : "ขอชั้นเรียน",
-      details: `${isModerator ? "Booked" : "Requested"} class for ${student.firstName} ${student.lastName} at ${location.name} on ${new Date(args.scheduledDate).toLocaleDateString()}`,
-      detailsTh: `${isModerator ? "จอง" : "ขอ"}ชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${location.nameTh} วันที่ ${new Date(args.scheduledDate).toLocaleDateString("th-TH")}`,
+      details: `${isModerator ? "Booked" : "Requested"} class for ${student.firstName} ${student.lastName} at ${locationText} on ${new Date(args.scheduledDate).toLocaleDateString()}`,
+      detailsTh: `${isModerator ? "จอง" : "ขอ"}ชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} วันที่ ${new Date(args.scheduledDate).toLocaleDateString("th-TH")}`,
       relatedClassId: classId,
       relatedStudentId: args.studentId,
       createdAt: Date.now(),

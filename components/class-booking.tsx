@@ -5,8 +5,9 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import type { UserRole } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
-import { Calendar, Check, X } from "lucide-react";
+import { Calendar, Check, MapPin, X } from "lucide-react";
 import { useState } from "react";
+import { CalendarPicker } from "./calendar-picker";
 
 interface ClassBookingProps {
   userId: Id<"users">;
@@ -14,7 +15,7 @@ interface ClassBookingProps {
 }
 
 export function ClassBooking({ userId, userRole }: ClassBookingProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const schools = useQuery(api.schools.list);
   const students = useQuery(api.students.list, {});
   const classes = useQuery(
@@ -32,6 +33,12 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
   const [locationId, setLocationId] = useState<Id<"locations"> | "">("");
   const [scheduledDate, setScheduledDate] = useState("");
+  const [selectedDateTimestamp, setSelectedDateTimestamp] = useState<number | null>(null);
+  const [selectedTime, setSelectedTime] = useState("09:00");
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [pendingLocationName, setPendingLocationName] = useState("");
+  const [pendingLocationNameTh, setPendingLocationNameTh] = useState("");
+  const [requestingNewLocation, setRequestingNewLocation] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -53,17 +60,35 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
       if (!studentId) {
         throw new Error("Please select a student");
       }
-      if (!locationId) {
-        throw new Error("Please select a location");
+      if (!locationId && !requestingNewLocation) {
+        throw new Error("Please select a location or request a new one");
+      }
+      if (requestingNewLocation && (!pendingLocationName.trim() || !pendingLocationNameTh.trim())) {
+        throw new Error("Please provide both English and Thai names for the new location");
+      }
+
+      // Combine date and time
+      let timestamp: number;
+      if (selectedDateTimestamp) {
+        const date = new Date(selectedDateTimestamp);
+        const [hours, minutes] = selectedTime.split(":");
+        date.setHours(Number.parseInt(hours), Number.parseInt(minutes));
+        timestamp = date.getTime();
+      } else if (scheduledDate) {
+        timestamp = new Date(scheduledDate).getTime();
+      } else {
+        throw new Error("Please select a date");
       }
 
       await bookClass({
         teacherId: userId,
         schoolId,
         studentId: studentId as Id<"students">,
-        locationId: locationId as Id<"locations">,
-        scheduledDate: new Date(scheduledDate).getTime(),
-        bookedByUserId: userId, // Pass the current user's ID
+        locationId: locationId ? (locationId as Id<"locations">) : undefined,
+        pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
+        pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
+        scheduledDate: timestamp,
+        bookedByUserId: userId,
       });
 
       // Reset form
@@ -71,6 +96,12 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
       setSchoolId("");
       setLocationId("");
       setScheduledDate("");
+      setSelectedDateTimestamp(null);
+      setSelectedTime("09:00");
+      setPendingLocationName("");
+      setPendingLocationNameTh("");
+      setRequestingNewLocation(false);
+      setShowCalendar(false);
       setShowForm(false);
     } catch (err) {
       setError(
@@ -210,10 +241,16 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                 <select
                   id="location"
                   value={locationId}
-                  onChange={(e) => setLocationId(e.target.value as Id<"locations"> | "")}
+                  onChange={(e) => {
+                    setLocationId(e.target.value as Id<"locations"> | "");
+                    if (e.target.value) {
+                      setRequestingNewLocation(false);
+                      setPendingLocationName("");
+                      setPendingLocationNameTh("");
+                    }
+                  }}
                   className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-shadow"
-                  required
-                  disabled={loading || !schoolId}
+                  disabled={loading || !schoolId || requestingNewLocation}
                 >
                   <option value="">
                     {schoolId
@@ -227,23 +264,146 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                     </option>
                   ))}
                 </select>
+                
+                {/* Request new location button */}
+                {userRole === "teacher" && schoolId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRequestingNewLocation(!requestingNewLocation);
+                      if (!requestingNewLocation) {
+                        setLocationId("");
+                      } else {
+                        setPendingLocationName("");
+                        setPendingLocationNameTh("");
+                      }
+                    }}
+                    className="mt-2 text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    {requestingNewLocation 
+                      ? t("Use existing location", "ใช้สถานที่ที่มีอยู่")
+                      : t("Request new location", "ขอสถานที่ใหม่")
+                    }
+                  </button>
+                )}
               </div>
 
               <div>
                 <label htmlFor="date" className="block text-sm font-medium mb-2">
                   {t("Scheduled Date", "วันที่กำหนด")}
                 </label>
+                
+                {/* Calendar toggle button */}
+                <button
+                  type="button"
+                  onClick={() => setShowCalendar(!showCalendar)}
+                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 text-left flex items-center justify-between"
+                  disabled={loading}
+                >
+                  <span className={selectedDateTimestamp ? "text-gray-900 dark:text-white" : "text-gray-500"}>
+                    {selectedDateTimestamp 
+                      ? new Date(selectedDateTimestamp).toLocaleDateString(
+                          language === "en" ? "en-US" : "th-TH",
+                          { year: "numeric", month: "long", day: "numeric" }
+                        )
+                      : t("Select date from calendar", "เลือกวันที่จากปฏิทิน")
+                    }
+                  </span>
+                  <Calendar className="w-5 h-5 text-gray-400" />
+                </button>
+                
+                {/* Fallback to datetime-local input */}
                 <input
                   type="datetime-local"
                   id="date"
                   value={scheduledDate}
-                  onChange={(e) => setScheduledDate(e.target.value)}
-                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 touch-manipulation transition-shadow"
-                  required
+                  onChange={(e) => {
+                    setScheduledDate(e.target.value);
+                    setSelectedDateTimestamp(null); // Clear calendar selection
+                  }}
+                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 touch-manipulation transition-shadow mt-2"
                   disabled={loading}
+                  placeholder={t("Or enter date/time manually", "หรือกรอกวันที่/เวลาด้วยตนเอง")}
                 />
               </div>
             </div>
+
+            {/* Calendar Picker */}
+            {showCalendar && (
+              <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-900">
+                <CalendarPicker
+                  selectedDate={selectedDateTimestamp}
+                  onDateSelect={(timestamp) => {
+                    setSelectedDateTimestamp(timestamp);
+                    setScheduledDate(""); // Clear manual input
+                  }}
+                  disabledDates={[]}
+                />
+                
+                {/* Time picker */}
+                {selectedDateTimestamp && (
+                  <div className="mt-4">
+                    <label htmlFor="time" className="block text-sm font-medium mb-2">
+                      {t("Select Time", "เลือกเวลา")}
+                    </label>
+                    <input
+                      type="time"
+                      id="time"
+                      value={selectedTime}
+                      onChange={(e) => setSelectedTime(e.target.value)}
+                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* New location request fields */}
+            {requestingNewLocation && (
+              <div className="border border-blue-200 dark:border-blue-800 rounded-xl p-4 bg-blue-50 dark:bg-blue-900/20">
+                <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-blue-500" />
+                  {t("Request New Location", "ขอสถานที่ใหม่")}
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="pendingLocationName" className="block text-sm font-medium mb-2">
+                      {t("Location Name (English)", "ชื่อสถานที่ (อังกฤษ)")}
+                    </label>
+                    <input
+                      type="text"
+                      id="pendingLocationName"
+                      value={pendingLocationName}
+                      onChange={(e) => setPendingLocationName(e.target.value)}
+                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      placeholder={t("e.g., Room 301", "เช่น ห้อง 301")}
+                      required={requestingNewLocation}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="pendingLocationNameTh" className="block text-sm font-medium mb-2">
+                      {t("Location Name (Thai)", "ชื่อสถานที่ (ไทย)")}
+                    </label>
+                    <input
+                      type="text"
+                      id="pendingLocationNameTh"
+                      value={pendingLocationNameTh}
+                      onChange={(e) => setPendingLocationNameTh(e.target.value)}
+                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      placeholder={t("e.g., ห้อง 301", "เช่น ห้อง 301")}
+                      required={requestingNewLocation}
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                  {t(
+                    "This location will need moderator approval before being used.",
+                    "สถานที่นี้จะต้องได้รับการอนุมัติจากผู้ดูแลก่อนจึงจะสามารถใช้งานได้"
+                  )}
+                </p>
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl md:rounded-lg text-sm">
