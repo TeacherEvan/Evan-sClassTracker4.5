@@ -148,6 +148,105 @@ export const unreadCount = query({
   },
 });
 
+// Query to get all conversations (inbox view) with unread counts
+export const getConversations = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    // Get all direct messages where user is sender or recipient
+    const allMessages = await ctx.db
+      .query("messages")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("isGroupMessage"), false),
+          q.or(
+            q.eq(q.field("senderId"), args.userId),
+            q.eq(q.field("recipientId"), args.userId)
+          )
+        )
+      )
+      .collect();
+
+    // Group messages by conversation partner
+    const conversationMap = new Map<string, {
+      partnerId: string;
+      partnerUsername: string;
+      lastMessage: string;
+      lastMessageTh: string;
+      lastMessageTime: number;
+      unreadCount: number;
+      messages: typeof allMessages;
+    }>();
+
+    for (const message of allMessages) {
+      const partnerId = message.senderId === args.userId
+        ? message.recipientId
+        : message.senderId;
+
+      if (!partnerId) continue;
+
+      const partnerIdString = partnerId.toString();
+
+      if (!conversationMap.has(partnerIdString)) {
+        const partner = await ctx.db.get(partnerId);
+        conversationMap.set(partnerIdString, {
+          partnerId: partnerIdString,
+          partnerUsername: partner?.username || "Unknown",
+          lastMessage: message.content,
+          lastMessageTh: message.contentTh,
+          lastMessageTime: message.createdAt,
+          unreadCount: 0,
+          messages: [],
+        });
+      }
+
+      const conversation = conversationMap.get(partnerIdString)!;
+      conversation.messages.push(message);
+
+      // Update last message if this is newer
+      if (message.createdAt > conversation.lastMessageTime) {
+        conversation.lastMessage = message.content;
+        conversation.lastMessageTh = message.contentTh;
+        conversation.lastMessageTime = message.createdAt;
+      }
+
+      // Count unread messages (messages sent TO this user that are unread)
+      if (message.recipientId === args.userId && !message.read) {
+        conversation.unreadCount++;
+      }
+    }
+
+    // Convert to array and sort: unread first (oldest unread first), then read (newest first)
+    const conversations = Array.from(conversationMap.values()).sort((a, b) => {
+      // If one has unread and other doesn't, unread comes first
+      if (a.unreadCount > 0 && b.unreadCount === 0) return -1;
+      if (a.unreadCount === 0 && b.unreadCount > 0) return 1;
+
+      // If both have unread or both have no unread, sort by oldest unread message time
+      if (a.unreadCount > 0 && b.unreadCount > 0) {
+        // Find oldest unread message in each conversation
+        const aOldestUnread = a.messages
+          .filter(m => m.recipientId === args.userId && !m.read)
+          .sort((x, y) => x.createdAt - y.createdAt)[0];
+        const bOldestUnread = b.messages
+          .filter(m => m.recipientId === args.userId && !m.read)
+          .sort((x, y) => x.createdAt - y.createdAt)[0];
+
+        if (aOldestUnread && bOldestUnread) {
+          return aOldestUnread.createdAt - bOldestUnread.createdAt;
+        }
+      }
+
+      // For conversations with no unread, sort by newest last message
+      return b.lastMessageTime - a.lastMessageTime;
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    return conversations.map(({ messages, ...conv }) => conv);
+  },
+});
+
 // Mutation to send a direct message
 export const sendDirectMessage = mutation({
   args: {
@@ -159,6 +258,12 @@ export const sendDirectMessage = mutation({
   handler: async (ctx, args) => {
     if (!args.content.trim() && !args.contentTh.trim()) {
       throw new Error("Message content cannot be empty in both languages");
+    }
+
+    // Get sender information for notification
+    const sender = await ctx.db.get(args.senderId);
+    if (!sender) {
+      throw new Error("Sender not found");
     }
 
     // Check if this is the first message between these users
@@ -205,6 +310,18 @@ export const sendDirectMessage = mutation({
       isGroupMessage: false,
       read: false,
       acknowledged: false,
+      createdAt: Date.now(),
+    });
+
+    // Create notification for recipient
+    await ctx.db.insert("notifications", {
+      title: `New message from ${sender.username}`,
+      titleTh: `ข้อความใหม่จาก ${sender.username}`,
+      message: "You have a new message. Check your Messages tab.",
+      messageTh: "คุณมีข้อความใหม่ ตรวจสอบแท็บข้อความของคุณ",
+      type: "info",
+      userId: args.recipientId,
+      read: false,
       createdAt: Date.now(),
     });
 
