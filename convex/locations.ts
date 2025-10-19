@@ -45,6 +45,8 @@ export const create = mutation({
         nameTh: v.string(),
         schoolId: v.id("schools"),
         createdBy: v.id("users"),
+        isPending: v.optional(v.boolean()), // For teacher-requested locations
+        requestedBy: v.optional(v.id("users")), // Teacher who requested
     },
     handler: async (ctx, args) => {
         // Validate inputs
@@ -56,7 +58,9 @@ export const create = mutation({
             name: args.name,
             nameTh: args.nameTh,
             schoolId: args.schoolId,
-            isActive: true,
+            isActive: args.isPending ? false : true, // Inactive until approved if pending
+            isPending: args.isPending || false,
+            requestedBy: args.requestedBy,
             createdAt: Date.now(),
             createdBy: args.createdBy,
         });
@@ -104,6 +108,68 @@ export const toggleActive = mutation({
         });
 
         return { success: true };
+    },
+});
+
+// Mutation to approve a pending teacher-requested location
+export const approvePending = mutation({
+    args: {
+        id: v.id("locations"),
+        approvedBy: v.id("users"), // Moderator approving
+    },
+    handler: async (ctx, args) => {
+        const location = await ctx.db.get(args.id);
+
+        if (!location) {
+            throw new Error("Location not found");
+        }
+
+        if (!location.isPending) {
+            throw new Error("Location is not pending approval");
+        }
+
+        await ctx.db.patch(args.id, {
+            isPending: false,
+            isActive: true,
+            approvedBy: args.approvedBy,
+        });
+
+        // Notify the teacher who requested it
+        if (location.requestedBy) {
+            await ctx.db.insert("notifications", {
+                title: "Location Request Approved",
+                titleTh: "คำขอสถานที่ได้รับการอนุมัติ",
+                message: `Your location request "${location.name}" has been approved.`,
+                messageTh: `คำขอสถานที่ "${location.nameTh}" ของคุณได้รับการอนุมัติแล้ว`,
+                type: "success",
+                userId: location.requestedBy,
+                read: false,
+                createdAt: Date.now(),
+            });
+        }
+
+        return { success: true };
+    },
+});
+
+// Query to get pending location requests
+export const getPending = query({
+    args: {
+        schoolId: v.optional(v.id("schools")),
+    },
+    handler: async (ctx, args) => {
+        if (args.schoolId) {
+            return await ctx.db
+                .query("locations")
+                .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId!))
+                .filter((q) => q.eq(q.field("isPending"), true))
+                .collect();
+        }
+
+        return await ctx.db
+            .query("locations")
+            .withIndex("by_pending", (q) => q.eq("isPending", true))
+            .collect();
     },
 });
 

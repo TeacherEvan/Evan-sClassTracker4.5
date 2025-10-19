@@ -5,6 +5,7 @@ import { ClassBooking } from "@/components/class-booking";
 import { DatabaseInit } from "@/components/database-init";
 import { ToastContainer, type ToastNotification } from "@/components/desktop-notification-toast";
 import DeviceTestingDashboard from "@/components/device-testing-dashboard";
+import { GuardianDashboard } from "@/components/guardian-dashboard";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LocationManagement } from "@/components/location-management";
 import { LoginForm } from "@/components/login-form";
@@ -217,7 +218,9 @@ export default function Home() {
                   ? "ครู"
                   : user.role === "moderator"
                     ? "ผู้ดูแล"
-                    : "ผู้จัดการ"
+                    : user.role === "guardian"
+                      ? "ผู้ปกครอง"
+                      : "ผู้จัดการ"
               )}
             </p>
           </div>
@@ -479,7 +482,7 @@ export default function Home() {
         <TeacherActivityDashboard schoolId={user.schoolId} moderatorId={user._id} />
       )}
 
-      {activeTab === "resources" && user && (
+      {activeTab === "resources" && user && (user.role === "admin" || user.role === "teacher") && (
         <>
           {user.role === "admin" ? (
             <TeacherHelperAdmin currentUser={user} />
@@ -487,6 +490,11 @@ export default function Home() {
             <TeacherHelper currentUser={user} />
           )}
         </>
+      )}
+
+      {/* Guardian Dashboard - Only for guardians */}
+      {user.role === "guardian" && (
+        <GuardianDashboard currentUser={user} />
       )}
 
       {activeTab === "notifications" && (
@@ -508,7 +516,7 @@ export default function Home() {
       )}
 
       {activeTab === "students" && user.role === "admin" && (
-        <StudentManagement />
+        <StudentManagement currentUser={user} />
       )}
 
       {activeTab === "moderators" && user.role === "admin" && (

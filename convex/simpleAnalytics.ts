@@ -202,16 +202,18 @@ export const getLocationUtilization = query({
 
         for (const cls of classes) {
             const locationId = cls.locationId;
-            if (!locationStats[locationId]) {
-                const location = await ctx.db.get(locationId);
-                locationStats[locationId] = {
-                    total: 0,
-                    name: location?.name || "Unknown",
-                    nameTh: location?.nameTh || "Unknown",
-                };
-            }
+            if (locationId) {
+                if (!locationStats[locationId]) {
+                    const location = await ctx.db.get(locationId);
+                    locationStats[locationId] = {
+                        total: 0,
+                        name: location?.name || cls.pendingLocationName || "Unknown",
+                        nameTh: location?.nameTh || cls.pendingLocationNameTh || "Unknown",
+                    };
+                }
 
-            locationStats[locationId].total++;
+                locationStats[locationId].total++;
+            }
         }
 
         return Object.entries(locationStats)

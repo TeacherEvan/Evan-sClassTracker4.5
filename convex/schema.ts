@@ -8,7 +8,8 @@ export default defineSchema({
     role: v.union(
       v.literal("teacher"),
       v.literal("moderator"),
-      v.literal("admin")
+      v.literal("admin"),
+      v.literal("guardian")
     ),
     schoolId: v.optional(v.id("schools")),
     requirePasswordChange: v.boolean(),
@@ -40,7 +41,9 @@ export default defineSchema({
     teacherId: v.id("users"),
     schoolId: v.id("schools"),
     studentId: v.id("students"),
-    locationId: v.id("locations"),
+    locationId: v.optional(v.id("locations")), // Optional if using pending location
+    pendingLocationName: v.optional(v.string()), // For teacher-requested locations (English)
+    pendingLocationNameTh: v.optional(v.string()), // For teacher-requested locations (Thai)
     status: v.union(
       v.literal("pending"),
       v.literal("acknowledged"),
@@ -62,16 +65,22 @@ export default defineSchema({
     firstName: v.string(),
     lastName: v.string(),
     studentId: v.string(), // Unique identifier
-    schoolId: v.optional(v.id("schools")), // Now optional - null if linked to guardian
+    schoolId: v.optional(v.id("schools")), // Optional - null if linked to guardian
+    guardianId: v.optional(v.id("users")), // Guardian user ID if linked to guardian
+    guardianTitle: v.optional(v.string()), // Guardian relationship description (e.g., "Parent", "Tutor")
     grade: v.string(),
     guardianName: v.optional(v.string()), // Guardian name if no school
     guardianPhone: v.optional(v.string()), // Guardian contact
     guardianEmail: v.optional(v.string()), // Guardian email
+    acknowledged: v.boolean(), // For guardian-acknowledged students
+    createdBy: v.id("users"), // Teacher who created the student
     createdAt: v.number(),
   })
     .index("by_student_id", ["studentId"])
     .index("by_school", ["schoolId"])
-    .index("by_guardian", ["guardianName"]),
+    .index("by_guardian", ["guardianName"])
+    .index("by_guardian_id", ["guardianId"])
+    .index("by_created_by", ["createdBy"]),
 
   notifications: defineTable({
     title: v.string(),
@@ -148,11 +157,16 @@ export default defineSchema({
     nameTh: v.string(),
     schoolId: v.id("schools"),
     isActive: v.boolean(), // Enable/disable without deleting
+    isPending: v.boolean(), // For teacher-requested locations awaiting approval
+    requestedBy: v.optional(v.id("users")), // Teacher who requested this location
+    approvedBy: v.optional(v.id("users")), // Moderator who approved it
     createdAt: v.number(),
-    createdBy: v.id("users"), // Moderator or Admin who created it
+    createdBy: v.id("users"), // Moderator or Admin who created it (or teacher who requested)
   })
     .index("by_school", ["schoolId"])
     .index("by_active", ["isActive"])
+    .index("by_pending", ["isPending"])
+    .index("by_requested_by", ["requestedBy"])
     .index("by_created_at", ["createdAt"]),
 
   cancellationRequests: defineTable({

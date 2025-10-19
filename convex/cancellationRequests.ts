@@ -116,16 +116,19 @@ export const create = mutation({
 
         // Get student and location for notification
         const student = await ctx.db.get(classData.studentId);
-        const location = await ctx.db.get(classData.locationId);
+        const location = classData.locationId ? await ctx.db.get(classData.locationId) : null;
         const teacher = await ctx.db.get(args.teacherId);
 
         // Create notification for moderator
-        if (school && school.moderatorId && student && location) {
+        if (school && school.moderatorId && student) {
+            const locationText = location?.name || classData.pendingLocationName || "Unknown location";
+            const locationTextTh = location?.nameTh || classData.pendingLocationNameTh || "ไม่ทราบสถานที่";
+
             await ctx.db.insert("notifications", {
                 title: `Class Cancellation Request`,
                 titleTh: `คำขอยกเลิกชั้นเรียน`,
-                message: `Teacher ${teacher?.username || "Unknown"} has requested to cancel the class for ${student.firstName} ${student.lastName} at ${location.name}. Reason: ${args.reason}`,
-                messageTh: `ครู ${teacher?.username || "ไม่ทราบ"} ได้ขอยกเลิกชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${location.nameTh} เหตุผล: ${args.reasonTh}`,
+                message: `Teacher ${teacher?.username || "Unknown"} has requested to cancel the class for ${student.firstName} ${student.lastName} at ${locationText}. Reason: ${args.reason}`,
+                messageTh: `ครู ${teacher?.username || "ไม่ทราบ"} ได้ขอยกเลิกชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} เหตุผล: ${args.reasonTh}`,
                 type: "warning",
                 userId: school.moderatorId,
                 read: false,
@@ -181,15 +184,18 @@ export const approve = mutation({
         // Get class details for notification
         const classData = await ctx.db.get(request.classId);
         const student = classData ? await ctx.db.get(classData.studentId) : null;
-        const location = classData ? await ctx.db.get(classData.locationId) : null;
+        const location = classData?.locationId ? await ctx.db.get(classData.locationId) : null;
 
         // Notify the teacher
-        if (student && location) {
+        if (student) {
+            const locationText = location?.name || classData?.pendingLocationName || "Unknown location";
+            const locationTextTh = location?.nameTh || classData?.pendingLocationNameTh || "ไม่ทราบสถานที่";
+
             await ctx.db.insert("notifications", {
                 title: `Cancellation Approved`,
                 titleTh: `อนุมัติการยกเลิก`,
-                message: `Your cancellation request for the class with ${student.firstName} ${student.lastName} at ${location.name} has been approved.`,
-                messageTh: `คำขอยกเลิกชั้นเรียนของคุณกับ ${student.firstName} ${student.lastName} ที่ ${location.nameTh} ได้รับการอนุมัติแล้ว`,
+                message: `Your cancellation request for the class with ${student.firstName} ${student.lastName} at ${locationText} has been approved.`,
+                messageTh: `คำขอยกเลิกชั้นเรียนของคุณกับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} ได้รับการอนุมัติแล้ว`,
                 type: "success",
                 userId: request.teacherId,
                 read: false,
@@ -242,15 +248,18 @@ export const reject = mutation({
         // Get class details for notification
         const classData = await ctx.db.get(request.classId);
         const student = classData ? await ctx.db.get(classData.studentId) : null;
-        const location = classData ? await ctx.db.get(classData.locationId) : null;
+        const location = classData?.locationId ? await ctx.db.get(classData.locationId) : null;
 
         // Notify the teacher
-        if (student && location) {
+        if (student) {
+            const locationText = location?.name || classData?.pendingLocationName || "Unknown location";
+            const locationTextTh = location?.nameTh || classData?.pendingLocationNameTh || "ไม่ทราบสถานที่";
+
             await ctx.db.insert("notifications", {
                 title: `Cancellation Rejected`,
                 titleTh: `ปฏิเสธการยกเลิก`,
-                message: `Your cancellation request for the class with ${student.firstName} ${student.lastName} at ${location.name} has been rejected. The class will proceed as scheduled.`,
-                messageTh: `คำขอยกเลิกชั้นเรียนของคุณกับ ${student.firstName} ${student.lastName} ที่ ${location.nameTh} ถูกปฏิเสธ ชั้นเรียนจะดำเนินการตามกำหนด`,
+                message: `Your cancellation request for the class with ${student.firstName} ${student.lastName} at ${locationText} has been rejected. The class will proceed as scheduled.`,
+                messageTh: `คำขอยกเลิกชั้นเรียนของคุณกับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} ถูกปฏิเสธ ชั้นเรียนจะดำเนินการตามกำหนด`,
                 type: "error",
                 userId: request.teacherId,
                 read: false,

@@ -32,7 +32,7 @@ export const exportClasses = query({
                 const teacher = await ctx.db.get(cls.teacherId);
                 const school = await ctx.db.get(cls.schoolId);
                 const student = await ctx.db.get(cls.studentId);
-                const location = await ctx.db.get(cls.locationId);
+                const location = cls.locationId ? await ctx.db.get(cls.locationId) : null;
 
                 return {
                     classId: cls._id,
@@ -41,8 +41,8 @@ export const exportClasses = query({
                     schoolNameTh: school?.nameTh || "Unknown",
                     studentName: student ? `${student.firstName} ${student.lastName}` : "Unknown",
                     studentId: student?.studentId || "Unknown",
-                    locationName: location?.name || "Unknown",
-                    locationNameTh: location?.nameTh || "Unknown",
+                    locationName: location?.name || cls.pendingLocationName || "Unknown",
+                    locationNameTh: location?.nameTh || cls.pendingLocationNameTh || "Unknown",
                     status: cls.status,
                     scheduledDate: new Date(cls.scheduledDate).toISOString(),
                     createdAt: new Date(cls.createdAt).toISOString(),

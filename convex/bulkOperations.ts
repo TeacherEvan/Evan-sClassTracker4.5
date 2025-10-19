@@ -19,12 +19,15 @@ export const bulkCreateStudents = mutation({
                 firstName: v.string(),
                 lastName: v.string(),
                 schoolId: v.optional(v.id("schools")),
+                guardianId: v.optional(v.id("users")),
+                guardianTitle: v.optional(v.string()),
                 grade: v.string(),
                 guardianName: v.optional(v.string()),
                 guardianPhone: v.optional(v.string()),
                 guardianEmail: v.optional(v.string()),
             })
         ),
+        createdBy: v.id("users"),
     },
     handler: async (ctx, args) => {
         const results = [];
@@ -69,10 +72,14 @@ export const bulkCreateStudents = mutation({
                     lastName: student.lastName,
                     studentId,
                     schoolId: student.schoolId,
+                    guardianId: student.guardianId,
+                    guardianTitle: student.guardianTitle,
                     grade: student.grade,
                     guardianName: student.guardianName,
                     guardianPhone: student.guardianPhone,
                     guardianEmail: student.guardianEmail,
+                    acknowledged: student.guardianId ? false : true,
+                    createdBy: args.createdBy,
                     createdAt: Date.now(),
                 });
 

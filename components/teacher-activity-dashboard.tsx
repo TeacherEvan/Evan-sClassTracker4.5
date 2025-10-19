@@ -185,8 +185,8 @@ function CancellationRequestItem({
     );
     const location = useQuery(
         api.locations.getById,
-        classData ? { id: classData.locationId } : "skip"
-    ); if (!classData || !teacher || !student || !location) {
+        classData?.locationId ? { id: classData.locationId } : "skip"
+    ); if (!classData || !teacher || !student) {
         return (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <p className="text-gray-500">{t("Loading...", "กำลังโหลด...")}</p>
@@ -212,10 +212,12 @@ function CancellationRequestItem({
                             <span className="font-medium">{t("Student:", "นักเรียน:")}</span>{" "}
                             {student.firstName} {student.lastName}
                         </p>
-                        <p>
-                            <span className="font-medium">{t("Location:", "สถานที่:")}</span>{" "}
-                            {location.name}
-                        </p>
+                        {location && (
+                            <p>
+                                <span className="font-medium">{t("Location:", "สถานที่:")}</span>{" "}
+                                {location.name}
+                            </p>
+                        )}
                         <p>
                             <span className="font-medium">{t("Scheduled:", "กำหนดการ:")}</span>{" "}
                             {new Date(classData.scheduledDate).toLocaleString()}

@@ -204,7 +204,7 @@ export const acknowledge = mutation({
 
     // Get student and location info for notification
     const student = await ctx.db.get(classData.studentId);
-    const location = await ctx.db.get(classData.locationId);
+    const location = classData.locationId ? await ctx.db.get(classData.locationId) : null;
 
     await ctx.db.patch(args.classId, {
       status: "acknowledged",
@@ -213,12 +213,15 @@ export const acknowledge = mutation({
     // Notify the teacher
     const teacher = await ctx.db.get(classData.teacherId);
 
-    if (teacher && student && location) {
+    if (teacher && student) {
+      const locationText = location?.name || classData.pendingLocationName || "Unknown location";
+      const locationTextTh = location?.nameTh || classData.pendingLocationNameTh || "ไม่ทราบสถานที่";
+
       await ctx.db.insert("notifications", {
         title: `Class Acknowledged`,
         titleTh: `รับทราบชั้นเรียน`,
-        message: `Your class request for ${student.firstName} ${student.lastName} at ${location.name} has been acknowledged by the moderator.`,
-        messageTh: `คำขอชั้นเรียนของคุณสำหรับ ${student.firstName} ${student.lastName} ที่ ${location.nameTh} ได้รับการรับทราบจากผู้ดูแล`,
+        message: `Your class request for ${student.firstName} ${student.lastName} at ${locationText} has been acknowledged by the moderator.`,
+        messageTh: `คำขอชั้นเรียนของคุณสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} ได้รับการรับทราบจากผู้ดูแล`,
         type: "success",
         userId: classData.teacherId,
         read: false,
@@ -244,19 +247,22 @@ export const approve = mutation({
 
     // Get student and location info for notification
     const student = await ctx.db.get(classData.studentId);
-    const location = await ctx.db.get(classData.locationId);
+    const location = classData.locationId ? await ctx.db.get(classData.locationId) : null;
 
     await ctx.db.patch(args.classId, {
       status: "approved",
     });
 
     // Notify the teacher
-    if (student && location) {
+    if (student) {
+      const locationText = location?.name || classData.pendingLocationName || "Unknown location";
+      const locationTextTh = location?.nameTh || classData.pendingLocationNameTh || "ไม่ทราบสถานที่";
+
       await ctx.db.insert("notifications", {
         title: `Class Approved`,
         titleTh: `อนุมัติชั้นเรียน`,
-        message: `Your class request for ${student.firstName} ${student.lastName} at ${location.name} has been approved!`,
-        messageTh: `คำขอชั้นเรียนของคุณสำหรับ ${student.firstName} ${student.lastName} ที่ ${location.nameTh} ได้รับการอนุมัติแล้ว!`,
+        message: `Your class request for ${student.firstName} ${student.lastName} at ${locationText} has been approved!`,
+        messageTh: `คำขอชั้นเรียนของคุณสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} ได้รับการอนุมัติแล้ว!`,
         type: "success",
         userId: classData.teacherId,
         read: false,
@@ -284,19 +290,22 @@ export const reject = mutation({
 
     // Get student and location info for notification
     const student = await ctx.db.get(classData.studentId);
-    const location = await ctx.db.get(classData.locationId);
+    const location = classData.locationId ? await ctx.db.get(classData.locationId) : null;
 
     await ctx.db.patch(args.classId, {
       status: "rejected",
     });
 
     // Notify the teacher
-    if (student && location) {
+    if (student) {
+      const locationText = location?.name || classData.pendingLocationName || "Unknown location";
+      const locationTextTh = location?.nameTh || classData.pendingLocationNameTh || "ไม่ทราบสถานที่";
+
       await ctx.db.insert("notifications", {
         title: `Class Rejected`,
         titleTh: `ปฏิเสธชั้นเรียน`,
-        message: args.reason || `Your class request for ${student.firstName} ${student.lastName} at ${location.name} has been rejected.`,
-        messageTh: args.reasonTh || `คำขอชั้นเรียนของคุณสำหรับ ${student.firstName} ${student.lastName} ที่ ${location.nameTh} ถูกปฏิเสธ`,
+        message: args.reason || `Your class request for ${student.firstName} ${student.lastName} at ${locationText} has been rejected.`,
+        messageTh: args.reasonTh || `คำขอชั้นเรียนของคุณสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} ถูกปฏิเสธ`,
         type: "error",
         userId: classData.teacherId,
         read: false,

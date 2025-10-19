@@ -3,8 +3,9 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import type { User } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
-import { Copy, GraduationCap, Mail, Pencil, Phone, Plus, Trash2, User, X } from "lucide-react";
+import { Copy, GraduationCap, Mail, Pencil, Phone, Plus, Trash2, User as UserIcon, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type Student = {
@@ -13,16 +14,25 @@ type Student = {
     lastName: string;
     studentId: string;
     schoolId?: Id<"schools">;
+    guardianId?: Id<"users">;
+    guardianTitle?: string;
     grade: string;
     guardianName?: string;
     guardianPhone?: string;
     guardianEmail?: string;
+    acknowledged: boolean;
+    createdBy: Id<"users">;
     createdAt: number;
 };
 
-export function StudentManagement() {
+interface StudentManagementProps {
+    currentUser: User;
+}
+
+export function StudentManagement({ currentUser }: StudentManagementProps) {
     const { t } = useLanguage();
     const schools = useQuery(api.schools.list, {});
+    const guardianUsers = useQuery(api.users.list, {});
     const createStudent = useMutation(api.students.create);
     const updateStudent = useMutation(api.students.update);
     const removeStudent = useMutation(api.students.remove);
@@ -109,6 +119,7 @@ export function StudentManagement() {
                     guardianName: guardianName || undefined,
                     guardianPhone: guardianPhone || undefined,
                     guardianEmail: guardianEmail || undefined,
+                    createdBy: currentUser._id,
                 });
                 setSuccess(t("Student created!", "สร้างข้อมูลนักเรียนแล้ว!"));
             }
@@ -457,7 +468,7 @@ export function StudentManagement() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-2">
-                                                <User className="w-4 h-4 text-gray-400" />
+                                                <UserIcon className="w-4 h-4 text-gray-400" />
                                                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                                                     {student.firstName} {student.lastName}
                                                 </span>

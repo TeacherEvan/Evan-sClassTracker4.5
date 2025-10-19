@@ -321,7 +321,9 @@ function ClassItemDisplay({
   classItem: {
     _id: Id<"classes">;
     studentId: Id<"students">;
-    locationId: Id<"locations">;
+    locationId?: Id<"locations">;
+    pendingLocationName?: string;
+    pendingLocationNameTh?: string;
     scheduledDate: number;
     status: "pending" | "acknowledged" | "approved" | "rejected";
   };
@@ -331,9 +333,11 @@ function ClassItemDisplay({
   onReject: (id: Id<"classes">) => void;
   onRequestCancellation: (id: Id<"classes">, reason: string, reasonTh: string) => void;
 }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const student = useQuery(api.students.getById, { id: classItem.studentId });
-  const location = useQuery(api.locations.getById, { id: classItem.locationId });
+  const location = useQuery(api.locations.getById,
+    classItem.locationId ? { id: classItem.locationId } : "skip"
+  );
   const hasPendingRequest = useQuery(api.cancellationRequests.hasPendingRequest, {
     classId: classItem._id,
   });
@@ -362,7 +366,7 @@ function ClassItemDisplay({
     return texts[status as keyof typeof texts] || status;
   };
 
-  if (!student || !location) {
+  if (!student) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6">
         <div className="flex items-center gap-3">
@@ -373,6 +377,13 @@ function ClassItemDisplay({
     );
   }
 
+  // Determine location display name
+  const locationDisplay = location
+    ? (language === "en" ? location.name : location.nameTh)
+    : classItem.pendingLocationName
+      ? `${language === "en" ? classItem.pendingLocationName : classItem.pendingLocationNameTh} ${t("(Pending Approval)", "(รอการอนุมัติ)")}`
+      : t("Location not specified", "ไม่ได้ระบุสถานที่");
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 active:scale-[0.99] transition-transform">
       <div className="flex flex-col md:flex-row items-start md:items-start justify-between mb-4 gap-3">
@@ -381,7 +392,7 @@ function ClassItemDisplay({
             {student.firstName} {student.lastName}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm md:text-base">
-            {t("Location:", "สถานที่:")} {location.name}
+            {t("Location:", "สถานที่:")} {locationDisplay}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
             {t("Scheduled:", "กำหนดการ:")} {new Date(classItem.scheduledDate).toLocaleString()}

@@ -69,11 +69,14 @@ export const create = mutation({
   args: {
     firstName: v.string(),
     lastName: v.string(),
-    schoolId: v.optional(v.id("schools")), // Now optional
+    schoolId: v.optional(v.id("schools")), // Optional for guardian-linked students
+    guardianId: v.optional(v.id("users")), // Guardian user ID
+    guardianTitle: v.optional(v.string()), // Relationship description
     grade: v.string(),
     guardianName: v.optional(v.string()),
     guardianPhone: v.optional(v.string()),
     guardianEmail: v.optional(v.string()),
+    createdBy: v.id("users"), // Teacher who created the student
   },
   handler: async (ctx, args) => {
     // Generate unique student ID
@@ -108,12 +111,31 @@ export const create = mutation({
       lastName: args.lastName,
       studentId,
       schoolId: args.schoolId,
+      guardianId: args.guardianId,
+      guardianTitle: args.guardianTitle,
       grade: args.grade,
       guardianName: args.guardianName,
       guardianPhone: args.guardianPhone,
       guardianEmail: args.guardianEmail,
+      acknowledged: args.guardianId ? false : true, // Needs guardian acknowledgement if linked
+      createdBy: args.createdBy,
       createdAt: Date.now(),
     });
+
+    // If guardian is linked, create notification for guardian
+    if (args.guardianId) {
+      const teacher = await ctx.db.get(args.createdBy);
+      await ctx.db.insert("notifications", {
+        title: `New Student Added: ${args.firstName} ${args.lastName}`,
+        titleTh: `นักเรียนใหม่ถูกเพิ่ม: ${args.firstName} ${args.lastName}`,
+        message: `Teacher ${teacher?.username || "Unknown"} has added you as guardian for ${args.firstName} ${args.lastName}. Please review and acknowledge.`,
+        messageTh: `ครู ${teacher?.username || "Unknown"} ได้เพิ่มคุณเป็นผู้ปกครองของ ${args.firstName} ${args.lastName} กรุณาตรวจสอบและยืนยัน`,
+        type: "info",
+        userId: args.guardianId,
+        read: false,
+        createdAt: Date.now(),
+      });
+    }
 
     return { id, studentId };
   },
@@ -126,6 +148,8 @@ export const update = mutation({
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
     grade: v.optional(v.string()),
+    guardianId: v.optional(v.id("users")),
+    guardianTitle: v.optional(v.string()),
     guardianName: v.optional(v.string()),
     guardianPhone: v.optional(v.string()),
     guardianEmail: v.optional(v.string()),
@@ -203,13 +227,57 @@ export const duplicate = mutation({
       lastName: originalStudent.lastName,
       studentId,
       schoolId: originalStudent.schoolId,
+      guardianId: originalStudent.guardianId,
+      guardianTitle: originalStudent.guardianTitle,
       grade: originalStudent.grade,
       guardianName: originalStudent.guardianName,
       guardianPhone: originalStudent.guardianPhone,
       guardianEmail: originalStudent.guardianEmail,
+      acknowledged: originalStudent.acknowledged,
+      createdBy: originalStudent.createdBy,
       createdAt: Date.now(),
     });
 
     return { id: newId, studentId };
+  },
+});
+
+// Query to get students created by a specific teacher
+export const getByTeacher = query({
+  args: {
+    teacherId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("students")
+      .withIndex("by_created_by", (q) => q.eq("createdBy", args.teacherId))
+      .collect();
+  },
+});
+
+// Query to get students for a guardian
+export const getByGuardianId = query({
+  args: {
+    guardianId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("students")
+      .withIndex("by_guardian_id", (q) => q.eq("guardianId", args.guardianId))
+      .collect();
+  },
+});
+
+// Mutation for guardian to acknowledge a student
+export const acknowledgeStudent = mutation({
+  args: {
+    studentId: v.id("students"),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.studentId, {
+      acknowledged: true,
+    });
+
+    return { success: true };
   },
 });

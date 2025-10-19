@@ -2,20 +2,11 @@
 
 import { Logo } from "@/components/logo";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import type { User } from "@/lib/types";
 import { useMutation } from "convex/react";
 import { AlertCircle } from "lucide-react";
 import { useState } from "react";
-
-type User = {
-  _id: Id<"users">;
-  username: string;
-  role: "teacher" | "moderator" | "admin";
-  schoolId?: Id<"schools">;
-  requirePasswordChange: boolean;
-  createdAt: number;
-};
 
 interface LoginFormProps {
   onLoginSuccess: (user: User) => void;

@@ -6,7 +6,7 @@
 import type { Id } from "@/convex/_generated/dataModel";
 
 // User types
-export type UserRole = "teacher" | "moderator" | "admin";
+export type UserRole = "teacher" | "moderator" | "admin" | "guardian";
 
 export type User = {
   _id: Id<"users">;
