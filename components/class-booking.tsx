@@ -264,7 +264,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                     </option>
                   ))}
                 </select>
-                
+
                 {/* Request new location button */}
                 {userRole === "teacher" && schoolId && (
                   <button
@@ -281,7 +281,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                     className="mt-2 text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
                   >
                     <MapPin className="w-4 h-4" />
-                    {requestingNewLocation 
+                    {requestingNewLocation
                       ? t("Use existing location", "ใช้สถานที่ที่มีอยู่")
                       : t("Request new location", "ขอสถานที่ใหม่")
                     }
@@ -293,7 +293,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                 <label htmlFor="date" className="block text-sm font-medium mb-2">
                   {t("Scheduled Date", "วันที่กำหนด")}
                 </label>
-                
+
                 {/* Calendar toggle button */}
                 <button
                   type="button"
@@ -302,17 +302,17 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                   disabled={loading}
                 >
                   <span className={selectedDateTimestamp ? "text-gray-900 dark:text-white" : "text-gray-500"}>
-                    {selectedDateTimestamp 
+                    {selectedDateTimestamp
                       ? new Date(selectedDateTimestamp).toLocaleDateString(
-                          language === "en" ? "en-US" : "th-TH",
-                          { year: "numeric", month: "long", day: "numeric" }
-                        )
+                        language === "en" ? "en-US" : "th-TH",
+                        { year: "numeric", month: "long", day: "numeric" }
+                      )
                       : t("Select date from calendar", "เลือกวันที่จากปฏิทิน")
                     }
                   </span>
                   <Calendar className="w-5 h-5 text-gray-400" />
                 </button>
-                
+
                 {/* Fallback to datetime-local input */}
                 <input
                   type="datetime-local"
@@ -340,7 +340,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                   }}
                   disabledDates={[]}
                 />
-                
+
                 {/* Time picker */}
                 {selectedDateTimestamp && (
                   <div className="mt-4">
