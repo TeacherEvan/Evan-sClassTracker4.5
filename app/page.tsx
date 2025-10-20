@@ -20,6 +20,7 @@ import { StudentManagement } from "@/components/student-management";
 import { TeacherActivityDashboard } from "@/components/teacher-activity-dashboard";
 import { TeacherHelper } from "@/components/teacher-helper";
 import { TeacherHelperAdmin } from "@/components/teacher-helper-admin";
+import TeacherLogsManager from "@/components/teacher-logs-manager";
 import { UserManagement } from "@/components/user-management";
 import { WeeklyCalendar } from "@/components/weekly-calendar";
 import { api } from "@/convex/_generated/api";
@@ -29,7 +30,7 @@ import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
 import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
 import { useQuery } from "convex/react";
-import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, FlaskConical, GraduationCap, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, FileText, FlaskConical, GraduationCap, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -37,7 +38,7 @@ export default function Home() {
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "testing">("calendar");
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "testing" | "logs">("calendar");
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
 
@@ -380,6 +381,17 @@ export default function Home() {
               </button>
 
               <button
+                onClick={() => setActiveTab("logs")}
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "logs"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <FileText className="w-4 h-4 md:w-5 md:h-5" />
+                {t("Teacher Logs", "บันทึกการสอน")}
+              </button>
+
+              <button
                 onClick={() => setActiveTab("locations")}
                 className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "locations"
                   ? "border-blue-500 text-blue-600 dark:text-blue-400"
@@ -390,6 +402,20 @@ export default function Home() {
                 {t("Locations", "สถานที่")}
               </button>
             </>
+          )}
+
+          {/* Teacher Logs tab - for teachers, moderators, and admins */}
+          {(user.role === "teacher" || user.role === "moderator" || user.role === "admin") && (
+            <button
+              onClick={() => setActiveTab("logs")}
+              className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "logs"
+                ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                }`}
+            >
+              <FileText className="w-4 h-4 md:w-5 md:h-5" />
+              {t("Teacher Logs", "บันทึกการสอน")}
+            </button>
           )}
 
           <button
@@ -543,6 +569,10 @@ export default function Home() {
 
       {activeTab === "testing" && user.role === "admin" && (
         <DeviceTestingDashboard />
+      )}
+
+      {activeTab === "logs" && (user.role === "admin" || user.role === "moderator" || user.role === "teacher") && (
+        <TeacherLogsManager currentUser={user} />
       )}
     </div>
   );

@@ -213,6 +213,9 @@ export default defineSchema({
     detailsTh: v.string(),
     relatedClassId: v.optional(v.id("classes")), // If action is related to a class
     relatedStudentId: v.optional(v.id("students")), // If action is related to a student
+    acknowledged: v.optional(v.boolean()), // Whether admin/moderator acknowledged this log
+    acknowledgedBy: v.optional(v.id("users")), // Admin/moderator who acknowledged
+    acknowledgedAt: v.optional(v.number()), // When it was acknowledged
     createdAt: v.number(),
   })
     .index("by_teacher", ["teacherId"])
@@ -220,5 +223,6 @@ export default defineSchema({
     .index("by_action", ["action"])
     .index("by_created_at", ["createdAt"])
     .index("by_teacher_and_date", ["teacherId", "createdAt"])
-    .index("by_school_and_date", ["schoolId", "createdAt"]),
+    .index("by_school_and_date", ["schoolId", "createdAt"])
+    .index("by_acknowledged", ["acknowledged"]),
 });

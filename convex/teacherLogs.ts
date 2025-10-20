@@ -166,9 +166,109 @@ export const create = mutation({
             detailsTh: args.detailsTh,
             relatedClassId: args.relatedClassId,
             relatedStudentId: args.relatedStudentId,
+            acknowledged: false, // Default to not acknowledged
             createdAt: Date.now(),
         });
 
         return logId;
     },
 });
+
+// Mutation to acknowledge a teacher log (Admin/Moderator only)
+export const acknowledgeLog = mutation({
+    args: {
+        logId: v.id("teacherLogs"),
+    },
+    handler: async (ctx, args) => {
+        // Get current user
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) {
+            throw new Error("Unauthorized");
+        }
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_username", (q) => q.eq("username", identity.subject))
+            .first();
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        // Check if user is admin or moderator
+        if (user.role !== "admin" && user.role !== "moderator") {
+            throw new Error("Only admins and moderators can acknowledge logs");
+        }
+
+        // Get the log
+        const log = await ctx.db.get(args.logId);
+        if (!log) {
+            throw new Error("Log not found");
+        }
+
+        // Update the log
+        await ctx.db.patch(args.logId, {
+            acknowledged: true,
+            acknowledgedBy: user._id,
+            acknowledgedAt: Date.now(),
+        });
+
+        // Get teacher info for notification
+        const teacher = await ctx.db.get(log.teacherId);
+
+        // Notify the teacher
+        if (teacher) {
+            await ctx.db.insert("notifications", {
+                title: "Class Log Acknowledged",
+                titleTh: "ยืนยันบันทึกคลาสแล้ว",
+                message: `Your class log has been acknowledged by ${user.username}.`,
+                messageTh: `บันทึกคลาสของคุณได้รับการยืนยันโดย ${user.username} แล้ว`,
+                type: "success",
+                userId: teacher._id,
+                read: false,
+                createdAt: Date.now(),
+            });
+        }
+
+        return { success: true };
+    },
+});
+
+// Query to list pending logs (unacknowledged) for admins/moderators
+export const listPendingLogs = query({
+    args: {
+        schoolId: v.optional(v.id("schools")),
+    },
+    handler: async (ctx, args) => {
+        // Get current user
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) {
+            return [];
+        }
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_username", (q) => q.eq("username", identity.subject))
+            .first();
+
+        if (!user || (user.role !== "admin" && user.role !== "moderator")) {
+            return [];
+        }
+
+        let logs = await ctx.db
+            .query("teacherLogs")
+            .withIndex("by_acknowledged", (q) => q.eq("acknowledged", false))
+            .order("desc")
+            .collect();
+
+        // Filter by school if moderator and schoolId provided
+        if (args.schoolId) {
+            logs = logs.filter((log) => log.schoolId === args.schoolId);
+        } else if (user.role === "moderator" && user.schoolId) {
+            logs = logs.filter((log) => log.schoolId === user.schoolId);
+        }
+
+        return logs;
+    },
+});
+

@@ -173,14 +173,54 @@ export const exportTeacherLogs = query({
         endDate: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
+        // Get current user
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) {
+            throw new Error("Unauthorized");
+        }
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_username", (q) => q.eq("username", identity.subject))
+            .first();
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        // Role-based access control
+        let allowedTeacherId: string | undefined = args.teacherId;
+
+        if (user.role === "teacher") {
+            // Teachers can only export their own logs
+            allowedTeacherId = user._id;
+        } else if (user.role === "moderator") {
+            // Moderators can export logs from their school
+            // If teacherId is specified, verify it belongs to their school
+            if (args.teacherId) {
+                const teacher = await ctx.db.get(args.teacherId);
+                if (teacher && teacher.schoolId !== user.schoolId) {
+                    throw new Error("Unauthorized: Cannot access logs from other schools");
+                }
+            }
+        }
+        // Admins can export any teacher's logs (no restrictions)
+
         let logs = await ctx.db.query("teacherLogs").order("desc").collect();
 
         // Apply filters
-        if (args.teacherId) {
-            logs = logs.filter((log) => log.teacherId === args.teacherId);
+        if (allowedTeacherId) {
+            logs = logs.filter((log) => log.teacherId === allowedTeacherId);
         }
         if (args.schoolId) {
+            // Moderators can only access their school
+            if (user.role === "moderator" && user.schoolId && args.schoolId !== user.schoolId) {
+                throw new Error("Unauthorized: Cannot access logs from other schools");
+            }
             logs = logs.filter((log) => log.schoolId === args.schoolId);
+        } else if (user.role === "moderator" && user.schoolId) {
+            // If moderator and no schoolId specified, default to their school
+            logs = logs.filter((log) => log.schoolId === user.schoolId);
         }
         if (args.startDate) {
             logs = logs.filter((log) => log.createdAt >= args.startDate!);
@@ -194,6 +234,9 @@ export const exportTeacherLogs = query({
             logs.map(async (log) => {
                 const teacher = await ctx.db.get(log.teacherId);
                 const school = await ctx.db.get(log.schoolId);
+                const acknowledgedByUser = log.acknowledgedBy
+                    ? await ctx.db.get(log.acknowledgedBy)
+                    : null;
 
                 return {
                     logId: log._id,
@@ -204,6 +247,11 @@ export const exportTeacherLogs = query({
                     actionTh: log.actionTh,
                     details: log.details,
                     detailsTh: log.detailsTh,
+                    acknowledged: log.acknowledged ? "Yes" : "No",
+                    acknowledgedBy: acknowledgedByUser?.username || "N/A",
+                    acknowledgedAt: log.acknowledgedAt
+                        ? new Date(log.acknowledgedAt).toISOString()
+                        : "N/A",
                     createdAt: new Date(log.createdAt).toISOString(),
                 };
             })
@@ -212,3 +260,4 @@ export const exportTeacherLogs = query({
         return exportData;
     },
 });
+
