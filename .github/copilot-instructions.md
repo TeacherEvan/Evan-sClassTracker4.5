@@ -145,6 +145,51 @@ status: v.union(
 )
 ```
 
+### Student Creation and Approval Workflow ✨ NEW
+Teacher-created students require moderator approval before being available for class booking (`convex/students.ts`):
+
+```
+Teacher creates student → acknowledged: false → Moderator notified
+                                              ↓
+                          Moderator approves → acknowledged: true → Available for booking
+                                              ↓
+                          Moderator rejects → Student deleted → Teacher notified
+```
+
+**Backend Logic:**
+```typescript
+// In students.ts create mutation
+const creator = await ctx.db.get(args.createdBy);
+const needsAcknowledgment = args.guardianId || 
+                             (creator?.role === "teacher" && args.schoolId);
+
+// Student marked as unacknowledged
+acknowledged: !needsAcknowledgment
+
+// Notification sent to school moderator
+if (creator?.role === "teacher" && args.schoolId) {
+  // Notify moderator via notifications table
+}
+```
+
+**Frontend Pattern:**
+- **Teachers:** Only see `acknowledged: true` students in class booking dropdown
+- **Moderators:** See pending students in "Students" tab via `PendingStudentsApproval` component
+- **Moderators:** Can approve (→ `acknowledged: true`) or reject (→ delete + notify teacher)
+
+**Queries:**
+```typescript
+// Teachers use acknowledgedOnly filter
+const students = useQuery(api.students.list, { acknowledgedOnly: true });
+
+// Moderators query pending students
+const pending = useQuery(api.students.getPendingBySchool, { schoolId });
+```
+
+**Key Mutations:**
+- `api.students.approveStudent({ studentId, moderatorId })` - Sets `acknowledged: true`, notifies teacher
+- `api.students.rejectStudent({ studentId, moderatorId, reason, reasonTh })` - Deletes student, notifies teacher with reason
+
 ### Notification Type System
 Strict union with UI color mapping:
 ```typescript
@@ -792,7 +837,7 @@ export const approveLocationProposal = mutation({
 
 ## Key Files for Reference
 
-- `convex/schema.ts` - Database schema with all indexes
+- `convex/schema.ts` - Database schema with all indexes (includes student acknowledgment indexes)
 - `app/layout.tsx` - Provider hierarchy (critical ordering)
 - `lib/language-context.tsx` - Bilingual translation pattern
 - `lib/data-context.tsx` - Shared data provider (reduces duplicate queries)
@@ -801,9 +846,10 @@ export const approveLocationProposal = mutation({
 - `convex/messages.ts` - Batch fetching pattern (N+1 fix), admin delete
 - `convex/notifications.ts` - Admin delete mutation
 - `convex/pagination.ts` - Native Convex pagination
-- `convex/students.ts` - Unique ID generation pattern
+- `convex/students.ts` - Unique ID generation pattern, student approval workflow (NEW)
 - `convex/crons.ts` - Scheduled job implementation
-- `components/class-booking.tsx` - Inline student creation, guardian title input
+- `components/class-booking.tsx` - Inline student creation, guardian title input, acknowledgedOnly filter
+- `components/pending-students-approval.tsx` - Moderator student approval interface (NEW)
 - `components/notification-list.tsx` - Admin delete UI
 - `components/month-calendar-picker.tsx` - Calendar component (ready for integration)
 - `DEPLOYMENT.md` - Production deployment guide
