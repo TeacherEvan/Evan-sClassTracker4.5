@@ -15,16 +15,31 @@ function generateStudentId(firstName: string, lastName: string, schoolId: string
 export const list = query({
   args: {
     schoolId: v.optional(v.id("schools")),
+    acknowledgedOnly: v.optional(v.boolean()), // If true, only return acknowledged students
   },
   handler: async (ctx, args) => {
     if (args.schoolId) {
-      return await ctx.db
+      const students = await ctx.db
         .query("students")
         .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId!))
         .collect();
+      
+      // Filter by acknowledgment status if requested
+      if (args.acknowledgedOnly) {
+        return students.filter(s => s.acknowledged === true);
+      }
+      
+      return students;
     }
 
-    return await ctx.db.query("students").collect();
+    const allStudents = await ctx.db.query("students").collect();
+    
+    // Filter by acknowledgment status if requested
+    if (args.acknowledgedOnly) {
+      return allStudents.filter(s => s.acknowledged === true);
+    }
+    
+    return allStudents;
   },
 });
 
@@ -79,6 +94,9 @@ export const create = mutation({
     createdBy: v.id("users"), // Teacher who created the student
   },
   handler: async (ctx, args) => {
+    // Get creator user info to determine if approval is needed
+    const creator = await ctx.db.get(args.createdBy);
+    
     // Generate unique student ID
     const schoolIdForHash = args.schoolId || "GUARDIAN";
     let studentId = generateStudentId(args.firstName, args.lastName, schoolIdForHash);
@@ -106,6 +124,13 @@ export const create = mutation({
       throw new Error("Failed to generate unique student ID after multiple attempts");
     }
 
+    // Determine if student needs acknowledgment:
+    // - If guardian is linked: needs guardian acknowledgment
+    // - If created by teacher at a school: needs moderator acknowledgment
+    // - Otherwise (admin/moderator created): auto-acknowledged
+    const needsAcknowledgment = args.guardianId || 
+                                 (creator?.role === "teacher" && args.schoolId);
+
     const id = await ctx.db.insert("students", {
       firstName: args.firstName,
       lastName: args.lastName,
@@ -117,7 +142,7 @@ export const create = mutation({
       guardianName: args.guardianName,
       guardianPhone: args.guardianPhone,
       guardianEmail: args.guardianEmail,
-      acknowledged: args.guardianId ? false : true, // Needs guardian acknowledgement if linked
+      acknowledged: !needsAcknowledgment, // false if needs acknowledgment
       createdBy: args.createdBy,
       createdAt: Date.now(),
     });
@@ -135,6 +160,25 @@ export const create = mutation({
         read: false,
         createdAt: Date.now(),
       });
+    }
+
+    // If teacher created student at a school, notify moderators
+    if (creator?.role === "teacher" && args.schoolId) {
+      // Find school to get moderator
+      const school = await ctx.db.get(args.schoolId);
+      
+      if (school?.moderatorId) {
+        await ctx.db.insert("notifications", {
+          title: `New Student Pending Approval: ${args.firstName} ${args.lastName}`,
+          titleTh: `นักเรียนใหม่รอการอนุมัติ: ${args.firstName} ${args.lastName}`,
+          message: `Teacher ${creator.username} has added a new student: ${args.firstName} ${args.lastName} (Grade ${args.grade}). Please review and approve.`,
+          messageTh: `ครู ${creator.username} ได้เพิ่มนักเรียนใหม่: ${args.firstName} ${args.lastName} (ชั้น ${args.grade}) กรุณาตรวจสอบและอนุมัติ`,
+          type: "info",
+          userId: school.moderatorId,
+          read: false,
+          createdAt: Date.now(),
+        });
+      }
     }
 
     return { id, studentId };
@@ -277,6 +321,107 @@ export const acknowledgeStudent = mutation({
     await ctx.db.patch(args.studentId, {
       acknowledged: true,
     });
+
+    return { success: true };
+  },
+});
+
+// Query to get pending students for a school (moderator approval)
+export const getPendingBySchool = query({
+  args: {
+    schoolId: v.id("schools"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("students")
+      .withIndex("by_school_and_acknowledged", (q) => 
+        q.eq("schoolId", args.schoolId).eq("acknowledged", false)
+      )
+      .collect();
+  },
+});
+
+// Mutation for moderator to approve a student
+export const approveStudent = mutation({
+  args: {
+    studentId: v.id("students"),
+    moderatorId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    // Get student and moderator info
+    const student = await ctx.db.get(args.studentId);
+    const moderator = await ctx.db.get(args.moderatorId);
+    
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
+    // Verify moderator has permission
+    if (moderator?.role !== "moderator" && moderator?.role !== "admin") {
+      throw new Error("Only moderators and admins can approve students");
+    }
+
+    // Update student to acknowledged
+    await ctx.db.patch(args.studentId, {
+      acknowledged: true,
+    });
+
+    // Notify the teacher who created the student
+    if (student.createdBy) {
+      await ctx.db.insert("notifications", {
+        title: `Student Approved: ${student.firstName} ${student.lastName}`,
+        titleTh: `อนุมัตินักเรียนแล้ว: ${student.firstName} ${student.lastName}`,
+        message: `Your student ${student.firstName} ${student.lastName} has been approved by ${moderator?.username || "moderator"} and is now available for class bookings.`,
+        messageTh: `นักเรียน ${student.firstName} ${student.lastName} ของคุณได้รับการอนุมัติโดย ${moderator?.username || "ผู้ดูแล"} และสามารถใช้จองชั้นเรียนได้แล้ว`,
+        type: "success",
+        userId: student.createdBy,
+        read: false,
+        createdAt: Date.now(),
+      });
+    }
+
+    return { success: true };
+  },
+});
+
+// Mutation for moderator to reject a student
+export const rejectStudent = mutation({
+  args: {
+    studentId: v.id("students"),
+    moderatorId: v.id("users"),
+    reason: v.string(),
+    reasonTh: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Get student and moderator info
+    const student = await ctx.db.get(args.studentId);
+    const moderator = await ctx.db.get(args.moderatorId);
+    
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
+    // Verify moderator has permission
+    if (moderator?.role !== "moderator" && moderator?.role !== "admin") {
+      throw new Error("Only moderators and admins can reject students");
+    }
+
+    // Notify the teacher who created the student
+    if (student.createdBy) {
+      await ctx.db.insert("notifications", {
+        title: `Student Rejected: ${student.firstName} ${student.lastName}`,
+        titleTh: `ปฏิเสธนักเรียน: ${student.firstName} ${student.lastName}`,
+        message: `Your student ${student.firstName} ${student.lastName} was rejected by ${moderator?.username || "moderator"}. Reason: ${args.reason}`,
+        messageTh: `นักเรียน ${student.firstName} ${student.lastName} ของคุณถูกปฏิเสธโดย ${moderator?.username || "ผู้ดูแล"} เหตุผล: ${args.reasonTh}`,
+        type: "warning",
+        userId: student.createdBy,
+        read: false,
+        createdAt: Date.now(),
+      });
+    }
+
+    // Delete the rejected student
+    await ctx.db.delete(args.studentId);
 
     return { success: true };
   },

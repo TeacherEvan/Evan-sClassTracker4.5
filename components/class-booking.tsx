@@ -19,7 +19,10 @@ interface ClassBookingProps {
 export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   const { t, language } = useLanguage();
   const { schools } = useDataContext(); // Use shared context instead of individual query
-  const students = useQuery(api.students.list, {});
+  // Teachers only see acknowledged students; moderators/admins see all
+  const students = useQuery(api.students.list, { 
+    acknowledgedOnly: userRole === "teacher" 
+  });
   const classes = useQuery(
     api.classes.listWithDetails,
     userRole === "teacher" ? { teacherId: userId } : {}

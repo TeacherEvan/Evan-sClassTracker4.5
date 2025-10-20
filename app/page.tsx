@@ -14,6 +14,7 @@ import { ModeratorListView } from "@/components/moderator-list-view";
 import { NotificationForm } from "@/components/notification-form";
 import { NotificationList } from "@/components/notification-list";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
+import { PendingStudentsApproval } from "@/components/pending-students-approval";
 import { SchoolManagement } from "@/components/school-management";
 import { SimpleAnalytics } from "@/components/simple-analytics";
 import { StudentManagement } from "@/components/student-management";
@@ -359,6 +360,17 @@ export default function Home() {
           {user.role === "moderator" && user.schoolId && (
             <>
               <button
+                onClick={() => setActiveTab("students")}
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "students"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <GraduationCap className="w-4 h-4 md:w-5 md:h-5" />
+                {t("Students", "นักเรียน")}
+              </button>
+
+              <button
                 onClick={() => setActiveTab("analytics")}
                 className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "analytics"
                   ? "border-blue-500 text-blue-600 dark:text-blue-400"
@@ -557,6 +569,12 @@ export default function Home() {
 
       {activeTab === "students" && user.role === "admin" && (
         <StudentManagement currentUser={user} />
+      )}
+
+      {activeTab === "students" && user.role === "moderator" && user.schoolId && (
+        <div className="max-w-4xl mx-auto px-3 py-4 md:p-4">
+          <PendingStudentsApproval schoolId={user.schoolId} moderatorId={user._id} />
+        </div>
       )}
 
       {activeTab === "moderators" && user.role === "admin" && (

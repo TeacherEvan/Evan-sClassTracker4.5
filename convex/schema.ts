@@ -82,7 +82,9 @@ export default defineSchema({
     .index("by_school", ["schoolId"])
     .index("by_guardian", ["guardianName"])
     .index("by_guardian_id", ["guardianId"])
-    .index("by_created_by", ["createdBy"]),
+    .index("by_created_by", ["createdBy"])
+    .index("by_acknowledged", ["acknowledged"])
+    .index("by_school_and_acknowledged", ["schoolId", "acknowledged"]),
 
   notifications: defineTable({
     title: v.string(),
