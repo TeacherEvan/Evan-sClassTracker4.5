@@ -1,14 +1,15 @@
 "use client";
 
 import { api } from "@/convex/_generated/api";
-import type { Id, Doc } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useDataContext } from "@/lib/data-context";
 import { useLanguage } from "@/lib/language-context";
 import type { UserRole } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
-import { Calendar, Check, MapPin, X } from "lucide-react";
+import { Calendar, Check, MapPin, X, Edit2, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { CalendarPicker } from "./calendar-picker";
+import { MonthCalendarPicker } from "./month-calendar-picker";
+import LocationProposalForm from "./location-proposal-form";
 
 interface ClassBookingProps {
   userId: Id<"users">;
@@ -27,7 +28,10 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   const acknowledgeClass = useMutation(api.classes.acknowledge);
   const approveClass = useMutation(api.classes.approve);
   const rejectClass = useMutation(api.classes.reject);
+  const updateClass = useMutation(api.classes.updateClass);
+  const deleteClass = useMutation(api.classes.deleteClass);
   const requestCancellation = useMutation(api.cancellationRequests.create);
+  const createStudent = useMutation(api.students.create);
 
   const [showForm, setShowForm] = useState(false);
   const [studentId, setStudentId] = useState<Id<"students"> | "">("");
@@ -40,14 +44,29 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   const [pendingLocationName, setPendingLocationName] = useState("");
   const [pendingLocationNameTh, setPendingLocationNameTh] = useState("");
   const [requestingNewLocation, setRequestingNewLocation] = useState(false);
+  const [showProposalForm, setShowProposalForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Student creation state
+  const [creatingStudent, setCreatingStudent] = useState(false);
+  const [newStudentFirstName, setNewStudentFirstName] = useState("");
+  const [newStudentLastName, setNewStudentLastName] = useState("");
+  const [newStudentGrade, setNewStudentGrade] = useState("");
+  const [newStudentSchoolId, setNewStudentSchoolId] = useState<Id<"schools"> | "">("");
+
+  // Guardian title state
+  const [guardianTitle, setGuardianTitle] = useState("");
 
   // Query locations for selected school
   const locations = useQuery(
     api.locations.list,
     schoolId ? { schoolId: schoolId as Id<"schools">, activeOnly: true } : "skip"
   );
+
+  // Check if selected location is guardian type
+  const selectedLocation = locations?.find(loc => loc._id === locationId);
+  const isGuardianLocation = selectedLocation?.type === "guardian";
 
   const handleBookClass = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +100,14 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
         throw new Error("Please select a date");
       }
 
+      // Validate guardian title if guardian location selected
+      if (isGuardianLocation && !guardianTitle.trim()) {
+        throw new Error(t(
+          "Please enter the guardian's title (e.g., Mom, Dad, Grandma)",
+          "กรุณาระบุความสัมพันธ์กับผู้ปกครอง (เช่น แม่, พ่อ, ยาย)"
+        ));
+      }
+
       await bookClass({
         teacherId: userId,
         schoolId,
@@ -90,6 +117,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
         pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
         scheduledDate: timestamp,
         bookedByUserId: userId,
+        guardianTitle: isGuardianLocation ? guardianTitle : undefined,
       });
 
       // Reset form
@@ -144,6 +172,22 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
     }
   };
 
+  const handleDelete = async (classId: Id<"classes">) => {
+    if (!window.confirm(t(
+      "Are you sure you want to delete this class? The teacher will be notified.",
+      "คุณแน่ใจหรือไม่ที่จะลบคลาสนี้? ครูจะได้รับการแจ้งเตือน"
+    ))) {
+      return;
+    }
+
+    try {
+      await deleteClass({ classId });
+      alert(t("Class deleted successfully", "ลบคลาสสำเร็จแล้ว"));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete class");
+    }
+  };
+
   const handleRequestCancellation = async (classId: Id<"classes">, reason: string, reasonTh: string) => {
     try {
       await requestCancellation({
@@ -155,6 +199,41 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
       alert(t("Cancellation request submitted", "ส่งคำขอยกเลิกแล้ว"));
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to submit cancellation request");
+    }
+  };
+
+  const handleCreateStudent = async () => {
+    if (!newStudentFirstName.trim() || !newStudentLastName.trim() || !newStudentGrade.trim() || !newStudentSchoolId) {
+      setError(t("Please fill in all student fields", "กรุณากรอกข้อมูลนักเรียนให้ครบถ้วน"));
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const newStudentData = await createStudent({
+        firstName: newStudentFirstName,
+        lastName: newStudentLastName,
+        grade: newStudentGrade,
+        schoolId: newStudentSchoolId as Id<"schools">,
+        createdBy: userId,
+      });
+
+      // Auto-select the newly created student
+      setStudentId(newStudentData.id);
+      setSchoolId(newStudentSchoolId as Id<"schools">);
+
+      // Reset student creation form
+      setCreatingStudent(false);
+      setNewStudentFirstName("");
+      setNewStudentLastName("");
+      setNewStudentGrade("");
+      setNewStudentSchoolId("");
+
+      alert(t("Student created successfully!", "สร้างข้อมูลนักเรียนสำเร็จ!"));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create student");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -189,24 +268,87 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
           <form onSubmit={handleBookClass} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="student" className="block text-sm font-medium mb-2">
-                  {t("Student Name", "ชื่อนักเรียน")}
-                </label>
-                <select
-                  id="student"
-                  value={studentId}
-                  onChange={(e) => setStudentId(e.target.value as Id<"students"> | "")}
-                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-shadow"
-                  required
-                  disabled={loading}
-                >
-                  <option value="">{t("Select a student", "เลือกนักเรียน")}</option>
-                  {students?.map((student) => (
-                    <option key={student._id} value={student._id}>
-                      {student.firstName} {student.lastName}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center justify-between mb-2">
+                  <label htmlFor="student" className="block text-sm font-medium">
+                    {t("Student Name", "ชื่อนักเรียน")}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setCreatingStudent(!creatingStudent)}
+                    className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+                  >
+                    {creatingStudent
+                      ? t("← Select Existing", "← เลือกนักเรียนที่มีอยู่")
+                      : t("+ Create New", "+ สร้างใหม่")
+                    }
+                  </button>
+                </div>
+
+                {creatingStudent ? (
+                  <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <input
+                      type="text"
+                      placeholder={t("First Name", "ชื่อ")}
+                      value={newStudentFirstName}
+                      onChange={(e) => setNewStudentFirstName(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      disabled={loading}
+                    />
+                    <input
+                      type="text"
+                      placeholder={t("Last Name", "นามสกุล")}
+                      value={newStudentLastName}
+                      onChange={(e) => setNewStudentLastName(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      disabled={loading}
+                    />
+                    <input
+                      type="text"
+                      placeholder={t("Grade", "ระดับชั้น")}
+                      value={newStudentGrade}
+                      onChange={(e) => setNewStudentGrade(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      disabled={loading}
+                    />
+                    <select
+                      value={newStudentSchoolId}
+                      onChange={(e) => setNewStudentSchoolId(e.target.value as Id<"schools"> | "")}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      disabled={loading}
+                    >
+                      <option value="">{t("Select School", "เลือกโรงเรียน")}</option>
+                      {schools?.map((school) => (
+                        <option key={school._id} value={school._id}>
+                          {school.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handleCreateStudent}
+                      disabled={loading}
+                      className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
+                    >
+                      {t("✓ Create & Select Student", "✓ สร้างและเลือกนักเรียน")}
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    id="student"
+                    value={studentId}
+                    onChange={(e) => setStudentId(e.target.value as Id<"students"> | "")}
+                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-shadow"
+                    required
+                    disabled={loading}
+                  >
+                    <option value="">{t("Select a student", "เลือกนักเรียน")}</option>
+                    {students?.map((student) => (
+                      <option key={student._id} value={student._id}>
+                        {student.firstName} {student.lastName}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div>
@@ -268,27 +410,63 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
 
                 {/* Request new location button */}
                 {userRole === "teacher" && schoolId && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRequestingNewLocation(!requestingNewLocation);
-                      if (!requestingNewLocation) {
-                        setLocationId("");
-                      } else {
-                        setPendingLocationName("");
-                        setPendingLocationNameTh("");
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRequestingNewLocation(!requestingNewLocation);
+                        if (!requestingNewLocation) {
+                          setLocationId("");
+                        } else {
+                          setPendingLocationName("");
+                          setPendingLocationNameTh("");
+                        }
+                      }}
+                      className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                    >
+                      <MapPin className="w-4 h-4" />
+                      {requestingNewLocation
+                        ? t("Use existing location", "ใช้สถานที่ที่มีอยู่")
+                        : t("Request new location", "ขอสถานที่ใหม่")
                       }
-                    }}
-                    className="mt-2 text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
-                  >
-                    <MapPin className="w-4 h-4" />
-                    {requestingNewLocation
-                      ? t("Use existing location", "ใช้สถานที่ที่มีอยู่")
-                      : t("Request new location", "ขอสถานที่ใหม่")
-                    }
-                  </button>
+                    </button>
+                    <span className="text-gray-300">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowProposalForm(true)}
+                      className="text-sm text-green-500 hover:text-green-600 flex items-center gap-1"
+                    >
+                      <MapPin className="w-4 h-4" />
+                      {t("Propose New Location", "เสนอสถานที่ใหม่")}
+                    </button>
+                  </div>
                 )}
               </div>
+
+              {/* Guardian Title (only if guardian location selected) */}
+              {isGuardianLocation && (
+                <div>
+                  <label htmlFor="guardianTitle" className="block text-sm font-medium mb-2">
+                    {t("Guardian Title", "ความสัมพันธ์กับผู้ปกครอง")} *
+                  </label>
+                  <input
+                    type="text"
+                    id="guardianTitle"
+                    value={guardianTitle}
+                    onChange={(e) => setGuardianTitle(e.target.value)}
+                    placeholder={t("e.g. Mom, Dad, Grandma", "เช่น แม่, พ่อ, ยาย")}
+                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                    required={isGuardianLocation}
+                    disabled={loading}
+                  />
+                  <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                    {t(
+                      "Classes at guardian's home are auto-approved",
+                      "ชั้นเรียนที่บ้านผู้ปกครองจะได้รับการอนุมัติอัตโนมัติ"
+                    )}
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label htmlFor="date" className="block text-sm font-medium mb-2">
@@ -333,13 +511,13 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
             {/* Calendar Picker */}
             {showCalendar && (
               <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-900">
-                <CalendarPicker
+                <MonthCalendarPicker
                   selectedDate={selectedDateTimestamp}
-                  onDateSelect={(timestamp) => {
+                  onSelectDate={(timestamp) => {
                     setSelectedDateTimestamp(timestamp);
                     setScheduledDate(""); // Clear manual input
                   }}
-                  disabledDates={[]}
+                  minDate={Date.now()} // Only allow future dates
                 />
 
                 {/* Time picker */}
@@ -450,6 +628,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
               onAcknowledge={handleAcknowledge}
               onApprove={handleApprove}
               onReject={handleReject}
+              onDelete={handleDelete}
               onRequestCancellation={handleRequestCancellation}
             />
           );
@@ -466,6 +645,14 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
           </div>
         )}
       </div>
+
+      {/* Location Proposal Modal */}
+      {showProposalForm && (
+        <LocationProposalForm
+          userId={userId}
+          onClose={() => setShowProposalForm(false)}
+        />
+      )}
     </div>
   );
 }
@@ -477,6 +664,7 @@ function ClassItemDisplay({
   onAcknowledge,
   onApprove,
   onReject,
+  onDelete,
   onRequestCancellation,
 }: {
   classItem: {
@@ -494,6 +682,7 @@ function ClassItemDisplay({
   onAcknowledge: (id: Id<"classes">) => void;
   onApprove: (id: Id<"classes">) => void;
   onReject: (id: Id<"classes">) => void;
+  onDelete: (id: Id<"classes">) => void;
   onRequestCancellation: (id: Id<"classes">, reason: string, reasonTh: string) => void;
 }) {
   const { t, language } = useLanguage();
@@ -611,6 +800,22 @@ function ClassItemDisplay({
         </div>
       )}
 
+      {/* Admin/Moderator Delete Button */}
+      {(userRole === "admin" || userRole === "moderator") && (
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <button
+            onClick={() => onDelete(classItem._id)}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all"
+          >
+            <Trash2 className="w-4 h-4" />
+            {t("Delete Class", "ลบคลาส")}
+          </button>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+            {t("Teacher will be notified of deletion", "ครูจะได้รับแจ้งเตือนเกี่ยวกับการลบ")}
+          </p>
+        </div>
+      )}
+
       {/* Teacher cancellation request for approved classes */}
       {userRole === "teacher" && classItem.status === "approved" && !hasPendingRequest && (
         <div className="mt-4">
@@ -696,3 +901,4 @@ function ClassItemDisplay({
     </div>
   );
 }
+

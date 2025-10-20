@@ -1,34 +1,37 @@
 "use client";
 
-import { useLanguage } from "@/lib/language-context";
-import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { X, Bell, CheckCheck } from "lucide-react";
-import { formatRelativeTime } from "@/lib/date-utils";
 import { getNotificationTypeColor, getNotificationTypeTextColor } from "@/lib/constants";
+import { formatRelativeTime } from "@/lib/date-utils";
+import { useLanguage } from "@/lib/language-context";
+import type { Notification, User } from "@/lib/types";
+import { useMutation, useQuery } from "convex/react";
+import { Bell, CheckCheck, Trash2, X } from "lucide-react";
 import { memo } from "react";
-import type { Notification } from "@/lib/types";
 
 // Memoized notification item component for better performance
-const NotificationItem = memo(({ 
-  notification, 
-  language, 
-  onMarkAsRead, 
-  onRemove 
-}: { 
-  notification: Notification; 
-  language: "en" | "th"; 
-  onMarkAsRead: (id: Id<"notifications">) => void; 
-  onRemove: (id: Id<"notifications">) => void; 
+const NotificationItem = memo(({
+  notification,
+  language,
+  onMarkAsRead,
+  onRemove,
+  onDelete,
+  isAdmin
+}: {
+  notification: Notification;
+  language: "en" | "th";
+  onMarkAsRead: (id: Id<"notifications">) => void;
+  onRemove: (id: Id<"notifications">) => void;
+  onDelete?: (id: Id<"notifications">) => void;
+  isAdmin?: boolean;
 }) => {
   const { t } = useLanguage();
-  
+
   return (
     <div
-      className={`p-4 md:p-5 border rounded-2xl md:rounded-lg ${getNotificationTypeColor(notification.type)} ${
-        !notification.read ? "border-l-4" : ""
-      } shadow-sm active:scale-[0.99] transition-transform touch-manipulation`}
+      className={`p-4 md:p-5 border rounded-2xl md:rounded-lg ${getNotificationTypeColor(notification.type)} ${!notification.read ? "border-l-4" : ""
+        } shadow-sm active:scale-[0.99] transition-transform touch-manipulation`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
@@ -58,13 +61,23 @@ const NotificationItem = memo(({
               <CheckCheck className="w-6 h-6 md:w-5 md:h-5" />
             </button>
           )}
-          <button
-            onClick={() => onRemove(notification._id)}
-            className="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400 active:scale-95 transition-all touch-manipulation rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-            title={t("Delete", "ลบ")}
-          >
-            <X className="w-6 h-6 md:w-5 md:h-5" />
-          </button>
+          {isAdmin && onDelete ? (
+            <button
+              onClick={() => onDelete(notification._id)}
+              className="p-2 text-red-600 hover:text-red-700 dark:hover:text-red-400 active:scale-95 transition-all touch-manipulation rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+              title={t("Delete (Admin)", "ลบ (ผู้ดูแลระบบ)")}
+            >
+              <Trash2 className="w-6 h-6 md:w-5 md:h-5" />
+            </button>
+          ) : (
+            <button
+              onClick={() => onRemove(notification._id)}
+              className="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400 active:scale-95 transition-all touch-manipulation rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+              title={t("Delete", "ลบ")}
+            >
+              <X className="w-6 h-6 md:w-5 md:h-5" />
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -73,7 +86,7 @@ const NotificationItem = memo(({
 
 NotificationItem.displayName = "NotificationItem";
 
-export function NotificationList({ userId }: { userId?: string }) {
+export function NotificationList({ userId, currentUser }: { userId?: string; currentUser?: User }) {
   const { language, t } = useLanguage();
   const notifications = useQuery(api.notifications.list, {
     userId,
@@ -82,6 +95,9 @@ export function NotificationList({ userId }: { userId?: string }) {
   const markAsRead = useMutation(api.notifications.markAsRead);
   const markAllAsRead = useMutation(api.notifications.markAllAsRead);
   const remove = useMutation(api.notifications.remove);
+  const deleteNotification = useMutation(api.notifications.deleteNotification);
+
+  const isAdmin = currentUser?.role === "admin";
 
   const handleMarkAsRead = (id: Id<"notifications">) => {
     markAsRead({ id });
@@ -89,6 +105,15 @@ export function NotificationList({ userId }: { userId?: string }) {
 
   const handleRemove = (id: Id<"notifications">) => {
     remove({ id });
+  };
+
+  const handleDelete = (id: Id<"notifications">) => {
+    if (window.confirm(t(
+      "Are you sure you want to permanently delete this notification?",
+      "คุณแน่ใจหรือไม่ว่าต้องการลบการแจ้งเตือนนี้อย่างถาวร?"
+    ))) {
+      deleteNotification({ id });
+    }
   };
 
   return (
@@ -135,6 +160,8 @@ export function NotificationList({ userId }: { userId?: string }) {
               language={language}
               onMarkAsRead={handleMarkAsRead}
               onRemove={handleRemove}
+              onDelete={isAdmin ? handleDelete : undefined}
+              isAdmin={isAdmin}
             />
           ))}
         </div>

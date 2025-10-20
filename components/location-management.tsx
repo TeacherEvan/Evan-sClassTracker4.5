@@ -4,7 +4,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { useMutation, useQuery } from "convex/react";
-import { MapPin, Pencil, Plus, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
+import { MapPin, Pencil, Plus, ToggleLeft, ToggleRight, Trash2, CheckCircle, XCircle, Clock } from "lucide-react";
 import { useState } from "react";
 
 interface LocationManagementProps {
@@ -28,6 +28,11 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
     const updateLocation = useMutation(api.locations.update);
     const toggleActive = useMutation(api.locations.toggleActive);
     const removeLocation = useMutation(api.locations.remove);
+    const approveProposal = useMutation(api.locationProposals.approveProposal);
+    const rejectProposal = useMutation(api.locationProposals.rejectProposal);
+
+    // Query pending proposals
+    const pendingProposals = useQuery(api.locationProposals.listPendingProposals);
 
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<Id<"locations"> | null>(null);
@@ -149,6 +154,74 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
                             </option>
                         ))}
                     </select>
+                </div>
+            )}
+
+            {/* Pending Proposals Section */}
+            {pendingProposals && pendingProposals.length > 0 && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 mb-6">
+                    <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-yellow-600" />
+                        {t("Pending Location Proposals", "สถานที่ที่รออนุมัติ")} ({pendingProposals.length})
+                    </h3>
+                    <div className="space-y-3">
+                        {pendingProposals.map((proposal) => (
+                            <div
+                                key={proposal._id}
+                                className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+                            >
+                                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                                    <div className="flex-1">
+                                        <p className="font-medium text-lg">
+                                            {proposal.name} / {proposal.nameTh}
+                                        </p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                            {t("School", "โรงเรียน")}: {proposal.schoolName} / {proposal.schoolNameTh}
+                                        </p>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            {t("Type", "ประเภท")}: {proposal.type === "guardian" ? t("Guardian", "ผู้ปกครอง") : t("School", "โรงเรียน")}
+                                        </p>
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            {t("Proposed by", "เสนอโดย")}: {proposal.proposerUsername}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {t("Date", "วันที่")}: {new Date(proposal.proposalDate || 0).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={async () => {
+                                                if (confirm(t("Approve this location proposal?", "อนุมัติสถานที่นี้?"))) {
+                                                    await approveProposal({ locationId: proposal._id });
+                                                }
+                                            }}
+                                            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+                                        >
+                                            <CheckCircle className="w-4 h-4" />
+                                            {t("Approve", "อนุมัติ")}
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                const reason = prompt(t("Rejection reason (English):", "เหตุผลการปฏิเสธ (อังกฤษ):"));
+                                                const reasonTh = prompt(t("Rejection reason (Thai):", "เหตุผลการปฏิเสธ (ไทย):"));
+                                                if (reason && reasonTh) {
+                                                    rejectProposal({
+                                                        locationId: proposal._id,
+                                                        reason,
+                                                        reasonTh
+                                                    });
+                                                }
+                                            }}
+                                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
+                                        >
+                                            <XCircle className="w-4 h-4" />
+                                            {t("Reject", "ปฏิเสธ")}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 

@@ -15,6 +15,7 @@ import type * as crons from "../crons.js";
 import type * as exports from "../exports.js";
 import type * as groups from "../groups.js";
 import type * as init from "../init.js";
+import type * as locationProposals from "../locationProposals.js";
 import type * as locations from "../locations.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
@@ -49,6 +50,7 @@ declare const fullApi: ApiFromModules<{
   exports: typeof exports;
   groups: typeof groups;
   init: typeof init;
+  locationProposals: typeof locationProposals;
   locations: typeof locations;
   messages: typeof messages;
   notifications: typeof notifications;

@@ -41,6 +41,12 @@ export default function Home() {
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
 
+  // Query unread message count for current user
+  const unreadCount = useQuery(
+    api.messages.unreadCount,
+    user ? { userId: user._id } : "skip"
+  );
+
   // Pull-to-refresh functionality
   const handleRefresh = async () => {
     // Simulate refresh by waiting a bit
@@ -319,26 +325,34 @@ export default function Home() {
 
           <button
             onClick={() => setActiveTab("messages")}
-            className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "messages"
+            className={`relative flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "messages"
               ? "border-blue-500 text-blue-600 dark:text-blue-400"
               : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
               }`}
           >
             <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
             {t("Messages", "ข้อความ")}
+            {/* Unread message badge */}
+            {unreadCount && unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 pulse-red rounded-full px-2 py-1 text-xs font-bold shadow-lg">
+                {unreadCount}
+              </span>
+            )}
           </button>
 
-          {/* Teacher's Helper tab - available to all users */}
-          <button
-            onClick={() => setActiveTab("resources")}
-            className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "resources"
-              ? "border-blue-500 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-              }`}
-          >
-            <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
-            {t("Teacher's Helper", "ผู้ช่วยครู")}
-          </button>
+          {/* Teacher's Helper tab - hide from moderators */}
+          {user.role !== "moderator" && (
+            <button
+              onClick={() => setActiveTab("resources")}
+              className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "resources"
+                ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                }`}
+            >
+              <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
+              {t("Teacher's Helper", "ผู้ช่วยครู")}
+            </button>
+          )}
 
           {/* Analytics tab for moderators */}
           {user.role === "moderator" && user.schoolId && (
@@ -500,7 +514,7 @@ export default function Home() {
       {activeTab === "notifications" && (
         <>
           {user.role === "admin" && <NotificationForm />}
-          <NotificationList />
+          <NotificationList currentUser={user} />
         </>
       )}
 

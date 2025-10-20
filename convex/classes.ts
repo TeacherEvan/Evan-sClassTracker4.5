@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 
 // Query to list classes
@@ -114,7 +115,7 @@ export const listWithDetails = query({
   handler: async (ctx, args) => {
     // First, get all classes based on filter
     let classes;
-    
+
     if (args.teacherId) {
       classes = await ctx.db
         .query("classes")
@@ -173,6 +174,7 @@ export const book = mutation({
     locationId: v.optional(v.id("locations")),
     pendingLocationName: v.optional(v.string()),
     pendingLocationNameTh: v.optional(v.string()),
+    guardianTitle: v.optional(v.string()), // Guardian title for guardian-linked classes
     scheduledDate: v.number(),
     bookedByUserId: v.id("users"), // ID of the user creating the booking
   },
@@ -193,7 +195,8 @@ export const book = mutation({
       throw new Error("Student not found");
     }
 
-    // Verify location exists and is active (if locationId is provided)
+    // Check if this is a guardian-linked class
+    let isGuardianLinked = false;
     if (args.locationId) {
       const location = await ctx.db.get(args.locationId);
       if (!location) {
@@ -201,6 +204,14 @@ export const book = mutation({
       }
       if (!location.isActive) {
         throw new Error("Selected location is not available");
+      }
+      // Check if location type is "guardian"
+      if (location.type === "guardian") {
+        isGuardianLinked = true;
+        // Guardian-linked classes require a guardian title
+        if (!args.guardianTitle?.trim()) {
+          throw new Error("Guardian title is required for guardian-linked classes");
+        }
       }
     }
 
@@ -210,11 +221,12 @@ export const book = mutation({
       throw new Error("User not found");
     }
 
-    // Determine status based on who is booking
+    // Determine status based on who is booking and whether it's guardian-linked
+    // Guardian-linked classes are auto-approved (no moderator workflow)
     // Moderators and admins can directly book (approved status)
     // Teachers create requests (pending status)
     const isModerator = bookingUser.role === "moderator" || bookingUser.role === "admin";
-    const status = isModerator ? "approved" : "pending";
+    const status = isGuardianLinked || isModerator ? "approved" : "pending";
 
     // Create the class
     const classId = await ctx.db.insert("classes", {
@@ -224,6 +236,8 @@ export const book = mutation({
       locationId: args.locationId,
       pendingLocationName: args.pendingLocationName,
       pendingLocationNameTh: args.pendingLocationNameTh,
+      guardianTitle: args.guardianTitle,
+      isGuardianLinked,
       status,
       scheduledDate: args.scheduledDate,
       createdAt: Date.now(),
@@ -238,7 +252,8 @@ export const book = mutation({
     const locationTextTh = location?.nameTh || args.pendingLocationNameTh || "ไม่ทราบสถานที่";
 
     // Only send notification if it's a teacher request (pending status)
-    if (!isModerator && school && school.moderatorId) {
+    // Skip notification for guardian-linked classes (auto-approved)
+    if (!isGuardianLinked && !isModerator && school && school.moderatorId) {
       // Get teacher information
       const teacher = await ctx.db.get(args.teacherId);
 
@@ -394,6 +409,129 @@ export const reject = mutation({
         createdAt: Date.now(),
       });
     }
+
+    return { success: true };
+  },
+});
+
+// Admin/Moderator: Update a class
+export const updateClass = mutation({
+  args: {
+    classId: v.id("classes"),
+    scheduledDate: v.optional(v.number()),
+    studentId: v.optional(v.id("students")),
+    locationId: v.optional(v.id("locations")),
+    status: v.optional(v.union(
+      v.literal("pending"),
+      v.literal("acknowledged"),
+      v.literal("approved"),
+      v.literal("rejected")
+    )),
+  },
+  handler: async (ctx, args) => {
+    // Check authentication
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    // Get user and verify admin/moderator role
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", identity.subject))
+      .first();
+
+    if (!user || !["admin", "moderator"].includes(user.role)) {
+      throw new Error("Unauthorized: Only admins and moderators can edit classes");
+    }
+
+    const classData = await ctx.db.get(args.classId);
+    if (!classData) {
+      throw new Error("Class not found");
+    }
+
+    // Build update object
+    const updates: Partial<{
+      scheduledDate: number;
+      studentId: Id<"students">;
+      locationId: Id<"locations">;
+      status: "pending" | "acknowledged" | "approved" | "rejected";
+    }> = {} as Record<string, unknown>;
+    if (args.scheduledDate) updates.scheduledDate = args.scheduledDate;
+    if (args.studentId) updates.studentId = args.studentId;
+    if (args.locationId) updates.locationId = args.locationId;
+    if (args.status) updates.status = args.status;
+
+    // Update class
+    await ctx.db.patch(args.classId, updates);
+
+    // Get student info for notification
+    const student = await ctx.db.get(args.studentId || classData.studentId);
+
+    // Create notification to teacher
+    if (student) {
+      await ctx.db.insert("notifications", {
+        userId: classData.teacherId,
+        title: "Class Updated",
+        titleTh: "มีการอัปเดตคลาส",
+        message: `Your class with ${student.firstName} ${student.lastName} has been updated by ${user.username}`,
+        messageTh: `คลาสของคุณกับ ${student.firstName} ${student.lastName} ถูกอัปเดตโดย ${user.username}`,
+        type: "info",
+        read: false,
+        createdAt: Date.now(),
+      });
+    }
+
+    return args.classId;
+  },
+});
+
+// Admin/Moderator: Delete a class
+export const deleteClass = mutation({
+  args: {
+    classId: v.id("classes"),
+  },
+  handler: async (ctx, args) => {
+    // Check authentication
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    // Get user and verify admin/moderator role
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", identity.subject))
+      .first();
+
+    if (!user || !["admin", "moderator"].includes(user.role)) {
+      throw new Error("Unauthorized: Only admins and moderators can delete classes");
+    }
+
+    const classData = await ctx.db.get(args.classId);
+    if (!classData) {
+      throw new Error("Class not found");
+    }
+
+    // Get student info for notification
+    const student = await ctx.db.get(classData.studentId);
+
+    // Create notification before deleting
+    if (student) {
+      await ctx.db.insert("notifications", {
+        userId: classData.teacherId,
+        title: "Class Deleted",
+        titleTh: "ลบคลาสแล้ว",
+        message: `Your class with ${student.firstName} ${student.lastName} has been deleted by ${user.username}`,
+        messageTh: `คลาสของคุณกับ ${student.firstName} ${student.lastName} ถูกลบโดย ${user.username}`,
+        type: "warning",
+        read: false,
+        createdAt: Date.now(),
+      });
+    }
+
+    // Delete class
+    await ctx.db.delete(args.classId);
 
     return { success: true };
   },

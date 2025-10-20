@@ -422,6 +422,33 @@ export const remove = mutation({
   },
 });
 
+// Mutation to delete a message (admin only)
+export const deleteMessage = mutation({
+  args: {
+    id: v.id("messages"),
+  },
+  handler: async (ctx, args) => {
+    // Check authentication
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    // Get user and verify admin role
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", identity.subject))
+      .first();
+
+    if (!user || user.role !== "admin") {
+      throw new Error("Unauthorized: Only admins can delete messages");
+    }
+
+    // Delete the message
+    await ctx.db.delete(args.id);
+  },
+});
+
 // Query to get available users for messaging (exclude current user)
 export const getAvailableUsers = query({
   args: {

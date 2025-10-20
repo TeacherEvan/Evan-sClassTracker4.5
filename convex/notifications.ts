@@ -127,3 +127,30 @@ export const remove = mutation({
     await ctx.db.delete(args.id);
   },
 });
+
+// Mutation to delete a notification (admin only)
+export const deleteNotification = mutation({
+  args: {
+    id: v.id("notifications"),
+  },
+  handler: async (ctx, args) => {
+    // Check authentication
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    // Get user and verify admin role
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_username", (q) => q.eq("username", identity.subject))
+      .first();
+
+    if (!user || user.role !== "admin") {
+      throw new Error("Unauthorized: Only admins can delete notifications");
+    }
+
+    // Delete the notification
+    await ctx.db.delete(args.id);
+  },
+});

@@ -44,6 +44,8 @@ export default defineSchema({
     locationId: v.optional(v.id("locations")), // Optional if using pending location
     pendingLocationName: v.optional(v.string()), // For teacher-requested locations (English)
     pendingLocationNameTh: v.optional(v.string()), // For teacher-requested locations (Thai)
+    guardianTitle: v.optional(v.string()), // Guardian relationship title for guardian-linked classes
+    isGuardianLinked: v.optional(v.boolean()), // Flag for guardian-linked classes (bypasses moderator approval)
     status: v.union(
       v.literal("pending"),
       v.literal("acknowledged"),
@@ -156,10 +158,20 @@ export default defineSchema({
     name: v.string(),
     nameTh: v.string(),
     schoolId: v.id("schools"),
+    type: v.optional(v.union(
+      v.literal("school"),
+      v.literal("guardian")
+    )), // Location type - guardian locations bypass moderator approval
     isActive: v.boolean(), // Enable/disable without deleting
     isPending: v.optional(v.boolean()), // For teacher-requested locations awaiting approval (optional for backward compatibility)
     requestedBy: v.optional(v.id("users")), // Teacher who requested this location
     approvedBy: v.optional(v.id("users")), // Moderator who approved it
+    proposedBy: v.optional(v.id("users")), // Teacher who proposed this location (new workflow)
+    approved: v.optional(v.boolean()), // Approval status for proposals
+    pendingApproval: v.optional(v.boolean()), // Waiting for moderator review
+    proposalDate: v.optional(v.number()), // When the location was proposed
+    rejectionReason: v.optional(v.string()), // Why proposal was rejected (English)
+    rejectionReasonTh: v.optional(v.string()), // Rejection reason (Thai)
     createdAt: v.number(),
     createdBy: v.id("users"), // Moderator or Admin who created it (or teacher who requested)
   })
@@ -167,6 +179,8 @@ export default defineSchema({
     .index("by_active", ["isActive"])
     .index("by_pending", ["isPending"])
     .index("by_requested_by", ["requestedBy"])
+    .index("by_pending_approval", ["pendingApproval"])
+    .index("by_proposed_by", ["proposedBy"])
     .index("by_created_at", ["createdAt"]),
 
   cancellationRequests: defineTable({

@@ -11,6 +11,7 @@ import {
   Inbox,
   MessageSquare,
   Send,
+  Trash2,
   UserPlus,
   Users,
 } from "lucide-react";
@@ -80,6 +81,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
   const sendGroupMessage = useMutation(api.messages.sendGroupMessage);
   const markAsRead = useMutation(api.messages.markAsRead);
   const acknowledge = useMutation(api.messages.acknowledge);
+  const deleteMessage = useMutation(api.messages.deleteMessage);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -127,6 +129,22 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
       await acknowledge({ messageId });
     } catch (error) {
       console.error("Failed to acknowledge message:", error);
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: Id<"messages">) => {
+    if (!window.confirm(t(
+      "Are you sure you want to delete this message? This action cannot be undone.",
+      "คุณแน่ใจหรือไม่ที่จะลบข้อความนี้? การกระทำนี้ไม่สามารถยกเลิกได้"
+    ))) {
+      return;
+    }
+
+    try {
+      await deleteMessage({ id: messageId });
+    } catch (error) {
+      console.error("Failed to delete message:", error);
+      alert(t("Failed to delete message", "ลบข้อความล้มเหลว"));
     }
   };
 
@@ -570,6 +588,15 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                             )}
                             {msg.acknowledged && (
                               <Check className="w-3.5 h-3.5 md:w-3 md:h-3 text-green-400" />
+                            )}
+                            {currentUser.role === "admin" && (
+                              <button
+                                onClick={() => handleDeleteMessage(msg._id)}
+                                className="text-xs hover:underline flex items-center gap-1 px-2 py-1 rounded touch-manipulation active:scale-95 transition-transform text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                                {t("Delete", "ลบ")}
+                              </button>
                             )}
                           </div>
                         </div>

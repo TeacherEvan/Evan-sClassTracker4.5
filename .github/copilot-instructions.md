@@ -421,6 +421,375 @@ await ctx.db
 - **Action needed:** Components need migration to `usePaginatedQuery` hook
 - See `OPTIMIZATION_CHANGELOG.md` for implementation guide
 
+## New Features (January 2025)
+
+### Guardian Location Type with Auto-Approval ✅ COMPLETE
+
+**Purpose:** Allow teachers to schedule classes at guardian homes without moderator approval, reducing administrative overhead for known/trusted guardians.
+
+**Database Schema Changes:**
+```typescript
+// convex/schema.ts - locations table
+type: v.optional(v.union(v.literal("school"), v.literal("guardian")))
+
+// convex/schema.ts - classes table
+guardianTitle: v.optional(v.string()),      // e.g., "Mom", "Dad", "Grandma"
+isGuardianLinked: v.optional(v.boolean()),  // Flag for filtering
+```
+
+**Backend Logic (`convex/classes.ts`):**
+```typescript
+// In book mutation - detect guardian location
+const location = await ctx.db.get(args.locationId);
+const isGuardianLinked = location?.type === "guardian";
+
+// Auto-approve if guardian location
+const status = isGuardianLinked || isModerator ? "approved" : "pending";
+
+// Skip moderator notification for guardian classes
+if (!isGuardianLinked) {
+  await ctx.db.insert("notifications", { /* notify moderators */ });
+}
+```
+
+**Frontend Pattern (`components/class-booking.tsx`):**
+```typescript
+// Detect guardian location type
+const selectedLocation = locations?.find(loc => loc._id === locationId);
+const isGuardianLocation = selectedLocation?.type === "guardian";
+
+// Conditional rendering of guardian title input
+{isGuardianLocation && (
+  <div>
+    <label>{t("Guardian Title", "ความสัมพันธ์กับผู้ปกครอง")} *</label>
+    <input
+      value={guardianTitle}
+      onChange={(e) => setGuardianTitle(e.target.value)}
+      placeholder={t("e.g. Mom, Dad, Grandma", "เช่น แม่, พ่อ, ยาย")}
+      required={isGuardianLocation}
+    />
+    <p className="text-blue-600">
+      {t("Classes at guardian's home are auto-approved", "...")}
+    </p>
+  </div>
+)}
+
+// Validation before submission
+if (isGuardianLocation && !guardianTitle.trim()) {
+  throw new Error(t("Please enter guardian's title", "..."));
+}
+
+// Include in mutation
+await bookClass({
+  ...otherFields,
+  guardianTitle: isGuardianLocation ? guardianTitle : undefined,
+});
+```
+
+**Workflow:**
+1. **Admin/Moderator:** Creates location with `type: "guardian"` via location management
+2. **Teacher:** Selects guardian location → guardian title field appears
+3. **Teacher:** Enters relationship (e.g., "Mom") → submits booking
+4. **System:** Class automatically approved with status "approved"
+5. **System:** Moderators receive NO notification (workflow bypassed)
+6. **Teacher:** Can immediately see approved class in their schedule
+
+**Benefits:**
+- Reduces moderator workload for trusted guardian locations
+- Faster scheduling for home-based tutoring
+- Maintains audit trail with guardian title for records
+
+**Testing:** See `TESTING_GUIDE.md` Feature 5
+
+---
+
+### Inline Student Creation During Class Booking ✅ COMPLETE
+
+**Purpose:** Allow teachers to create new students directly within the class booking form, eliminating navigation overhead.
+
+**Implementation (`components/class-booking.tsx`):**
+```typescript
+// Toggle state
+const [creatingStudent, setCreatingStudent] = useState(false);
+
+// Student creation form fields
+const [newStudentFirstName, setNewStudentFirstName] = useState("");
+const [newStudentLastName, setNewStudentLastName] = useState("");
+const [newStudentGrade, setNewStudentGrade] = useState("");
+const [newStudentSchoolId, setNewStudentSchoolId] = useState<Id<"schools"> | "">("");
+
+// Handler
+const handleCreateStudent = async () => {
+  const newStudentData = await createStudent({
+    firstName: newStudentFirstName,
+    lastName: newStudentLastName,
+    grade: newStudentGrade,
+    schoolId: newStudentSchoolId as Id<"schools">,
+    createdBy: userId, // Required for audit trail
+  });
+  
+  // Auto-select newly created student
+  setStudentId(newStudentData.id);
+  setCreatingStudent(false); // Return to select mode
+};
+
+// UI: Toggle button
+<button onClick={() => setCreatingStudent(!creatingStudent)}>
+  {creatingStudent 
+    ? t("Use existing student", "เลือกนักเรียนที่มี")
+    : t("Create new student", "สร้างนักเรียนใหม่")
+  }
+</button>
+
+// UI: Conditional form (highlighted in blue box)
+{creatingStudent ? (
+  <div className="bg-blue-50 p-4 rounded-lg">
+    <input placeholder={t("First Name", "ชื่อ")} ... />
+    <input placeholder={t("Last Name", "นามสกุล")} ... />
+    {/* ... */}
+    <button onClick={handleCreateStudent}>Create</button>
+  </div>
+) : (
+  <select value={studentId} ...> {/* Existing students */} </select>
+)}
+```
+
+**Flow:** Toggle → Fill form → Create → Auto-select → Continue booking
+
+**Testing:** See `TESTING_GUIDE.md` Feature 4
+
+---
+
+### Admin/Moderator Class Management ✅ BACKEND COMPLETE
+
+**Purpose:** Allow admins and moderators to edit or delete classes with automatic teacher notifications.
+
+**New Mutations (`convex/classes.ts`):**
+
+```typescript
+// Update class details
+export const updateClass = mutation({
+  args: {
+    classId: v.id("classes"),
+    scheduledDate: v.optional(v.number()),
+    studentId: v.optional(v.id("students")),
+    locationId: v.optional(v.id("locations")),
+    status: v.optional(v.union(...)),
+  },
+  handler: async (ctx, args) => {
+    // Role verification
+    if (!["admin", "moderator"].includes(user.role)) {
+      throw new Error("Unauthorized");
+    }
+    
+    // Update class
+    await ctx.db.patch(args.classId, updates);
+    
+    // Notify teacher
+    await ctx.db.insert("notifications", {
+      title: "Class Updated",
+      titleTh: "มีการอัปเดตคลาส",
+      message: `Your class with ${student.firstName} ${student.lastName} has been updated by ${user.username}`,
+      type: "info",
+      userId: classData.teacherId,
+    });
+  },
+});
+
+// Delete class
+export const deleteClass = mutation({
+  args: { classId: v.id("classes") },
+  handler: async (ctx, args) => {
+    // Role verification
+    if (!["admin", "moderator"].includes(user.role)) {
+      throw new Error("Unauthorized");
+    }
+    
+    // Notify BEFORE deletion (important!)
+    await ctx.db.insert("notifications", {
+      title: "Class Deleted",
+      titleTh: "ลบคลาสแล้ว",
+      message: `Your class with ${student.firstName} ${student.lastName} has been deleted by ${user.username}`,
+      type: "warning",
+      userId: classData.teacherId,
+    });
+    
+    // Delete class
+    await ctx.db.delete(args.classId);
+  },
+});
+```
+
+**Frontend Status:** Backend ready, moderator UI buttons pending implementation
+
+**Testing:** See `TESTING_GUIDE.md` Feature 6 (Convex Dashboard testing)
+
+---
+
+### Unread Message Indicator ✅ COMPLETE
+
+**Purpose:** Visual notification for unread messages with pulsating badge.
+
+**Implementation:**
+```css
+/* app/globals.css */
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+.pulse-red {
+  animation: pulse-red 1.5s infinite;
+  background-color: #ef4444; /* Red */
+}
+```
+
+```tsx
+/* app/page.tsx */
+const unreadCount = useQuery(api.messages.unreadCount, 
+  user ? { userId: user._id } : "skip"
+);
+
+// Badge component
+{unreadCount && unreadCount > 0 && (
+  <span className="pulse-red absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white">
+    {unreadCount}
+  </span>
+)}
+```
+
+**Visual:** Red circular badge, white text, pulsates continuously, positioned top-right of Messages tab.
+
+---
+
+### Admin Delete Controls ✅ COMPLETE
+
+**Purpose:** Allow admins to delete notifications and messages system-wide.
+
+**Backend Mutations:**
+```typescript
+// convex/notifications.ts
+export const deleteNotification = mutation({
+  args: { notificationId: v.id("notifications") },
+  handler: async (ctx, args) => {
+    if (user.role !== "admin") throw new Error("Unauthorized");
+    await ctx.db.delete(args.notificationId);
+  },
+});
+
+// convex/messages.ts
+export const deleteMessage = mutation({
+  args: { messageId: v.id("messages") },
+  handler: async (ctx, args) => {
+    if (user.role !== "admin") throw new Error("Unauthorized");
+    await ctx.db.delete(args.messageId);
+  },
+});
+```
+
+**Frontend (`components/notification-list.tsx`):**
+```tsx
+// Conditional rendering
+{isAdmin ? (
+  <button onClick={handleDelete}>
+    <Trash2 className="w-4 h-4 text-red-500" /> {/* Admin: Red trash icon */}
+  </button>
+) : (
+  <button onClick={handleDismiss}>
+    <X className="w-4 h-4" /> {/* Regular: Gray X */}
+  </button>
+)}
+```
+
+**Message Hub Status:** Backend complete, frontend UI pending.
+
+---
+
+### Teacher-Proposed Locations ❌ NOT YET IMPLEMENTED
+
+**Purpose:** Allow teachers to propose new locations that require moderator approval before becoming available.
+
+**Planned Architecture:**
+
+**Schema Changes Needed:**
+```typescript
+// locations table additions
+proposedBy: v.optional(v.id("users")),      // Teacher who proposed
+approved: v.optional(v.boolean()),           // Approval status
+pendingApproval: v.optional(v.boolean()),    // Moderator review needed
+proposalDate: v.optional(v.number()),        // Timestamp
+```
+
+**Backend Mutations Needed:**
+```typescript
+// Propose new location
+export const proposeLocation = mutation({
+  args: {
+    name: v.string(),
+    nameTh: v.string(),
+    schoolId: v.id("schools"),
+    type: v.union(v.literal("school"), v.literal("guardian")),
+  },
+  handler: async (ctx, args) => {
+    // Teacher role check
+    await ctx.db.insert("locations", {
+      ...args,
+      proposedBy: userId,
+      approved: false,
+      pendingApproval: true,
+      isActive: false, // Not available until approved
+    });
+    
+    // Notify moderators
+    // ...
+  },
+});
+
+// Approve/reject proposal
+export const approveLocationProposal = mutation({
+  args: {
+    locationId: v.id("locations"),
+    approved: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    // Moderator role check
+    await ctx.db.patch(args.locationId, {
+      approved: args.approved,
+      pendingApproval: false,
+      isActive: args.approved, // Activate if approved
+    });
+    
+    // Notify proposing teacher
+    // ...
+  },
+});
+```
+
+**Frontend Components Needed:**
+1. **Teacher Proposal Form:**
+   - Add "Propose New Location" button in class-booking.tsx
+   - Modal/inline form with name, nameTh, type selection
+   - Submit → pending status message
+
+2. **Moderator Approval Interface:**
+   - Add "Pending Locations" section in location-management.tsx
+   - List proposals with teacher name, date, details
+   - Approve/Reject buttons
+   - Confirmation dialogs
+
+**Workflow:**
+1. Teacher fills class booking form
+2. Clicks "Propose New Location" (instead of "Request New Location")
+3. Fills location details including type (school/guardian)
+4. Submits → Location created with `pendingApproval: true`
+5. Moderator sees pending location in management dashboard
+6. Moderator approves → Location becomes available (`isActive: true`)
+7. Teacher receives notification of approval/rejection
+8. Approved location appears in teacher's location dropdown
+
+**Current Status:** Not started, requires ~4-6 hours implementation time.
+
+---
+
 ## Key Files for Reference
 
 - `convex/schema.ts` - Database schema with all indexes
@@ -428,12 +797,18 @@ await ctx.db
 - `lib/language-context.tsx` - Bilingual translation pattern
 - `lib/data-context.tsx` - Shared data provider (reduces duplicate queries)
 - `components/notification-form.tsx` - Standard form pattern
-- `convex/classes.ts` - State machine, workflow, and compound queries
-- `convex/messages.ts` - Batch fetching pattern (N+1 fix)
+- `convex/classes.ts` - State machine, workflow, compound queries, admin mutations
+- `convex/messages.ts` - Batch fetching pattern (N+1 fix), admin delete
+- `convex/notifications.ts` - Admin delete mutation
 - `convex/pagination.ts` - Native Convex pagination
 - `convex/students.ts` - Unique ID generation pattern
 - `convex/crons.ts` - Scheduled job implementation
+- `components/class-booking.tsx` - Inline student creation, guardian title input
+- `components/notification-list.tsx` - Admin delete UI
+- `components/month-calendar-picker.tsx` - Calendar component (ready for integration)
 - `DEPLOYMENT.md` - Production deployment guide
 - `ARCHITECTURE.md` - System diagrams and data flows
 - `PERFORMANCE_AUDIT.md` - Bottlenecks, optimizations, and incomplete features
 - `OPTIMIZATION_CHANGELOG.md` - Complete optimization history
+- `NEW_FEATURES_IMPLEMENTATION_SUMMARY.md` - January 2025 features technical reference
+- `TESTING_GUIDE.md` - Step-by-step testing procedures
