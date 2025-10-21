@@ -6,10 +6,11 @@ import { useDataContext } from "@/lib/data-context";
 import { useLanguage } from "@/lib/language-context";
 import type { UserRole } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
-import { Calendar, Check, ChevronDown, ChevronUp, Edit2, MapPin, Trash2, X } from "lucide-react";
+import { Calendar, Check, ChevronDown, ChevronUp, Edit2, MapPin, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
 import { useState } from "react";
 import { EditClassModal } from "./edit-class-modal";
 import LocationProposalForm from "./location-proposal-form";
+import { MergeClassesModal } from "./merge-classes-modal";
 import { MonthCalendarPicker } from "./month-calendar-picker";
 import { MultiDateCalendar } from "./multi-date-calendar";
 
@@ -53,6 +54,9 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
 
   // Edit modal state - using Doc type from classes query
   const [editingClass, setEditingClass] = useState<Doc<"classes"> | null>(null);
+
+  // Merge classes state
+  const [showMergeModal, setShowMergeModal] = useState(false);
 
   // Optional fields state
   const [showOptionalFields, setShowOptionalFields] = useState(false);
@@ -327,15 +331,26 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
             ? t("Class Bookings", "การจองชั้นเรียน")
             : t("Class Requests", "คำขอชั้นเรียน")}
         </h2>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-95 transition-all font-medium flex items-center justify-center gap-2 touch-manipulation shadow-lg shadow-blue-500/20 w-full md:w-auto text-base md:text-sm"
-        >
-          <Calendar className="w-5 h-5" />
-          {userRole === "moderator" || userRole === "admin"
-            ? t("Book Class", "จองชั้นเรียน")
-            : t("Request Class", "ขอชั้นเรียน")}
-        </button>
+        <div className="flex flex-wrap gap-2 w-full md:w-auto">
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex-1 md:flex-none bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-95 transition-all font-medium flex items-center justify-center gap-2 touch-manipulation shadow-lg shadow-blue-500/20 text-base md:text-sm"
+          >
+            <Calendar className="w-5 h-5" />
+            {userRole === "moderator" || userRole === "admin"
+              ? t("Book Class", "จองชั้นเรียน")
+              : t("Request Class", "ขอชั้นเรียน")}
+          </button>
+          {classes && classes.length > 1 && (
+            <button
+              onClick={() => setShowMergeModal(true)}
+              className="flex-1 md:flex-none bg-purple-500 text-white px-4 py-3 md:py-2 rounded-xl md:rounded-lg hover:bg-purple-600 active:scale-95 transition-all font-medium flex items-center justify-center gap-2 touch-manipulation shadow-lg shadow-purple-500/20 text-base md:text-sm"
+            >
+              <Users className="w-5 h-5" />
+              {t("Merge Classes", "รวมคลาส")}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Booking Form */}
@@ -964,6 +979,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
               key={classItem._id}
               classItem={classItem}
               userRole={userRole}
+              userId={userId}
               onAcknowledge={handleAcknowledge}
               onApprove={handleApprove}
               onReject={handleReject}
@@ -1010,6 +1026,19 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
           onClose={() => setShowProposalForm(false)}
         />
       )}
+
+      {/* Merge Classes Modal */}
+      {showMergeModal && classes && (
+        <MergeClassesModal
+          userId={userId}
+          classes={classes}
+          onClose={() => setShowMergeModal(false)}
+          onSuccess={() => {
+            setShowMergeModal(false);
+            // Data will auto-refresh via Convex real-time updates
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -1018,6 +1047,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
 function ClassItemDisplay({
   classItem,
   userRole,
+  userId,
   onAcknowledge,
   onApprove,
   onReject,
@@ -1028,12 +1058,14 @@ function ClassItemDisplay({
   classItem: {
     _id: Id<"classes">;
     studentId: Id<"students">;
+    additionalStudentIds?: Id<"students">[];
     locationId?: Id<"locations">;
     pendingLocationName?: string;
     pendingLocationNameTh?: string;
     scheduledDate: number;
     status: "pending" | "acknowledged" | "approved" | "rejected";
     student: Doc<"students"> | null; // Full student object from joined query
+    additionalStudents?: (Doc<"students"> | null)[]; // Additional students from joined query
     location: Doc<"locations"> | null; // Full location object from joined query
     isEdited?: boolean;
     editHistory?: Array<{
@@ -1049,6 +1081,7 @@ function ClassItemDisplay({
     }>;
   };
   userRole: UserRole;
+  userId: Id<"users">;
   onAcknowledge: (id: Id<"classes">) => void;
   onApprove: (id: Id<"classes">) => void;
   onReject: (id: Id<"classes">) => void;
@@ -1057,6 +1090,10 @@ function ClassItemDisplay({
   onEdit: (classData: typeof classItem) => void;
 }) {
   const { t, language } = useLanguage();
+  const students = useQuery(api.students.list, {}); // For dropdown
+
+  const addStudentToClass = useMutation(api.classes.addStudentToClass);
+  const removeStudentFromClass = useMutation(api.classes.removeStudentFromClass);
 
   const hasPendingRequest = useQuery(api.cancellationRequests.hasPendingRequest, {
     classId: classItem._id,
@@ -1065,6 +1102,9 @@ function ClassItemDisplay({
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelReasonTh, setCancelReasonTh] = useState("");
+  const [showAddStudent, setShowAddStudent] = useState(false);
+  const [selectedStudentToAdd, setSelectedStudentToAdd] = useState<Id<"students"> | "">("");
+  const [addingStudent, setAddingStudent] = useState(false);
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -1108,14 +1148,93 @@ function ClassItemDisplay({
       ? `${language === "en" ? classItem.pendingLocationName : classItem.pendingLocationNameTh} ${t("(Pending Approval)", "(รอการอนุมัติ)")}`
       : t("Location not specified", "ไม่ได้ระบุสถานที่");
 
+  const handleAddStudent = async () => {
+    if (!selectedStudentToAdd) return;
+    setAddingStudent(true);
+    try {
+      await addStudentToClass({
+        userId,
+        classId: classItem._id,
+        studentId: selectedStudentToAdd as Id<"students">,
+      });
+      setSelectedStudentToAdd("");
+      setShowAddStudent(false);
+      alert(t("Student added successfully!", "เพิ่มนักเรียนสำเร็จ!"));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to add student");
+    } finally {
+      setAddingStudent(false);
+    }
+  };
+
+  const handleRemoveStudent = async (studentId: Id<"students">) => {
+    if (!confirm(t("Remove this student from the class?", "ลบนักเรียนคนนี้ออกจากคลาสหรือไม่?"))) {
+      return;
+    }
+    try {
+      await removeStudentFromClass({
+        userId,
+        classId: classItem._id,
+        studentId,
+      });
+      alert(t("Student removed successfully!", "ลบนักเรียนสำเร็จ!"));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to remove student");
+    }
+  };
+
+  const totalStudents = 1 + (classItem.additionalStudents?.length || 0);
+  const availableStudents = students?.filter(
+    (s) =>
+      s._id !== classItem.studentId &&
+      !(classItem.additionalStudentIds?.includes(s._id))
+  ) || [];
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 active:scale-[0.99] transition-transform">
       <div className="flex flex-col md:flex-row items-start md:items-start justify-between mb-4 gap-3">
         <div className="flex-1">
-          <h3 className="text-lg md:text-xl font-semibold">
-            {student.firstName} {student.lastName}
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm md:text-base">
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="text-lg md:text-xl font-semibold">
+              {student.firstName} {student.lastName}
+            </h3>
+            {totalStudents > 1 && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded text-xs font-medium">
+                <Users className="w-3 h-3" />
+                {totalStudents} {t("students", "คน")}
+              </span>
+            )}
+          </div>
+
+          {/* Show additional students if any */}
+          {classItem.additionalStudents && classItem.additionalStudents.length > 0 && (
+            <div className="mt-2 space-y-1">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {t("Additional Students:", "นักเรียนเพิ่มเติม:")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {classItem.additionalStudents.map((addStudent) => (
+                  addStudent && (
+                    <div
+                      key={addStudent._id}
+                      className="inline-flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm"
+                    >
+                      <span>{addStudent.firstName} {addStudent.lastName}</span>
+                      <button
+                        onClick={() => handleRemoveStudent(addStudent._id)}
+                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                        title={t("Remove student", "ลบนักเรียน")}
+                      >
+                        <UserMinus className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+          )}
+
+          <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm md:text-base">
             {t("Location:", "สถานที่:")} {locationDisplay}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
@@ -1125,6 +1244,57 @@ function ClassItemDisplay({
         <span className={`px-3 py-1.5 rounded-xl md:rounded-full text-xs md:text-sm font-medium ${getStatusBadge(classItem.status)} whitespace-nowrap`}>
           {getStatusText(classItem.status)}
         </span>
+      </div>
+
+      {/* Add Student Section - Available to all users */}
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        {!showAddStudent ? (
+          <button
+            onClick={() => setShowAddStudent(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition-all text-sm"
+          >
+            <UserPlus className="w-4 h-4" />
+            {t("Add Student to Class", "เพิ่มนักเรียนในคลาส")}
+          </button>
+        ) : (
+          <div className="bg-green-50 dark:bg-green-900/10 rounded-lg p-4">
+            <h4 className="font-semibold mb-3 text-sm">
+              {t("Add Another Student", "เพิ่มนักเรียนอีกคน")}
+            </h4>
+            <div className="space-y-3">
+              <select
+                value={selectedStudentToAdd}
+                onChange={(e) => setSelectedStudentToAdd(e.target.value as Id<"students"> | "")}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-gray-800 text-sm"
+              >
+                <option value="">{t("Select a student", "เลือกนักเรียน")}</option>
+                {availableStudents.map((s) => (
+                  <option key={s._id} value={s._id}>
+                    {s.firstName} {s.lastName}
+                  </option>
+                ))}
+              </select>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAddStudent}
+                  disabled={!selectedStudentToAdd || addingStudent}
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  {addingStudent ? t("Adding...", "กำลังเพิ่ม...") : t("Add", "เพิ่ม")}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddStudent(false);
+                    setSelectedStudentToAdd("");
+                  }}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 text-sm"
+                >
+                  {t("Cancel", "ยกเลิก")}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {(userRole === "moderator" || userRole === "admin") && classItem.status === "pending" && (

@@ -144,9 +144,20 @@ export const listWithDetails = query({
 
     // Batch fetch all related entities
     const studentIds = [...new Set(classes.map(c => c.studentId))];
+    // Also collect additional student IDs
+    const additionalStudentIds = new Set<Id<"students">>();
+    for (const cls of classes) {
+      if (cls.additionalStudentIds) {
+        for (const id of cls.additionalStudentIds) {
+          additionalStudentIds.add(id);
+        }
+      }
+    }
+    const allStudentIds = [...new Set([...studentIds, ...additionalStudentIds])];
+
     const locationIds = [...new Set(classes.map(c => c.locationId).filter(Boolean))];
 
-    const students = await Promise.all(studentIds.map(id => ctx.db.get(id)));
+    const students = await Promise.all(allStudentIds.map(id => ctx.db.get(id)));
     const locations = await Promise.all(locationIds.map(id => ctx.db.get(id!)));
 
     // Create lookup maps
@@ -157,10 +168,11 @@ export const listWithDetails = query({
       locations.filter((l): l is NonNullable<typeof l> => l !== null).map(l => [l._id, l])
     );
 
-    // Return enriched data
+    // Return enriched data with additional students
     return classes.map(c => ({
       ...c,
       student: studentMap.get(c.studentId) || null,
+      additionalStudents: c.additionalStudentIds?.map(id => studentMap.get(id) || null).filter(Boolean) || [],
       location: c.locationId ? locationMap.get(c.locationId) || null : null,
     }));
   },
@@ -824,5 +836,331 @@ export const getEditAnalytics = query({
     }));
 
     return analytics;
+  },
+});
+
+// Mutation to add a student to an existing class
+export const addStudentToClass = mutation({
+  args: {
+    userId: v.id("users"), // User performing the action
+    classId: v.id("classes"),
+    studentId: v.id("students"), // Student to add
+  },
+  handler: async (ctx, args) => {
+    // Rate limiting
+    await checkRateLimit(ctx, {
+      key: `addStudent_${args.userId}`,
+      limit: 100,
+      windowMs: 60000, // 100 per minute
+    });
+
+    // Get the user performing the action
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Get the class
+    const classData = await ctx.db.get(args.classId);
+    if (!classData) {
+      throw new Error("Class not found");
+    }
+
+    // Authorization check - teachers can only add to their own classes
+    if (user.role === "teacher" && classData.teacherId !== args.userId) {
+      throw new Error("Unauthorized: You can only add students to your own classes");
+    }
+
+    // Moderators can only modify classes in their school
+    if (user.role === "moderator") {
+      const school = await ctx.db.get(classData.schoolId);
+      if (school?.moderatorId !== args.userId) {
+        throw new Error("Unauthorized: You can only modify classes in your school");
+      }
+    }
+
+    // Verify the student exists
+    const student = await ctx.db.get(args.studentId);
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
+    // Check if student is already in the class
+    if (classData.studentId === args.studentId) {
+      throw new Error("This student is already the primary student in this class");
+    }
+
+    const existingAdditionalStudents = classData.additionalStudentIds || [];
+    if (existingAdditionalStudents.includes(args.studentId)) {
+      throw new Error("This student is already added to this class");
+    }
+
+    // Add the student to the class
+    const updatedAdditionalStudents = [...existingAdditionalStudents, args.studentId];
+
+    await ctx.db.patch(args.classId, {
+      additionalStudentIds: updatedAdditionalStudents,
+    });
+
+    // Get primary student for logging
+    const primaryStudent = await ctx.db.get(classData.studentId);
+
+    // Create notification for the teacher (if not the one who added)
+    if (classData.teacherId !== args.userId) {
+      await ctx.db.insert("notifications", {
+        title: "Student Added to Your Class",
+        titleTh: "เพิ่มนักเรียนในคลาสของคุณ",
+        message: `${user.username} added ${student.firstName} ${student.lastName} to your class with ${primaryStudent?.firstName} ${primaryStudent?.lastName}`,
+        messageTh: `${user.username} ได้เพิ่ม ${student.firstName} ${student.lastName} ในคลาสของคุณกับ ${primaryStudent?.firstName} ${primaryStudent?.lastName}`,
+        type: "info",
+        userId: classData.teacherId,
+        read: false,
+        createdAt: Date.now(),
+      });
+    }
+
+    // Log the action
+    await ctx.db.insert("teacherLogs", {
+      teacherId: classData.teacherId,
+      schoolId: classData.schoolId,
+      action: "student_added_to_class",
+      actionTh: "เพิ่มนักเรียนในคลาส",
+      details: `${user.username} added ${student.firstName} ${student.lastName} to class (now ${updatedAdditionalStudents.length + 1} students)`,
+      detailsTh: `${user.username} เพิ่ม ${student.firstName} ${student.lastName} ในคลาส (ตอนนี้มี ${updatedAdditionalStudents.length + 1} คน)`,
+      relatedClassId: args.classId,
+      relatedStudentId: args.studentId,
+      createdAt: Date.now(),
+    });
+
+    return { success: true, totalStudents: updatedAdditionalStudents.length + 1 };
+  },
+});
+
+// Mutation to remove a student from a class
+export const removeStudentFromClass = mutation({
+  args: {
+    userId: v.id("users"), // User performing the action
+    classId: v.id("classes"),
+    studentId: v.id("students"), // Student to remove
+  },
+  handler: async (ctx, args) => {
+    // Rate limiting
+    await checkRateLimit(ctx, {
+      key: `removeStudent_${args.userId}`,
+      limit: 100,
+      windowMs: 60000, // 100 per minute
+    });
+
+    // Get the user performing the action
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Get the class
+    const classData = await ctx.db.get(args.classId);
+    if (!classData) {
+      throw new Error("Class not found");
+    }
+
+    // Authorization check
+    if (user.role === "teacher" && classData.teacherId !== args.userId) {
+      throw new Error("Unauthorized: You can only remove students from your own classes");
+    }
+
+    if (user.role === "moderator") {
+      const school = await ctx.db.get(classData.schoolId);
+      if (school?.moderatorId !== args.userId) {
+        throw new Error("Unauthorized: You can only modify classes in your school");
+      }
+    }
+
+    // Cannot remove the primary student
+    if (classData.studentId === args.studentId) {
+      throw new Error("Cannot remove the primary student. Consider merging or deleting the class instead.");
+    }
+
+    const existingAdditionalStudents = classData.additionalStudentIds || [];
+    if (!existingAdditionalStudents.includes(args.studentId)) {
+      throw new Error("This student is not in the additional students list");
+    }
+
+    // Remove the student
+    const updatedAdditionalStudents = existingAdditionalStudents.filter(
+      (id) => id !== args.studentId
+    );
+
+    await ctx.db.patch(args.classId, {
+      additionalStudentIds: updatedAdditionalStudents,
+    });
+
+    const student = await ctx.db.get(args.studentId);
+
+    // Log the action
+    await ctx.db.insert("teacherLogs", {
+      teacherId: classData.teacherId,
+      schoolId: classData.schoolId,
+      action: "student_removed_from_class",
+      actionTh: "ลบนักเรียนออกจากคลาส",
+      details: `${user.username} removed ${student?.firstName} ${student?.lastName} from class (now ${updatedAdditionalStudents.length + 1} students)`,
+      detailsTh: `${user.username} ลบ ${student?.firstName} ${student?.lastName} ออกจากคลาส (ตอนนี้มี ${updatedAdditionalStudents.length + 1} คน)`,
+      relatedClassId: args.classId,
+      relatedStudentId: args.studentId,
+      createdAt: Date.now(),
+    });
+
+    return { success: true, totalStudents: updatedAdditionalStudents.length + 1 };
+  },
+});
+
+// Mutation to merge multiple classes into one
+export const mergeClasses = mutation({
+  args: {
+    userId: v.id("users"), // User performing the action
+    targetClassId: v.id("classes"), // The class to merge into (will keep this one)
+    sourceClassIds: v.array(v.id("classes")), // The classes to merge from (will be deleted)
+  },
+  handler: async (ctx, args) => {
+    // Rate limiting
+    await checkRateLimit(ctx, {
+      key: `mergeClasses_${args.userId}`,
+      limit: 50,
+      windowMs: 60000, // 50 per minute
+    });
+
+    // Get the user performing the action
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Get the target class
+    const targetClass = await ctx.db.get(args.targetClassId);
+    if (!targetClass) {
+      throw new Error("Target class not found");
+    }
+
+    // Authorization check
+    if (user.role === "teacher" && targetClass.teacherId !== args.userId) {
+      throw new Error("Unauthorized: You can only merge your own classes");
+    }
+
+    if (user.role === "moderator") {
+      const school = await ctx.db.get(targetClass.schoolId);
+      if (school?.moderatorId !== args.userId) {
+        throw new Error("Unauthorized: You can only merge classes in your school");
+      }
+    }
+
+    // Validate source classes
+    if (args.sourceClassIds.length === 0) {
+      throw new Error("No source classes provided");
+    }
+
+    if (args.sourceClassIds.includes(args.targetClassId)) {
+      throw new Error("Cannot merge a class into itself");
+    }
+
+    // Get all source classes
+    const sourceClasses = await Promise.all(
+      args.sourceClassIds.map((id) => ctx.db.get(id))
+    );
+
+    // Verify all source classes exist and belong to the same teacher and school
+    for (const sourceClass of sourceClasses) {
+      if (!sourceClass) {
+        throw new Error("One or more source classes not found");
+      }
+
+      if (sourceClass.teacherId !== targetClass.teacherId) {
+        throw new Error("Can only merge classes from the same teacher");
+      }
+
+      if (sourceClass.schoolId !== targetClass.schoolId) {
+        throw new Error("Can only merge classes from the same school");
+      }
+
+      // Check if scheduled for the same date/time
+      if (sourceClass.scheduledDate !== targetClass.scheduledDate) {
+        throw new Error("Can only merge classes scheduled for the same date and time");
+      }
+
+      // Check if at the same location
+      if (sourceClass.locationId !== targetClass.locationId) {
+        throw new Error("Can only merge classes at the same location");
+      }
+    }
+
+    // Collect all students from source classes
+    const additionalStudents = new Set(targetClass.additionalStudentIds || []);
+    const primaryStudentIds: Id<"students">[] = [targetClass.studentId];
+
+    for (const sourceClass of sourceClasses) {
+      if (sourceClass) {
+        // Add primary student if not already the target's primary student
+        if (sourceClass.studentId !== targetClass.studentId) {
+          additionalStudents.add(sourceClass.studentId);
+        }
+        // Add all additional students
+        if (sourceClass.additionalStudentIds) {
+          for (const studentId of sourceClass.additionalStudentIds) {
+            if (studentId !== targetClass.studentId) {
+              additionalStudents.add(studentId);
+            }
+          }
+        }
+        primaryStudentIds.push(sourceClass.studentId);
+      }
+    }
+
+    // Update the target class with merged students
+    await ctx.db.patch(args.targetClassId, {
+      additionalStudentIds: Array.from(additionalStudents),
+    });
+
+    // Get student names for logging
+    const studentPromises = primaryStudentIds.map((id) => ctx.db.get(id));
+    const students = await Promise.all(studentPromises);
+    const studentNames = students
+      .filter((s) => s !== null)
+      .map((s) => `${s?.firstName} ${s?.lastName}`)
+      .join(", ");
+
+    // Delete source classes
+    for (const classId of args.sourceClassIds) {
+      await ctx.db.delete(classId);
+    }
+
+    // Log the action
+    await ctx.db.insert("teacherLogs", {
+      teacherId: targetClass.teacherId,
+      schoolId: targetClass.schoolId,
+      action: "classes_merged",
+      actionTh: "รวมคลาส",
+      details: `${user.username} merged ${args.sourceClassIds.length} classes into one (Students: ${studentNames}). Total students: ${additionalStudents.size + 1}`,
+      detailsTh: `${user.username} รวม ${args.sourceClassIds.length} คลาสเป็นหนึ่งเดียว (นักเรียน: ${studentNames}) รวม: ${additionalStudents.size + 1} คน`,
+      relatedClassId: args.targetClassId,
+      createdAt: Date.now(),
+    });
+
+    // Notify the teacher (if not the one who merged)
+    if (targetClass.teacherId !== args.userId) {
+      await ctx.db.insert("notifications", {
+        title: "Classes Merged",
+        titleTh: "รวมคลาส",
+        message: `${user.username} merged ${args.sourceClassIds.length} of your classes into one class. Total students: ${additionalStudents.size + 1}`,
+        messageTh: `${user.username} รวม ${args.sourceClassIds.length} คลาสของคุณเป็นหนึ่งเดียว รวมนักเรียน: ${additionalStudents.size + 1} คน`,
+        type: "info",
+        userId: targetClass.teacherId,
+        read: false,
+        createdAt: Date.now(),
+      });
+    }
+
+    return {
+      success: true,
+      totalStudents: additionalStudents.size + 1,
+      mergedClassIds: args.sourceClassIds,
+    };
   },
 });

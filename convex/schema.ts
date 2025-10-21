@@ -41,6 +41,7 @@ export default defineSchema({
     teacherId: v.id("users"),
     schoolId: v.id("schools"),
     studentId: v.id("students"),
+    additionalStudentIds: v.optional(v.array(v.id("students"))), // For multi-student classes
     locationId: v.optional(v.id("locations")), // Optional if using pending location
     pendingLocationName: v.optional(v.string()), // For teacher-requested locations (English)
     pendingLocationNameTh: v.optional(v.string()), // For teacher-requested locations (Thai)
