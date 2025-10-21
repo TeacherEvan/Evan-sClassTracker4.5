@@ -28,7 +28,6 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   const acknowledgeClass = useMutation(api.classes.acknowledge);
   const approveClass = useMutation(api.classes.approve);
   const rejectClass = useMutation(api.classes.reject);
-  const updateClass = useMutation(api.classes.updateClass);
   const deleteClass = useMutation(api.classes.deleteClass);
   const requestCancellation = useMutation(api.cancellationRequests.create);
   const createStudent = useMutation(api.students.create);
@@ -686,6 +685,10 @@ function ClassItemDisplay({
   onRequestCancellation: (id: Id<"classes">, reason: string, reasonTh: string) => void;
 }) {
   const { t, language } = useLanguage();
+  const { schools } = useDataContext();
+  const students = useQuery(api.students.list, {});
+  const updateClassMutation = useMutation(api.classes.updateClass);
+  
   const hasPendingRequest = useQuery(api.cancellationRequests.hasPendingRequest, {
     classId: classItem._id,
   });
@@ -693,6 +696,26 @@ function ClassItemDisplay({
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelReasonTh, setCancelReasonTh] = useState("");
+  
+  // Edit form state
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editStudentId, setEditStudentId] = useState<Id<"students"> | "">(classItem.studentId);
+  const [editScheduledDate, setEditScheduledDate] = useState(
+    new Date(classItem.scheduledDate).toISOString().slice(0, 16)
+  );
+  const [editStatus, setEditStatus] = useState<"pending" | "acknowledged" | "approved" | "rejected">(classItem.status);
+  const [editSchoolId, setEditSchoolId] = useState<Id<"schools"> | "">(
+    classItem.student?.schoolId || ""
+  );
+  const [editLocationId, setEditLocationId] = useState<Id<"locations"> | "">(
+    classItem.locationId || ""
+  );
+  
+  // Query locations for selected school in edit form
+  const editLocations = useQuery(
+    api.locations.list,
+    editSchoolId ? { schoolId: editSchoolId as Id<"schools">, activeOnly: true } : "skip"
+  );
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -712,6 +735,41 @@ function ClassItemDisplay({
       rejected: t("Rejected", "ปฏิเสธแล้ว"),
     };
     return texts[status as keyof typeof texts] || status;
+  };
+
+  const handleEditClass = async () => {
+    try {
+      const updates: {
+        classId: Id<"classes">;
+        scheduledDate?: number;
+        studentId?: Id<"students">;
+        locationId?: Id<"locations">;
+        status?: "pending" | "acknowledged" | "approved" | "rejected";
+      } = {
+        classId: classItem._id,
+      };
+
+      // Only include changed fields
+      const newDate = new Date(editScheduledDate).getTime();
+      if (newDate !== classItem.scheduledDate) {
+        updates.scheduledDate = newDate;
+      }
+      if (editStudentId && editStudentId !== classItem.studentId) {
+        updates.studentId = editStudentId as Id<"students">;
+      }
+      if (editLocationId && editLocationId !== classItem.locationId) {
+        updates.locationId = editLocationId as Id<"locations">;
+      }
+      if (editStatus !== classItem.status) {
+        updates.status = editStatus;
+      }
+
+      await updateClassMutation(updates);
+      setShowEditForm(false);
+      alert(t("Class updated successfully", "อัปเดตคลาสสำเร็จแล้ว"));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to update class");
+    }
   };
 
   // Use joined data from query instead of loading indicator
@@ -800,18 +858,151 @@ function ClassItemDisplay({
         </div>
       )}
 
-      {/* Admin/Moderator Delete Button */}
+      {/* Admin/Moderator Edit and Delete Buttons */}
       {(userRole === "admin" || userRole === "moderator") && (
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <button
-            onClick={() => onDelete(classItem._id)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all"
-          >
-            <Trash2 className="w-4 h-4" />
-            {t("Delete Class", "ลบคลาส")}
-          </button>
+          {!showEditForm ? (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setShowEditForm(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:scale-95 transition-all"
+              >
+                <Edit2 className="w-4 h-4" />
+                {t("Edit Class", "แก้ไขคลาส")}
+              </button>
+              <button
+                onClick={() => onDelete(classItem._id)}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all"
+              >
+                <Trash2 className="w-4 h-4" />
+                {t("Delete Class", "ลบคลาส")}
+              </button>
+            </div>
+          ) : (
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <h4 className="font-semibold mb-4 flex items-center gap-2">
+                <Edit2 className="w-4 h-4 text-blue-500" />
+                {t("Edit Class Details", "แก้ไขรายละเอียดคลาส")}
+              </h4>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    {t("Student", "นักเรียน")}
+                  </label>
+                  <select
+                    value={editStudentId}
+                    onChange={(e) => setEditStudentId(e.target.value as Id<"students"> | "")}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                  >
+                    <option value="">{t("Select a student", "เลือกนักเรียน")}</option>
+                    {students?.map((student) => (
+                      <option key={student._id} value={student._id}>
+                        {student.firstName} {student.lastName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    {t("School", "โรงเรียน")}
+                  </label>
+                  <select
+                    value={editSchoolId}
+                    onChange={(e) => {
+                      setEditSchoolId(e.target.value as Id<"schools"> | "");
+                      setEditLocationId(""); // Reset location when school changes
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                  >
+                    <option value="">{t("Select a school", "เลือกโรงเรียน")}</option>
+                    {schools?.map((school) => (
+                      <option key={school._id} value={school._id}>
+                        {school.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    {t("Location", "สถานที่")}
+                  </label>
+                  <select
+                    value={editLocationId}
+                    onChange={(e) => setEditLocationId(e.target.value as Id<"locations"> | "")}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                    disabled={!editSchoolId}
+                  >
+                    <option value="">
+                      {editSchoolId
+                        ? t("Select a location", "เลือกสถานที่")
+                        : t("Select a school first", "เลือกโรงเรียนก่อน")
+                      }
+                    </option>
+                    {editLocations?.map((location) => (
+                      <option key={location._id} value={location._id}>
+                        {location.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    {t("Scheduled Date & Time", "วันและเวลาที่กำหนด")}
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={editScheduledDate}
+                    onChange={(e) => setEditScheduledDate(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    {t("Status", "สถานะ")}
+                  </label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value as "pending" | "acknowledged" | "approved" | "rejected")}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                  >
+                    <option value="pending">{t("Pending", "รอดำเนินการ")}</option>
+                    <option value="acknowledged">{t("Acknowledged", "รับทราบแล้ว")}</option>
+                    <option value="approved">{t("Approved", "อนุมัติแล้ว")}</option>
+                    <option value="rejected">{t("Rejected", "ปฏิเสธแล้ว")}</option>
+                  </select>
+                </div>
+                
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={handleEditClass}
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                  >
+                    {t("Save Changes", "บันทึกการเปลี่ยนแปลง")}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowEditForm(false);
+                      // Reset to original values
+                      setEditStudentId(classItem.studentId);
+                      setEditScheduledDate(new Date(classItem.scheduledDate).toISOString().slice(0, 16));
+                      setEditStatus(classItem.status);
+                      setEditLocationId(classItem.locationId || "");
+                      setEditSchoolId(classItem.student?.schoolId || "");
+                    }}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  >
+                    {t("Cancel", "ยกเลิก")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            {t("Teacher will be notified of deletion", "ครูจะได้รับแจ้งเตือนเกี่ยวกับการลบ")}
+            {t("Teacher will be notified of any changes", "ครูจะได้รับแจ้งเตือนเกี่ยวกับการเปลี่ยนแปลง")}
           </p>
         </div>
       )}
