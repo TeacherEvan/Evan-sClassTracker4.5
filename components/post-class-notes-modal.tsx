@@ -52,11 +52,7 @@ export function PostClassNotesModal({
     };
 
     const handleSubmit = async () => {
-        if (!notes.trim() || !notesTh.trim()) {
-            setError(t("Please provide notes in both languages", "กรุณาระบุบันทึกในทั้งสองภาษา"));
-            return;
-        }
-
+        // Notes are now optional - no validation needed
         setLoading(true);
         setError("");
 
@@ -64,8 +60,8 @@ export function PostClassNotesModal({
             await createNotes({
                 classId: currentClass._id,
                 teacherId: currentUserId,
-                notes,
-                notesTh,
+                notes: notes || undefined,
+                notesTh: notesTh || undefined,
                 attendance,
                 behavior: behavior || undefined,
                 participation: participation || undefined,
@@ -259,7 +255,7 @@ export function PostClassNotesModal({
                     {/* Notes */}
                     <div>
                         <label className="block text-sm font-medium mb-2">
-                            {t("Notes (English)", "บันทึก (ภาษาอังกฤษ)")} <span className="text-red-500">*</span>
+                            {t("Notes (English)", "บันทึก (ภาษาอังกฤษ)")} <span className="text-gray-400 text-xs">({t("Optional", "ไม่บังคับ")})</span>
                         </label>
                         <textarea
                             value={notes}
@@ -272,7 +268,7 @@ export function PostClassNotesModal({
 
                     <div>
                         <label className="block text-sm font-medium mb-2">
-                            {t("Notes (Thai)", "บันทึก (ภาษาไทย)")} <span className="text-red-500">*</span>
+                            {t("Notes (Thai)", "บันทึก (ภาษาไทย)")} <span className="text-gray-400 text-xs">({t("Optional", "ไม่บังคับ")})</span>
                         </label>
                         <textarea
                             value={notesTh}

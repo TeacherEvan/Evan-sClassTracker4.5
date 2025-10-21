@@ -278,8 +278,8 @@ export default defineSchema({
     studentId: v.id("students"),
     schoolId: v.id("schools"),
     // Bilingual content
-    notes: v.string(),
-    notesTh: v.string(),
+    notes: v.optional(v.string()),
+    notesTh: v.optional(v.string()),
     // Structured feedback
     attendance: v.union(v.literal("present"), v.literal("absent"), v.literal("late")),
     behavior: v.optional(v.union(

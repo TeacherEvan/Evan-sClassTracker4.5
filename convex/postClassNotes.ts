@@ -58,8 +58,8 @@ export const create = mutation({
     args: {
         classId: v.id("classes"),
         teacherId: v.id("users"),
-        notes: v.string(),
-        notesTh: v.string(),
+        notes: v.optional(v.string()),
+        notesTh: v.optional(v.string()),
         attendance: v.union(v.literal("present"), v.literal("absent"), v.literal("late")),
         behavior: v.optional(v.union(
             v.literal("excellent"),
