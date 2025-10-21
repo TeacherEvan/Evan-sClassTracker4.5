@@ -180,7 +180,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
     }
 
     try {
-      await deleteClass({ classId });
+      await deleteClass({ classId, userId });
       alert(t("Class deleted successfully", "ลบคลาสสำเร็จแล้ว"));
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to delete class");
@@ -741,12 +741,14 @@ function ClassItemDisplay({
     try {
       const updates: {
         classId: Id<"classes">;
+        userId: Id<"users">;
         scheduledDate?: number;
         studentId?: Id<"students">;
         locationId?: Id<"locations">;
         status?: "pending" | "acknowledged" | "approved" | "rejected";
       } = {
         classId: classItem._id,
+        userId,
       };
 
       // Only include changed fields

@@ -418,6 +418,7 @@ export const reject = mutation({
 export const updateClass = mutation({
   args: {
     classId: v.id("classes"),
+    userId: v.id("users"), // User performing the update
     scheduledDate: v.optional(v.number()),
     studentId: v.optional(v.id("students")),
     locationId: v.optional(v.id("locations")),
@@ -429,19 +430,14 @@ export const updateClass = mutation({
     )),
   },
   handler: async (ctx, args) => {
-    // Check authentication
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
+    // Get user and verify admin/moderator role
+    const user = await ctx.db.get(args.userId);
+    
+    if (!user) {
+      throw new Error("User not found");
     }
 
-    // Get user and verify admin/moderator role
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", identity.subject))
-      .first();
-
-    if (!user || !["admin", "moderator"].includes(user.role)) {
+    if (!["admin", "moderator"].includes(user.role)) {
       throw new Error("Unauthorized: Only admins and moderators can edit classes");
     }
 
@@ -490,21 +486,17 @@ export const updateClass = mutation({
 export const deleteClass = mutation({
   args: {
     classId: v.id("classes"),
+    userId: v.id("users"), // User performing the deletion
   },
   handler: async (ctx, args) => {
-    // Check authentication
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
+    // Get user and verify admin/moderator role
+    const user = await ctx.db.get(args.userId);
+    
+    if (!user) {
+      throw new Error("User not found");
     }
 
-    // Get user and verify admin/moderator role
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", identity.subject))
-      .first();
-
-    if (!user || !["admin", "moderator"].includes(user.role)) {
+    if (!["admin", "moderator"].includes(user.role)) {
       throw new Error("Unauthorized: Only admins and moderators can delete classes");
     }
 
