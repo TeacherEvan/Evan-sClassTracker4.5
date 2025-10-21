@@ -1,9 +1,60 @@
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+import { mutation, MutationCtx, query } from "./_generated/server";
 import { checkRateLimit, validateLength } from "./rateLimit";
 
-// Query to list classes
+/**
+ * Authorization Helper: Verifies user has permission to access/modify a class
+ * - Admins: Can access all schools
+ * - Moderators: Can only access classes from their assigned school
+ * - Teachers: Can only access their own classes (optional check)
+ * 
+ * @throws Error if unauthorized
+ */
+async function verifyClassAccess(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  classData: Doc<"classes">,
+  options: { requireModeratorOrAdmin?: boolean; allowTeacherOwner?: boolean } = {}
+): Promise<void> {
+  const user = await ctx.db.get(userId);
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  // Check role requirements if specified
+  if (options.requireModeratorOrAdmin && !["admin", "moderator"].includes(user.role)) {
+    throw new Error("Unauthorized: Only admins and moderators can perform this action");
+  }
+
+  // Admin has access to everything
+  if (user.role === "admin") {
+    return;
+  }
+
+  // Moderator can only access their assigned school
+  if (user.role === "moderator") {
+    const school = await ctx.db.get(classData.schoolId);
+    if (!school || school.moderatorId !== userId) {
+      throw new Error("Unauthorized: Moderators can only manage classes from their assigned school");
+    }
+    return;
+  }
+
+  // Teacher can only access their own classes (if allowed)
+  if (user.role === "teacher" && options.allowTeacherOwner) {
+    if (classData.teacherId !== userId) {
+      throw new Error("Unauthorized: You can only manage your own classes");
+    }
+    return;
+  }
+
+  // If we get here and teacher isn't allowed, throw error
+  if (user.role === "teacher" && !options.allowTeacherOwner) {
+    throw new Error("Unauthorized: This action is not available to teachers");
+  }
+}// Query to list classes
 export const list = query({
   args: {
     teacherId: v.optional(v.id("users")),
@@ -325,22 +376,16 @@ export const acknowledge = mutation({
     classId: v.id("classes"),
   },
   handler: async (ctx, args) => {
-    // Get user and verify moderator/admin role
-    const user = await ctx.db.get(args.userId);
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    if (!["admin", "moderator"].includes(user.role)) {
-      throw new Error("Unauthorized: Only admins and moderators can acknowledge classes");
-    }
-
     const classData = await ctx.db.get(args.classId);
 
     if (!classData) {
       throw new Error("Class not found");
     }
+
+    // Verify authorization (replaces 15+ lines of duplicate code)
+    await verifyClassAccess(ctx, args.userId, classData, {
+      requireModeratorOrAdmin: true
+    });
 
     // Get student and location info for notification
     const student = await ctx.db.get(classData.studentId);
@@ -380,22 +425,16 @@ export const approve = mutation({
     classId: v.id("classes"),
   },
   handler: async (ctx, args) => {
-    // Get user and verify moderator/admin role
-    const user = await ctx.db.get(args.userId);
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    if (!["admin", "moderator"].includes(user.role)) {
-      throw new Error("Unauthorized: Only admins and moderators can approve classes");
-    }
-
     const classData = await ctx.db.get(args.classId);
 
     if (!classData) {
       throw new Error("Class not found");
     }
+
+    // Verify authorization (replaces duplicate code)
+    await verifyClassAccess(ctx, args.userId, classData, {
+      requireModeratorOrAdmin: true
+    });
 
     // Get student and location info for notification
     const student = await ctx.db.get(classData.studentId);
@@ -435,22 +474,16 @@ export const reject = mutation({
     reasonTh: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Get user and verify moderator/admin role
-    const user = await ctx.db.get(args.userId);
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    if (!["admin", "moderator"].includes(user.role)) {
-      throw new Error("Unauthorized: Only admins and moderators can reject classes");
-    }
-
     const classData = await ctx.db.get(args.classId);
 
     if (!classData) {
       throw new Error("Class not found");
     }
+
+    // Verify authorization (replaces duplicate code)
+    await verifyClassAccess(ctx, args.userId, classData, {
+      requireModeratorOrAdmin: true
+    });
 
     // Get student and location info for notification
     const student = await ctx.db.get(classData.studentId);
@@ -497,21 +530,18 @@ export const updateClass = mutation({
     )),
   },
   handler: async (ctx, args) => {
-    // Get user and verify admin/moderator role
-    const user = await ctx.db.get(args.userId);
-
-    if (!user) {
-      throw new Error("Not authenticated");
-    }
-
-    if (!["admin", "moderator"].includes(user.role)) {
-      throw new Error("Unauthorized: Only admins and moderators can edit classes");
-    }
-
     const classData = await ctx.db.get(args.classId);
     if (!classData) {
       throw new Error("Class not found");
     }
+
+    // Verify authorization (replaces duplicate code)
+    await verifyClassAccess(ctx, args.userId, classData, {
+      requireModeratorOrAdmin: true
+    });
+
+    // Get user for notification
+    const user = await ctx.db.get(args.userId);
 
     // Build update object
     const updates: Partial<{
@@ -532,7 +562,7 @@ export const updateClass = mutation({
     const student = await ctx.db.get(args.studentId || classData.studentId);
 
     // Create notification to teacher
-    if (student) {
+    if (student && user) {
       await ctx.db.insert("notifications", {
         userId: classData.teacherId,
         title: "Class Updated",
@@ -556,27 +586,24 @@ export const deleteClass = mutation({
     userId: v.id("users"), // ID of the user performing the deletion
   },
   handler: async (ctx, args) => {
-    // Get user and verify admin/moderator role
-    const user = await ctx.db.get(args.userId);
-
-    if (!user) {
-      throw new Error("Not authenticated");
-    }
-
-    if (!["admin", "moderator"].includes(user.role)) {
-      throw new Error("Unauthorized: Only admins and moderators can delete classes");
-    }
-
     const classData = await ctx.db.get(args.classId);
     if (!classData) {
       throw new Error("Class not found");
     }
 
+    // Verify authorization (replaces duplicate code)
+    await verifyClassAccess(ctx, args.userId, classData, {
+      requireModeratorOrAdmin: true
+    });
+
+    // Get user for notification message
+    const user = await ctx.db.get(args.userId);
+
     // Get student info for notification
     const student = await ctx.db.get(classData.studentId);
 
     // Create notification before deleting
-    if (student) {
+    if (student && user) {
       await ctx.db.insert("notifications", {
         userId: classData.teacherId,
         title: "Class Deleted",
@@ -623,37 +650,34 @@ export const editClass = mutation({
     }),
   },
   handler: async (ctx, args) => {
-    // 1. Verify user is authenticated
-    const user = await ctx.db.get(args.userId);
-    if (!user) {
-      throw new Error("Not authenticated");
-    }
-
-    // 2. Fetch current class data
+    // 1. Fetch current class data
     const classData = await ctx.db.get(args.classId);
     if (!classData) {
       throw new Error("Class not found");
     }
 
-    // 3. Check permissions
-    // Teachers can only edit their own classes
-    // Mods/admins can edit classes in their school
-    const isModerator = user.role === "moderator" || user.role === "admin";
-    const isTeacher = user.role === "teacher" && classData.teacherId === args.userId;
-
-    if (!isModerator && !isTeacher) {
-      if (user.role === "teacher") {
-        throw new Error("You can only edit your own classes");
-      }
-      throw new Error("Unauthorized: You do not have permission to edit this class");
+    // 2. Get user for audit trail
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("Not authenticated");
     }
 
-    // If user is moderator, verify they manage this school
-    if (isModerator && user.role === "moderator") {
-      const school = await ctx.db.get(classData.schoolId);
-      if (school?.moderatorId !== args.userId) {
-        throw new Error("Unauthorized: You can only edit classes in your school");
-      }
+    // 3. Verify authorization using helper
+    // Teachers can only edit their own classes
+    // Moderators can edit classes in their assigned school
+    // Admins can edit classes from any school
+    const isTeacher = user.role === "teacher" && classData.teacherId === args.userId;
+
+    if (isTeacher) {
+      // Teacher editing their own class
+      await verifyClassAccess(ctx, args.userId, classData, {
+        allowTeacherOwner: true
+      });
+    } else {
+      // Moderator or admin
+      await verifyClassAccess(ctx, args.userId, classData, {
+        requireModeratorOrAdmin: true
+      });
     }
 
     // 4. Build change log
@@ -854,29 +878,28 @@ export const addStudentToClass = mutation({
       windowMs: 60000, // 100 per minute
     });
 
-    // Get the user performing the action
-    const user = await ctx.db.get(args.userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     // Get the class
     const classData = await ctx.db.get(args.classId);
     if (!classData) {
       throw new Error("Class not found");
     }
 
-    // Authorization check - teachers can only add to their own classes
-    if (user.role === "teacher" && classData.teacherId !== args.userId) {
-      throw new Error("Unauthorized: You can only add students to your own classes");
+    // Get the user performing the action
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
     }
 
-    // Moderators can only modify classes in their school
-    if (user.role === "moderator") {
-      const school = await ctx.db.get(classData.schoolId);
-      if (school?.moderatorId !== args.userId) {
-        throw new Error("Unauthorized: You can only modify classes in your school");
-      }
+    // Authorization check using helper
+    // Teachers can add to their own classes, moderators to their school, admins to any
+    if (user.role === "teacher") {
+      await verifyClassAccess(ctx, args.userId, classData, {
+        allowTeacherOwner: true
+      });
+    } else {
+      await verifyClassAccess(ctx, args.userId, classData, {
+        requireModeratorOrAdmin: true
+      });
     }
 
     // Verify the student exists
@@ -951,28 +974,27 @@ export const removeStudentFromClass = mutation({
       windowMs: 60000, // 100 per minute
     });
 
-    // Get the user performing the action
-    const user = await ctx.db.get(args.userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     // Get the class
     const classData = await ctx.db.get(args.classId);
     if (!classData) {
       throw new Error("Class not found");
     }
 
-    // Authorization check
-    if (user.role === "teacher" && classData.teacherId !== args.userId) {
-      throw new Error("Unauthorized: You can only remove students from your own classes");
+    // Get the user performing the action
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
     }
 
-    if (user.role === "moderator") {
-      const school = await ctx.db.get(classData.schoolId);
-      if (school?.moderatorId !== args.userId) {
-        throw new Error("Unauthorized: You can only modify classes in your school");
-      }
+    // Authorization check using helper
+    if (user.role === "teacher") {
+      await verifyClassAccess(ctx, args.userId, classData, {
+        allowTeacherOwner: true
+      });
+    } else {
+      await verifyClassAccess(ctx, args.userId, classData, {
+        requireModeratorOrAdmin: true
+      });
     }
 
     // Cannot remove the primary student
@@ -1028,28 +1050,27 @@ export const mergeClasses = mutation({
       windowMs: 60000, // 50 per minute
     });
 
-    // Get the user performing the action
-    const user = await ctx.db.get(args.userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
-
     // Get the target class
     const targetClass = await ctx.db.get(args.targetClassId);
     if (!targetClass) {
       throw new Error("Target class not found");
     }
 
-    // Authorization check
-    if (user.role === "teacher" && targetClass.teacherId !== args.userId) {
-      throw new Error("Unauthorized: You can only merge your own classes");
+    // Get the user performing the action
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
     }
 
-    if (user.role === "moderator") {
-      const school = await ctx.db.get(targetClass.schoolId);
-      if (school?.moderatorId !== args.userId) {
-        throw new Error("Unauthorized: You can only merge classes in your school");
-      }
+    // Authorization check using helper
+    if (user.role === "teacher") {
+      await verifyClassAccess(ctx, args.userId, targetClass, {
+        allowTeacherOwner: true
+      });
+    } else {
+      await verifyClassAccess(ctx, args.userId, targetClass, {
+        requireModeratorOrAdmin: true
+      });
     }
 
     // Validate source classes
