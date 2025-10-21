@@ -35,8 +35,7 @@ async function verifyClassAccess(
 
   // Moderator can only access their assigned school
   if (user.role === "moderator") {
-    const school = await ctx.db.get(classData.schoolId);
-    if (!school || school.moderatorId !== userId) {
+    if (!user.schoolId || user.schoolId !== classData.schoolId) {
       throw new Error("Unauthorized: Moderators can only manage classes from their assigned school");
     }
     return;

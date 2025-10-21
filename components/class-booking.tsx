@@ -28,6 +28,11 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
     api.classes.listWithDetails,
     userRole === "teacher" ? { teacherId: userId } : {}
   );
+  // Query all teachers for admin/moderator to select from
+  const allTeachers = useQuery(
+    api.users.list,
+    (userRole === "admin" || userRole === "moderator") ? { role: "teacher" } : "skip"
+  );
   const bookClass = useMutation(api.classes.book);
   const acknowledgeClass = useMutation(api.classes.acknowledge);
   const approveClass = useMutation(api.classes.approve);
@@ -40,6 +45,10 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   const [studentId, setStudentId] = useState<Id<"students"> | "">("");
   const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
   const [locationId, setLocationId] = useState<Id<"locations"> | "">("");
+  // Teacher selection for admin/moderator
+  const [selectedTeacherId, setSelectedTeacherId] = useState<Id<"users"> | "">(
+    userRole === "teacher" ? userId : ""
+  );
   const [scheduledDate, setScheduledDate] = useState("");
   const [selectedDateTimestamp, setSelectedDateTimestamp] = useState<number | null>(null);
   const [selectedDates, setSelectedDates] = useState<number[]>([]); // Multi-date selection
@@ -99,7 +108,9 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
     (locationId || requestingNewLocation) &&
     (requestingNewLocation ? (pendingLocationName.trim() && pendingLocationNameTh.trim()) : true) &&
     (useMultiDate ? selectedDates.length > 0 : (selectedDateTimestamp || scheduledDate)) &&
-    (isGuardianLocation ? guardianTitle.trim() : true);
+    (isGuardianLocation ? guardianTitle.trim() : true) &&
+    // Admin/Moderator must select a teacher
+    ((userRole === "admin" || userRole === "moderator") ? selectedTeacherId : true);
 
   const handleBookClass = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +129,10 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
       }
       if (requestingNewLocation && (!pendingLocationName.trim() || !pendingLocationNameTh.trim())) {
         throw new Error("Please provide both English and Thai names for the new location");
+      }
+      // Admin/Moderator must select a teacher
+      if ((userRole === "admin" || userRole === "moderator") && !selectedTeacherId) {
+        throw new Error(t("Please select a teacher", "กรุณาเลือกครูผู้สอน"));
       }
 
       // Multi-date booking support
@@ -165,10 +180,15 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
         ...(classType !== "regular" ? { classType } : {}),
       };
 
+      // Determine the teacher ID (use selected teacher for admin/mod, or current user for teachers)
+      const effectiveTeacherId = (userRole === "admin" || userRole === "moderator")
+        ? (selectedTeacherId as Id<"users">)
+        : userId;
+
       // Book classes for all selected dates
       const bookingPromises = datesToBook.map(timestamp =>
         bookClass({
-          teacherId: userId,
+          teacherId: effectiveTeacherId,
           schoolId,
           studentId: studentId as Id<"students">,
           locationId: locationId ? (locationId as Id<"locations">) : undefined,
@@ -206,6 +226,10 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
       setShowCalendar(false);
       setShowForm(false);
       setGuardianTitle("");
+      // Reset teacher selection for admin/moderator
+      if (userRole === "admin" || userRole === "moderator") {
+        setSelectedTeacherId("");
+      }
 
       // Reset optional fields
       setShowOptionalFields(false);
@@ -487,6 +511,36 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                   ))}
                 </select>
               </div>
+
+              {/* Teacher Selection for Admin/Moderator */}
+              {(userRole === "admin" || userRole === "moderator") && (
+                <div>
+                  <label htmlFor="teacher" className="block text-sm font-medium mb-2">
+                    {t("Teacher", "ครูผู้สอน")} *
+                  </label>
+                  <select
+                    id="teacher"
+                    value={selectedTeacherId}
+                    onChange={(e) => setSelectedTeacherId(e.target.value as Id<"users"> | "")}
+                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-shadow"
+                    required
+                    disabled={loading}
+                  >
+                    <option value="">{t("Select a teacher", "เลือกครูผู้สอน")}</option>
+                    {allTeachers?.map((teacher) => (
+                      <option key={teacher._id} value={teacher._id}>
+                        {teacher.username}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                    {t(
+                      "Select which teacher will teach this class",
+                      "เลือกครูที่จะสอนคลาสนี้"
+                    )}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
