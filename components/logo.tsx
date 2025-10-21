@@ -27,15 +27,33 @@ export function Logo({ size = "md", showSlogan = true }: LogoProps) {
 
     return (
         <div className="flex flex-col items-center justify-center space-y-2">
-            {/* Main Title - Stoic and Intellectual */}
+            {/* Main Title - Beautiful, Stoic, Stone with Pulsating Gold */}
             <h1
-                className={`font-serif ${sizeClasses[size].title} font-bold text-gray-900 dark:text-gray-100 tracking-tight text-center`}
+                className={`font-serif ${sizeClasses[size].title} font-bold tracking-tight text-center relative`}
                 style={{
                     fontFamily: "'Playfair Display', 'Georgia', serif",
                     letterSpacing: "0.02em",
                 }}
             >
-                {t("Evan's ClassTracker", "Evan's ClassTracker")}
+                <span
+                    className="inline-block"
+                    style={{
+                        background: "linear-gradient(135deg, #D4AF37 0%, #F4E5B0 25%, #D4AF37 50%, #F4E5B0 75%, #D4AF37 100%)",
+                        backgroundSize: "200% 200%",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        backgroundClip: "text",
+                        animation: "goldPulse 3s ease-in-out infinite",
+                        textShadow: "0 2px 4px rgba(212, 175, 55, 0.2)",
+                        filter: "drop-shadow(0 0 8px rgba(212, 175, 55, 0.4))",
+                    }}
+                >
+                    {t("Teacher's", "Teacher's")}
+                </span>
+                {" "}
+                <span className="text-gray-900 dark:text-gray-100">
+                    {t("ClassTracker", "ClassTracker")}
+                </span>
             </h1>
 
             {/* Slogan - Pulsating Gold */}

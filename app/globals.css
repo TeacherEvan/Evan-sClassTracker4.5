@@ -104,3 +104,26 @@ body {
   /* Tailwind red-500 */
   color: white;
 }
+
+/* Pulsating gold animation for Teacher's text */
+@keyframes goldPulse {
+  0% {
+    background-position: 0% 50%;
+    filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.4)) brightness(1);
+  }
+
+  50% {
+    background-position: 100% 50%;
+    filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.8)) brightness(1.2);
+  }
+
+  100% {
+    background-position: 0% 50%;
+    filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.4)) brightness(1);
+  }
+}
+
+/* Gold pulse animation utility class */
+.animate-pulse-gold {
+  animation: goldPulse 3s ease-in-out infinite;
+}
