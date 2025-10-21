@@ -1,15 +1,16 @@
 "use client";
 
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { getClassStatusColor } from "@/lib/constants";
 import { getWeekStart, isToday } from "@/lib/date-utils";
 import { useLanguage } from "@/lib/language-context";
-import type { ClassData, User } from "@/lib/types";
+import type { User } from "@/lib/types";
 import { useSwipeGesture } from "@/lib/use-swipe-gesture";
 import { useMutation, useQuery } from "convex/react";
 import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { ClassDetailModal } from "./class-detail-modal";
 
 type WeeklyCalendarProps = {
     currentUser: User;
@@ -26,6 +27,42 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     const [showAddDialog, setShowAddDialog] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedSchoolId, setSelectedSchoolId] = useState<Id<"schools"> | "">("");
+
+    // Class detail modal state - using enriched class type from listWithDetails
+    type ClassWithDetails = {
+        _id: Id<"classes">;
+        studentId: Id<"students">;
+        teacherId: Id<"users">;
+        schoolId: Id<"schools">;
+        locationId?: Id<"locations">;
+        scheduledDate: number;
+        status: "pending" | "acknowledged" | "approved" | "rejected";
+        student: Doc<"students"> | null;
+        additionalStudents?: (Doc<"students"> | null)[];
+        location: Doc<"locations"> | null;
+        additionalStudentIds?: Id<"students">[];
+        pendingLocationName?: string;
+        pendingLocationNameTh?: string;
+        guardianTitle?: string;
+        duration?: number;
+        subject?: string;
+        subjectTh?: string;
+        lessonTopic?: string;
+        lessonTopicTh?: string;
+        materials?: string;
+        materialsTh?: string;
+        preparationNotes?: string;
+        preparationNotesTh?: string;
+        classType?: "regular" | "makeup" | "trial" | "assessment" | "special";
+        isEdited?: boolean;
+        editHistory?: Array<{
+            editedAt: number;
+            editedBy: Id<"users">;
+            editedByName: string;
+            editedByRole: string;
+        }>;
+    };
+    const [selectedClass, setSelectedClass] = useState<ClassWithDetails | null>(null);
 
     // Form fields
     const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
@@ -82,16 +119,26 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
         return new Map(schools.map(s => [s._id, s]));
     }, [schools]);
 
-    // Get classes for current week
+    // Get classes for current week with full details
     const classes = useQuery(
-        api.classes.getByDateRange,
-        {
-            startDate: weekStart.getTime(),
-            endDate: weekEnd.getTime(),
-            schoolId: currentUser.role === "moderator" ? currentUser.schoolId : selectedSchoolId || undefined,
-            teacherId: currentUser.role === "teacher" ? currentUser._id : undefined,
-        }
-    ) as ClassData[] | undefined;
+        api.classes.listWithDetails,
+        currentUser.role === "teacher"
+            ? { teacherId: currentUser._id }
+            : (currentUser.role === "moderator" && currentUser.schoolId)
+                ? { schoolId: currentUser.schoolId }
+                : selectedSchoolId
+                    ? { schoolId: selectedSchoolId }
+                    : {}
+    );
+
+    // Filter classes by date range on client side (since we're using listWithDetails)
+    const weekClasses = useMemo(() => {
+        if (!classes) return [];
+        return classes.filter(c =>
+            c.scheduledDate >= weekStart.getTime() &&
+            c.scheduledDate <= weekEnd.getTime()
+        );
+    }, [classes, weekStart, weekEnd]);
 
     const goToPreviousWeek = () => {
         const newDate = new Date(currentDate);
@@ -171,15 +218,19 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     };
 
     const getClassesForDay = (day: Date) => {
-        if (!classes) return [];
+        if (!weekClasses) return [];
         const dayStart = new Date(day);
         dayStart.setHours(0, 0, 0, 0);
         const dayEnd = new Date(day);
         dayEnd.setHours(23, 59, 59, 999);
 
-        return classes.filter(
+        return weekClasses.filter(
             (c) => c.scheduledDate >= dayStart.getTime() && c.scheduledDate <= dayEnd.getTime()
         );
+    };
+
+    const handleClassClick = (classItem: ClassWithDetails) => {
+        setSelectedClass(classItem);
     };
 
     return (
@@ -299,14 +350,16 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                     {dayClasses.map((classItem) => {
                                         const teacher = usersMap.get(classItem.teacherId);
                                         const school = schoolsMap.get(classItem.schoolId);
+                                        const student = classItem.student;
 
                                         return (
-                                            <div
+                                            <button
                                                 key={classItem._id}
-                                                className={`text-xs p-1.5 md:p-2 rounded-lg md:rounded border ${getClassStatusColor(classItem.status)} active:scale-95 transition-transform touch-manipulation cursor-pointer`}
+                                                onClick={() => handleClassClick(classItem)}
+                                                className={`w-full text-left text-xs p-1.5 md:p-2 rounded-lg md:rounded border ${getClassStatusColor(classItem.status)} hover:opacity-80 active:scale-95 transition-all touch-manipulation cursor-pointer`}
                                             >
                                                 <div className="font-semibold truncate text-[11px] md:text-xs">
-                                                    {language === "en" ? classItem.title : classItem.titleTh}
+                                                    {student ? `${student.firstName} ${student.lastName}` : t("Student", "นักเรียน")}
                                                 </div>
                                                 <div className="text-gray-600 dark:text-gray-300 truncate text-[10px] md:text-xs">
                                                     {teacher?.username}
@@ -316,7 +369,13 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                                         {language === "en" ? school.name : school.nameTh}
                                                     </div>
                                                 )}
-                                            </div>
+                                                <div className="text-gray-500 dark:text-gray-400 text-[9px] md:text-[10px] mt-0.5">
+                                                    {new Date(classItem.scheduledDate).toLocaleTimeString(
+                                                        language === "en" ? "en-US" : "th-TH",
+                                                        { hour: "2-digit", minute: "2-digit" }
+                                                    )}
+                                                </div>
+                                            </button>
                                         );
                                     })}
                                 </div>
@@ -345,6 +404,22 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                     <span>{t("Rejected", "ปฏิเสธ")}</span>
                 </div>
             </div>
+
+            {/* Class Detail Modal */}
+            {selectedClass && (
+                <ClassDetailModal
+                    classData={selectedClass as unknown as Doc<"classes">}
+                    studentData={selectedClass.student}
+                    locationData={selectedClass.location}
+                    schoolData={schoolsMap.get(selectedClass.schoolId) || null}
+                    teacherData={usersMap.get(selectedClass.teacherId) || null}
+                    additionalStudents={selectedClass.additionalStudents}
+                    currentUserId={currentUser._id}
+                    currentUserRole={currentUser.role}
+                    allClasses={weekClasses}
+                    onClose={() => setSelectedClass(null)}
+                />
+            )}
 
             {/* Add Class Dialog */}
             {showAddDialog && (

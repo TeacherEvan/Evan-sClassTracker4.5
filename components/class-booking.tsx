@@ -626,7 +626,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                     <Calendar className="w-5 h-5 text-gray-400" />
                   </button>
                 ) : (
-                  // Single-date display (original)
+                  // Single-date display
                   <>
                     <button
                       type="button"
@@ -640,7 +640,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                             language === "en" ? "en-US" : "th-TH",
                             { year: "numeric", month: "long", day: "numeric" }
                           )
-                          : t("Select date from calendar", "เลือกวันที่จากปฏิทิน")
+                          : t("Click to select date", "คลิกเพื่อเลือกวันที่")
                         }
                       </span>
                       <Calendar className="w-5 h-5 text-gray-400" />
@@ -698,6 +698,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                       onSelectDate={(timestamp) => {
                         setSelectedDateTimestamp(timestamp);
                         setScheduledDate(""); // Clear manual input
+                        // Don't auto-close calendar to allow time selection
                       }}
                       minDate={Date.now()} // Only allow future dates
                     />
@@ -716,6 +717,17 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                           className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
                         />
                       </div>
+                    )}
+
+                    {/* Close calendar button */}
+                    {selectedDateTimestamp && (
+                      <button
+                        type="button"
+                        onClick={() => setShowCalendar(false)}
+                        className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                      >
+                        {t("✓ Confirm Date & Time", "✓ ยืนยันวันที่และเวลา")}
+                      </button>
                     )}
                   </>
                 )}
@@ -1364,8 +1376,8 @@ function ClassItemDisplay({
         </div>
       )}
 
-      {/* Admin/Moderator Edit and Delete Buttons */}
-      {(userRole === "admin" || userRole === "moderator") && (
+      {/* Edit and Delete Buttons - Available to Admin/Moderator/Teacher */}
+      {(userRole === "admin" || userRole === "moderator" || userRole === "teacher") && (
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <div className="flex flex-wrap gap-2">
             <button
@@ -1375,13 +1387,15 @@ function ClassItemDisplay({
               <Edit2 className="w-4 h-4" />
               {t("Edit Class", "แก้ไขคลาส")}
             </button>
-            <button
-              onClick={() => onDelete(classItem._id)}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all"
-            >
-              <Trash2 className="w-4 h-4" />
-              {t("Delete Class", "ลบคลาส")}
-            </button>
+            {(userRole === "admin" || userRole === "moderator") && (
+              <button
+                onClick={() => onDelete(classItem._id)}
+                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all"
+              >
+                <Trash2 className="w-4 h-4" />
+                {t("Delete Class", "ลบคラส")}
+              </button>
+            )}
           </div>
 
           {/* Show "Edited" badge if class has been edited */}
@@ -1400,9 +1414,11 @@ function ClassItemDisplay({
             </div>
           )}
 
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-            {t("Teacher will be notified of any changes", "ครูจะได้รับแจ้งเตือนเกี่ยวกับการเปลี่ยนแปลง")}
-          </p>
+          {(userRole === "admin" || userRole === "moderator") && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              {t("Teacher will be notified of any changes", "ครูจะได้รับแจ้งเตือนเกี่ยวกับการเปลี่ยนแปลง")}
+            </p>
+          )}
         </div>
       )}
 
