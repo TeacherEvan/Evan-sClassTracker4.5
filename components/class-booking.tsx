@@ -106,7 +106,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
     studentId &&
     schoolId &&
     (locationId || requestingNewLocation) &&
-    (requestingNewLocation ? (pendingLocationName.trim() && pendingLocationNameTh.trim()) : true) &&
+    (requestingNewLocation ? (pendingLocationName.trim() || pendingLocationNameTh.trim()) : true) &&
     (useMultiDate ? selectedDates.length > 0 : (selectedDateTimestamp || scheduledDate)) &&
     (isGuardianLocation ? guardianTitle.trim() : true) &&
     // Admin/Moderator must select a teacher
@@ -127,8 +127,8 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
       if (!locationId && !requestingNewLocation) {
         throw new Error("Please select a location or request a new one");
       }
-      if (requestingNewLocation && (!pendingLocationName.trim() || !pendingLocationNameTh.trim())) {
-        throw new Error("Please provide both English and Thai names for the new location");
+      if (requestingNewLocation && !pendingLocationName.trim() && !pendingLocationNameTh.trim()) {
+        throw new Error("Please provide at least one location name (English or Thai)");
       }
       // Admin/Moderator must select a teacher
       if ((userRole === "admin" || userRole === "moderator") && !selectedTeacherId) {
