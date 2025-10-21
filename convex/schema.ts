@@ -54,6 +54,37 @@ export default defineSchema({
     ),
     scheduledDate: v.number(),
     createdAt: v.number(),
+    // NEW OPTIONAL FIELDS
+    duration: v.optional(v.number()), // Minutes (default 60)
+    subject: v.optional(v.string()), // Math, English, etc.
+    subjectTh: v.optional(v.string()), // Thai translation
+    lessonTopic: v.optional(v.string()), // Specific topic
+    lessonTopicTh: v.optional(v.string()), // Thai translation
+    materials: v.optional(v.string()), // Required materials
+    materialsTh: v.optional(v.string()), // Thai translation
+    preparationNotes: v.optional(v.string()), // Teacher prep notes
+    preparationNotesTh: v.optional(v.string()), // Thai translation
+    classType: v.optional(v.union( // Type classification
+      v.literal("regular"),
+      v.literal("makeup"),
+      v.literal("assessment"),
+      v.literal("trial")
+    )),
+    // EDIT AUDIT TRAIL
+    isEdited: v.optional(v.boolean()),
+    lastEditedAt: v.optional(v.number()),
+    lastEditedBy: v.optional(v.id("users")),
+    editHistory: v.optional(v.array(v.object({
+      editedAt: v.number(),
+      editedBy: v.id("users"),
+      editedByName: v.string(), // Cache for performance
+      editedByRole: v.string(),
+      changes: v.array(v.object({
+        field: v.string(),
+        oldValue: v.string(),
+        newValue: v.string(),
+      })),
+    }))),
   })
     .index("by_teacher", ["teacherId"])
     .index("by_school", ["schoolId"])
@@ -61,7 +92,9 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_scheduled_date", ["scheduledDate"])
     .index("by_school_and_date", ["schoolId", "scheduledDate"])
-    .index("by_teacher_and_date", ["teacherId", "scheduledDate"]),
+    .index("by_teacher_and_date", ["teacherId", "scheduledDate"])
+    .index("by_edited", ["isEdited"])
+    .index("by_last_edited", ["lastEditedAt"]),
 
   students: defineTable({
     firstName: v.string(),
@@ -77,6 +110,18 @@ export default defineSchema({
     acknowledged: v.optional(v.boolean()), // For guardian-acknowledged students (optional for backward compatibility)
     createdBy: v.optional(v.id("users")), // Teacher who created the student (optional for backward compatibility)
     createdAt: v.number(),
+    // NEW OPTIONAL FIELDS
+    nickname: v.optional(v.string()), // Preferred name
+    dateOfBirth: v.optional(v.number()), // For age calculation
+    parentName: v.optional(v.string()), // Primary parent
+    parentPhone: v.optional(v.string()), // Contact number
+    parentEmail: v.optional(v.string()), // Email contact
+    secondaryParentName: v.optional(v.string()),
+    secondaryParentPhone: v.optional(v.string()),
+    allergies: v.optional(v.string()), // Medical info
+    specialNeeds: v.optional(v.string()), // Learning accommodations
+    medicalNotes: v.optional(v.string()), // Medical conditions/medications
+    notes: v.optional(v.string()), // General notes
   })
     .index("by_student_id", ["studentId"])
     .index("by_school", ["schoolId"])
@@ -225,4 +270,67 @@ export default defineSchema({
     .index("by_teacher_and_date", ["teacherId", "createdAt"])
     .index("by_school_and_date", ["schoolId", "createdAt"])
     .index("by_acknowledged", ["acknowledged"]),
+
+  postClassNotes: defineTable({
+    classId: v.id("classes"),
+    teacherId: v.id("users"),
+    studentId: v.id("students"),
+    schoolId: v.id("schools"),
+    // Bilingual content
+    notes: v.string(),
+    notesTh: v.string(),
+    // Structured feedback
+    attendance: v.union(v.literal("present"), v.literal("absent"), v.literal("late")),
+    behavior: v.optional(v.union(
+      v.literal("excellent"),
+      v.literal("good"),
+      v.literal("fair"),
+      v.literal("needs_improvement")
+    )),
+    participation: v.optional(v.union(
+      v.literal("excellent"),
+      v.literal("good"),
+      v.literal("fair"),
+      v.literal("needs_improvement")
+    )),
+    homework: v.optional(v.string()), // Homework assigned
+    homeworkTh: v.optional(v.string()),
+    createdAt: v.number(),
+    skipped: v.boolean(), // User chose to skip
+  })
+    .index("by_class", ["classId"])
+    .index("by_teacher", ["teacherId"])
+    .index("by_student", ["studentId"])
+    .index("by_school", ["schoolId"])
+    .index("by_created_at", ["createdAt"]),
+
+  appUpdates: defineTable({
+    version: v.string(), // "2.0.0"
+    releaseDate: v.number(),
+    title: v.string(),
+    titleTh: v.string(),
+    description: v.string(), // Markdown supported
+    descriptionTh: v.string(),
+    features: v.array(v.object({
+      title: v.string(),
+      titleTh: v.string(),
+      description: v.string(),
+      descriptionTh: v.string(),
+      icon: v.string(), // Lucide icon name
+    })),
+    isActive: v.boolean(), // Show this update
+    createdAt: v.number(),
+  })
+    .index("by_active", ["isActive"])
+    .index("by_release_date", ["releaseDate"])
+    .index("by_version", ["version"]),
+
+  userUpdateViews: defineTable({
+    userId: v.id("users"),
+    updateId: v.id("appUpdates"),
+    viewedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_update", ["updateId"])
+    .index("by_user_and_update", ["userId", "updateId"]),
 });

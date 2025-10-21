@@ -6,10 +6,12 @@ import { useDataContext } from "@/lib/data-context";
 import { useLanguage } from "@/lib/language-context";
 import type { UserRole } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
-import { Calendar, Check, Edit2, MapPin, Trash2, X } from "lucide-react";
+import { Calendar, Check, ChevronDown, ChevronUp, Edit2, MapPin, Trash2, X } from "lucide-react";
 import { useState } from "react";
+import { EditClassModal } from "./edit-class-modal";
 import LocationProposalForm from "./location-proposal-form";
 import { MonthCalendarPicker } from "./month-calendar-picker";
+import { MultiDateCalendar } from "./multi-date-calendar";
 
 interface ClassBookingProps {
   userId: Id<"users">;
@@ -38,6 +40,8 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   const [locationId, setLocationId] = useState<Id<"locations"> | "">("");
   const [scheduledDate, setScheduledDate] = useState("");
   const [selectedDateTimestamp, setSelectedDateTimestamp] = useState<number | null>(null);
+  const [selectedDates, setSelectedDates] = useState<number[]>([]); // Multi-date selection
+  const [useMultiDate, setUseMultiDate] = useState(false); // Toggle multi-date mode
   const [selectedTime, setSelectedTime] = useState("09:00");
   const [showCalendar, setShowCalendar] = useState(false);
   const [pendingLocationName, setPendingLocationName] = useState("");
@@ -46,6 +50,22 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Edit modal state - using Doc type from classes query
+  const [editingClass, setEditingClass] = useState<Doc<"classes"> | null>(null);
+
+  // Optional fields state
+  const [showOptionalFields, setShowOptionalFields] = useState(false);
+  const [duration, setDuration] = useState("");
+  const [subject, setSubject] = useState("");
+  const [subjectTh, setSubjectTh] = useState("");
+  const [lessonTopic, setLessonTopic] = useState("");
+  const [lessonTopicTh, setLessonTopicTh] = useState("");
+  const [materials, setMaterials] = useState("");
+  const [materialsTh, setMaterialsTh] = useState("");
+  const [preparationNotes, setPreparationNotes] = useState("");
+  const [preparationNotesTh, setPreparationNotesTh] = useState("");
+  const [classType, setClassType] = useState<"regular" | "makeup" | "trial" | "assessment" | "special">("regular");
 
   // Student creation state
   const [creatingStudent, setCreatingStudent] = useState(false);
@@ -67,6 +87,15 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   const selectedLocation = locations?.find(loc => loc._id === locationId);
   const isGuardianLocation = selectedLocation?.type === "guardian";
 
+  // Form validation
+  const isFormValid =
+    studentId &&
+    schoolId &&
+    (locationId || requestingNewLocation) &&
+    (requestingNewLocation ? (pendingLocationName.trim() && pendingLocationNameTh.trim()) : true) &&
+    (useMultiDate ? selectedDates.length > 0 : (selectedDateTimestamp || scheduledDate)) &&
+    (isGuardianLocation ? guardianTitle.trim() : true);
+
   const handleBookClass = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -86,17 +115,31 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
         throw new Error("Please provide both English and Thai names for the new location");
       }
 
-      // Combine date and time
-      let timestamp: number;
-      if (selectedDateTimestamp) {
-        const date = new Date(selectedDateTimestamp);
-        const [hours, minutes] = selectedTime.split(":");
-        date.setHours(Number.parseInt(hours), Number.parseInt(minutes));
-        timestamp = date.getTime();
-      } else if (scheduledDate) {
-        timestamp = new Date(scheduledDate).getTime();
+      // Multi-date booking support
+      const datesToBook: number[] = [];
+
+      if (useMultiDate && selectedDates.length > 0) {
+        // Use selected dates from multi-date calendar
+        for (const dateTimestamp of selectedDates) {
+          const date = new Date(dateTimestamp);
+          const [hours, minutes] = selectedTime.split(":");
+          date.setHours(Number.parseInt(hours), Number.parseInt(minutes));
+          datesToBook.push(date.getTime());
+        }
       } else {
-        throw new Error("Please select a date");
+        // Single date booking (original behavior)
+        let timestamp: number;
+        if (selectedDateTimestamp) {
+          const date = new Date(selectedDateTimestamp);
+          const [hours, minutes] = selectedTime.split(":");
+          date.setHours(Number.parseInt(hours), Number.parseInt(minutes));
+          timestamp = date.getTime();
+        } else if (scheduledDate) {
+          timestamp = new Date(scheduledDate).getTime();
+        } else {
+          throw new Error("Please select a date");
+        }
+        datesToBook.push(timestamp);
       }
 
       // Validate guardian title if guardian location selected
@@ -107,17 +150,41 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
         ));
       }
 
-      await bookClass({
-        teacherId: userId,
-        schoolId,
-        studentId: studentId as Id<"students">,
-        locationId: locationId ? (locationId as Id<"locations">) : undefined,
-        pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
-        pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
-        scheduledDate: timestamp,
-        bookedByUserId: userId,
-        guardianTitle: isGuardianLocation ? guardianTitle : undefined,
-      });
+      // Prepare optional fields (only include if filled)
+      const optionalFields = {
+        ...(duration ? { duration: Number.parseInt(duration) } : {}),
+        ...(subject ? { subject, subjectTh } : {}),
+        ...(lessonTopic ? { lessonTopic, lessonTopicTh } : {}),
+        ...(materials ? { materials, materialsTh } : {}),
+        ...(preparationNotes ? { preparationNotes, preparationNotesTh } : {}),
+        ...(classType !== "regular" ? { classType } : {}),
+      };
+
+      // Book classes for all selected dates
+      const bookingPromises = datesToBook.map(timestamp =>
+        bookClass({
+          teacherId: userId,
+          schoolId,
+          studentId: studentId as Id<"students">,
+          locationId: locationId ? (locationId as Id<"locations">) : undefined,
+          pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
+          pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
+          scheduledDate: timestamp,
+          bookedByUserId: userId,
+          guardianTitle: isGuardianLocation ? guardianTitle : undefined,
+          ...optionalFields,
+        })
+      );
+
+      await Promise.all(bookingPromises);
+
+      // Show success message
+      if (datesToBook.length > 1) {
+        alert(t(
+          `Successfully booked ${datesToBook.length} classes!`,
+          `จองคลาสสำเร็จแล้ว ${datesToBook.length} คลาส!`
+        ));
+      }
 
       // Reset form
       setStudentId("");
@@ -125,12 +192,28 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
       setLocationId("");
       setScheduledDate("");
       setSelectedDateTimestamp(null);
+      setSelectedDates([]);
+      setUseMultiDate(false);
       setSelectedTime("09:00");
       setPendingLocationName("");
       setPendingLocationNameTh("");
       setRequestingNewLocation(false);
       setShowCalendar(false);
       setShowForm(false);
+      setGuardianTitle("");
+
+      // Reset optional fields
+      setShowOptionalFields(false);
+      setDuration("");
+      setSubject("");
+      setSubjectTh("");
+      setLessonTopic("");
+      setLessonTopicTh("");
+      setMaterials("");
+      setMaterialsTh("");
+      setPreparationNotes("");
+      setPreparationNotesTh("");
+      setClassType("regular");
     } catch (err) {
       setError(
         err instanceof Error
@@ -468,71 +551,142 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
               )}
 
               <div>
-                <label htmlFor="date" className="block text-sm font-medium mb-2">
-                  {t("Scheduled Date", "วันที่กำหนด")}
-                </label>
-
-                {/* Calendar toggle button */}
-                <button
-                  type="button"
-                  onClick={() => setShowCalendar(!showCalendar)}
-                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 text-left flex items-center justify-between"
-                  disabled={loading}
-                >
-                  <span className={selectedDateTimestamp ? "text-gray-900 dark:text-white" : "text-gray-500"}>
-                    {selectedDateTimestamp
-                      ? new Date(selectedDateTimestamp).toLocaleDateString(
-                        language === "en" ? "en-US" : "th-TH",
-                        { year: "numeric", month: "long", day: "numeric" }
-                      )
-                      : t("Select date from calendar", "เลือกวันที่จากปฏิทิน")
+                <div className="flex items-center justify-between mb-2">
+                  <label htmlFor="date" className="block text-sm font-medium">
+                    {t("Scheduled Date", "วันที่กำหนด")}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUseMultiDate(!useMultiDate);
+                      if (!useMultiDate) {
+                        // Switching to multi-date mode
+                        setSelectedDateTimestamp(null);
+                        setScheduledDate("");
+                        setShowCalendar(true);
+                      } else {
+                        // Switching to single-date mode
+                        setSelectedDates([]);
+                      }
+                    }}
+                    className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+                  >
+                    {useMultiDate
+                      ? t("← Single Date", "← วันเดียว")
+                      : t("+ Multiple Dates", "+ หลายวัน")
                     }
-                  </span>
-                  <Calendar className="w-5 h-5 text-gray-400" />
-                </button>
+                  </button>
+                </div>
 
-                {/* Fallback to datetime-local input */}
-                <input
-                  type="datetime-local"
-                  id="date"
-                  value={scheduledDate}
-                  onChange={(e) => {
-                    setScheduledDate(e.target.value);
-                    setSelectedDateTimestamp(null); // Clear calendar selection
-                  }}
-                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 touch-manipulation transition-shadow mt-2"
-                  disabled={loading}
-                  placeholder={t("Or enter date/time manually", "หรือกรอกวันที่/เวลาด้วยตนเอง")}
-                />
+                {useMultiDate ? (
+                  // Multi-date display
+                  <button
+                    type="button"
+                    onClick={() => setShowCalendar(!showCalendar)}
+                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 text-left flex items-center justify-between"
+                    disabled={loading}
+                  >
+                    <span className={selectedDates.length > 0 ? "text-gray-900 dark:text-white" : "text-gray-500"}>
+                      {selectedDates.length > 0
+                        ? t(`${selectedDates.length} dates selected`, `เลือกแล้ว ${selectedDates.length} วัน`)
+                        : t("Select multiple dates", "เลือกหลายวัน")
+                      }
+                    </span>
+                    <Calendar className="w-5 h-5 text-gray-400" />
+                  </button>
+                ) : (
+                  // Single-date display (original)
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setShowCalendar(!showCalendar)}
+                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 text-left flex items-center justify-between"
+                      disabled={loading}
+                    >
+                      <span className={selectedDateTimestamp ? "text-gray-900 dark:text-white" : "text-gray-500"}>
+                        {selectedDateTimestamp
+                          ? new Date(selectedDateTimestamp).toLocaleDateString(
+                            language === "en" ? "en-US" : "th-TH",
+                            { year: "numeric", month: "long", day: "numeric" }
+                          )
+                          : t("Select date from calendar", "เลือกวันที่จากปฏิทิน")
+                        }
+                      </span>
+                      <Calendar className="w-5 h-5 text-gray-400" />
+                    </button>
+
+                    {/* Fallback to datetime-local input */}
+                    <input
+                      type="datetime-local"
+                      id="date"
+                      value={scheduledDate}
+                      onChange={(e) => {
+                        setScheduledDate(e.target.value);
+                        setSelectedDateTimestamp(null); // Clear calendar selection
+                      }}
+                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 touch-manipulation transition-shadow mt-2"
+                      disabled={loading}
+                      placeholder={t("Or enter date/time manually", "หรือกรอกวันที่/เวลาด้วยตนเอง")}
+                    />
+                  </>
+                )}
               </div>
             </div>
 
             {/* Calendar Picker */}
             {showCalendar && (
               <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-900">
-                <MonthCalendarPicker
-                  selectedDate={selectedDateTimestamp}
-                  onSelectDate={(timestamp) => {
-                    setSelectedDateTimestamp(timestamp);
-                    setScheduledDate(""); // Clear manual input
-                  }}
-                  minDate={Date.now()} // Only allow future dates
-                />
-
-                {/* Time picker */}
-                {selectedDateTimestamp && (
-                  <div className="mt-4">
-                    <label htmlFor="time" className="block text-sm font-medium mb-2">
-                      {t("Select Time", "เลือกเวลา")}
-                    </label>
-                    <input
-                      type="time"
-                      id="time"
-                      value={selectedTime}
-                      onChange={(e) => setSelectedTime(e.target.value)}
-                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                {useMultiDate ? (
+                  <>
+                    <MultiDateCalendar
+                      selectedDates={selectedDates}
+                      onDatesChange={setSelectedDates}
+                      minDate={new Date()}
+                      maxSelections={14}
                     />
-                  </div>
+                    {/* Time picker for all selected dates */}
+                    {selectedDates.length > 0 && (
+                      <div className="mt-4">
+                        <label htmlFor="time" className="block text-sm font-medium mb-2">
+                          {t("Time for all classes", "เวลาสำหรับทุกคลาส")}
+                        </label>
+                        <input
+                          type="time"
+                          id="time"
+                          value={selectedTime}
+                          onChange={(e) => setSelectedTime(e.target.value)}
+                          className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <MonthCalendarPicker
+                      selectedDate={selectedDateTimestamp}
+                      onSelectDate={(timestamp) => {
+                        setSelectedDateTimestamp(timestamp);
+                        setScheduledDate(""); // Clear manual input
+                      }}
+                      minDate={Date.now()} // Only allow future dates
+                    />
+
+                    {/* Time picker */}
+                    {selectedDateTimestamp && (
+                      <div className="mt-4">
+                        <label htmlFor="time" className="block text-sm font-medium mb-2">
+                          {t("Select Time", "เลือกเวลา")}
+                        </label>
+                        <input
+                          type="time"
+                          id="time"
+                          value={selectedTime}
+                          onChange={(e) => setSelectedTime(e.target.value)}
+                          className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -583,6 +737,182 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
               </div>
             )}
 
+            {/* Optional Fields Section */}
+            <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setShowOptionalFields(!showOptionalFields)}
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between transition-colors"
+              >
+                <span className="text-sm font-medium">
+                  {t("Additional Class Details (Optional)", "รายละเอียดเพิ่มเติม (ไม่บังคับ)")}
+                </span>
+                {showOptionalFields ? (
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                )}
+              </button>
+
+              {showOptionalFields && (
+                <div className="p-4 space-y-4">
+                  {/* Duration */}
+                  <div>
+                    <label htmlFor="duration" className="block text-sm font-medium mb-2">
+                      {t("Duration (minutes)", "ระยะเวลา (นาที)")}
+                    </label>
+                    <input
+                      type="number"
+                      id="duration"
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                      placeholder="60"
+                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                    />
+                  </div>
+
+                  {/* Subject */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="subject" className="block text-sm font-medium mb-2">
+                        {t("Subject (English)", "วิชา (อังกฤษ)")}
+                      </label>
+                      <input
+                        type="text"
+                        id="subject"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        placeholder={t("e.g., Math", "เช่น คณิตศาสตร์")}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="subjectTh" className="block text-sm font-medium mb-2">
+                        {t("Subject (Thai)", "วิชา (ไทย)")}
+                      </label>
+                      <input
+                        type="text"
+                        id="subjectTh"
+                        value={subjectTh}
+                        onChange={(e) => setSubjectTh(e.target.value)}
+                        placeholder={t("e.g., คณิตศาสตร์", "เช่น คณิตศาสตร์")}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Lesson Topic */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="lessonTopic" className="block text-sm font-medium mb-2">
+                        {t("Lesson Topic (English)", "หัวข้อบทเรียน (อังกฤษ)")}
+                      </label>
+                      <input
+                        type="text"
+                        id="lessonTopic"
+                        value={lessonTopic}
+                        onChange={(e) => setLessonTopic(e.target.value)}
+                        placeholder={t("e.g., Fractions", "เช่น เศษส่วน")}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="lessonTopicTh" className="block text-sm font-medium mb-2">
+                        {t("Lesson Topic (Thai)", "หัวข้อบทเรียน (ไทย)")}
+                      </label>
+                      <input
+                        type="text"
+                        id="lessonTopicTh"
+                        value={lessonTopicTh}
+                        onChange={(e) => setLessonTopicTh(e.target.value)}
+                        placeholder={t("e.g., เศษส่วน", "เช่น เศษส่วน")}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Materials */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="materials" className="block text-sm font-medium mb-2">
+                        {t("Materials Needed (English)", "อุปกรณ์ที่ต้องใช้ (อังกฤษ)")}
+                      </label>
+                      <textarea
+                        id="materials"
+                        value={materials}
+                        onChange={(e) => setMaterials(e.target.value)}
+                        rows={2}
+                        placeholder={t("e.g., Textbook, calculator", "เช่น หนังสือเรียน, เครื่องคิดเลข")}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="materialsTh" className="block text-sm font-medium mb-2">
+                        {t("Materials Needed (Thai)", "อุปกรณ์ที่ต้องใช้ (ไทย)")}
+                      </label>
+                      <textarea
+                        id="materialsTh"
+                        value={materialsTh}
+                        onChange={(e) => setMaterialsTh(e.target.value)}
+                        rows={2}
+                        placeholder={t("e.g., หนังสือเรียน, เครื่องคิดเลข", "เช่น หนังสือเรียน, เครื่องคิดเลข")}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Preparation Notes */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="preparationNotes" className="block text-sm font-medium mb-2">
+                        {t("Preparation Notes (English)", "หมายเหตุการเตรียมการ (อังกฤษ)")}
+                      </label>
+                      <textarea
+                        id="preparationNotes"
+                        value={preparationNotes}
+                        onChange={(e) => setPreparationNotes(e.target.value)}
+                        rows={2}
+                        placeholder={t("e.g., Review chapter 3", "เช่น ทบทวนบทที่ 3")}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="preparationNotesTh" className="block text-sm font-medium mb-2">
+                        {t("Preparation Notes (Thai)", "หมายเหตุการเตรียมการ (ไทย)")}
+                      </label>
+                      <textarea
+                        id="preparationNotesTh"
+                        value={preparationNotesTh}
+                        onChange={(e) => setPreparationNotesTh(e.target.value)}
+                        rows={2}
+                        placeholder={t("e.g., ทบทวนบทที่ 3", "เช่น ทบทวนบทที่ 3")}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Class Type */}
+                  <div>
+                    <label htmlFor="classType" className="block text-sm font-medium mb-2">
+                      {t("Class Type", "ประเภทคลาส")}
+                    </label>
+                    <select
+                      id="classType"
+                      value={classType}
+                      onChange={(e) => setClassType(e.target.value as typeof classType)}
+                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                    >
+                      <option value="regular">{t("Regular", "ปกติ")}</option>
+                      <option value="makeup">{t("Makeup", "ชดเชย")}</option>
+                      <option value="trial">{t("Trial", "ทดลอง")}</option>
+                      <option value="assessment">{t("Assessment", "ประเมินผล")}</option>
+                      <option value="special">{t("Special", "พิเศษ")}</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {error && (
               <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl md:rounded-lg text-sm">
                 {error}
@@ -592,16 +922,26 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
             <div className="flex flex-col md:flex-row gap-3">
               <button
                 type="submit"
-                disabled={loading}
-                className="flex-1 bg-blue-500 text-white py-3.5 md:py-2.5 px-4 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-98 transition-all font-medium disabled:opacity-50 touch-manipulation shadow-lg shadow-blue-500/20 text-base md:text-sm"
+                disabled={loading || !isFormValid}
+                className="flex-1 bg-blue-500 text-white py-3.5 md:py-2.5 px-4 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-98 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation shadow-lg shadow-blue-500/20 text-base md:text-sm"
               >
-                {loading
-                  ? userRole === "moderator" || userRole === "admin"
+                {loading ? (
+                  userRole === "moderator" || userRole === "admin"
                     ? t("Booking...", "กำลังจอง...")
-                    : t("Requesting...", "กำลังขอ...")
-                  : userRole === "moderator" || userRole === "admin"
-                    ? t("Book Class", "จองชั้นเรียน")
-                    : t("Request Class", "ขอชั้นเรียน")}
+                    : t("Submitting Request...", "กำลังส่งคำขอ...")
+                ) : (
+                  <>
+                    {userRole === "moderator" || userRole === "admin" ? (
+                      useMultiDate && selectedDates.length > 1
+                        ? t(`Book ${selectedDates.length} Classes`, `จอง ${selectedDates.length} คลาส`)
+                        : t("Book Class", "จองคลาส")
+                    ) : (
+                      useMultiDate && selectedDates.length > 1
+                        ? t(`Submit ${selectedDates.length} Class Requests`, `ส่งคำขอ ${selectedDates.length} คลาส`)
+                        : t("Submit Class Request", "ส่งคำขอคลาส")
+                    )}
+                  </>
+                )}
               </button>
               <button
                 type="button"
@@ -623,13 +963,17 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
             <ClassItemDisplay
               key={classItem._id}
               classItem={classItem}
-              userId={userId}
               userRole={userRole}
               onAcknowledge={handleAcknowledge}
               onApprove={handleApprove}
               onReject={handleReject}
               onDelete={handleDelete}
               onRequestCancellation={handleRequestCancellation}
+              onEdit={(item) => {
+                // Convert classItem to Doc<"classes"> by extracting core fields
+                const classDoc = item as unknown as Doc<"classes">;
+                setEditingClass(classDoc);
+              }}
             />
           );
         })}
@@ -646,6 +990,19 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
         )}
       </div>
 
+      {/* Edit Class Modal */}
+      {editingClass && (
+        <EditClassModal
+          classData={editingClass}
+          currentUserId={userId}
+          onClose={() => setEditingClass(null)}
+          onSuccess={() => {
+            setEditingClass(null);
+            // Data will auto-refresh via Convex real-time updates
+          }}
+        />
+      )}
+
       {/* Location Proposal Modal */}
       {showProposalForm && (
         <LocationProposalForm
@@ -660,13 +1017,13 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
 // Separate component to display individual class items with related data
 function ClassItemDisplay({
   classItem,
-  userId,
   userRole,
   onAcknowledge,
   onApprove,
   onReject,
   onDelete,
   onRequestCancellation,
+  onEdit,
 }: {
   classItem: {
     _id: Id<"classes">;
@@ -678,19 +1035,28 @@ function ClassItemDisplay({
     status: "pending" | "acknowledged" | "approved" | "rejected";
     student: Doc<"students"> | null; // Full student object from joined query
     location: Doc<"locations"> | null; // Full location object from joined query
+    isEdited?: boolean;
+    editHistory?: Array<{
+      editedAt: number;
+      editedBy: Id<"users">;
+      editedByName: string;
+      editedByRole: string;
+      changes: Array<{
+        field: string;
+        oldValue: unknown;
+        newValue: unknown;
+      }>;
+    }>;
   };
-  userId: Id<"users">;
   userRole: UserRole;
   onAcknowledge: (id: Id<"classes">) => void;
   onApprove: (id: Id<"classes">) => void;
   onReject: (id: Id<"classes">) => void;
   onDelete: (id: Id<"classes">) => void;
   onRequestCancellation: (id: Id<"classes">, reason: string, reasonTh: string) => void;
+  onEdit: (classData: typeof classItem) => void;
 }) {
   const { t, language } = useLanguage();
-  const { schools } = useDataContext();
-  const students = useQuery(api.students.list, {});
-  const updateClassMutation = useMutation(api.classes.updateClass);
 
   const hasPendingRequest = useQuery(api.cancellationRequests.hasPendingRequest, {
     classId: classItem._id,
@@ -699,26 +1065,6 @@ function ClassItemDisplay({
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelReasonTh, setCancelReasonTh] = useState("");
-
-  // Edit form state
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [editStudentId, setEditStudentId] = useState<Id<"students"> | "">(classItem.studentId);
-  const [editScheduledDate, setEditScheduledDate] = useState(
-    new Date(classItem.scheduledDate).toISOString().slice(0, 16)
-  );
-  const [editStatus, setEditStatus] = useState<"pending" | "acknowledged" | "approved" | "rejected">(classItem.status);
-  const [editSchoolId, setEditSchoolId] = useState<Id<"schools"> | "">(
-    classItem.student?.schoolId || ""
-  );
-  const [editLocationId, setEditLocationId] = useState<Id<"locations"> | "">(
-    classItem.locationId || ""
-  );
-
-  // Query locations for selected school in edit form
-  const editLocations = useQuery(
-    api.locations.list,
-    editSchoolId ? { schoolId: editSchoolId as Id<"schools">, activeOnly: true } : "skip"
-  );
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -738,43 +1084,6 @@ function ClassItemDisplay({
       rejected: t("Rejected", "ปฏิเสธแล้ว"),
     };
     return texts[status as keyof typeof texts] || status;
-  };
-
-  const handleEditClass = async () => {
-    try {
-      const updates: {
-        classId: Id<"classes">;
-        userId: Id<"users">;
-        scheduledDate?: number;
-        studentId?: Id<"students">;
-        locationId?: Id<"locations">;
-        status?: "pending" | "acknowledged" | "approved" | "rejected";
-      } = {
-        classId: classItem._id,
-        userId: userId, // Pass the current user's ID for authentication
-      };
-
-      // Only include changed fields
-      const newDate = new Date(editScheduledDate).getTime();
-      if (newDate !== classItem.scheduledDate) {
-        updates.scheduledDate = newDate;
-      }
-      if (editStudentId && editStudentId !== classItem.studentId) {
-        updates.studentId = editStudentId as Id<"students">;
-      }
-      if (editLocationId && editLocationId !== classItem.locationId) {
-        updates.locationId = editLocationId as Id<"locations">;
-      }
-      if (editStatus !== classItem.status) {
-        updates.status = editStatus;
-      }
-
-      await updateClassMutation(updates);
-      setShowEditForm(false);
-      alert(t("Class updated successfully", "อัปเดตคลาสสำเร็จแล้ว"));
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to update class");
-    }
   };
 
   // Use joined data from query instead of loading indicator
@@ -866,146 +1175,39 @@ function ClassItemDisplay({
       {/* Admin/Moderator Edit and Delete Buttons */}
       {(userRole === "admin" || userRole === "moderator") && (
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          {!showEditForm ? (
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setShowEditForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:scale-95 transition-all"
-              >
-                <Edit2 className="w-4 h-4" />
-                {t("Edit Class", "แก้ไขคลาส")}
-              </button>
-              <button
-                onClick={() => onDelete(classItem._id)}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all"
-              >
-                <Trash2 className="w-4 h-4" />
-                {t("Delete Class", "ลบคลาส")}
-              </button>
-            </div>
-          ) : (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <h4 className="font-semibold mb-4 flex items-center gap-2">
-                <Edit2 className="w-4 h-4 text-blue-500" />
-                {t("Edit Class Details", "แก้ไขรายละเอียดคลาส")}
-              </h4>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    {t("Student", "นักเรียน")}
-                  </label>
-                  <select
-                    value={editStudentId}
-                    onChange={(e) => setEditStudentId(e.target.value as Id<"students"> | "")}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                  >
-                    <option value="">{t("Select a student", "เลือกนักเรียน")}</option>
-                    {students?.map((student) => (
-                      <option key={student._id} value={student._id}>
-                        {student.firstName} {student.lastName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => onEdit(classItem)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:scale-95 transition-all"
+            >
+              <Edit2 className="w-4 h-4" />
+              {t("Edit Class", "แก้ไขคลาส")}
+            </button>
+            <button
+              onClick={() => onDelete(classItem._id)}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all"
+            >
+              <Trash2 className="w-4 h-4" />
+              {t("Delete Class", "ลบคลาส")}
+            </button>
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    {t("School", "โรงเรียน")}
-                  </label>
-                  <select
-                    value={editSchoolId}
-                    onChange={(e) => {
-                      setEditSchoolId(e.target.value as Id<"schools"> | "");
-                      setEditLocationId(""); // Reset location when school changes
-                    }}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                  >
-                    <option value="">{t("Select a school", "เลือกโรงเรียน")}</option>
-                    {schools?.map((school) => (
-                      <option key={school._id} value={school._id}>
-                        {school.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    {t("Location", "สถานที่")}
-                  </label>
-                  <select
-                    value={editLocationId}
-                    onChange={(e) => setEditLocationId(e.target.value as Id<"locations"> | "")}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                    disabled={!editSchoolId}
-                  >
-                    <option value="">
-                      {editSchoolId
-                        ? t("Select a location", "เลือกสถานที่")
-                        : t("Select a school first", "เลือกโรงเรียนก่อน")
-                      }
-                    </option>
-                    {editLocations?.map((location) => (
-                      <option key={location._id} value={location._id}>
-                        {location.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    {t("Scheduled Date & Time", "วันและเวลาที่กำหนด")}
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={editScheduledDate}
-                    onChange={(e) => setEditScheduledDate(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    {t("Status", "สถานะ")}
-                  </label>
-                  <select
-                    value={editStatus}
-                    onChange={(e) => setEditStatus(e.target.value as "pending" | "acknowledged" | "approved" | "rejected")}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                  >
-                    <option value="pending">{t("Pending", "รอดำเนินการ")}</option>
-                    <option value="acknowledged">{t("Acknowledged", "รับทราบแล้ว")}</option>
-                    <option value="approved">{t("Approved", "อนุมัติแล้ว")}</option>
-                    <option value="rejected">{t("Rejected", "ปฏิเสธแล้ว")}</option>
-                  </select>
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={handleEditClass}
-                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-                  >
-                    {t("Save Changes", "บันทึกการเปลี่ยนแปลง")}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowEditForm(false);
-                      // Reset to original values
-                      setEditStudentId(classItem.studentId);
-                      setEditScheduledDate(new Date(classItem.scheduledDate).toISOString().slice(0, 16));
-                      setEditStatus(classItem.status);
-                      setEditLocationId(classItem.locationId || "");
-                      setEditSchoolId(classItem.student?.schoolId || "");
-                    }}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                  >
-                    {t("Cancel", "ยกเลิก")}
-                  </button>
-                </div>
-              </div>
+          {/* Show "Edited" badge if class has been edited */}
+          {classItem.isEdited && classItem.editHistory && classItem.editHistory.length > 0 && (
+            <div className="mt-3 flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
+              <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded font-medium">
+                <Edit2 className="w-3 h-3" />
+                {t("Edited", "แก้ไขแล้ว")}
+              </span>
+              <span>
+                {t(
+                  `Last edited by ${classItem.editHistory[classItem.editHistory.length - 1].editedByName} on ${new Date(classItem.editHistory[classItem.editHistory.length - 1].editedAt).toLocaleDateString()}`,
+                  `แก้ไขล่าสุดโดย ${classItem.editHistory[classItem.editHistory.length - 1].editedByName} เมื่อ ${new Date(classItem.editHistory[classItem.editHistory.length - 1].editedAt).toLocaleDateString('th-TH')}`
+                )}
+              </span>
             </div>
           )}
+
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
             {t("Teacher will be notified of any changes", "ครูจะได้รับแจ้งเตือนเกี่ยวกับการเปลี่ยนแปลง")}
           </p>

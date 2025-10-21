@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as appUpdates from "../appUpdates.js";
 import type * as bulkOperations from "../bulkOperations.js";
 import type * as cancellationRequests from "../cancellationRequests.js";
 import type * as classes from "../classes.js";
@@ -20,6 +21,8 @@ import type * as locations from "../locations.js";
 import type * as messages from "../messages.js";
 import type * as notifications from "../notifications.js";
 import type * as pagination from "../pagination.js";
+import type * as postClassNotes from "../postClassNotes.js";
+import type * as rateLimit from "../rateLimit.js";
 import type * as schools from "../schools.js";
 import type * as search from "../search.js";
 import type * as simpleAnalytics from "../simpleAnalytics.js";
@@ -43,6 +46,7 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  appUpdates: typeof appUpdates;
   bulkOperations: typeof bulkOperations;
   cancellationRequests: typeof cancellationRequests;
   classes: typeof classes;
@@ -55,6 +59,8 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   notifications: typeof notifications;
   pagination: typeof pagination;
+  postClassNotes: typeof postClassNotes;
+  rateLimit: typeof rateLimit;
   schools: typeof schools;
   search: typeof search;
   simpleAnalytics: typeof simpleAnalytics;

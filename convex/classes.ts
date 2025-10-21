@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
+import { checkRateLimit, validateLength } from "./rateLimit";
 
 // Query to list classes
 export const list = query({
@@ -179,6 +180,24 @@ export const book = mutation({
     bookedByUserId: v.id("users"), // ID of the user creating the booking
   },
   handler: async (ctx, args) => {
+    // ✅ SECURITY: Rate limiting - max 30 class bookings per minute per user
+    await checkRateLimit(ctx, {
+      key: `book-class:${args.bookedByUserId}`,
+      limit: 30,
+      windowMs: 60000, // 1 minute
+    });
+
+    // ✅ SECURITY: Validate pending location names if provided
+    if (args.pendingLocationName) {
+      validateLength(args.pendingLocationName, "Location name", 200, 1);
+    }
+    if (args.pendingLocationNameTh) {
+      validateLength(args.pendingLocationNameTh, "Thai location name", 200, 1);
+    }
+    if (args.guardianTitle) {
+      validateLength(args.guardianTitle, "Guardian title", 100, 1);
+    }
+
     // Validate scheduled date
     if (args.scheduledDate < Date.now()) {
       throw new Error("Cannot schedule a class in the past");
@@ -562,5 +581,248 @@ export const deleteClass = mutation({
     await ctx.db.delete(args.classId);
 
     return { success: true };
+  },
+});
+
+// Mutation to edit a class with full audit trail
+export const editClass = mutation({
+  args: {
+    userId: v.id("users"),
+    classId: v.id("classes"),
+    updates: v.object({
+      studentId: v.optional(v.id("students")),
+      locationId: v.optional(v.id("locations")),
+      scheduledDate: v.optional(v.number()),
+      duration: v.optional(v.number()),
+      subject: v.optional(v.string()),
+      subjectTh: v.optional(v.string()),
+      lessonTopic: v.optional(v.string()),
+      lessonTopicTh: v.optional(v.string()),
+      materials: v.optional(v.string()),
+      materialsTh: v.optional(v.string()),
+      preparationNotes: v.optional(v.string()),
+      preparationNotesTh: v.optional(v.string()),
+      classType: v.optional(v.union(
+        v.literal("regular"),
+        v.literal("makeup"),
+        v.literal("assessment"),
+        v.literal("trial")
+      )),
+    }),
+  },
+  handler: async (ctx, args) => {
+    // 1. Verify user is authenticated
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    // 2. Fetch current class data
+    const classData = await ctx.db.get(args.classId);
+    if (!classData) {
+      throw new Error("Class not found");
+    }
+
+    // 3. Check permissions
+    // Teachers can only edit their own classes
+    // Mods/admins can edit classes in their school
+    const isModerator = user.role === "moderator" || user.role === "admin";
+    const isTeacher = user.role === "teacher" && classData.teacherId === args.userId;
+
+    if (!isModerator && !isTeacher) {
+      if (user.role === "teacher") {
+        throw new Error("You can only edit your own classes");
+      }
+      throw new Error("Unauthorized: You do not have permission to edit this class");
+    }
+
+    // If user is moderator, verify they manage this school
+    if (isModerator && user.role === "moderator") {
+      const school = await ctx.db.get(classData.schoolId);
+      if (school?.moderatorId !== args.userId) {
+        throw new Error("Unauthorized: You can only edit classes in your school");
+      }
+    }
+
+    // 4. Build change log
+    const changes: Array<{ field: string; oldValue: string; newValue: string }> = [];
+
+    // Helper function to format values for logging
+    const formatValue = (field: string, value: unknown): string => {
+      if (value === undefined || value === null) return "Not set";
+      if (field.includes("Date") && typeof value === "number") {
+        return new Date(value).toLocaleString();
+      }
+      return String(value);
+    };
+
+    // Check each field for changes
+    if (args.updates.studentId !== undefined && args.updates.studentId !== classData.studentId) {
+      const oldStudent = await ctx.db.get(classData.studentId);
+      const newStudent = await ctx.db.get(args.updates.studentId);
+      changes.push({
+        field: "student",
+        oldValue: oldStudent ? `${oldStudent.firstName} ${oldStudent.lastName}` : "Unknown",
+        newValue: newStudent ? `${newStudent.firstName} ${newStudent.lastName}` : "Unknown",
+      });
+    }
+
+    if (args.updates.locationId !== undefined && args.updates.locationId !== classData.locationId) {
+      const oldLocation = classData.locationId ? await ctx.db.get(classData.locationId) : null;
+      const newLocation = await ctx.db.get(args.updates.locationId);
+      changes.push({
+        field: "location",
+        oldValue: oldLocation?.name || "Not set",
+        newValue: newLocation?.name || "Not set",
+      });
+    }
+
+    if (args.updates.scheduledDate !== undefined && args.updates.scheduledDate !== classData.scheduledDate) {
+      changes.push({
+        field: "scheduledDate",
+        oldValue: formatValue("scheduledDate", classData.scheduledDate),
+        newValue: formatValue("scheduledDate", args.updates.scheduledDate),
+      });
+    }
+
+    // Log optional field changes
+    const optionalFields = [
+      "duration", "subject", "subjectTh", "lessonTopic", "lessonTopicTh",
+      "materials", "materialsTh", "preparationNotes", "preparationNotesTh", "classType"
+    ] as const;
+
+    for (const field of optionalFields) {
+      if (args.updates[field] !== undefined && args.updates[field] !== classData[field]) {
+        changes.push({
+          field,
+          oldValue: formatValue(field, classData[field]),
+          newValue: formatValue(field, args.updates[field]),
+        });
+      }
+    }
+
+    // If no changes, don't update
+    if (changes.length === 0) {
+      return { success: true, message: "No changes detected" };
+    }
+
+    // 5. Prepare edit history entry
+    const editHistoryEntry = {
+      editedAt: Date.now(),
+      editedBy: args.userId,
+      editedByName: user.username,
+      editedByRole: user.role,
+      changes,
+    };
+
+    // 6. Update class with new data and edit history
+    const existingHistory = classData.editHistory || [];
+    await ctx.db.patch(args.classId, {
+      ...args.updates,
+      isEdited: true,
+      lastEditedAt: Date.now(),
+      lastEditedBy: args.userId,
+      editHistory: [...existingHistory, editHistoryEntry],
+    });
+
+    // 7. Send notification to moderator (if teacher edited)
+    if (user.role === "teacher") {
+      const school = await ctx.db.get(classData.schoolId);
+      if (school?.moderatorId) {
+        const student = await ctx.db.get(classData.studentId);
+        await ctx.db.insert("notifications", {
+          userId: school.moderatorId,
+          title: "Class Edited",
+          titleTh: "แก้ไขคลาสแล้ว",
+          message: `Teacher ${user.username} edited their class with ${student?.firstName} ${student?.lastName}. ${changes.length} change(s) made.`,
+          messageTh: `ครู ${user.username} แก้ไขคลาสของพวกเขากับ ${student?.firstName} ${student?.lastName}. มีการเปลี่ยนแปลง ${changes.length} รายการ`,
+          type: "info",
+          read: false,
+          createdAt: Date.now(),
+        });
+      }
+    }
+
+    // 8. Log the edit action
+    await ctx.db.insert("teacherLogs", {
+      teacherId: classData.teacherId,
+      schoolId: classData.schoolId,
+      action: "class_edited",
+      actionTh: "แก้ไขคลาส",
+      details: `Class edited by ${user.username}. Changes: ${changes.map(c => c.field).join(", ")}`,
+      detailsTh: `แก้ไขคลาสโดย ${user.username}. การเปลี่ยนแปลง: ${changes.map(c => c.field).join(", ")}`,
+      relatedClassId: args.classId,
+      createdAt: Date.now(),
+    });
+
+    return { success: true, changesCount: changes.length };
+  },
+});
+
+// Query to get edit analytics for mods/admins
+export const getEditAnalytics = query({
+  args: {
+    userId: v.id("users"),
+    schoolId: v.id("schools"),
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // Verify user is mod/admin
+    const user = await ctx.db.get(args.userId);
+    if (!user || !["admin", "moderator"].includes(user.role)) {
+      throw new Error("Unauthorized: Only admins and moderators can view edit analytics");
+    }
+
+    // If moderator, verify they manage this school
+    if (user.role === "moderator") {
+      const school = await ctx.db.get(args.schoolId);
+      if (school?.moderatorId !== args.userId) {
+        throw new Error("Unauthorized: You can only view analytics for your school");
+      }
+    }
+
+    // Query edited classes
+    const query = ctx.db
+      .query("classes")
+      .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId))
+      .filter((q) => q.eq(q.field("isEdited"), true));
+
+    const editedClasses = await query.collect();
+
+    // Filter by date range if provided
+    let filteredClasses = editedClasses;
+    if (args.startDate && args.endDate) {
+      filteredClasses = editedClasses.filter(
+        (cls) =>
+          cls.lastEditedAt &&
+          cls.lastEditedAt >= args.startDate! &&
+          cls.lastEditedAt <= args.endDate!
+      );
+    }
+
+    // Batch fetch related entities
+    const studentIds = [...new Set(filteredClasses.map((c) => c.studentId))];
+    const teacherIds = [...new Set(filteredClasses.map((c) => c.teacherId))];
+
+    const students = await Promise.all(studentIds.map((id) => ctx.db.get(id)));
+    const teachers = await Promise.all(teacherIds.map((id) => ctx.db.get(id)));
+
+    const studentMap = new Map(students.map((s) => [s?._id, s]));
+    const teacherMap = new Map(teachers.map((t) => [t?._id, t]));
+
+    // Build analytics data
+    const analytics = filteredClasses.map((cls) => ({
+      classId: cls._id,
+      student: studentMap.get(cls.studentId),
+      teacher: teacherMap.get(cls.teacherId),
+      scheduledDate: cls.scheduledDate,
+      lastEditedAt: cls.lastEditedAt,
+      lastEditedBy: cls.lastEditedBy,
+      editCount: cls.editHistory?.length || 0,
+      editHistory: cls.editHistory || [],
+    }));
+
+    return analytics;
   },
 });

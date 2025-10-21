@@ -5,7 +5,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
-import { Copy, GraduationCap, Mail, Pencil, Phone, Plus, Trash2, User as UserIcon, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, GraduationCap, Mail, Pencil, Phone, Plus, Trash2, User as UserIcon, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 type Student = {
@@ -32,7 +32,6 @@ interface StudentManagementProps {
 export function StudentManagement({ currentUser }: StudentManagementProps) {
     const { t } = useLanguage();
     const schools = useQuery(api.schools.list, {});
-    const guardianUsers = useQuery(api.users.list, {});
     const createStudent = useMutation(api.students.create);
     const updateStudent = useMutation(api.students.update);
     const removeStudent = useMutation(api.students.remove);
@@ -52,6 +51,20 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const [guardianEmail, setGuardianEmail] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+
+    // Optional fields state
+    const [showOptionalFields, setShowOptionalFields] = useState(false);
+    const [nickname, setNickname] = useState("");
+    const [dateOfBirth, setDateOfBirth] = useState("");
+    const [parentName, setParentName] = useState("");
+    const [parentPhone, setParentPhone] = useState("");
+    const [parentEmail, setParentEmail] = useState("");
+    const [secondaryParentName, setSecondaryParentName] = useState("");
+    const [secondaryParentPhone, setSecondaryParentPhone] = useState("");
+    const [allergies, setAllergies] = useState("");
+    const [specialNeeds, setSpecialNeeds] = useState("");
+    const [medicalNotes, setMedicalNotes] = useState("");
+    const [notes, setNotes] = useState("");
 
     // Query students based on filter
     const students = useQuery(
@@ -107,6 +120,18 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     guardianName: guardianName || undefined,
                     guardianPhone: guardianPhone || undefined,
                     guardianEmail: guardianEmail || undefined,
+                    // Optional fields
+                    nickname: nickname || undefined,
+                    dateOfBirth: dateOfBirth ? new Date(dateOfBirth).getTime() : undefined,
+                    parentName: parentName || undefined,
+                    parentPhone: parentPhone || undefined,
+                    parentEmail: parentEmail || undefined,
+                    secondaryParentName: secondaryParentName || undefined,
+                    secondaryParentPhone: secondaryParentPhone || undefined,
+                    allergies: allergies || undefined,
+                    specialNeeds: specialNeeds || undefined,
+                    medicalNotes: medicalNotes || undefined,
+                    notes: notes || undefined,
                 });
                 setSuccess(t("Student updated!", "อัปเดตข้อมูลนักเรียนแล้ว!"));
             } else {
@@ -120,6 +145,18 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     guardianPhone: guardianPhone || undefined,
                     guardianEmail: guardianEmail || undefined,
                     createdBy: currentUser._id,
+                    // Optional fields
+                    nickname: nickname || undefined,
+                    dateOfBirth: dateOfBirth ? new Date(dateOfBirth).getTime() : undefined,
+                    parentName: parentName || undefined,
+                    parentPhone: parentPhone || undefined,
+                    parentEmail: parentEmail || undefined,
+                    secondaryParentName: secondaryParentName || undefined,
+                    secondaryParentPhone: secondaryParentPhone || undefined,
+                    allergies: allergies || undefined,
+                    specialNeeds: specialNeeds || undefined,
+                    medicalNotes: medicalNotes || undefined,
+                    notes: notes || undefined,
                 });
                 setSuccess(t("Student created!", "สร้างข้อมูลนักเรียนแล้ว!"));
             }
@@ -131,7 +168,19 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         }
     };
 
-    const handleEdit = (student: Student) => {
+    const handleEdit = (student: Student & {
+        nickname?: string;
+        dateOfBirth?: number;
+        parentName?: string;
+        parentPhone?: string;
+        parentEmail?: string;
+        secondaryParentName?: string;
+        secondaryParentPhone?: string;
+        allergies?: string;
+        specialNeeds?: string;
+        medicalNotes?: string;
+        notes?: string;
+    }) => {
         setEditingStudent(student._id);
         setFirstName(student.firstName);
         setLastName(student.lastName);
@@ -140,6 +189,20 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         setGuardianName(student.guardianName || "");
         setGuardianPhone(student.guardianPhone || "");
         setGuardianEmail(student.guardianEmail || "");
+
+        // Load optional fields
+        setNickname(student.nickname || "");
+        setDateOfBirth(student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : "");
+        setParentName(student.parentName || "");
+        setParentPhone(student.parentPhone || "");
+        setParentEmail(student.parentEmail || "");
+        setSecondaryParentName(student.secondaryParentName || "");
+        setSecondaryParentPhone(student.secondaryParentPhone || "");
+        setAllergies(student.allergies || "");
+        setSpecialNeeds(student.specialNeeds || "");
+        setMedicalNotes(student.medicalNotes || "");
+        setNotes(student.notes || "");
+
         setShowForm(true);
         setError("");
         setSuccess("");
@@ -195,6 +258,20 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         setGuardianEmail("");
         setShowForm(false);
         setEditingStudent(null);
+
+        // Reset optional fields
+        setShowOptionalFields(false);
+        setNickname("");
+        setDateOfBirth("");
+        setParentName("");
+        setParentPhone("");
+        setParentEmail("");
+        setSecondaryParentName("");
+        setSecondaryParentPhone("");
+        setAllergies("");
+        setSpecialNeeds("");
+        setMedicalNotes("");
+        setNotes("");
     };
 
     const cancelEdit = () => {
@@ -400,6 +477,194 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                         />
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Optional Fields Section */}
+                            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowOptionalFields(!showOptionalFields)}
+                                    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center justify-between transition-colors rounded-lg"
+                                >
+                                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                        {t("Additional Information (Optional)", "ข้อมูลเพิ่มเติม (ไม่บังคับ)")}
+                                    </span>
+                                    {showOptionalFields ? (
+                                        <ChevronUp className="w-5 h-5 text-gray-400" />
+                                    ) : (
+                                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                                    )}
+                                </button>
+
+                                {showOptionalFields && (
+                                    <div className="mt-4 space-y-4">
+                                        {/* Nickname & Date of Birth */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    {t("Nickname", "ชื่อเล่น")}
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={nickname}
+                                                    onChange={(e) => setNickname(e.target.value)}
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                    placeholder={t("e.g., Bee", "เช่น ผึ้ง")}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    {t("Date of Birth", "วันเกิด")}
+                                                </label>
+                                                <input
+                                                    type="date"
+                                                    value={dateOfBirth}
+                                                    onChange={(e) => setDateOfBirth(e.target.value)}
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Primary Parent Contact */}
+                                        <div className="space-y-4 pt-2">
+                                            <h5 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                {t("Primary Parent Contact", "ผู้ปกครองหลัก")}
+                                            </h5>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    {t("Parent Name", "ชื่อผู้ปกครอง")}
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={parentName}
+                                                    onChange={(e) => setParentName(e.target.value)}
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                        {t("Parent Phone", "เบอร์โทรผู้ปกครอง")}
+                                                    </label>
+                                                    <input
+                                                        type="tel"
+                                                        value={parentPhone}
+                                                        onChange={(e) => setParentPhone(e.target.value)}
+                                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                        {t("Parent Email", "อีเมลผู้ปกครอง")}
+                                                    </label>
+                                                    <input
+                                                        type="email"
+                                                        value={parentEmail}
+                                                        onChange={(e) => setParentEmail(e.target.value)}
+                                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Secondary Parent Contact */}
+                                        <div className="space-y-4 pt-2">
+                                            <h5 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                {t("Secondary Parent Contact", "ผู้ปกครองรอง")}
+                                            </h5>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                        {t("Secondary Parent Name", "ชื่อผู้ปกครองรอง")}
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={secondaryParentName}
+                                                        onChange={(e) => setSecondaryParentName(e.target.value)}
+                                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                        {t("Secondary Parent Phone", "เบอร์ผู้ปกครองรอง")}
+                                                    </label>
+                                                    <input
+                                                        type="tel"
+                                                        value={secondaryParentPhone}
+                                                        onChange={(e) => setSecondaryParentPhone(e.target.value)}
+                                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Health & Special Information */}
+                                        <div className="space-y-4 pt-2">
+                                            <h5 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                {t("Health & Special Information", "ข้อมูลสุขภาพและพิเศษ")}
+                                            </h5>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    {t("Allergies", "อาการแพ้")}
+                                                </label>
+                                                <textarea
+                                                    value={allergies}
+                                                    onChange={(e) => setAllergies(e.target.value)}
+                                                    rows={2}
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                    placeholder={t("e.g., Peanuts, shellfish", "เช่น ถั่ว, อาหารทะเล")}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    {t("Special Needs", "ความต้องการพิเศษ")}
+                                                </label>
+                                                <textarea
+                                                    value={specialNeeds}
+                                                    onChange={(e) => setSpecialNeeds(e.target.value)}
+                                                    rows={2}
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                    placeholder={t("e.g., ADHD, dyslexia", "เช่น ADHD, ดิสเลกเซีย")}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    {t("Medical Notes", "หมายเหตุทางการแพทย์")}
+                                                </label>
+                                                <textarea
+                                                    value={medicalNotes}
+                                                    onChange={(e) => setMedicalNotes(e.target.value)}
+                                                    rows={2}
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                    placeholder={t("Any medical conditions or medications", "โรคประจำตัวหรือยาที่ต้องรับประทาน")}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* General Notes */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                {t("Additional Notes", "หมายเหตุเพิ่มเติม")}
+                                            </label>
+                                            <textarea
+                                                value={notes}
+                                                onChange={(e) => setNotes(e.target.value)}
+                                                rows={3}
+                                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                placeholder={t("Any other important information", "ข้อมูลสำคัญอื่นๆ")}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Form Actions */}

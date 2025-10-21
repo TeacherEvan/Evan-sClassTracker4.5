@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query } from "./_generated/server";
+import { checkRateLimit, validateLength } from "./rateLimit";
 
 // Query to list messages for a user (both direct and group messages)
 export const list = query({
@@ -287,6 +288,17 @@ export const sendDirectMessage = mutation({
     contentTh: v.string(),
   },
   handler: async (ctx, args) => {
+    // ✅ SECURITY: Rate limiting - max 20 messages per minute per user
+    await checkRateLimit(ctx, {
+      key: `send-message:${args.senderId}`,
+      limit: 20,
+      windowMs: 60000, // 1 minute
+    });
+
+    // ✅ SECURITY: Input validation
+    validateLength(args.content, "Message content", 5000, 1);
+    validateLength(args.contentTh, "Thai message content", 5000, 1);
+
     if (!args.content.trim() && !args.contentTh.trim()) {
       throw new Error("Message content cannot be empty in both languages");
     }
@@ -369,6 +381,17 @@ export const sendGroupMessage = mutation({
     contentTh: v.string(),
   },
   handler: async (ctx, args) => {
+    // ✅ SECURITY: Rate limiting - max 10 group messages per minute per user
+    await checkRateLimit(ctx, {
+      key: `send-group-message:${args.senderId}`,
+      limit: 10,
+      windowMs: 60000, // 1 minute
+    });
+
+    // ✅ SECURITY: Input validation
+    validateLength(args.content, "Message content", 5000, 1);
+    validateLength(args.contentTh, "Thai message content", 5000, 1);
+
     if (!args.content.trim() && !args.contentTh.trim()) {
       throw new Error("Message content cannot be empty in both languages");
     }

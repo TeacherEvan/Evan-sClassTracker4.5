@@ -143,7 +143,7 @@ npx tsc --noEmit         # Typecheck
 
 ---
 
-## ðŸ“‹ Common Patterns & Examples
+## ðŸ"‹ Common Patterns & Examples
 
 ### Form Submission Pattern
 ```tsx
@@ -158,6 +158,26 @@ const handleSubmit = async (e: React.FormEvent) => {
 };
 ```
 **No loading states needed** - Convex provides optimistic updates.
+
+### Collapsible Optional Fields Pattern
+**For forms with many optional fields, use collapsible sections:**
+```tsx
+const [showOptionalFields, setShowOptionalFields] = useState(false);
+
+// Button to toggle
+<button onClick={() => setShowOptionalFields(!showOptionalFields)}>
+  {showOptionalFields ? <ChevronUp /> : <ChevronDown />}
+  {t("Optional Fields", "à¸Ÿà¸µà¸¥à¸"à¹Œà¹€à¸žà¸´à¹ˆà¸¡à¹€à¸•à¸´à¸¡")}
+</button>
+
+// Collapsible section
+{showOptionalFields && (
+  <div className="space-y-4">
+    {/* Optional fields here */}
+  </div>
+)}
+```
+**See:** `components/student-management.tsx` (11 optional fields), `components/class-booking.tsx` (10 optional fields)
 
 ### Authentication Pattern
 ```tsx
@@ -209,6 +229,120 @@ const data = useQuery(api.exports.exportTeacherLogs, {
 
 ### Class Booking State Machine
 ```
+Teacher books â†' "pending" 
+  â†' Moderator acknowledges â†' "acknowledged" 
+    â†' Moderator approves/rejects â†' "approved"/"rejected"
+```
+
+**Exception:** Guardian-linked classes (`isGuardianLinked: true`) auto-approve, skip moderator notification.
+
+**See:** `convex/classes.ts` for workflow implementation.
+
+### Multi-Date Booking Pattern
+```tsx
+// State for multi-date selection
+const [useMultiDate, setUseMultiDate] = useState(false);
+const [selectedDates, setSelectedDates] = useState<number[]>([]);
+
+// Toggle between single and multi-date mode
+<button onClick={() => {
+  setUseMultiDate(!useMultiDate);
+  if (!useMultiDate) {
+    setSelectedDateTimestamp(null);
+    setShowCalendar(true);
+  } else {
+    setSelectedDates([]);
+  }
+}}>
+  {useMultiDate ? t("← Single Date", "← วันเดียว") : t("+ Multiple Dates", "+ หลายวัน")}
+</button>
+
+// Batch booking for all selected dates
+const bookingPromises = selectedDates.map(timestamp =>
+  bookClass({ /* args */, scheduledDate: timestamp })
+);
+await Promise.all(bookingPromises);
+```
+**See:** `components/class-booking.tsx`, `components/multi-date-calendar.tsx`
+
+### Edit Audit Trail Pattern
+**Track all changes with full edit history:**
+```tsx
+// Schema fields
+isEdited: v.optional(v.boolean()),
+lastEditedAt: v.optional(v.number()),
+lastEditedBy: v.optional(v.id("users")),
+editHistory: v.optional(v.array(v.object({
+  editedAt: v.number(),
+  editedBy: v.id("users"),
+  editedByName: v.string(),
+  editedByRole: v.string(),
+  changes: v.array(v.object({
+    field: v.string(),
+    oldValue: v.string(),
+    newValue: v.string(),
+  })),
+}))),
+
+// Mutation pattern
+const changes = [];
+if (args.updates.studentId !== classData.studentId) {
+  changes.push({
+    field: "student",
+    oldValue: formatValue(classData.studentId),
+    newValue: formatValue(args.updates.studentId),
+  });
+}
+// ... track all changes
+
+await ctx.db.patch(classId, {
+  ...args.updates,
+  isEdited: true,
+  lastEditedAt: Date.now(),
+  lastEditedBy: userId,
+  editHistory: [...existing, { editedAt, editedBy, changes }],
+});
+```
+**See:** `convex/classes.ts` editClass mutation, `components/edit-class-modal.tsx`
+
+### Login Modal Triggers Pattern
+**Automatically show modals on login based on conditions:**
+```tsx
+// State
+const [showPostClassNotes, setShowPostClassNotes] = useState(false);
+const [showUpdateAnnouncement, setShowUpdateAnnouncement] = useState(false);
+
+// Queries
+const classesNeedingFeedback = useQuery(api.postClassNotes.getClassesNeedingFeedback, 
+  user?.role === "teacher" ? { userId: user._id } : "skip"
+);
+const activeUpdate = useQuery(api.appUpdates.getActive);
+const hasViewedUpdate = useQuery(api.appUpdates.hasUserViewed, 
+  user && activeUpdate ? { userId: user._id, updateId: activeUpdate._id } : "skip"
+);
+
+// Auto-trigger after login
+useEffect(() => {
+  if (user?.role === "teacher" && classesNeedingFeedback?.length > 0 && !showPasswordChange) {
+    const timer = setTimeout(() => setShowPostClassNotes(true), 1000);
+    return () => clearTimeout(timer);
+  }
+}, [user, classesNeedingFeedback, showPasswordChange]);
+
+// Render modals
+{showPostClassNotes && (
+  <Suspense fallback={null}>
+    <PostClassNotesModal 
+      classes={classesNeedingFeedback} 
+      onComplete={() => setShowPostClassNotes(false)}
+    />
+  </Suspense>
+)}
+```
+**See:** `app/page.tsx` modal integration, `components/post-class-notes-modal.tsx`, `components/update-announcement-modal.tsx`
+
+---
+```
 Teacher books â†’ "pending" 
   â†’ Moderator acknowledges â†’ "acknowledged" 
     â†’ Moderator approves/rejects â†’ "approved"/"rejected"
@@ -238,10 +372,17 @@ Teacher books â†’ "pending"
 | `convex/schema.ts` | Database schema, indexes (source of truth) |
 | `app/layout.tsx` | Provider hierarchy (critical order) |
 | `lib/language-context.tsx` | Bilingual helper (`t()` function) |
-| `convex/classes.ts` | State machine, workflow, compound queries |
+| `convex/classes.ts` | State machine, workflow, edit audit trail |
 | `convex/students.ts` | Unique ID generation pattern |
+| `convex/postClassNotes.ts` | Post-class feedback system |
+| `convex/appUpdates.ts` | Update announcement system |
 | `components/notification-form.tsx` | Standard form pattern |
-| `components/class-booking.tsx` | Inline creation, guardian logic |
+| `components/class-booking.tsx` | Multi-date booking, optional fields, inline creation |
+| `components/edit-class-modal.tsx` | Full edit modal with audit trail |
+| `components/student-management.tsx` | Collapsible optional fields (11 fields) |
+| `components/post-class-notes-modal.tsx` | Multi-class wizard pattern |
+| `components/update-announcement-modal.tsx` | One-time view tracking pattern |
+| `components/multi-date-calendar.tsx` | Multi-date selection component |
 | `PERFORMANCE_AUDIT.md` | N+1 fixes, bottlenecks |
 | `DEPLOYMENT.md` | Production deployment guide |
 | `ARCHITECTURE.md` | System diagrams, data flows |
@@ -255,6 +396,9 @@ Teacher books â†’ "pending"
 - Create inline entity creation flows (see `class-booking.tsx`)
 - Fix N+1 queries using batch fetch pattern
 - Add soft delete logic to tables
+- Add collapsible optional fields sections (see `student-management.tsx`)
+- Implement edit audit trails (see `classes.editClass` mutation)
+- Add login-triggered modals (see `app/page.tsx`)
 
 ## âš ï¸ Risky Changes (Ask First)
 

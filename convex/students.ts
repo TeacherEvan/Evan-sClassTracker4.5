@@ -77,6 +77,18 @@ export const create = mutation({
     guardianPhone: v.optional(v.string()),
     guardianEmail: v.optional(v.string()),
     createdBy: v.id("users"), // Teacher who created the student
+    // Optional fields
+    nickname: v.optional(v.string()),
+    dateOfBirth: v.optional(v.number()), // Timestamp
+    parentName: v.optional(v.string()),
+    parentPhone: v.optional(v.string()),
+    parentEmail: v.optional(v.string()),
+    secondaryParentName: v.optional(v.string()),
+    secondaryParentPhone: v.optional(v.string()),
+    allergies: v.optional(v.string()),
+    specialNeeds: v.optional(v.string()),
+    medicalNotes: v.optional(v.string()),
+    notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Generate unique student ID
@@ -120,6 +132,18 @@ export const create = mutation({
       acknowledged: args.guardianId ? false : true, // Needs guardian acknowledgement if linked
       createdBy: args.createdBy,
       createdAt: Date.now(),
+      // Optional fields
+      nickname: args.nickname,
+      dateOfBirth: args.dateOfBirth,
+      parentName: args.parentName,
+      parentPhone: args.parentPhone,
+      parentEmail: args.parentEmail,
+      secondaryParentName: args.secondaryParentName,
+      secondaryParentPhone: args.secondaryParentPhone,
+      allergies: args.allergies,
+      specialNeeds: args.specialNeeds,
+      medicalNotes: args.medicalNotes,
+      notes: args.notes,
     });
 
     // If guardian is linked, create notification for guardian
@@ -153,6 +177,18 @@ export const update = mutation({
     guardianName: v.optional(v.string()),
     guardianPhone: v.optional(v.string()),
     guardianEmail: v.optional(v.string()),
+    // Optional fields
+    nickname: v.optional(v.string()),
+    dateOfBirth: v.optional(v.number()), // Timestamp
+    parentName: v.optional(v.string()),
+    parentPhone: v.optional(v.string()),
+    parentEmail: v.optional(v.string()),
+    secondaryParentName: v.optional(v.string()),
+    secondaryParentPhone: v.optional(v.string()),
+    allergies: v.optional(v.string()),
+    specialNeeds: v.optional(v.string()),
+    medicalNotes: v.optional(v.string()),
+    notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
