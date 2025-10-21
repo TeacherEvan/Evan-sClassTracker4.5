@@ -177,19 +177,12 @@ export const create = mutation({
 // Mutation to acknowledge a teacher log (Admin/Moderator only)
 export const acknowledgeLog = mutation({
     args: {
+        userId: v.id("users"), // ID of the admin/moderator acknowledging the log
         logId: v.id("teacherLogs"),
     },
     handler: async (ctx, args) => {
         // Get current user
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            throw new Error("Unauthorized");
-        }
-
-        const user = await ctx.db
-            .query("users")
-            .withIndex("by_username", (q) => q.eq("username", identity.subject))
-            .first();
+        const user = await ctx.db.get(args.userId);
 
         if (!user) {
             throw new Error("User not found");
@@ -237,19 +230,12 @@ export const acknowledgeLog = mutation({
 // Query to list pending logs (unacknowledged) for admins/moderators
 export const listPendingLogs = query({
     args: {
+        userId: v.id("users"), // ID of the admin/moderator requesting the list
         schoolId: v.optional(v.id("schools")),
     },
     handler: async (ctx, args) => {
         // Get current user
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            return [];
-        }
-
-        const user = await ctx.db
-            .query("users")
-            .withIndex("by_username", (q) => q.eq("username", identity.subject))
-            .first();
+        const user = await ctx.db.get(args.userId);
 
         if (!user || (user.role !== "admin" && user.role !== "moderator")) {
             return [];

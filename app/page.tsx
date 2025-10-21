@@ -540,7 +540,7 @@ export default function Home() {
       {activeTab === "notifications" && (
         <>
           {user.role === "admin" && <NotificationForm />}
-          <NotificationList currentUser={user} />
+          <NotificationList userId={user._id} currentUser={user} />
         </>
       )}
 

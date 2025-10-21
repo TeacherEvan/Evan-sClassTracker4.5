@@ -31,7 +31,7 @@ export default function TeacherLogsManager({ currentUser }: TeacherLogsManagerPr
     const pendingLogs = useQuery(
         api.teacherLogs.listPendingLogs,
         currentUser.role === "admin" || currentUser.role === "moderator"
-            ? { schoolId: currentUser.schoolId }
+            ? { userId: currentUser._id, schoolId: currentUser.schoolId }
             : "skip"
     );
 
@@ -49,6 +49,7 @@ export default function TeacherLogsManager({ currentUser }: TeacherLogsManagerPr
     const exportLogs = useQuery(
         api.exports.exportTeacherLogs,
         {
+            userId: currentUser._id,
             teacherId: selectedTeacherId || (currentUser.role === "teacher" ? currentUser._id : undefined),
             startDate: startDate ? new Date(startDate).getTime() : undefined,
             endDate: endDate ? new Date(endDate).getTime() : undefined,
@@ -57,7 +58,7 @@ export default function TeacherLogsManager({ currentUser }: TeacherLogsManagerPr
 
     const handleAcknowledge = async (logId: Id<"teacherLogs">) => {
         try {
-            await acknowledgeLog({ logId });
+            await acknowledgeLog({ userId: currentUser._id, logId });
         } catch (error) {
             console.error("Error acknowledging log:", error);
             alert(t("Failed to acknowledge log", "ไม่สามารถยืนยันบันทึกได้"));

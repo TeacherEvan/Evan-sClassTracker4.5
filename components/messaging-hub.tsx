@@ -141,7 +141,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
     }
 
     try {
-      await deleteMessage({ id: messageId });
+      await deleteMessage({ userId: currentUser._id, id: messageId });
     } catch (error) {
       console.error("Failed to delete message:", error);
       alert(t("Failed to delete message", "ลบข้อความล้มเหลว"));

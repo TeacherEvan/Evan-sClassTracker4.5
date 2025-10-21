@@ -108,11 +108,13 @@ export function NotificationList({ userId, currentUser }: { userId?: string; cur
   };
 
   const handleDelete = (id: Id<"notifications">) => {
+    if (!userId) return; // Guard against undefined userId
+    
     if (window.confirm(t(
       "Are you sure you want to permanently delete this notification?",
       "คุณแน่ใจหรือไม่ว่าต้องการลบการแจ้งเตือนนี้อย่างถาวร?"
     ))) {
-      deleteNotification({ id });
+      deleteNotification({ userId: userId as Id<"users">, id });
     }
   };
 

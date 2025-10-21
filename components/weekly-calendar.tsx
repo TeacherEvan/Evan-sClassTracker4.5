@@ -120,7 +120,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
         setShowAddDialog(true);
         setError("");
 
-        // Pre-fill school if moderator
+        // Pre-fill school if moderator (admins can select any school)
         if (currentUser?.role === "moderator" && currentUser.schoolId) {
             setSchoolId(currentUser.schoolId);
         }

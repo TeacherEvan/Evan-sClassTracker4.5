@@ -167,6 +167,7 @@ export const exportAnalytics = query({
 // Export teacher logs as CSV-ready format
 export const exportTeacherLogs = query({
     args: {
+        userId: v.id("users"), // ID of the user requesting the export
         teacherId: v.optional(v.id("users")),
         schoolId: v.optional(v.id("schools")),
         startDate: v.optional(v.number()),
@@ -174,15 +175,7 @@ export const exportTeacherLogs = query({
     },
     handler: async (ctx, args) => {
         // Get current user
-        const identity = await ctx.auth.getUserIdentity();
-        if (!identity) {
-            throw new Error("Unauthorized");
-        }
-
-        const user = await ctx.db
-            .query("users")
-            .withIndex("by_username", (q) => q.eq("username", identity.subject))
-            .first();
+        const user = await ctx.db.get(args.userId);
 
         if (!user) {
             throw new Error("User not found");

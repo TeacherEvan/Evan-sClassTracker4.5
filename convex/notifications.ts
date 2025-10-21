@@ -7,17 +7,16 @@ export const list = query({
     userId: v.optional(v.union(v.string(), v.id("users"))),
   },
   handler: async (ctx, args) => {
-    const notifications = args.userId
-      ? await ctx.db
-        .query("notifications")
-        .withIndex("by_user", (q) => q.eq("userId", args.userId))
-        .order("desc")
-        .collect()
-      : await ctx.db
-        .query("notifications")
-        .withIndex("by_created_at")
-        .order("desc")
-        .collect();
+    // IMPORTANT: Always require userId to prevent leaking all notifications
+    if (!args.userId) {
+      return [];
+    }
+    
+    const notifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
+      .collect();
 
     return notifications;
   },
@@ -29,16 +28,16 @@ export const unreadCount = query({
     userId: v.optional(v.union(v.string(), v.id("users"))),
   },
   handler: async (ctx, args) => {
-    const notifications = args.userId
-      ? await ctx.db
-        .query("notifications")
-        .withIndex("by_user", (q) => q.eq("userId", args.userId))
-        .filter((q) => q.eq(q.field("read"), false))
-        .collect()
-      : await ctx.db
-        .query("notifications")
-        .withIndex("by_read", (q) => q.eq("read", false))
-        .collect();
+    // IMPORTANT: Always require userId to prevent leaking notification counts
+    if (!args.userId) {
+      return 0;
+    }
+    
+    const notifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .filter((q) => q.eq(q.field("read"), false))
+      .collect();
 
     return notifications.length;
   },
@@ -131,20 +130,12 @@ export const remove = mutation({
 // Mutation to delete a notification (admin only)
 export const deleteNotification = mutation({
   args: {
+    userId: v.id("users"), // ID of the admin performing the deletion
     id: v.id("notifications"),
   },
   handler: async (ctx, args) => {
-    // Check authentication
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
     // Get user and verify admin role
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", identity.subject))
-      .first();
+    const user = await ctx.db.get(args.userId);
 
     if (!user || user.role !== "admin") {
       throw new Error("Unauthorized: Only admins can delete notifications");

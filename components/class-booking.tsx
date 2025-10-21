@@ -6,10 +6,10 @@ import { useDataContext } from "@/lib/data-context";
 import { useLanguage } from "@/lib/language-context";
 import type { UserRole } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
-import { Calendar, Check, MapPin, X, Edit2, Trash2 } from "lucide-react";
+import { Calendar, Check, Edit2, MapPin, Trash2, X } from "lucide-react";
 import { useState } from "react";
-import { MonthCalendarPicker } from "./month-calendar-picker";
 import LocationProposalForm from "./location-proposal-form";
+import { MonthCalendarPicker } from "./month-calendar-picker";
 
 interface ClassBookingProps {
   userId: Id<"users">;
@@ -146,7 +146,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
 
   const handleAcknowledge = async (classId: Id<"classes">) => {
     try {
-      await acknowledgeClass({ classId });
+      await acknowledgeClass({ userId, classId });
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to acknowledge class");
     }
@@ -154,7 +154,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
 
   const handleApprove = async (classId: Id<"classes">) => {
     try {
-      await approveClass({ classId });
+      await approveClass({ userId, classId });
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to approve class");
     }
@@ -165,7 +165,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
     if (!reason) return;
 
     try {
-      await rejectClass({ classId, reason, reasonTh: reason });
+      await rejectClass({ userId, classId, reason, reasonTh: reason });
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to reject class");
     }
@@ -180,7 +180,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
     }
 
     try {
-      await deleteClass({ classId });
+      await deleteClass({ classId, userId });
       alert(t("Class deleted successfully", "ลบคลาสสำเร็จแล้ว"));
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to delete class");
@@ -623,6 +623,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
             <ClassItemDisplay
               key={classItem._id}
               classItem={classItem}
+              userId={userId}
               userRole={userRole}
               onAcknowledge={handleAcknowledge}
               onApprove={handleApprove}
@@ -659,6 +660,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
 // Separate component to display individual class items with related data
 function ClassItemDisplay({
   classItem,
+  userId,
   userRole,
   onAcknowledge,
   onApprove,
@@ -677,6 +679,7 @@ function ClassItemDisplay({
     student: Doc<"students"> | null; // Full student object from joined query
     location: Doc<"locations"> | null; // Full location object from joined query
   };
+  userId: Id<"users">;
   userRole: UserRole;
   onAcknowledge: (id: Id<"classes">) => void;
   onApprove: (id: Id<"classes">) => void;
@@ -688,7 +691,7 @@ function ClassItemDisplay({
   const { schools } = useDataContext();
   const students = useQuery(api.students.list, {});
   const updateClassMutation = useMutation(api.classes.updateClass);
-  
+
   const hasPendingRequest = useQuery(api.cancellationRequests.hasPendingRequest, {
     classId: classItem._id,
   });
@@ -696,7 +699,7 @@ function ClassItemDisplay({
   const [showCancelForm, setShowCancelForm] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelReasonTh, setCancelReasonTh] = useState("");
-  
+
   // Edit form state
   const [showEditForm, setShowEditForm] = useState(false);
   const [editStudentId, setEditStudentId] = useState<Id<"students"> | "">(classItem.studentId);
@@ -710,7 +713,7 @@ function ClassItemDisplay({
   const [editLocationId, setEditLocationId] = useState<Id<"locations"> | "">(
     classItem.locationId || ""
   );
-  
+
   // Query locations for selected school in edit form
   const editLocations = useQuery(
     api.locations.list,
@@ -741,12 +744,14 @@ function ClassItemDisplay({
     try {
       const updates: {
         classId: Id<"classes">;
+        userId: Id<"users">;
         scheduledDate?: number;
         studentId?: Id<"students">;
         locationId?: Id<"locations">;
         status?: "pending" | "acknowledged" | "approved" | "rejected";
       } = {
         classId: classItem._id,
+        userId: userId, // Pass the current user's ID for authentication
       };
 
       // Only include changed fields
@@ -813,7 +818,7 @@ function ClassItemDisplay({
         </span>
       </div>
 
-      {userRole === "moderator" && classItem.status === "pending" && (
+      {(userRole === "moderator" || userRole === "admin") && classItem.status === "pending" && (
         <div className="flex flex-col md:flex-row gap-2 mt-4">
           <button
             onClick={() => onAcknowledge(classItem._id)}
@@ -839,7 +844,7 @@ function ClassItemDisplay({
         </div>
       )}
 
-      {userRole === "moderator" && classItem.status === "acknowledged" && (
+      {(userRole === "moderator" || userRole === "admin") && classItem.status === "acknowledged" && (
         <div className="flex flex-col md:flex-row gap-2 mt-4">
           <button
             onClick={() => onApprove(classItem._id)}
@@ -902,7 +907,7 @@ function ClassItemDisplay({
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     {t("School", "โรงเรียน")}
@@ -923,7 +928,7 @@ function ClassItemDisplay({
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     {t("Location", "สถานที่")}
@@ -947,7 +952,7 @@ function ClassItemDisplay({
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     {t("Scheduled Date & Time", "วันและเวลาที่กำหนด")}
@@ -959,7 +964,7 @@ function ClassItemDisplay({
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     {t("Status", "สถานะ")}
@@ -975,7 +980,7 @@ function ClassItemDisplay({
                     <option value="rejected">{t("Rejected", "ปฏิเสธแล้ว")}</option>
                   </select>
                 </div>
-                
+
                 <div className="flex gap-2 pt-2">
                   <button
                     onClick={handleEditClass}

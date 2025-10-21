@@ -4,7 +4,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { useMutation, useQuery } from "convex/react";
-import { MapPin, Pencil, Plus, ToggleLeft, ToggleRight, Trash2, CheckCircle, XCircle, Clock } from "lucide-react";
+import { CheckCircle, Clock, MapPin, Pencil, Plus, ToggleLeft, ToggleRight, Trash2, XCircle } from "lucide-react";
 import { useState } from "react";
 
 interface LocationManagementProps {
@@ -32,7 +32,10 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
     const rejectProposal = useMutation(api.locationProposals.rejectProposal);
 
     // Query pending proposals
-    const pendingProposals = useQuery(api.locationProposals.listPendingProposals);
+    const pendingProposals = useQuery(
+        api.locationProposals.listPendingProposals,
+        { userId }
+    );
 
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<Id<"locations"> | null>(null);
@@ -192,7 +195,7 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
                                         <button
                                             onClick={async () => {
                                                 if (confirm(t("Approve this location proposal?", "อนุมัติสถานที่นี้?"))) {
-                                                    await approveProposal({ locationId: proposal._id });
+                                                    await approveProposal({ userId, locationId: proposal._id });
                                                 }
                                             }}
                                             className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
@@ -206,6 +209,7 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
                                                 const reasonTh = prompt(t("Rejection reason (Thai):", "เหตุผลการปฏิเสธ (ไทย):"));
                                                 if (reason && reasonTh) {
                                                     rejectProposal({
+                                                        userId,
                                                         locationId: proposal._id,
                                                         reason,
                                                         reasonTh

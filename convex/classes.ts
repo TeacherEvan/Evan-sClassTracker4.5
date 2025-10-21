@@ -287,12 +287,24 @@ export const book = mutation({
   },
 });
 
-// Mutation to acknowledge a class booking (moderator)
+// Mutation to acknowledge a class booking (moderator/admin)
 export const acknowledge = mutation({
   args: {
+    userId: v.id("users"), // ID of the moderator/admin performing the action
     classId: v.id("classes"),
   },
   handler: async (ctx, args) => {
+    // Get user and verify moderator/admin role
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (!["admin", "moderator"].includes(user.role)) {
+      throw new Error("Unauthorized: Only admins and moderators can acknowledge classes");
+    }
+
     const classData = await ctx.db.get(args.classId);
 
     if (!classData) {
@@ -330,12 +342,24 @@ export const acknowledge = mutation({
   },
 });
 
-// Mutation to approve a class
+// Mutation to approve a class (moderator/admin)
 export const approve = mutation({
   args: {
+    userId: v.id("users"), // ID of the moderator/admin performing the action
     classId: v.id("classes"),
   },
   handler: async (ctx, args) => {
+    // Get user and verify moderator/admin role
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (!["admin", "moderator"].includes(user.role)) {
+      throw new Error("Unauthorized: Only admins and moderators can approve classes");
+    }
+
     const classData = await ctx.db.get(args.classId);
 
     if (!classData) {
@@ -371,14 +395,26 @@ export const approve = mutation({
   },
 });
 
-// Mutation to reject a class
+// Mutation to reject a class (moderator/admin)
 export const reject = mutation({
   args: {
+    userId: v.id("users"), // ID of the moderator/admin performing the action
     classId: v.id("classes"),
     reason: v.optional(v.string()),
     reasonTh: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Get user and verify moderator/admin role
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (!["admin", "moderator"].includes(user.role)) {
+      throw new Error("Unauthorized: Only admins and moderators can reject classes");
+    }
+
     const classData = await ctx.db.get(args.classId);
 
     if (!classData) {
@@ -418,6 +454,7 @@ export const reject = mutation({
 export const updateClass = mutation({
   args: {
     classId: v.id("classes"),
+    userId: v.id("users"), // ID of the user performing the update
     scheduledDate: v.optional(v.number()),
     studentId: v.optional(v.id("students")),
     locationId: v.optional(v.id("locations")),
@@ -429,19 +466,14 @@ export const updateClass = mutation({
     )),
   },
   handler: async (ctx, args) => {
-    // Check authentication
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    // Get user and verify admin/moderator role
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
       throw new Error("Not authenticated");
     }
 
-    // Get user and verify admin/moderator role
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", identity.subject))
-      .first();
-
-    if (!user || !["admin", "moderator"].includes(user.role)) {
+    if (!["admin", "moderator"].includes(user.role)) {
       throw new Error("Unauthorized: Only admins and moderators can edit classes");
     }
 
@@ -490,21 +522,17 @@ export const updateClass = mutation({
 export const deleteClass = mutation({
   args: {
     classId: v.id("classes"),
+    userId: v.id("users"), // ID of the user performing the deletion
   },
   handler: async (ctx, args) => {
-    // Check authentication
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    // Get user and verify admin/moderator role
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
       throw new Error("Not authenticated");
     }
 
-    // Get user and verify admin/moderator role
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", identity.subject))
-      .first();
-
-    if (!user || !["admin", "moderator"].includes(user.role)) {
+    if (!["admin", "moderator"].includes(user.role)) {
       throw new Error("Unauthorized: Only admins and moderators can delete classes");
     }
 

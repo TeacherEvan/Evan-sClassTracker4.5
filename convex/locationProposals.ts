@@ -4,23 +4,15 @@ import { mutation, query } from "./_generated/server";
 // Teacher proposes a new location
 export const proposeLocation = mutation({
   args: {
+    userId: v.id("users"), // ID of the teacher proposing the location
     name: v.string(),
     nameTh: v.string(),
     schoolId: v.id("schools"),
     type: v.union(v.literal("school"), v.literal("guardian")),
   },
   handler: async (ctx, args) => {
-    // Check authentication
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
     // Get user and verify teacher role
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", identity.subject))
-      .first();
+    const user = await ctx.db.get(args.userId);
 
     if (!user) {
       throw new Error("User not found");
@@ -78,19 +70,12 @@ export const proposeLocation = mutation({
 
 // Query to list pending location proposals (for moderators)
 export const listPendingProposals = query({
-  args: {},
-  handler: async (ctx) => {
-    // Check authentication
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
+  args: {
+    userId: v.id("users"), // ID of the user requesting the list
+  },
+  handler: async (ctx, args) => {
     // Get user and verify moderator/admin role
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", identity.subject))
-      .first();
+    const user = await ctx.db.get(args.userId);
 
     if (!user || !["moderator", "admin"].includes(user.role)) {
       return [];
@@ -122,7 +107,7 @@ export const listPendingProposals = query({
     );
 
     // Sort by proposal date (newest first)
-    return enrichedProposals.sort((a, b) => 
+    return enrichedProposals.sort((a, b) =>
       (b.proposalDate || 0) - (a.proposalDate || 0)
     );
   },
@@ -131,20 +116,12 @@ export const listPendingProposals = query({
 // Moderator approves a location proposal
 export const approveProposal = mutation({
   args: {
+    userId: v.id("users"), // ID of the moderator/admin approving the proposal
     locationId: v.id("locations"),
   },
   handler: async (ctx, args) => {
-    // Check authentication
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
     // Get user and verify moderator/admin role
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", identity.subject))
-      .first();
+    const user = await ctx.db.get(args.userId);
 
     if (!user || !["moderator", "admin"].includes(user.role)) {
       throw new Error("Unauthorized: Only moderators and admins can approve proposals");
@@ -186,22 +163,14 @@ export const approveProposal = mutation({
 // Moderator rejects a location proposal
 export const rejectProposal = mutation({
   args: {
+    userId: v.id("users"), // ID of the moderator/admin rejecting the proposal
     locationId: v.id("locations"),
     reason: v.string(),
     reasonTh: v.string(),
   },
   handler: async (ctx, args) => {
-    // Check authentication
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
     // Get user and verify moderator/admin role
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", identity.subject))
-      .first();
+    const user = await ctx.db.get(args.userId);
 
     if (!user || !["moderator", "admin"].includes(user.role)) {
       throw new Error("Unauthorized: Only moderators and admins can reject proposals");
@@ -247,19 +216,12 @@ export const rejectProposal = mutation({
 
 // Query to get teacher's own proposed locations
 export const myProposals = query({
-  args: {},
-  handler: async (ctx) => {
-    // Check authentication
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return [];
-    }
-
+  args: {
+    userId: v.id("users"), // ID of the teacher requesting their proposals
+  },
+  handler: async (ctx, args) => {
     // Get user
-    const user = await ctx.db
-      .query("users")
-      .withIndex("by_username", (q) => q.eq("username", identity.subject))
-      .first();
+    const user = await ctx.db.get(args.userId);
 
     if (!user) {
       return [];
@@ -287,7 +249,7 @@ export const myProposals = query({
     );
 
     // Sort by proposal date (newest first)
-    return enrichedProposals.sort((a, b) => 
+    return enrichedProposals.sort((a, b) =>
       (b.proposalDate || 0) - (a.proposalDate || 0)
     );
   },

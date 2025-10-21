@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
-import { X, MapPin, CheckCircle, XCircle, Clock } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import { CheckCircle, Clock, MapPin, X, XCircle } from "lucide-react";
+import { useState } from "react";
 
 interface LocationProposalFormProps {
   userId: Id<"users">;
@@ -27,7 +27,7 @@ export default function LocationProposalForm({
 
   const schools = useQuery(api.schools.list);
   const proposeLocation = useMutation(api.locationProposals.proposeLocation);
-  const myProposals = useQuery(api.locationProposals.myProposals);
+  const myProposals = useQuery(api.locationProposals.myProposals, { userId });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +46,7 @@ export default function LocationProposalForm({
       }
 
       await proposeLocation({
+        userId,
         name: name.trim(),
         nameTh: nameTh.trim(),
         schoolId: schoolId as Id<"schools">,
