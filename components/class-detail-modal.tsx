@@ -1,11 +1,15 @@
 "use client";
 
+import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import { toast } from "@/lib/toast";
 import type { UserRole } from "@/lib/types";
+import { useMutation } from "convex/react";
 import {
     BookOpen,
     Calendar,
+    Check,
     ClipboardList,
     Clock,
     Edit2,
@@ -89,6 +93,53 @@ export function ClassDetailModal({
     const { t, language } = useLanguage();
     const [showEditModal, setShowEditModal] = useState(false);
     const [showMergeModal, setShowMergeModal] = useState(false);
+
+    // Mutations for class actions
+    const acknowledgeClass = useMutation(api.classes.acknowledge);
+    const approveClass = useMutation(api.classes.approve);
+    const rejectClass = useMutation(api.classes.reject);
+
+    const handleAcknowledge = async () => {
+        try {
+            await acknowledgeClass({ userId: currentUserId, classId: classData._id });
+            toast.success("Class acknowledged successfully", "รับทราบคลาสสำเร็จ");
+            onClose(); // Close modal after action
+        } catch (err) {
+            toast.error(
+                err instanceof Error ? err.message : "Failed to acknowledge class",
+                err instanceof Error ? err.message : "ไม่สามารถรับทราบคลาสได้"
+            );
+        }
+    };
+
+    const handleApprove = async () => {
+        try {
+            await approveClass({ userId: currentUserId, classId: classData._id });
+            toast.success("Class approved successfully", "อนุมัติคลาสสำเร็จ");
+            onClose(); // Close modal after action
+        } catch (err) {
+            toast.error(
+                err instanceof Error ? err.message : "Failed to approve class",
+                err instanceof Error ? err.message : "ไม่สามารถอนุมัติคลาสได้"
+            );
+        }
+    };
+
+    const handleReject = async () => {
+        const reason = prompt(t("Reason for rejection:", "เหตุผลในการปฏิเสธ:"));
+        if (!reason) return;
+
+        try {
+            await rejectClass({ userId: currentUserId, classId: classData._id, reason, reasonTh: reason });
+            toast.success("Class rejected successfully", "ปฏิเสธคลาสสำเร็จ");
+            onClose(); // Close modal after action
+        } catch (err) {
+            toast.error(
+                err instanceof Error ? err.message : "Failed to reject class",
+                err instanceof Error ? err.message : "ไม่สามารถปฏิเสธคลาสได้"
+            );
+        }
+    };
 
     const getStatusBadge = (status: string) => {
         const badges = {
@@ -397,6 +448,64 @@ export function ClassDetailModal({
 
                     {/* Footer Actions */}
                     <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6">
+                        {/* Moderator/Admin Action Buttons for Pending Classes */}
+                        {(currentUserRole === "moderator" || currentUserRole === "admin") && classData.status === "pending" && (
+                            <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                    {t("Class Actions:", "การจัดการคลาส:")}
+                                </p>
+                                <div className="flex flex-wrap gap-3">
+                                    <button
+                                        onClick={handleAcknowledge}
+                                        className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:scale-95 transition-all font-medium"
+                                    >
+                                        <Check className="w-5 h-5" />
+                                        {t("Acknowledge", "รับทราบ")}
+                                    </button>
+                                    <button
+                                        onClick={handleApprove}
+                                        className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95 transition-all font-medium"
+                                    >
+                                        <Check className="w-5 h-5" />
+                                        {t("Approve", "อนุมัติ")}
+                                    </button>
+                                    <button
+                                        onClick={handleReject}
+                                        className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
+                                    >
+                                        <X className="w-5 h-5" />
+                                        {t("Reject", "ปฏิเสธ")}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Moderator/Admin Action Buttons for Acknowledged Classes */}
+                        {(currentUserRole === "moderator" || currentUserRole === "admin") && classData.status === "acknowledged" && (
+                            <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                    {t("Class Actions:", "การจัดการคลาส:")}
+                                </p>
+                                <div className="flex flex-wrap gap-3">
+                                    <button
+                                        onClick={handleApprove}
+                                        className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95 transition-all font-medium"
+                                    >
+                                        <Check className="w-5 h-5" />
+                                        {t("Approve", "อนุมัติ")}
+                                    </button>
+                                    <button
+                                        onClick={handleReject}
+                                        className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
+                                    >
+                                        <X className="w-5 h-5" />
+                                        {t("Reject", "ปฏิเสธ")}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Edit and Merge Buttons */}
                         <div className="flex flex-wrap gap-3">
                             <button
                                 onClick={() => setShowEditModal(true)}
