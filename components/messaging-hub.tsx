@@ -270,16 +270,16 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                       setMode("direct");
                     }}
                     className={`w-full text-left p-4 rounded-lg border transition-all hover:shadow-md ${conv.unreadCount > 0
-                        ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700"
-                        : "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600"
+                      ? "bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700"
+                      : "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600"
                       }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <h4 className={`font-semibold truncate ${conv.unreadCount > 0
-                              ? "text-blue-900 dark:text-blue-100"
-                              : "text-gray-900 dark:text-white"
+                            ? "text-blue-900 dark:text-blue-100"
+                            : "text-gray-900 dark:text-white"
                             }`}>
                             {conv.partnerUsername}
                           </h4>
@@ -290,8 +290,8 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                           )}
                         </div>
                         <p className={`text-sm mt-1 truncate ${conv.unreadCount > 0
-                            ? "text-blue-700 dark:text-blue-200 font-medium"
-                            : "text-gray-600 dark:text-gray-300"
+                          ? "text-blue-700 dark:text-blue-200 font-medium"
+                          : "text-gray-600 dark:text-gray-300"
                           }`}>
                           {language === "en" ? conv.lastMessage : conv.lastMessageTh}
                         </p>

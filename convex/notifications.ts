@@ -11,7 +11,7 @@ export const list = query({
     if (!args.userId) {
       return [];
     }
-    
+
     const notifications = await ctx.db
       .query("notifications")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
@@ -32,7 +32,7 @@ export const unreadCount = query({
     if (!args.userId) {
       return 0;
     }
-    
+
     const notifications = await ctx.db
       .query("notifications")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
