@@ -56,6 +56,7 @@ Successfully migrated all blocking browser `alert()` calls to non-intrusive toas
 ## Toast System Integration
 
 ### Import Pattern
+
 ```typescript
 import { toast } from "@/lib/toast";
 ```
@@ -63,11 +64,13 @@ import { toast } from "@/lib/toast";
 ### Usage Patterns
 
 **Success messages:**
+
 ```typescript
 toast.success("Operation succeeded", "การดำเนินการสำเร็จ");
 ```
 
 **Error messages:**
+
 ```typescript
 toast.error(
   err instanceof Error ? err.message : "Operation failed",
@@ -76,11 +79,13 @@ toast.error(
 ```
 
 **Warning messages:**
+
 ```typescript
 toast.warning("Please check input", "กรุณาตรวจสอบข้อมูล");
 ```
 
 **Info messages:**
+
 ```typescript
 toast.info("Processing...", "กำลังดำเนินการ...");
 ```
@@ -88,6 +93,7 @@ toast.info("Processing...", "กำลังดำเนินการ...");
 ### Bilingual Support
 
 All toast notifications maintain full bilingual support (English/Thai):
+
 - First parameter: English message
 - Second parameter: Thai message (ภาษาไทย)
 
@@ -106,6 +112,7 @@ All toast notifications maintain full bilingual support (English/Thai):
 ## Toast vs Alert Comparison
 
 ### Before (alert)
+
 ```typescript
 // ❌ Blocking, no customization, interrupts workflow
 alert(t("Operation successful", "ดำเนินการสำเร็จ"));
@@ -113,6 +120,7 @@ alert(err instanceof Error ? err.message : "Failed");
 ```
 
 ### After (toast)
+
 ```typescript
 // ✅ Non-blocking, styled, dismissible, doesn't interrupt
 toast.success("Operation successful", "ดำเนินการสำเร็จ");
@@ -168,6 +176,7 @@ toast.error(
 ## Verification
 
 ### Build Results
+
 ```
 ✓ Compiled successfully in 37.4s
 ✓ Linting and checking validity of types
@@ -179,6 +188,7 @@ Route (app)               Size    First Load JS
 ```
 
 ### grep Verification
+
 ```bash
 # Confirmed: No alert() calls remain in components
 grep -r "alert(" components/*.tsx
@@ -190,11 +200,13 @@ grep -r "alert(" components/*.tsx
 ## Bundle Analyzer Setup
 
 ### Installation
+
 ```bash
 npm install --save-dev @next/bundle-analyzer
 ```
 
 ### Configuration (next.config.ts)
+
 ```typescript
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: process.env.ANALYZE === "true",
@@ -204,6 +216,7 @@ export default withBundleAnalyzer(nextConfig);
 ```
 
 ### Usage
+
 ```bash
 # PowerShell
 $env:ANALYZE="true"; npm run build
