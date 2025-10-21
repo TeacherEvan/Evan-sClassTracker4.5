@@ -4,6 +4,7 @@ import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useDataContext } from "@/lib/data-context";
 import { useLanguage } from "@/lib/language-context";
+import { toast } from "@/lib/toast";
 import type { UserRole } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
 import { Calendar, Check, ChevronDown, ChevronUp, Edit2, MapPin, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
@@ -184,10 +185,10 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
 
       // Show success message
       if (datesToBook.length > 1) {
-        alert(t(
+        toast.success(
           `Successfully booked ${datesToBook.length} classes!`,
           `จองคลาสสำเร็จแล้ว ${datesToBook.length} คลาส!`
-        ));
+        );
       }
 
       // Reset form
@@ -235,7 +236,10 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
     try {
       await acknowledgeClass({ userId, classId });
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to acknowledge class");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to acknowledge class",
+        err instanceof Error ? err.message : "ไม่สามารถรับทราบคลาสได้"
+      );
     }
   };
 
@@ -243,7 +247,10 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
     try {
       await approveClass({ userId, classId });
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to approve class");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to approve class",
+        err instanceof Error ? err.message : "ไม่สามารถอนุมัติคลาสได้"
+      );
     }
   };
 
@@ -254,7 +261,10 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
     try {
       await rejectClass({ userId, classId, reason, reasonTh: reason });
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to reject class");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to reject class",
+        err instanceof Error ? err.message : "ไม่สามารถปฏิเสธคลาสได้"
+      );
     }
   };
 
@@ -268,9 +278,12 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
 
     try {
       await deleteClass({ classId, userId });
-      alert(t("Class deleted successfully", "ลบคลาสสำเร็จแล้ว"));
+      toast.success("Class deleted successfully", "ลบคลาสสำเร็จแล้ว");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete class");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to delete class",
+        err instanceof Error ? err.message : "ไม่สามารถลบคลาสได้"
+      );
     }
   };
 
@@ -282,9 +295,12 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
         reason,
         reasonTh,
       });
-      alert(t("Cancellation request submitted", "ส่งคำขอยกเลิกแล้ว"));
+      toast.success("Cancellation request submitted", "ส่งคำขอยกเลิกแล้ว");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to submit cancellation request");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to submit cancellation request",
+        err instanceof Error ? err.message : "ไม่สามารถส่งคำขอยกเลิกได้"
+      );
     }
   };
 
@@ -315,7 +331,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
       setNewStudentGrade("");
       setNewStudentSchoolId("");
 
-      alert(t("Student created successfully!", "สร้างข้อมูลนักเรียนสำเร็จ!"));
+      toast.success("Student created successfully!", "สร้างข้อมูลนักเรียนสำเร็จ!");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create student");
     } finally {
@@ -1159,9 +1175,12 @@ function ClassItemDisplay({
       });
       setSelectedStudentToAdd("");
       setShowAddStudent(false);
-      alert(t("Student added successfully!", "เพิ่มนักเรียนสำเร็จ!"));
+      toast.success("Student added successfully!", "เพิ่มนักเรียนสำเร็จ!");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to add student");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to add student",
+        err instanceof Error ? err.message : "ไม่สามารถเพิ่มนักเรียนได้"
+      );
     } finally {
       setAddingStudent(false);
     }
@@ -1177,9 +1196,12 @@ function ClassItemDisplay({
         classId: classItem._id,
         studentId,
       });
-      alert(t("Student removed successfully!", "ลบนักเรียนสำเร็จ!"));
+      toast.success("Student removed successfully!", "ลบนักเรียนสำเร็จ!");
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to remove student");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to remove student",
+        err instanceof Error ? err.message : "ไม่สามารถลบนักเรียนได้"
+      );
     }
   };
 
@@ -1429,7 +1451,10 @@ function ClassItemDisplay({
                   <button
                     onClick={() => {
                       if (!cancelReason.trim() && !cancelReasonTh.trim()) {
-                        alert(t("Please provide reason in at least one language", "กรุณาระบุเหตุผลอย่างน้อยหนึ่งภาษา"));
+                        toast.warning(
+                          "Please provide reason in at least one language",
+                          "กรุณาระบุเหตุผลอย่างน้อยหนึ่งภาษา"
+                        );
                         return;
                       }
                       onRequestCancellation(classItem._id, cancelReason, cancelReasonTh);

@@ -3,6 +3,7 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import { toast } from "@/lib/toast";
 import { useMutation, useQuery } from "convex/react";
 import { RefreshCw, UserPlus } from "lucide-react";
 import { useState } from "react";
@@ -63,14 +64,15 @@ export function UserManagement() {
 
     try {
       await resetPassword({ userId });
-      alert(
-        t(
-          `Password reset! New password: Teacher${username}`,
-          `รีเซ็ตรหัสผ่านแล้ว! รหัสผ่านใหม่: Teacher${username}`
-        )
+      toast.success(
+        `Password reset! New password: Teacher${username}`,
+        `รีเซ็ตรหัสผ่านแล้ว! รหัสผ่านใหม่: Teacher${username}`
       );
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to reset password");
+      toast.error(
+        err instanceof Error ? err.message : "Failed to reset password",
+        err instanceof Error ? err.message : "ไม่สามารถรีเซ็ตรหัสผ่านได้"
+      );
     }
   };
 

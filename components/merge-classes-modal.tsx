@@ -3,6 +3,7 @@
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import { toast } from "@/lib/toast";
 import { useMutation } from "convex/react";
 import { Check, X } from "lucide-react";
 import { useState } from "react";
@@ -86,7 +87,7 @@ export function MergeClassesModal({
                 targetClassId: targetClassId as Id<"classes">,
                 sourceClassIds: selectedSourceIds,
             });
-            alert(t("Classes merged successfully!", "รวมคลาสสำเร็จ!"));
+            toast.success("Classes merged successfully!", "รวมคลาสสำเร็จ!");
             onSuccess();
             onClose();
         } catch (err) {

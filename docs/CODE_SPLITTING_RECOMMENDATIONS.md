@@ -10,7 +10,7 @@
 
 ## Implementation Status
 
-This file documented potential lazy loading opportunities for bundle optimization. 
+This file documented potential lazy loading opportunities for bundle optimization.
 
 **Original statement**: "These are NOT implemented yet but are recommended for future optimization if bundle size becomes a concern."
 
@@ -53,10 +53,12 @@ const UserManagement = lazy(() => import("@/components/user-management"));
 ## Bundle Impact Analysis
 
 ### Current Approach
+
 - All components loaded on initial page load
 - Estimated initial bundle size: ~350KB (uncompressed)
 
 ### With Lazy Loading
+
 - Initial bundle: ~150KB (login, layout, core)
 - Calendar tab: +80KB
 - Classes tab: +70KB
@@ -67,14 +69,17 @@ const UserManagement = lazy(() => import("@/components/user-management"));
 ## Implementation Priority
 
 ### HIGH Priority
+
 - **SchoolManagement** - Admin only, not needed for most users
 - **UserManagement** - Admin only, not needed for most users
 
 ### MEDIUM Priority
+
 - **WeeklyCalendar** - Largest component, but frequently used
 - **ClassBooking** - Frequently used, but could benefit teachers
 
 ### LOW Priority
+
 - **NotificationForm** - Admin only, small size
 - **NotificationList** - Frequently accessed, should load immediately
 
@@ -88,6 +93,7 @@ const UserManagement = lazy(() => import("@/components/user-management"));
 ## When to Implement
 
 Consider implementing lazy loading when:
+
 - Bundle size exceeds 500KB
 - Initial load time exceeds 3 seconds on 3G
 - Component count grows beyond 20

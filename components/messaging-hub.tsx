@@ -3,6 +3,7 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import { toast } from "@/lib/toast";
 import type { User, UserWithSchool } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
 import {
@@ -144,7 +145,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
       await deleteMessage({ userId: currentUser._id, id: messageId });
     } catch (error) {
       console.error("Failed to delete message:", error);
-      alert(t("Failed to delete message", "ลบข้อความล้มเหลว"));
+      toast.error("Failed to delete message", "ลบข้อความล้มเหลว");
     }
   };
 

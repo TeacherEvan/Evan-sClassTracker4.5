@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/lib/language-context";
+import { toast } from "@/lib/toast";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useState } from "react";
 
@@ -79,11 +80,9 @@ export function MultiDateCalendar({
         } else {
             // Add date if not at max
             if (selectedDates.length >= maxSelections) {
-                alert(
-                    t(
-                        `You can only select up to ${maxSelections} dates at once.`,
-                        `คุณสามารถเลือกได้สูงสุด ${maxSelections} วันเท่านั้น`
-                    )
+                toast.warning(
+                    `You can only select up to ${maxSelections} dates at once.`,
+                    `คุณสามารถเลือกได้สูงสุด ${maxSelections} วันเท่านั้น`
                 );
                 return;
             }

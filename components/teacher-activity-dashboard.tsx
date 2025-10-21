@@ -3,6 +3,7 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import { toast } from "@/lib/toast";
 import { useMutation, useQuery } from "convex/react";
 import { Activity, Check, Clock, X } from "lucide-react";
 import { useState } from "react";
@@ -38,7 +39,10 @@ export function TeacherActivityDashboard({
         try {
             await approveCancellation({ requestId, moderatorId });
         } catch (err) {
-            alert(err instanceof Error ? err.message : "Failed to approve cancellation");
+            toast.error(
+                err instanceof Error ? err.message : "Failed to approve cancellation",
+                err instanceof Error ? err.message : "ไม่สามารถอนุมัติการยกเลิกได้"
+            );
         }
     };
 
@@ -57,7 +61,10 @@ export function TeacherActivityDashboard({
         try {
             await rejectCancellation({ requestId, moderatorId });
         } catch (err) {
-            alert(err instanceof Error ? err.message : "Failed to reject cancellation");
+            toast.error(
+                err instanceof Error ? err.message : "Failed to reject cancellation",
+                err instanceof Error ? err.message : "ไม่สามารถปฏิเสธการยกเลิกได้"
+            );
         }
     };
 

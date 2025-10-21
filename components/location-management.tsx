@@ -3,6 +3,7 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import { toast } from "@/lib/toast";
 import { useMutation, useQuery } from "convex/react";
 import { CheckCircle, Clock, MapPin, Pencil, Plus, ToggleLeft, ToggleRight, Trash2, XCircle } from "lucide-react";
 import { useState } from "react";
@@ -96,7 +97,10 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
         try {
             await toggleActive({ id });
         } catch (err) {
-            alert(err instanceof Error ? err.message : "Failed to toggle location");
+            toast.error(
+                err instanceof Error ? err.message : "Failed to toggle location",
+                err instanceof Error ? err.message : "ไม่สามารถเปลี่ยนสถานะสถานที่ได้"
+            );
         }
     };
 
@@ -108,7 +112,10 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
         try {
             await removeLocation({ id });
         } catch (err) {
-            alert(err instanceof Error ? err.message : "Failed to delete location");
+            toast.error(
+                err instanceof Error ? err.message : "Failed to delete location",
+                err instanceof Error ? err.message : "ไม่สามารถลบสถานที่ได้"
+            );
         }
     };
 

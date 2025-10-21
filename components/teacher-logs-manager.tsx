@@ -3,6 +3,7 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import { toast } from "@/lib/toast";
 import type { User } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
 import { CheckCircle, Clock, Download, FileText, Filter } from "lucide-react";
@@ -61,13 +62,13 @@ export default function TeacherLogsManager({ currentUser }: TeacherLogsManagerPr
             await acknowledgeLog({ userId: currentUser._id, logId });
         } catch (error) {
             console.error("Error acknowledging log:", error);
-            alert(t("Failed to acknowledge log", "ไม่สามารถยืนยันบันทึกได้"));
+            toast.error("Failed to acknowledge log", "ไม่สามารถยืนยันบันทึกได้");
         }
     };
 
     const handleDownload = () => {
         if (!exportLogs || exportLogs.length === 0) {
-            alert(t("No logs to download", "ไม่มีบันทึกให้ดาวน์โหลด"));
+            toast.warning("No logs to download", "ไม่มีบันทึกให้ดาวน์โหลด");
             return;
         }
 
