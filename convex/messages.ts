@@ -296,8 +296,9 @@ export const sendDirectMessage = mutation({
     });
 
     // ✅ SECURITY: Input validation
-    validateLength(args.content, "Message content", 5000, 1);
-    validateLength(args.contentTh, "Thai message content", 5000, 1);
+    // Allow empty string for either language, but at least one must have content
+    validateLength(args.content, "Message content", 5000, 0);
+    validateLength(args.contentTh, "Thai message content", 5000, 0);
 
     if (!args.content.trim() && !args.contentTh.trim()) {
       throw new Error("Message content cannot be empty in both languages");
@@ -389,8 +390,9 @@ export const sendGroupMessage = mutation({
     });
 
     // ✅ SECURITY: Input validation
-    validateLength(args.content, "Message content", 5000, 1);
-    validateLength(args.contentTh, "Thai message content", 5000, 1);
+    // Allow empty string for either language, but at least one must have content
+    validateLength(args.content, "Message content", 5000, 0);
+    validateLength(args.contentTh, "Thai message content", 5000, 0);
 
     if (!args.content.trim() && !args.contentTh.trim()) {
       throw new Error("Message content cannot be empty in both languages");

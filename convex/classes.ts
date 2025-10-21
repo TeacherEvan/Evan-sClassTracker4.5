@@ -254,7 +254,7 @@ export const book = mutation({
       validateLength(args.pendingLocationName, "Location name", 200, 1);
     }
     if (args.pendingLocationNameTh) {
-      validateLength(args.pendingLocationNameTh, "Thai location name", 200, 1);
+      validateLength(args.pendingLocationNameTh, "Thai location name", 200, 0);
     }
     if (args.guardianTitle) {
       validateLength(args.guardianTitle, "Guardian title", 100, 1);
@@ -265,9 +265,9 @@ export const book = mutation({
       throw new Error("Cannot schedule a class in the past");
     }
 
-    // Validate location - either locationId or pending location names must be provided
-    if (!args.locationId && (!args.pendingLocationName || !args.pendingLocationNameTh)) {
-      throw new Error("Must provide either a location or pending location names");
+    // Validate location - either locationId or at least one pending location name must be provided
+    if (!args.locationId && !args.pendingLocationName && !args.pendingLocationNameTh) {
+      throw new Error("Must provide either a location or at least one pending location name");
     }
 
     // Verify student exists
