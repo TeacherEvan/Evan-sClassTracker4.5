@@ -234,8 +234,13 @@ export default defineSchema({
     classId: v.id("classes"),
     teacherId: v.id("users"),
     schoolId: v.id("schools"),
+    requestType: v.union(
+      v.literal("cancel"),
+      v.literal("postpone")
+    ),
     reason: v.string(),
     reasonTh: v.string(),
+    newScheduledDate: v.optional(v.number()), // For postponement
     status: v.union(
       v.literal("pending"),
       v.literal("approved"),
@@ -244,12 +249,15 @@ export default defineSchema({
     createdAt: v.number(),
     resolvedAt: v.optional(v.number()),
     resolvedBy: v.optional(v.id("users")), // Moderator who approved/rejected
+    reviewNotes: v.optional(v.string()),
+    reviewNotesTh: v.optional(v.string()),
   })
     .index("by_class", ["classId"])
     .index("by_teacher", ["teacherId"])
     .index("by_school", ["schoolId"])
     .index("by_status", ["status"])
-    .index("by_created_at", ["createdAt"]),
+    .index("by_created_at", ["createdAt"])
+    .index("by_class_and_status", ["classId", "status"]),
 
   teacherLogs: defineTable({
     teacherId: v.id("users"),

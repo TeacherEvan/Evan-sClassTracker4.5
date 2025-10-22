@@ -3,9 +3,11 @@
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import { toast } from "@/lib/toast";
 import { useMutation, useQuery } from "convex/react";
-import { AlertCircle, Calendar, Edit3, MapPin, User, X } from "lucide-react";
+import { AlertCircle, Calendar, ChevronDown, ChevronUp, Edit3, MapPin, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { MultiDateCalendar } from "./multi-date-calendar";
 
 interface EditClassModalProps {
     classData: Doc<"classes">;
@@ -54,6 +56,12 @@ export function EditClassModal({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [showOptional, setShowOptional] = useState(false);
+
+    // State for adding dates feature
+    const [showAddDates, setShowAddDates] = useState(false);
+    const [selectedNewDates, setSelectedNewDates] = useState<number[]>([]);
+    const [selectedTime, setSelectedTime] = useState("09:00");
+    const addDatesToClass = useMutation(api.classes.addDatesToClass);
 
     // Show optional section if any optional fields have values
     useEffect(() => {
@@ -345,6 +353,98 @@ export function EditClassModal({
                             </div>
                         </div>
                     )}
+
+                    {/* Add Additional Dates Section */}
+                    <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+                        <button
+                            type="button"
+                            onClick={() => setShowAddDates(!showAddDates)}
+                            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium mb-4"
+                        >
+                            {showAddDates ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                            {t("Add More Dates to This Class", "เพิ่มวันเรียนเพิ่มเติม")}
+                        </button>
+
+                        {showAddDates && (
+                            <div className="space-y-4 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    {t(
+                                        "Select additional dates to create more classes with the same details (student, location, etc.)",
+                                        "เลือกวันเพิ่มเติมเพื่อสร้างชั้นเรียนเพิ่มเติมที่มีรายละเอียดเหมือนกัน (นักเรียน สถานที่ ฯลฯ)"
+                                    )}
+                                </p>
+
+                                <MultiDateCalendar
+                                    selectedDates={selectedNewDates}
+                                    onDatesChange={setSelectedNewDates}
+                                    minDate={new Date()}
+                                    maxSelections={14}
+                                />
+
+                                {selectedNewDates.length > 0 && (
+                                    <div>
+                                        <label htmlFor="time" className="block text-sm font-medium mb-2">
+                                            {t(
+                                                selectedNewDates.length > 1 ? "Time for all new classes" : "Select Time",
+                                                selectedNewDates.length > 1 ? "เวลาสำหรับทุกคลาสใหม่" : "เลือกเวลา"
+                                            )}
+                                        </label>
+                                        <input
+                                            type="time"
+                                            id="time"
+                                            value={selectedTime}
+                                            onChange={(e) => setSelectedTime(e.target.value)}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                                        />
+                                    </div>
+                                )}
+
+                                {selectedNewDates.length > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            try {
+                                                // Combine dates with selected time
+                                                const datesWithTime = selectedNewDates.map(dateTimestamp => {
+                                                    const date = new Date(dateTimestamp);
+                                                    const [hours, minutes] = selectedTime.split(":");
+                                                    date.setHours(Number.parseInt(hours), Number.parseInt(minutes));
+                                                    return date.getTime();
+                                                });
+
+                                                await addDatesToClass({
+                                                    userId: currentUserId,
+                                                    classId: classData._id,
+                                                    newDates: datesWithTime,
+                                                });
+
+                                                toast.success(
+                                                    `Successfully added ${selectedNewDates.length} date(s)!`,
+                                                    `เพิ่ม ${selectedNewDates.length} วันสำเร็จแล้ว!`
+                                                );
+
+                                                // Reset
+                                                setSelectedNewDates([]);
+                                                setShowAddDates(false);
+                                                onSuccess(); // Refresh parent
+                                            } catch (err) {
+                                                toast.error(
+                                                    err instanceof Error ? err.message : "Failed to add dates",
+                                                    "ไม่สามารถเพิ่มวันได้"
+                                                );
+                                            }
+                                        }}
+                                        className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors"
+                                    >
+                                        {t(
+                                            `Add ${selectedNewDates.length} Date${selectedNewDates.length > 1 ? 's' : ''}`,
+                                            `เพิ่ม ${selectedNewDates.length} วัน`
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
 
                     {/* Footer */}
                     <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">

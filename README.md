@@ -1,19 +1,20 @@
 # Evan's Class Tracker 4.5
 
-Bilingual English/Thai class tracker for teachers and schools - Built with Convex & Vercel
+Bilingual English/Thai class tracker for teachers and schools - Built with Next.js 15, React 19, Convex & Tailwind v4
 
-## ✨ Recent Optimizations (Oct 21, 2025)
+## ✨ Recent Optimizations (Oct 2025)
 
 🚀 **Performance Enhancements:**
 
-- **40-50% faster initial load** - Implemented code splitting with lazy loading
-- **10-100x faster message loading** - Eliminated N+1 database queries
-- **True database-level pagination** - Efficient handling of 10,000+ records
+- **40-50% faster initial load** - Code splitting with lazy loading
+- **10-100x faster queries** - Eliminated N+1 database queries via batch fetching
+- **Native database pagination** - Efficient handling of 10,000+ records with cursors
 - **Rate limiting** - Protection against abuse (20 msgs/min, 30 bookings/min)
 - **Input validation** - Security improvements on all user inputs
-- **Toast notifications** - Modern, non-blocking error/success messages
+- **Toast notifications** - Modern, non-blocking bilingual feedback system
+- **Index-first queries** - Optimized database access patterns
 
-See [OPTIMIZATION_IMPLEMENTATION_SUMMARY.md](OPTIMIZATION_IMPLEMENTATION_SUMMARY.md) for details.
+See [docs/OPTIMIZATION_ANALYSIS_2025.md](docs/OPTIMIZATION_ANALYSIS_2025.md) for details.
 
 ## Features
 

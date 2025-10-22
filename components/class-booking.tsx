@@ -12,7 +12,6 @@ import { useState } from "react";
 import { EditClassModal } from "./edit-class-modal";
 import LocationProposalForm from "./location-proposal-form";
 import { MergeClassesModal } from "./merge-classes-modal";
-import { MonthCalendarPicker } from "./month-calendar-picker";
 import { MultiDateCalendar } from "./multi-date-calendar";
 
 interface ClassBookingProps {
@@ -22,7 +21,7 @@ interface ClassBookingProps {
 }
 
 export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingProps) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { schools } = useDataContext(); // Use shared context instead of individual query
 
   const [showForm, setShowForm] = useState(false);
@@ -65,9 +64,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     userRole === "teacher" ? userId : ""
   );
   const [scheduledDate, setScheduledDate] = useState("");
-  const [selectedDateTimestamp, setSelectedDateTimestamp] = useState<number | null>(null);
-  const [selectedDates, setSelectedDates] = useState<number[]>([]); // Multi-date selection
-  const [useMultiDate, setUseMultiDate] = useState(false); // Toggle multi-date mode
+  const [selectedDates, setSelectedDates] = useState<number[]>([]); // Multi-date selection (supports 1+ dates)
   const [selectedTime, setSelectedTime] = useState("09:00");
   const [showCalendar, setShowCalendar] = useState(false);
   const [pendingLocationName, setPendingLocationName] = useState("");
@@ -123,7 +120,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     schoolId &&
     (locationId || requestingNewLocation) &&
     (requestingNewLocation ? (pendingLocationName.trim() || pendingLocationNameTh.trim()) : true) &&
-    (useMultiDate ? selectedDates.length > 0 : (selectedDateTimestamp || scheduledDate)) &&
+    (selectedDates.length > 0 || scheduledDate) &&
     (isGuardianLocation ? guardianTitle.trim() : true) &&
     // Admin/Moderator must select a teacher
     ((userRole === "admin" || userRole === "moderator") ? selectedTeacherId : true);
@@ -151,31 +148,22 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         throw new Error(t("Please select a teacher", "กรุณาเลือกครูผู้สอน"));
       }
 
-      // Multi-date booking support
+      // Date booking support (supports single or multiple dates)
       const datesToBook: number[] = [];
 
-      if (useMultiDate && selectedDates.length > 0) {
-        // Use selected dates from multi-date calendar
+      if (selectedDates.length > 0) {
+        // Use selected dates from multi-date calendar with selected time
         for (const dateTimestamp of selectedDates) {
           const date = new Date(dateTimestamp);
           const [hours, minutes] = selectedTime.split(":");
           date.setHours(Number.parseInt(hours), Number.parseInt(minutes));
           datesToBook.push(date.getTime());
         }
+      } else if (scheduledDate) {
+        // Fallback to manual datetime-local input
+        datesToBook.push(new Date(scheduledDate).getTime());
       } else {
-        // Single date booking (original behavior)
-        let timestamp: number;
-        if (selectedDateTimestamp) {
-          const date = new Date(selectedDateTimestamp);
-          const [hours, minutes] = selectedTime.split(":");
-          date.setHours(Number.parseInt(hours), Number.parseInt(minutes));
-          timestamp = date.getTime();
-        } else if (scheduledDate) {
-          timestamp = new Date(scheduledDate).getTime();
-        } else {
-          throw new Error("Please select a date");
-        }
-        datesToBook.push(timestamp);
+        throw new Error("Please select at least one date");
       }
 
       // Validate guardian title if guardian location selected
@@ -232,9 +220,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       setSchoolId("");
       setLocationId("");
       setScheduledDate("");
-      setSelectedDateTimestamp(null);
       setSelectedDates([]);
-      setUseMultiDate(false);
       setSelectedTime("09:00");
       setPendingLocationName("");
       setPendingLocationNameTh("");
@@ -384,7 +370,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   return (
     <div className="w-full max-w-4xl mx-auto px-3 py-4 md:p-4">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 md:mb-6 gap-3">
-        <h2 className="text-xl md:text-2xl font-semibold">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
           {userRole === "moderator" || userRole === "admin"
             ? t("Class Bookings", "การจองชั้นเรียน")
             : t("Class Requests", "คำขอชั้นเรียน")}
@@ -414,7 +400,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       {/* Booking Form */}
       {showForm && (
         <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 mb-4 md:mb-6">
-          <h3 className="text-lg md:text-xl font-semibold mb-4">
+          <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-6 pb-3 border-b-2 border-gray-200 dark:border-gray-700">
             {userRole === "moderator" || userRole === "admin"
               ? t("Book a New Class", "จองชั้นเรียนใหม่")
               : t("Request a New Class", "ขอชั้นเรียนใหม่")}
@@ -666,154 +652,68 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
               )}
 
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label htmlFor="date" className="block text-sm font-medium">
-                    {t("Scheduled Date", "วันที่กำหนด")}
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUseMultiDate(!useMultiDate);
-                      if (!useMultiDate) {
-                        // Switching to multi-date mode
-                        setSelectedDateTimestamp(null);
-                        setScheduledDate("");
-                        setShowCalendar(true);
-                      } else {
-                        // Switching to single-date mode
-                        setSelectedDates([]);
-                      }
-                    }}
-                    className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
-                  >
-                    {useMultiDate
-                      ? t("← Single Date", "← วันเดียว")
-                      : t("+ Multiple Dates", "+ หลายวัน")
+                <label htmlFor="date" className="block text-sm font-medium mb-2">
+                  {t("Scheduled Date", "วันที่กำหนด")}
+                </label>
+
+                {/* Multi-date calendar button (supports single or multiple dates) */}
+                <button
+                  type="button"
+                  onClick={() => setShowCalendar(!showCalendar)}
+                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 text-left flex items-center justify-between"
+                  disabled={loading}
+                >
+                  <span className={selectedDates.length > 0 ? "text-gray-900 dark:text-white" : "text-gray-500"}>
+                    {selectedDates.length > 0
+                      ? t(`${selectedDates.length} date${selectedDates.length > 1 ? 's' : ''} selected`, `เลือกแล้ว ${selectedDates.length} วัน`)
+                      : t("Select date(s)", "เลือกวันที่")
                     }
-                  </button>
-                </div>
+                  </span>
+                  <Calendar className="w-5 h-5 text-gray-400" />
+                </button>
 
-                {useMultiDate ? (
-                  // Multi-date display
-                  <button
-                    type="button"
-                    onClick={() => setShowCalendar(!showCalendar)}
-                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 text-left flex items-center justify-between"
-                    disabled={loading}
-                  >
-                    <span className={selectedDates.length > 0 ? "text-gray-900 dark:text-white" : "text-gray-500"}>
-                      {selectedDates.length > 0
-                        ? t(`${selectedDates.length} dates selected`, `เลือกแล้ว ${selectedDates.length} วัน`)
-                        : t("Select multiple dates", "เลือกหลายวัน")
-                      }
-                    </span>
-                    <Calendar className="w-5 h-5 text-gray-400" />
-                  </button>
-                ) : (
-                  // Single-date display
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setShowCalendar(!showCalendar)}
-                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 text-left flex items-center justify-between"
-                      disabled={loading}
-                    >
-                      <span className={selectedDateTimestamp ? "text-gray-900 dark:text-white" : "text-gray-500"}>
-                        {selectedDateTimestamp
-                          ? new Date(selectedDateTimestamp).toLocaleDateString(
-                            language === "en" ? "en-US" : "th-TH",
-                            { year: "numeric", month: "long", day: "numeric" }
-                          )
-                          : t("Click to select date", "คลิกเพื่อเลือกวันที่")
-                        }
-                      </span>
-                      <Calendar className="w-5 h-5 text-gray-400" />
-                    </button>
-
-                    {/* Fallback to datetime-local input */}
-                    <input
-                      type="datetime-local"
-                      id="date"
-                      value={scheduledDate}
-                      onChange={(e) => {
-                        setScheduledDate(e.target.value);
-                        setSelectedDateTimestamp(null); // Clear calendar selection
-                      }}
-                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 touch-manipulation transition-shadow mt-2"
-                      disabled={loading}
-                      placeholder={t("Or enter date/time manually", "หรือกรอกวันที่/เวลาด้วยตนเอง")}
-                    />
-                  </>
-                )}
+                {/* Fallback to datetime-local input for manual entry */}
+                <input
+                  type="datetime-local"
+                  id="date"
+                  value={scheduledDate}
+                  onChange={(e) => {
+                    setScheduledDate(e.target.value);
+                    setSelectedDates([]); // Clear calendar selection
+                  }}
+                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 touch-manipulation transition-shadow mt-2"
+                  disabled={loading}
+                  placeholder={t("Or enter date/time manually", "หรือกรอกวันที่/เวลาด้วยตนเอง")}
+                />
               </div>
             </div>
 
-            {/* Calendar Picker */}
+            {/* Calendar Picker - supports single or multiple date selection */}
             {showCalendar && (
               <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-900">
-                {useMultiDate ? (
-                  <>
-                    <MultiDateCalendar
-                      selectedDates={selectedDates}
-                      onDatesChange={setSelectedDates}
-                      minDate={new Date()}
-                      maxSelections={14}
+                <MultiDateCalendar
+                  selectedDates={selectedDates}
+                  onDatesChange={setSelectedDates}
+                  minDate={new Date()}
+                  maxSelections={14}
+                />
+                {/* Time picker for all selected dates */}
+                {selectedDates.length > 0 && (
+                  <div className="mt-4">
+                    <label htmlFor="time" className="block text-sm font-medium mb-2">
+                      {t(
+                        selectedDates.length > 1 ? "Time for all classes" : "Select Time",
+                        selectedDates.length > 1 ? "เวลาสำหรับทุกคลาส" : "เลือกเวลา"
+                      )}
+                    </label>
+                    <input
+                      type="time"
+                      id="time"
+                      value={selectedTime}
+                      onChange={(e) => setSelectedTime(e.target.value)}
+                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
                     />
-                    {/* Time picker for all selected dates */}
-                    {selectedDates.length > 0 && (
-                      <div className="mt-4">
-                        <label htmlFor="time" className="block text-sm font-medium mb-2">
-                          {t("Time for all classes", "เวลาสำหรับทุกคลาส")}
-                        </label>
-                        <input
-                          type="time"
-                          id="time"
-                          value={selectedTime}
-                          onChange={(e) => setSelectedTime(e.target.value)}
-                          className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                        />
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <MonthCalendarPicker
-                      selectedDate={selectedDateTimestamp}
-                      onSelectDate={(timestamp) => {
-                        setSelectedDateTimestamp(timestamp);
-                        setScheduledDate(""); // Clear manual input
-                        // Don't auto-close calendar to allow time selection
-                      }}
-                      minDate={Date.now()} // Only allow future dates
-                    />
-
-                    {/* Time picker */}
-                    {selectedDateTimestamp && (
-                      <div className="mt-4">
-                        <label htmlFor="time" className="block text-sm font-medium mb-2">
-                          {t("Select Time", "เลือกเวลา")}
-                        </label>
-                        <input
-                          type="time"
-                          id="time"
-                          value={selectedTime}
-                          onChange={(e) => setSelectedTime(e.target.value)}
-                          className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                        />
-                      </div>
-                    )}
-
-                    {/* Close calendar button */}
-                    {selectedDateTimestamp && (
-                      <button
-                        type="button"
-                        onClick={() => setShowCalendar(false)}
-                        className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                      >
-                        {t("✓ Confirm Date & Time", "✓ ยืนยันวันที่และเวลา")}
-                      </button>
-                    )}
-                  </>
+                  </div>
                 )}
               </div>
             )}
@@ -1058,11 +958,11 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                 ) : (
                   <>
                     {userRole === "moderator" || userRole === "admin" ? (
-                      useMultiDate && selectedDates.length > 1
+                      selectedDates.length > 1
                         ? t(`Book ${selectedDates.length} Classes`, `จอง ${selectedDates.length} คลาส`)
                         : t("Book Class", "จองคลาส")
                     ) : (
-                      useMultiDate && selectedDates.length > 1
+                      selectedDates.length > 1
                         ? t(`Submit ${selectedDates.length} Class Requests`, `ส่งคำขอ ${selectedDates.length} คลาส`)
                         : t("Submit Class Request", "ส่งคำขอคลาส")
                     )}

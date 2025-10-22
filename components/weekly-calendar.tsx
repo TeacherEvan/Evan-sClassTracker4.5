@@ -73,6 +73,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     const [teacherId, setTeacherId] = useState<Id<"users"> | "">(
         currentUser.role === "teacher" ? currentUser._id : ""
     );
+    const [selectedTime, setSelectedTime] = useState("09:00");
     const [error, setError] = useState("");
 
     // Inline student creation
@@ -201,12 +202,17 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
         }
 
         try {
+            // Combine selected date with selected time
+            const dateWithTime = new Date(selectedDate);
+            const [hours, minutes] = selectedTime.split(":");
+            dateWithTime.setHours(Number.parseInt(hours), Number.parseInt(minutes));
+
             await bookClass({
                 teacherId: teacherId as Id<"users">,
                 schoolId: schoolId as Id<"schools">,
                 studentId: studentId as Id<"students">,
                 locationId: locationId as Id<"locations">,
-                scheduledDate: selectedDate.getTime(),
+                scheduledDate: dateWithTime.getTime(),
                 bookedByUserId: currentUser._id,
             });
 
@@ -215,6 +221,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
             setStudentId("");
             setLocationId("");
             setTeacherId(currentUser.role === "teacher" ? currentUser._id : "");
+            setSelectedTime("09:00");
             setShowAddDialog(false);
             setSelectedDate(null);
         } catch (err) {
@@ -243,7 +250,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
             {/* Header */}
             <div className="mb-4 md:mb-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 md:mb-4 gap-3">
-                    <h2 className="text-xl md:text-2xl font-semibold">
+                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
                         {t("Weekly Calendar", "ปฏิทินรายสัปดาห์")}
                     </h2>
                     <button
@@ -431,8 +438,8 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-semibold">
+                            <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-gray-200 dark:border-gray-700">
+                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                                     {t("Add Class", "เพิ่มคลาส")}
                                 </h3>
                                 <button
@@ -443,6 +450,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                         setStudentId("");
                                         setLocationId("");
                                         setTeacherId(currentUser.role === "teacher" ? currentUser._id : "");
+                                        setSelectedTime("09:00");
                                         setError("");
                                         setShowStudentForm(false);
                                         setNewStudentFirstName("");
@@ -638,6 +646,20 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                     </select>
                                 </div>
 
+                                <div>
+                                    <label htmlFor="timeSelect" className="block text-sm font-medium mb-2">
+                                        {t("Time", "เวลา")}
+                                    </label>
+                                    <input
+                                        type="time"
+                                        id="timeSelect"
+                                        value={selectedTime}
+                                        onChange={(e) => setSelectedTime(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                        required
+                                    />
+                                </div>
+
                                 <div className="flex gap-3 pt-4">
                                     <button
                                         type="submit"
@@ -654,6 +676,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                             setStudentId("");
                                             setLocationId("");
                                             setTeacherId(currentUser.role === "teacher" ? currentUser._id : "");
+                                            setSelectedTime("09:00");
                                             setError("");
                                             setShowStudentForm(false);
                                             setNewStudentFirstName("");

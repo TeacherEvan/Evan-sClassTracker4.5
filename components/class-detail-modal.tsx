@@ -5,8 +5,9 @@ import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { UserRole } from "@/lib/types";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import {
+    AlertTriangle,
     BookOpen,
     Calendar,
     Check,
@@ -93,11 +94,26 @@ export function ClassDetailModal({
     const { t, language } = useLanguage();
     const [showEditModal, setShowEditModal] = useState(false);
     const [showMergeModal, setShowMergeModal] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showPostponeModal, setShowPostponeModal] = useState(false);
+    const [cancelReason, setCancelReason] = useState("");
+    const [cancelReasonTh, setCancelReasonTh] = useState("");
+    const [postponeReason, setPostponeReason] = useState("");
+    const [postponeReasonTh, setPostponeReasonTh] = useState("");
+    const [newDate, setNewDate] = useState("");
+    const [newTime, setNewTime] = useState("09:00");
 
     // Mutations for class actions
     const acknowledgeClass = useMutation(api.classes.acknowledge);
     const approveClass = useMutation(api.classes.approve);
     const rejectClass = useMutation(api.classes.reject);
+    const createCancellationRequest = useMutation(api.cancellationRequests.create);
+    
+    // Check for pending requests
+    const pendingRequest = useQuery(
+        api.cancellationRequests.list,
+        classData ? { teacherId: classData.teacherId } : "skip"
+    )?.find(req => req.classId === classData._id && req.status === "pending");
 
     const handleAcknowledge = async () => {
         try {
@@ -137,6 +153,72 @@ export function ClassDetailModal({
             toast.error(
                 err instanceof Error ? err.message : "Failed to reject class",
                 err instanceof Error ? err.message : "ไม่สามารถปฏิเสธคลาสได้"
+            );
+        }
+    };
+
+    const handleCancelRequest = async () => {
+        if (!cancelReason.trim() || !cancelReasonTh.trim()) {
+            toast.error("Please provide reasons in both languages", "กรุณาระบุเหตุผลทั้งสองภาษา");
+            return;
+        }
+
+        try {
+            await createCancellationRequest({
+                classId: classData._id,
+                teacherId: currentUserId,
+                requestType: "cancel",
+                reason: cancelReason,
+                reasonTh: cancelReasonTh,
+            });
+            toast.success("Cancellation request submitted", "ส่งคำขอยกเลิกแล้ว");
+            setShowCancelModal(false);
+            setCancelReason("");
+            setCancelReasonTh("");
+            onClose();
+        } catch (err) {
+            toast.error(
+                err instanceof Error ? err.message : "Failed to submit cancellation request",
+                err instanceof Error ? err.message : "ไม่สามารถส่งคำขอยกเลิกได้"
+            );
+        }
+    };
+
+    const handlePostponeRequest = async () => {
+        if (!postponeReason.trim() || !postponeReasonTh.trim()) {
+            toast.error("Please provide reasons in both languages", "กรุณาระบุเหตุผลทั้งสองภาษา");
+            return;
+        }
+
+        if (!newDate) {
+            toast.error("Please select a new date", "กรุณาเลือกวันที่ใหม่");
+            return;
+        }
+
+        try {
+            const dateObj = new Date(newDate);
+            const [hours, minutes] = newTime.split(":");
+            dateObj.setHours(Number.parseInt(hours), Number.parseInt(minutes));
+
+            await createCancellationRequest({
+                classId: classData._id,
+                teacherId: currentUserId,
+                requestType: "postpone",
+                reason: postponeReason,
+                reasonTh: postponeReasonTh,
+                newScheduledDate: dateObj.getTime(),
+            });
+            toast.success("Postponement request submitted", "ส่งคำขอเลื่อนแล้ว");
+            setShowPostponeModal(false);
+            setPostponeReason("");
+            setPostponeReasonTh("");
+            setNewDate("");
+            setNewTime("09:00");
+            onClose();
+        } catch (err) {
+            toast.error(
+                err instanceof Error ? err.message : "Failed to submit postponement request",
+                err instanceof Error ? err.message : "ไม่สามารถส่งคำขอเลื่อนได้"
             );
         }
     };
@@ -505,6 +587,49 @@ export function ClassDetailModal({
                             </div>
                         )}
 
+                        {/* Cancel/Postpone Buttons for Teachers */}
+                        {currentUserRole === "teacher" && classData.status === "approved" && classData.scheduledDate > Date.now() && !pendingRequest && (
+                            <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                                    {t("Request Changes:", "ขอเปลี่ยนแปลง:")}
+                                </p>
+                                <div className="flex flex-wrap gap-3">
+                                    <button
+                                        onClick={() => setShowCancelModal(true)}
+                                        className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
+                                    >
+                                        <X className="w-5 h-5" />
+                                        {t("Cancel Class", "ยกเลิกคลาส")}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowPostponeModal(true)}
+                                        className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 active:scale-95 transition-all font-medium"
+                                    >
+                                        <Clock className="w-5 h-5" />
+                                        {t("Postpone Class", "เลื่อนคลาส")}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Pending Request Notice */}
+                        {pendingRequest && (
+                            <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                                <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-400">
+                                    <AlertTriangle className="w-5 h-5" />
+                                    <p className="font-medium">
+                                        {t(
+                                            `${pendingRequest.requestType === "cancel" ? "Cancellation" : "Postponement"} request pending approval`,
+                                            `คำขอ${pendingRequest.requestType === "cancel" ? "ยกเลิก" : "เลื่อน"}รอการอนุมัติ`
+                                        )}
+                                    </p>
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                    {language === "en" ? pendingRequest.reason : pendingRequest.reasonTh}
+                                </p>
+                            </div>
+                        )}
+
                         {/* Edit and Merge Buttons */}
                         <div className="flex flex-wrap gap-3">
                             <button
@@ -552,6 +677,165 @@ export function ClassDetailModal({
                         onClose(); // Close detail modal after successful merge
                     }}
                 />
+            )}
+
+            {/* Cancel Request Modal */}
+            {showCancelModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                                <X className="w-6 h-6 text-red-600 dark:text-red-400" />
+                            </div>
+                            <h3 className="text-xl font-bold">
+                                {t("Cancel Class", "ยกเลิกคลาส")}
+                            </h3>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            {t(
+                                "Please provide a reason for cancelling this class. The moderator will review your request.",
+                                "กรุณาระบุเหตุผลในการยกเลิกคลาสนี้ ผู้ดูแลจะพิจารณาคำขอของคุณ"
+                            )}
+                        </p>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    {t("Reason (English)", "เหตุผล (อังกฤษ)")}
+                                </label>
+                                <textarea
+                                    value={cancelReason}
+                                    onChange={(e) => setCancelReason(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 min-h-[80px]"
+                                    placeholder="Enter reason in English..."
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    {t("Reason (Thai)", "เหตุผล (ไทย)")}
+                                </label>
+                                <textarea
+                                    value={cancelReasonTh}
+                                    onChange={(e) => setCancelReasonTh(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 min-h-[80px]"
+                                    placeholder="ระบุเหตุผลเป็นภาษาไทย..."
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={() => {
+                                    setShowCancelModal(false);
+                                    setCancelReason("");
+                                    setCancelReasonTh("");
+                                }}
+                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={handleCancelRequest}
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-medium"
+                            >
+                                {t("Submit Request", "ส่งคำขอ")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Postpone Request Modal */}
+            {showPostponeModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
+                                <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                            </div>
+                            <h3 className="text-xl font-bold">
+                                {t("Postpone Class", "เลื่อนคลาส")}
+                            </h3>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            {t(
+                                "Select a new date and provide a reason for postponing this class.",
+                                "เลือกวันที่ใหม่และระบุเหตุผลในการเลื่อนคลาสนี้"
+                            )}
+                        </p>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    {t("New Date", "วันที่ใหม่")}
+                                </label>
+                                <input
+                                    type="date"
+                                    value={newDate}
+                                    onChange={(e) => setNewDate(e.target.value)}
+                                    min={new Date().toISOString().split("T")[0]}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 dark:bg-gray-700"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    {t("New Time", "เวลาใหม่")}
+                                </label>
+                                <input
+                                    type="time"
+                                    value={newTime}
+                                    onChange={(e) => setNewTime(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 dark:bg-gray-700"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    {t("Reason (English)", "เหตุผล (อังกฤษ)")}
+                                </label>
+                                <textarea
+                                    value={postponeReason}
+                                    onChange={(e) => setPostponeReason(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 dark:bg-gray-700 min-h-[60px]"
+                                    placeholder="Enter reason in English..."
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-2">
+                                    {t("Reason (Thai)", "เหตุผล (ไทย)")}
+                                </label>
+                                <textarea
+                                    value={postponeReasonTh}
+                                    onChange={(e) => setPostponeReasonTh(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 dark:bg-gray-700 min-h-[60px]"
+                                    placeholder="ระบุเหตุผลเป็นภาษาไทย..."
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={() => {
+                                    setShowPostponeModal(false);
+                                    setPostponeReason("");
+                                    setPostponeReasonTh("");
+                                    setNewDate("");
+                                    setNewTime("09:00");
+                                }}
+                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={handlePostponeRequest}
+                                className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 active:scale-95 transition-all font-medium"
+                            >
+                                {t("Submit Request", "ส่งคำขอ")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </>
     );

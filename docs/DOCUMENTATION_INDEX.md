@@ -1,23 +1,31 @@
 # 📝 Documentation Index
 
-**Last Updated:** October 21, 2025  
+**Last Updated:** October 22, 2025  
 **Status:** Current & Organized ✅  
-**Cleanup:** Removed 22 redundant files (45% reduction)
+**Optimization:** Oct 2025 - 40-50% faster, 10-100x query improvement
 
 ---
 
-## 🎯 Start Here
+## 🚀 Start Here (Priority Order)
 
-### For New Developers
+### For AI Agents & New Developers
 
-👉 **[README.md](../README.md)** - Project overview and setup  
-👉 **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Common patterns and best practices
+1. **[../.github/copilot-instructions.md](../.github/copilot-instructions.md)** - ⭐ **START HERE** - AI agent guidelines, critical patterns, non-negotiable rules
+2. **[SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md)** - Executive summary, key links, quick reference
+3. **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture, data flows, diagrams
+4. **[../README.md](../README.md)** - Setup instructions, quick start, credentials
+
+### For Development Work
+
+1. **[OPTIMIZATION_ANALYSIS_2025.md](OPTIMIZATION_ANALYSIS_2025.md)** - Performance patterns (N+1 fixes, pagination, indexes)
+2. **[FEATURES_DOCUMENTATION.md](FEATURES_DOCUMENTATION.md)** - Complete API reference
+3. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Common patterns and examples
 
 ### For Current Status
 
 👉 **[TODO.md](../TODO.md)** - Active tasks and priorities  
-👉 **[SESSION_EXECUTIVE_SUMMARY.md](SESSION_EXECUTIVE_SUMMARY.md)** - Latest session (Oct 21, 2025)  
-👉 **[FEATURE_COMPLETION_SUMMARY.md](FEATURE_COMPLETION_SUMMARY.md)** - Feature status
+👉 **[FEATURE_COMPLETION_SUMMARY.md](FEATURE_COMPLETION_SUMMARY.md)** - Feature status  
+👉 **[IMPLEMENTATION_REVIEW_2025.md](IMPLEMENTATION_REVIEW_2025.md)** - Latest implementation review
 
 ---
 
@@ -25,10 +33,20 @@
 
 ### Architecture & Design
 
+- **[SYSTEM_OVERVIEW.md](SYSTEM_OVERVIEW.md)** - 🆕 Executive summary with all key links
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and data flows
+- **[../.github/copilot-instructions.md](../.github/copilot-instructions.md)** - 🆕 AI agent guidelines (critical patterns)
 - **[UI_FLOW_DIAGRAMS.md](UI_FLOW_DIAGRAMS.md)** - User interface flows
 - **[VISUAL_UI_MOCKUP.md](VISUAL_UI_MOCKUP.md)** - UI design mockups
 - **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - Developer quick reference
+
+### Performance & Optimization
+
+- **[OPTIMIZATION_ANALYSIS_2025.md](OPTIMIZATION_ANALYSIS_2025.md)** - ⭐ Performance improvements (Oct 2025)
+- **[PERFORMANCE_AUDIT.md](PERFORMANCE_AUDIT.md)** - Performance analysis
+- **[PENDING_OPTIMIZATIONS.md](PENDING_OPTIMIZATIONS.md)** - Future improvements
+- **[CODE_SPLITTING_STATUS.md](CODE_SPLITTING_STATUS.md)** - Code splitting implementation
+- **[ALERT_TO_TOAST_MIGRATION.md](ALERT_TO_TOAST_MIGRATION.md)** - Toast notification migration
 
 ### Implementation Guides
 
@@ -41,7 +59,6 @@
 
 - **[AUTHORIZATION_REFACTORING_COMPLETE.md](AUTHORIZATION_REFACTORING_COMPLETE.md)** - Auth code optimization
 - **[MULTI_STUDENT_AUTHORIZATION_UPDATE.md](MULTI_STUDENT_AUTHORIZATION_UPDATE.md)** - Multi-student & authorization
-- **[OPTIMIZATION_ANALYSIS_2025.md](OPTIMIZATION_ANALYSIS_2025.md)** - Latest optimization review
 - **[FEATURE_COMPLETION_SUMMARY.md](FEATURE_COMPLETION_SUMMARY.md)** - Current feature status
 - **[CODE_QUALITY_REVIEW.md](CODE_QUALITY_REVIEW.md)** - Code quality assessment
 - **[SESSION_EXECUTIVE_SUMMARY.md](SESSION_EXECUTIVE_SUMMARY.md)** - Latest session summary

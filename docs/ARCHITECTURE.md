@@ -2,33 +2,42 @@
 
 ## Overview
 
+Bilingual (English/Thai) class tracking system built with **Next.js 15**, **React 19**, **Convex** real-time backend, and **Tailwind v4**. Recent optimizations (Oct 2025) achieved 40-50% faster loads, 10-100x faster queries via N+1 elimination, and native database pagination.
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Evan's Class Tracker 4.5                   │
-│                  Next.js 15 + Convex + Vercel                   │
+│           Next.js 15 + React 19 + Convex + Tailwind v4          │
+│                  🚀 Optimized Oct 2025                          │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
 │                         Frontend Layer                          │
 ├─────────────────────────────────────────────────────────────────┤
+│  Provider Hierarchy (Load-Bearing - DO NOT REORDER):           │
+│  1. ErrorBoundary → 2. ConvexClientProvider →                  │
+│  3. DeviceProvider → 4. DataProvider → 5. LanguageProvider     │
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
 │  │ Login Page   │  │ Main App     │  │ DB Init      │         │
 │  │ - Auth form  │  │ - Dashboard  │  │ - Setup      │         │
 │  │ - Validation │  │ - Navigation │  │ - Samples    │         │
+│  │ - Toast      │  │ - Role tabs  │  │              │         │
 │  └──────────────┘  └──────────────┘  └──────────────┘         │
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
 │  │ User Mgmt    │  │ Class Book   │  │ Password Chg │         │
-│  │ - Create     │  │ - Form       │  │ - Forced     │         │
-│  │ - Reset      │  │ - Approval   │  │ - Security   │         │
+│  │ - Create     │  │ - Multi-date │  │ - Forced     │         │
+│  │ - Reset      │  │ - Optional   │  │ - Security   │         │
+│  │ - Rate Limit │  │   Fields     │  │ - Toast      │         │
 │  └──────────────┘  └──────────────┘  └──────────────┘         │
 │                                                                 │
-│  ┌──────────────┐  ┌──────────────┐                           │
-│  │ Notification │  │ Language     │                           │
-│  │ - List       │  │ - EN/TH      │                           │
-│  │ - Form       │  │ - Switcher   │                           │
-│  └──────────────┘  └──────────────┘                           │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│  │ Student Mgmt │  │ Edit Modal   │  │ Notification │         │
+│  │ - Unique IDs │  │ - Audit      │  │ - Toast      │         │
+│  │ - 11 Optional│  │   Trail      │  │ - Bilingual  │         │
+│  │   Fields     │  │ - Changes    │  │ - Types      │         │
+│  └──────────────┘  └──────────────┘  └──────────────┘         │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
                               ↓ ↑
@@ -37,21 +46,31 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                        Backend Layer (Convex)                   │
 ├─────────────────────────────────────────────────────────────────┤
+│  🚀 Performance Patterns: Index-first, No N+1, Pagination       │
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
 │  │ users.ts     │  │ classes.ts   │  │ students.ts  │         │
 │  │ - login()    │  │ - book()     │  │ - create()   │         │
-│  │ - create()   │  │ - acknowledge│  │ - list()     │         │
-│  │ - change     │  │ - approve()  │  │ - unique ID  │         │
-│  │   Password() │  │ - reject()   │  │   generator  │         │
+│  │ - create()   │  │ - editClass()│  │ - list()     │         │
+│  │ - change     │  │ - acknowledge│  │ - unique ID  │         │
+│  │   Password() │  │ - approve()  │  │   generator  │         │
+│  │ - custom     │  │ - reject()   │  │ - soft del   │         │
+│  │   session    │  │ - audit trail│  │              │         │
 │  └──────────────┘  └──────────────┘  └──────────────┘         │
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │ schools.ts   │  │ notifications│  │ init.ts      │         │
-│  │ - list()     │  │ - create()   │  │ - setup()    │         │
-│  │ - create()   │  │ - list()     │  │ - samples    │         │
-│  │ - update     │  │ - markRead() │  │              │         │
-│  │   Moderator()│  │              │  │              │         │
+│  │ schools.ts   │  │ notifications│  │ pagination.ts│         │
+│  │ - list()     │  │ - create()   │  │ - native     │         │
+│  │ - create()   │  │ - list()     │  │   paginate() │         │
+│  │ - update     │  │ - markRead() │  │ - efficient  │         │
+│  │   Moderator()│  │ - bilingual  │  │   cursor     │         │
+│  └──────────────┘  └──────────────┘  └──────────────┘         │
+│                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│  │ rateLimit.ts │  │ postClassNotes│ │ appUpdates.ts│         │
+│  │ - check()    │  │ - feedback   │  │ - announce   │         │
+│  │ - validate   │  │ - wizard     │  │ - viewed     │         │
+│  │ - 20-30/min  │  │ - teacher    │  │   tracking   │         │
 │  └──────────────┘  └──────────────┘  └──────────────┘         │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
@@ -61,29 +80,72 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Database Layer (Convex)                    │
 ├─────────────────────────────────────────────────────────────────┤
+│  📊 Indexed queries, soft deletes, bilingual fields             │
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
 │  │ users        │  │ classes      │  │ students     │         │
 │  │ - username   │  │ - teacherId  │  │ - firstName  │         │
 │  │ - password   │  │ - schoolId   │  │ - lastName   │         │
-│  │ - role       │  │ - title      │  │ - studentId  │         │
+│  │ - role       │  │ - studentId  │  │ - studentId  │         │
 │  │ - schoolId   │  │ - status     │  │ - schoolId   │         │
 │  │ - require    │  │ - scheduled  │  │ - grade      │         │
-│  │   PwdChange  │  │              │  │              │         │
+│  │   PwdChange  │  │ - isEdited   │  │ - isActive   │         │
+│  │ - deviceType │  │ - editHistory│  │ - 11 optional│         │
+│  └──────────────┘  └──────────────┘  └──────────────┘         │
+│                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│  │ schools      │  │ notifications│  │ locations    │         │
+│  │ - name       │  │ - title/     │  │ - name/      │         │
+│  │ - nameTh     │  │   titleTh    │  │   nameTh     │         │
+│  │ - moderator  │  │ - message/   │  │ - schoolId   │         │
+│  │   Id         │  │   messageTh  │  │ - isActive   │         │
+│  │              │  │ - type       │  │              │         │
+│  │              │  │ - userId     │  │              │         │
 │  └──────────────┘  └──────────────┘  └──────────────┘         │
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────┐                           │
-│  │ schools      │  │ notifications│                           │
-│  │ - name       │  │ - title/     │                           │
-│  │ - nameTh     │  │   titleTh    │                           │
-│  │ - moderator  │  │ - message/   │                           │
-│  │   Id         │  │   messageTh  │                           │
-│  │              │  │ - type       │                           │
-│  │              │  │ - userId     │                           │
+│  │ postClassNotes│ │ appUpdates   │                           │
+│  │ - classId    │  │ - title/Th   │                           │
+│  │ - feedback   │  │ - content/Th │                           │
+│  │ - rating     │  │ - isActive   │                           │
+│  │ - teacherId  │  │ - viewedBy   │                           │
 │  └──────────────┘  └──────────────┘                           │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+## Performance Optimizations (Oct 2025)
+
+### Key Achievements
+
+- **40-50% faster initial load** - Code splitting with lazy loading
+- **10-100x faster queries** - Eliminated N+1 database queries
+- **Native database pagination** - Efficient handling of 10,000+ records
+- **Rate limiting** - Protection against abuse (20-30 requests/min)
+- **Input validation** - Security improvements on all user inputs
+- **Toast notifications** - Modern, non-blocking UI feedback
+
+### Critical Performance Patterns
+
+1. **Index-First Queries**
+   - Always use `.withIndex()` to avoid table scans
+   - Check `convex/schema.ts` for available indexes
+   - Example: `ctx.db.query("classes").withIndex("by_school_and_date", q => q.eq("schoolId", schoolId))`
+
+2. **Batch Fetching (No N+1)**
+   - NEVER query inside loops
+   - Use batch fetch + lookup map pattern
+   - See: `docs/OPTIMIZATION_ANALYSIS_2025.md`
+
+3. **Native Pagination**
+   - Use Convex `.paginate()` for large datasets
+   - Database-level pagination with cursor support
+   - Implementation: `convex/pagination.ts`
+
+4. **Soft Deletes**
+   - Use `isActive` boolean flag
+   - Never hard delete records
+   - Query with `.withIndex("by_active", q => q.eq("isActive", true))`
 
 ## Data Flow Diagrams
 
@@ -338,15 +400,16 @@ Teacher books class
 
 ## Technology Stack
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │          Frontend Technologies          │
 ├─────────────────────────────────────────┤
-│ • Next.js 15 (App Router)               │
+│ • Next.js 15 (App Router + Turbopack)   │
 │ • React 19                              │
-│ • TypeScript                            │
+│ • TypeScript 5                          │
 │ • Tailwind CSS 4                        │
 │ • Lucide React (Icons)                  │
+│ • Custom Toast System                   │
 └─────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────┐
@@ -354,54 +417,112 @@ Teacher books class
 ├─────────────────────────────────────────┤
 │ • Convex (Database + API)               │
 │ • Real-time Subscriptions               │
-│ • TypeScript                            │
+│ • TypeScript Edge Functions             │
+│ • Rate Limiting & Validation            │
+│ • Native Pagination                     │
+│ • Custom Session Auth                   │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│          Key Features & Patterns        │
+├─────────────────────────────────────────┤
+│ • Bilingual (EN/TH) First               │
+│ • Index-First Queries                   │
+│ • Soft Deletes Only                     │
+│ • Edit Audit Trails                     │
+│ • Multi-Date Booking                    │
+│ • Toast Notifications                   │
+│ • Collapsible Optional Fields           │
+│ • Provider Hierarchy (Load-Bearing)     │
 └─────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────┐
 │               Deployment                │
 ├─────────────────────────────────────────┤
-│ • Vercel (Frontend)                     │
-│ • Convex Cloud (Backend)                │
+│ • Vercel (Frontend + Edge Network)      │
+│ • Convex Cloud (Backend + Database)     │
+│ • Turbopack (Build System)              │
 └─────────────────────────────────────────┘
 ```
 
 ## File Organization
 
-```
+```text
 Evan-sClassTracker4.5/
 │
+├── .github/
+│   └── copilot-instructions.md (AI agent guidelines)
+│
 ├── app/
-│   ├── layout.tsx          (Root layout + providers)
-│   ├── page.tsx            (Main app with auth)
+│   ├── layout.tsx          (Root layout + critical provider hierarchy)
+│   ├── page.tsx            (Main app with auth + modal triggers)
 │   └── globals.css         (Global styles)
 │
 ├── components/
-│   ├── class-booking.tsx   (Class booking UI)
+│   ├── admin-contact-button.tsx (Admin support)
+│   ├── class-booking.tsx   (Multi-date booking + optional fields)
 │   ├── database-init.tsx   (First-time setup)
+│   ├── desktop-notification-toast.tsx (Toast UI component)
+│   ├── edit-class-modal.tsx (Full edit with audit trail)
+│   ├── error-boundary.tsx  (Error handling)
+│   ├── guardian-dashboard.tsx (Guardian role UI)
 │   ├── language-switcher.tsx (EN/TH toggle)
+│   ├── location-management.tsx (Location CRUD)
 │   ├── login-form.tsx      (Authentication)
+│   ├── merge-classes-modal.tsx (Class merging)
+│   ├── messaging-hub.tsx   (Teacher messaging)
+│   ├── moderator-list-view.tsx (Moderator class list)
+│   ├── multi-date-calendar.tsx (Multi-date selection)
 │   ├── notification-form.tsx (Create notifications)
 │   ├── notification-list.tsx (Display notifications)
 │   ├── password-change-dialog.tsx (Password change)
-│   └── user-management.tsx (User CRUD)
+│   ├── post-class-notes-modal.tsx (Feedback wizard)
+│   ├── school-management.tsx (School CRUD)
+│   ├── student-management.tsx (Student CRUD + 11 optional fields)
+│   ├── teacher-activity-dashboard.tsx (Analytics)
+│   ├── teacher-helper.tsx  (Helper tools)
+│   ├── teacher-logs-manager.tsx (Log management)
+│   ├── update-announcement-modal.tsx (Update tracking)
+│   ├── user-management.tsx (User CRUD)
+│   └── weekly-calendar.tsx (Calendar view)
 │
 ├── convex/
-│   ├── schema.ts           (Database schema)
+│   ├── schema.ts           (Database schema + indexes)
 │   ├── users.ts            (User auth & management)
 │   ├── schools.ts          (School management)
-│   ├── classes.ts          (Class booking)
-│   ├── students.ts         (Student management)
+│   ├── classes.ts          (Class booking + audit trail)
+│   ├── students.ts         (Student management + unique IDs)
 │   ├── notifications.ts    (Notification system)
+│   ├── messages.ts         (Teacher messaging)
+│   ├── locations.ts        (Location management)
+│   ├── postClassNotes.ts   (Feedback system)
+│   ├── appUpdates.ts       (Update announcements)
+│   ├── teacherLogs.ts      (Activity logging)
+│   ├── pagination.ts       (Native pagination)
+│   ├── rateLimit.ts        (Rate limiting + validation)
+│   ├── exports.ts          (Data export functions)
+│   ├── search.ts           (Search functionality)
+│   ├── simpleAnalytics.ts  (Analytics data)
+│   ├── bulkOperations.ts   (Bulk import/export)
+│   ├── groups.ts           (Student grouping)
+│   ├── crons.ts            (Scheduled tasks)
 │   └── init.ts             (Database initialization)
 │
 ├── lib/
 │   ├── convex-provider.tsx (Convex React setup)
-│   └── language-context.tsx (i18n context)
+│   ├── language-context.tsx (i18n context)
+│   ├── data-context.tsx    (Shared data layer)
+│   ├── device-context.tsx  (Device detection)
+│   ├── toast.ts            (Toast notification manager)
+│   └── constants.ts        (App constants)
 │
-└── Documentation/
-    ├── README.md                   (Quick start)
+└── docs/
+    ├── .github/
+    │   └── copilot-instructions.md (AI agent guidelines)
+    ├── ARCHITECTURE.md             (This file)
+    ├── OPTIMIZATION_ANALYSIS_2025.md (Performance improvements)
     ├── FEATURES_DOCUMENTATION.md   (API reference)
-    ├── IMPLEMENTATION_SUMMARY.md   (What was built)
     ├── QUICK_REFERENCE.md          (User guide)
-    └── ARCHITECTURE.md             (This file)
+    ├── DEPLOYMENT.md               (Deployment guide)
+    └── [30+ other documentation files]
 ```
