@@ -622,8 +622,8 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                           e.key === "Enter" && handleSendMessage()
                         }
                         placeholder={t(
-                          "Type message (English)",
-                          "พิมพ์ข้อความ (อังกฤษ)"
+                          "Type message (English) - at least one required",
+                          "พิมพ์ข้อความ (อังกฤษ) - ต้องกรอกอย่างน้อย 1 ภาษา"
                         )}
                         className="px-4 py-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-base md:text-sm touch-manipulation transition-shadow"
                       />
@@ -635,8 +635,8 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                           e.key === "Enter" && handleSendMessage()
                         }
                         placeholder={t(
-                          "Type message (Thai)",
-                          "พิมพ์ข้อความ (ไทย)"
+                          "Type message (Thai) - optional",
+                          "พิมพ์ข้อความ (ไทย) - ไม่จำเป็น"
                         )}
                         className="px-4 py-3 md:py-2 border border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-base md:text-sm touch-manipulation transition-shadow"
                       />

@@ -18,15 +18,34 @@ import { MultiDateCalendar } from "./multi-date-calendar";
 interface ClassBookingProps {
   userId: Id<"users">;
   userRole: UserRole;
+  userSchoolId?: Id<"schools">; // Moderator's school ID
 }
 
-export function ClassBooking({ userId, userRole }: ClassBookingProps) {
+export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingProps) {
   const { t, language } = useLanguage();
   const { schools } = useDataContext(); // Use shared context instead of individual query
-  const students = useQuery(api.students.list, {});
+
+  const [showForm, setShowForm] = useState(false);
+  const [studentId, setStudentId] = useState<Id<"students"> | "">("");
+  const [schoolId, setSchoolId] = useState<Id<"schools"> | "">(
+    // Moderators auto-select their school, others start empty
+    userRole === "moderator" && userSchoolId ? userSchoolId : ""
+  );
+
+  // Load students filtered by selected school - prevents cross-school contamination
+  const students = useQuery(
+    api.students.list,
+    schoolId ? { schoolId: schoolId as Id<"schools"> } : "skip"
+  );
+
+  // Filter classes by role: teachers see their classes, moderators see their school's classes
   const classes = useQuery(
     api.classes.listWithDetails,
-    userRole === "teacher" ? { teacherId: userId } : {}
+    userRole === "teacher"
+      ? { teacherId: userId }
+      : userRole === "moderator" && userSchoolId
+        ? { schoolId: userSchoolId }
+        : {}
   );
   // Query all teachers for admin/moderator to select from
   const allTeachers = useQuery(
@@ -40,10 +59,6 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   const deleteClass = useMutation(api.classes.deleteClass);
   const requestCancellation = useMutation(api.cancellationRequests.create);
   const createStudent = useMutation(api.students.create);
-
-  const [showForm, setShowForm] = useState(false);
-  const [studentId, setStudentId] = useState<Id<"students"> | "">("");
-  const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
   const [locationId, setLocationId] = useState<Id<"locations"> | "">("");
   // Teacher selection for admin/moderator
   const [selectedTeacherId, setSelectedTeacherId] = useState<Id<"users"> | "">(
@@ -512,10 +527,11 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                   onChange={(e) => {
                     setSchoolId(e.target.value as Id<"schools"> | "");
                     setLocationId(""); // Reset location when school changes
+                    setStudentId(""); // Reset student when school changes
                   }}
                   className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-shadow"
                   required
-                  disabled={loading}
+                  disabled={loading || userRole === "moderator"} // Moderators can't change their school
                 >
                   <option value="">{t("Select a school", "เลือกโรงเรียน")}</option>
                   {schools?.map((school) => (
@@ -1152,6 +1168,7 @@ function ClassItemDisplay({
 }: {
   classItem: {
     _id: Id<"classes">;
+    schoolId: Id<"schools">; // Required for school isolation
     studentId: Id<"students">;
     additionalStudentIds?: Id<"students">[];
     locationId?: Id<"locations">;
@@ -1185,7 +1202,11 @@ function ClassItemDisplay({
   onEdit: (classData: typeof classItem) => void;
 }) {
   const { t, language } = useLanguage();
-  const students = useQuery(api.students.list, {}); // For dropdown
+  // Load students filtered by the class's school to prevent cross-school contamination
+  const students = useQuery(
+    api.students.list,
+    { schoolId: classItem.schoolId }
+  );
 
   const addStudentToClass = useMutation(api.classes.addStudentToClass);
   const removeStudentFromClass = useMutation(api.classes.removeStudentFromClass);

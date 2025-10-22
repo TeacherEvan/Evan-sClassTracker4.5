@@ -122,6 +122,9 @@ export function AdminContactButton({
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       {t("Message (English)", "ข้อความ (อังกฤษ)")}
+                      <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                        {t("(At least one language required)", "(ต้องกรอกอย่างน้อย 1 ภาษา)")}
+                      </span>
                     </label>
                     <textarea
                       value={messageContent}
@@ -130,23 +133,23 @@ export function AdminContactButton({
                         "Type your message in English...",
                         "พิมพ์ข้อความของคุณเป็นภาษาอังกฤษ..."
                       )}
-                      rows={3}
+                      rows={4}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t("Message (Thai)", "ข้อความ (ไทย)")}
+                      {t("Message (Thai) - Optional", "ข้อความ (ไทย) - ไม่จำเป็น")}
                     </label>
                     <textarea
                       value={messageContentTh}
                       onChange={(e) => setMessageContentTh(e.target.value)}
                       placeholder={t(
-                        "Type your message in Thai...",
-                        "พิมพ์ข้อความของคุณเป็นภาษาไทย..."
+                        "Type your message in Thai (optional)...",
+                        "พิมพ์ข้อความของคุณเป็นภาษาไทย (ไม่จำเป็น)..."
                       )}
-                      rows={3}
+                      rows={4}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     />
                   </div>

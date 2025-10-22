@@ -21,7 +21,11 @@ export function EditClassModal({
     onSuccess,
 }: EditClassModalProps) {
     const { t } = useLanguage();
-    const students = useQuery(api.students.list, {});
+    // Load students filtered by class's school to prevent cross-school contamination
+    const students = useQuery(
+        api.students.list,
+        classData.schoolId ? { schoolId: classData.schoolId } : "skip"
+    );
     const locations = useQuery(
         api.locations.list,
         classData.schoolId ? { schoolId: classData.schoolId, activeOnly: true } : "skip"

@@ -622,7 +622,7 @@ export default function Home() {
 
       {activeTab === "classes" && (
         <Suspense fallback={<LoadingFallback />}>
-          <ClassBooking userId={user._id} userRole={user.role} />
+          <ClassBooking userId={user._id} userRole={user.role} userSchoolId={user.schoolId} />
         </Suspense>
       )}
 
