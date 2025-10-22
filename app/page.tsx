@@ -68,6 +68,12 @@ export default function Home() {
     user?.role === "teacher" ? { userId: user._id } : "skip"
   );
 
+  // Query teacher's class count (only for teachers)
+  const teacherClassCount = useQuery(
+    api.teacherClassCount.getTeacherClassCount,
+    user?.role === "teacher" ? { teacherId: user._id } : "skip"
+  );
+
   // Query active app update
   const activeUpdate = useQuery(api.appUpdates.getActive);
 
@@ -340,9 +346,20 @@ export default function Home() {
       <header className="max-w-4xl mx-auto mb-3 md:mb-8 p-3 md:p-0">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4">
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl md:text-3xl font-bold truncate">
-              {t("Class Tracker", "ติดตามชั้นเรียน")}
-            </h1>
+            <div className="flex items-center gap-2 md:gap-3">
+              <h1 className="text-xl md:text-3xl font-bold truncate">
+                {t("Class Tracker", "ติดตามชั้นเรียน")}
+              </h1>
+              {/* Class Count Badge (Teachers Only) */}
+              {user.role === "teacher" && teacherClassCount && (
+                <div className="flex items-center gap-1 px-2 md:px-3 py-1 md:py-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 dark:from-yellow-500 dark:to-yellow-600 rounded-full shadow-lg">
+                  <GraduationCap className="w-3 h-3 md:w-4 md:h-4 text-yellow-900 dark:text-yellow-100" />
+                  <span className="text-xs md:text-sm font-bold text-yellow-900 dark:text-yellow-100">
+                    {teacherClassCount.total}
+                  </span>
+                </div>
+              )}
+            </div>
             <p className="text-xs md:text-base text-gray-600 dark:text-gray-400 mt-1 truncate">
               {t(`Welcome, ${user.username}`, `ยินดีต้อนรับ, ${user.username}`)}
               {" · "}
@@ -674,7 +691,11 @@ export default function Home() {
 
       {activeTab === "analytics" && user.role === "moderator" && user.schoolId && (
         <Suspense fallback={<LoadingFallback />}>
-          <SimpleAnalytics schoolId={user.schoolId} />
+          <SimpleAnalytics
+            schoolId={user.schoolId}
+            currentUserId={user._id}
+            currentUserRole={user.role}
+          />
         </Suspense>
       )}
 

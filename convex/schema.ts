@@ -409,4 +409,18 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_window", ["windowId"])
     .index("by_user_and_window", ["userId", "windowId"]),
+
+  classCountAuditLogs: defineTable({
+    teacherId: v.id("users"),
+    moderatorId: v.id("users"),
+    moderatorUsername: v.string(),
+    startDate: v.number(),
+    endDate: v.number(),
+    action: v.union(v.literal("viewed"), v.literal("exported")),
+    timestamp: v.number(),
+  })
+    .index("by_teacher", ["teacherId"])
+    .index("by_moderator", ["moderatorId"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_teacher_and_timestamp", ["teacherId", "timestamp"]),
 });

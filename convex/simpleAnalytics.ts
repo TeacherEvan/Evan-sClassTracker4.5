@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 
 // Simple query to count classes for a school
@@ -371,7 +372,11 @@ export const getMostActiveTeachers = query({
         }
 
         return Object.entries(teacherStats)
-            .map(([teacherId, stats]) => ({ teacherId, ...stats }))
+            .map(([teacherId, stats]) => ({
+                teacherId: teacherId as Id<"users">, // Preserve Id type through Object.entries
+                count: stats.count,
+                username: stats.username
+            }))
             .sort((a, b) => b.count - a.count)
             .slice(0, limit);
     },

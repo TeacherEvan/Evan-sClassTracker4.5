@@ -29,6 +29,7 @@ import type * as schools from "../schools.js";
 import type * as search from "../search.js";
 import type * as simpleAnalytics from "../simpleAnalytics.js";
 import type * as students from "../students.js";
+import type * as teacherClassCount from "../teacherClassCount.js";
 import type * as teacherLogs from "../teacherLogs.js";
 import type * as teacherResources from "../teacherResources.js";
 import type * as users from "../users.js";
@@ -69,6 +70,7 @@ declare const fullApi: ApiFromModules<{
   search: typeof search;
   simpleAnalytics: typeof simpleAnalytics;
   students: typeof students;
+  teacherClassCount: typeof teacherClassCount;
   teacherLogs: typeof teacherLogs;
   teacherResources: typeof teacherResources;
   users: typeof users;

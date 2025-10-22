@@ -127,3 +127,48 @@ body {
 .animate-pulse-gold {
   animation: goldPulse 3s ease-in-out infinite;
 }
+
+/* Print styles for ClassCount modal */
+@media print {
+
+  /* Hide everything except the modal content */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Show only the modal */
+  .teacher-classcount-modal,
+  .teacher-classcount-modal * {
+    visibility: visible;
+  }
+
+  .teacher-classcount-modal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide modal controls */
+  .teacher-classcount-modal button[aria-label="Close"],
+  .teacher-classcount-modal .print-hide {
+    display: none !important;
+  }
+
+  /* Clean page breaks */
+  .teacher-classcount-modal .student-breakdown-item {
+    page-break-inside: avoid;
+  }
+
+  /* High contrast for printing */
+  .teacher-classcount-modal {
+    color: black !important;
+  }
+
+  .teacher-classcount-modal h2,
+  .teacher-classcount-modal h3 {
+    color: black !important;
+  }
+}

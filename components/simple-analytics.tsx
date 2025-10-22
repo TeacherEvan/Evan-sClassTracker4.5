@@ -4,17 +4,24 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { useQuery } from "convex/react";
-import { BarChart3, CheckCircle, Clock, XCircle, TrendingUp, TrendingDown, Users, Edit2 } from "lucide-react";
+import { BarChart3, CheckCircle, Clock, Edit2, GraduationCap, TrendingDown, TrendingUp, Users, XCircle } from "lucide-react";
 import { useState } from "react";
+import { TeacherClassCountModal } from "./teacher-class-count-modal";
 
 interface SimpleAnalyticsProps {
     schoolId: Id<"schools">;
+    currentUserId?: Id<"users">;
+    currentUserRole?: string;
 }
 
-export function SimpleAnalytics({ schoolId }: SimpleAnalyticsProps) {
+export function SimpleAnalytics({ schoolId, currentUserId, currentUserRole }: SimpleAnalyticsProps) {
     const { t } = useLanguage();
     const [selectedPeriod, setSelectedPeriod] = useState<"week" | "month" | "all">("month");
     const [showDetails, setShowDetails] = useState(false);
+    const [selectedTeacher, setSelectedTeacher] = useState<{ id: Id<"users">; username: string } | null>(null);
+
+    // Check if user can view ClassCount (moderator or admin)
+    const canViewClassCount = currentUserRole === "moderator" || currentUserRole === "admin";
 
     // Calculate date range based on selected period
     const getDateRange = () => {
@@ -86,36 +93,33 @@ export function SimpleAnalytics({ schoolId }: SimpleAnalyticsProps) {
                         )}
                     </p>
                 </div>
-                
+
                 {/* Period Selector */}
                 <div className="flex gap-2">
                     <button
                         onClick={() => setSelectedPeriod("week")}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                            selectedPeriod === "week"
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-                        }`}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedPeriod === "week"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                            }`}
                     >
                         {t("Week", "สัปดาห์")}
                     </button>
                     <button
                         onClick={() => setSelectedPeriod("month")}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                            selectedPeriod === "month"
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-                        }`}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedPeriod === "month"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                            }`}
                     >
                         {t("Month", "เดือน")}
                     </button>
                     <button
                         onClick={() => setSelectedPeriod("all")}
-                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                            selectedPeriod === "all"
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-                        }`}
+                        className={`px-4 py-2 rounded-lg font-medium transition-colors ${selectedPeriod === "all"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                            }`}
                     >
                         {t("All Time", "ทั้งหมด")}
                     </button>
@@ -254,7 +258,17 @@ export function SimpleAnalytics({ schoolId }: SimpleAnalyticsProps) {
                                     <span className="flex items-center justify-center w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900 text-teal-600 dark:text-teal-300 font-bold">
                                         {index + 1}
                                     </span>
-                                    <span className="font-medium">{teacher.username}</span>
+                                    {canViewClassCount ? (
+                                        <button
+                                            onClick={() => setSelectedTeacher({ id: teacher.teacherId, username: teacher.username })}
+                                            className="font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-2"
+                                        >
+                                            {teacher.username}
+                                            <GraduationCap className="w-4 h-4" />
+                                        </button>
+                                    ) : (
+                                        <span className="font-medium">{teacher.username}</span>
+                                    )}
                                 </div>
                                 <span className="text-2xl font-bold text-teal-600 dark:text-teal-400">
                                     {teacher.count}
@@ -344,6 +358,16 @@ export function SimpleAnalytics({ schoolId }: SimpleAnalyticsProps) {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* ClassCount Modal */}
+            {selectedTeacher && currentUserId && (
+                <TeacherClassCountModal
+                    teacherId={selectedTeacher.id}
+                    teacherUsername={selectedTeacher.username}
+                    moderatorId={currentUserId}
+                    onClose={() => setSelectedTeacher(null)}
+                />
             )}
         </div>
     );
