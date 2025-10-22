@@ -1,11 +1,9 @@
 "use client";
 
-import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
-import { useMutation } from "convex/react";
-import { AlertTriangle, Check, Users, X } from "lucide-react";
+import { AlertTriangle, Check, Users } from "lucide-react";
 import { useState } from "react";
 
 interface ClassConflictModalProps {
@@ -17,8 +15,8 @@ interface ClassConflictModalProps {
     locationId?: Id<"locations">;
     scheduledDate: number;
     status: string;
-    student: Doc<"students"> | null;
-    location: Doc<"locations"> | null;
+    student: Partial<Doc<"students">> & { _id: Id<"students">; firstName: string; lastName: string } | null;
+    location: Partial<Doc<"locations">> & { _id: Id<"locations">; name: string; nameTh: string } | null;
     teacherId: Id<"users">;
     schoolId: Id<"schools">;
   }>;
@@ -35,7 +33,6 @@ interface ClassConflictModalProps {
 }
 
 export function ClassConflictModal({
-  userId,
   conflicts,
   newClassData,
   onMerge,
@@ -43,8 +40,6 @@ export function ClassConflictModal({
   onCancel,
 }: ClassConflictModalProps) {
   const { t, language } = useLanguage();
-  const mergeClasses = useMutation(api.classes.mergeClasses);
-  const addStudentToClass = useMutation(api.classes.addStudentToClass);
 
   const [selectedAction, setSelectedAction] = useState<"merge" | "separate" | null>(null);
   const [selectedTargetClass, setSelectedTargetClass] = useState<Id<"classes"> | "">(

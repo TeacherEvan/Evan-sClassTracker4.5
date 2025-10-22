@@ -84,9 +84,44 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const [showMergeModal, setShowMergeModal] = useState(false);
 
   // Conflict detection state
-  const [conflictingClasses, setConflictingClasses] = useState<any[]>([]);
+  type ConflictClass = {
+    _id: Id<"classes">;
+    studentId: Id<"students">;
+    additionalStudentIds?: Id<"students">[];
+    locationId?: Id<"locations">;
+    scheduledDate: number;
+    status: string;
+    student: Partial<Doc<"students">> & { _id: Id<"students">; firstName: string; lastName: string } | null;
+    location: Partial<Doc<"locations">> & { _id: Id<"locations">; name: string; nameTh: string } | null;
+    teacherId: Id<"users">;
+    schoolId: Id<"schools">;
+  };
+  
+  type PendingBookingData = {
+    teacherId: Id<"users">;
+    schoolId: Id<"schools">;
+    studentId: Id<"students">;
+    locationId?: Id<"locations">;
+    pendingLocationName?: string;
+    pendingLocationNameTh?: string;
+    scheduledDate: number;
+    bookedByUserId: Id<"users">;
+    guardianTitle?: string;
+    duration?: number;
+    subject?: string;
+    subjectTh?: string;
+    lessonTopic?: string;
+    lessonTopicTh?: string;
+    materials?: string;
+    materialsTh?: string;
+    preparationNotes?: string;
+    preparationNotesTh?: string;
+    classType?: "regular" | "makeup" | "trial" | "assessment";
+  };
+  
+  const [conflictingClasses, setConflictingClasses] = useState<ConflictClass[]>([]);
   const [showConflictModal, setShowConflictModal] = useState(false);
-  const [pendingBookingData, setPendingBookingData] = useState<any>(null);
+  const [pendingBookingData, setPendingBookingData] = useState<PendingBookingData | null>(null);
 
   // Optional fields state
   const [showOptionalFields, setShowOptionalFields] = useState(false);
@@ -232,27 +267,33 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
           bookedByUserId: userId,
           guardianTitle: isGuardianLocation ? guardianTitle : undefined,
           ...optionalFields,
-        }) as any;
+        }) as { success: boolean; hasConflicts: boolean; conflicts?: Array<{
+          classId: Id<"classes">;
+          studentId: Id<"students">;
+          studentName: string;
+          locationId?: Id<"locations">;
+          locationName: string;
+          scheduledDate: number;
+          status: string;
+          additionalStudentIds?: Id<"students">[];
+        }>; classId?: Id<"classes"> };
 
         if (result.hasConflicts) {
           // Show conflict modal
-          const student = students?.find(s => s._id === studentId);
-          const location = locations?.find(l => l._id === locationId);
-          const locationDisplay = location?.name || pendingLocationName || "Unknown";
           
           setPendingBookingData({
             ...optionalFields,
             teacherId: effectiveTeacherId,
-            schoolId,
-            studentId,
-            locationId,
+            schoolId: schoolId as Id<"schools">,
+            studentId: studentId as Id<"students">,
+            locationId: locationId ? (locationId as Id<"locations">) : undefined,
             pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
             pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
             scheduledDate: datesToBook[0],
             bookedByUserId: userId,
             guardianTitle: isGuardianLocation ? guardianTitle : undefined,
           });
-          setConflictingClasses(result.conflicts.map((c: any) => ({
+          setConflictingClasses((result.conflicts || []).map((c) => ({
             _id: c.classId,
             studentId: c.studentId,
             additionalStudentIds: c.additionalStudentIds,
@@ -324,7 +365,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       const result = await bookClassWithConflictCheck({
         ...pendingBookingData,
         forceCreate: true,
-      }) as any;
+      }) as { success: boolean; classId?: Id<"classes"> };
       
       if (result.success && result.classId) {
         // Then add the student to the first conflicting class instead
@@ -1229,13 +1270,13 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       )}
 
       {/* Conflict Detection Modal */}
-      {showConflictModal && pendingBookingData && (
+      {showConflictModal && pendingBookingData && conflictingClasses.length > 0 && (
         <ClassConflictModal
           userId={userId}
           conflicts={conflictingClasses}
           newClassData={{
             studentId: pendingBookingData.studentId,
-            studentName: students?.find(s => s._id === pendingBookingData.studentId)?.firstName + " " + students?.find(s => s._id === pendingBookingData.studentId)?.lastName || "Unknown",
+            studentName: (students?.find(s => s._id === pendingBookingData.studentId)?.firstName || "Unknown") + " " + (students?.find(s => s._id === pendingBookingData.studentId)?.lastName || ""),
             scheduledDate: pendingBookingData.scheduledDate,
             locationId: pendingBookingData.locationId,
             locationName: locations?.find(l => l._id === pendingBookingData.locationId)?.name || pendingBookingData.pendingLocationName || "Unknown",
