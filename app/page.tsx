@@ -44,6 +44,7 @@ const PostClassNotesModal = lazy(() => import("@/components/post-class-notes-mod
 const UpdateAnnouncementModal = lazy(() => import("@/components/update-announcement-modal").then(m => ({ default: m.UpdateAnnouncementModal })));
 const AdminContactRequests = lazy(() => import("@/components/admin-contact-requests").then(m => ({ default: m.AdminContactRequests })));
 const AdminNotificationWindows = lazy(() => import("@/components/admin-notification-windows").then(m => ({ default: m.AdminNotificationWindows })));
+const ClassCountModal = lazy(() => import("@/components/class-count-modal").then(m => ({ default: m.ClassCountModal })));
 
 export default function Home() {
   const { t } = useLanguage();
@@ -55,6 +56,7 @@ export default function Home() {
   const [isDesktop, setIsDesktop] = useState(false);
   const [showPostClassNotes, setShowPostClassNotes] = useState(false);
   const [showUpdateAnnouncement, setShowUpdateAnnouncement] = useState(false);
+  const [showClassCountModal, setShowClassCountModal] = useState(false);
 
   // Query unread message count for current user
   const unreadCount = useQuery(
@@ -350,14 +352,18 @@ export default function Home() {
               <h1 className="text-xl md:text-3xl font-bold truncate">
                 {t("Class Tracker", "ติดตามชั้นเรียน")}
               </h1>
-              {/* Class Count Badge (Teachers Only) */}
+              {/* Class Count Badge (Teachers Only) - Clickable */}
               {user.role === "teacher" && teacherClassCount && (
-                <div className="flex items-center gap-1 px-2 md:px-3 py-1 md:py-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 dark:from-yellow-500 dark:to-yellow-600 rounded-full shadow-lg">
+                <button
+                  onClick={() => setShowClassCountModal(true)}
+                  className="flex items-center gap-1 px-2 md:px-3 py-1 md:py-1.5 bg-gradient-to-r from-yellow-400 to-yellow-500 dark:from-yellow-500 dark:to-yellow-600 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all active:scale-95 touch-manipulation"
+                  title={t("Click to view details", "คลิกเพื่อดูรายละเอียด")}
+                >
                   <GraduationCap className="w-3 h-3 md:w-4 md:h-4 text-yellow-900 dark:text-yellow-100" />
                   <span className="text-xs md:text-sm font-bold text-yellow-900 dark:text-yellow-100">
                     {teacherClassCount.total}
                   </span>
-                </div>
+                </button>
               )}
             </div>
             <p className="text-xs md:text-base text-gray-600 dark:text-gray-400 mt-1 truncate">
@@ -804,6 +810,16 @@ export default function Home() {
           <UpdateAnnouncementModal
             update={activeUpdate}
             onClose={handleUpdateAnnouncementClose}
+          />
+        </Suspense>
+      )}
+
+      {/* ClassCount Details Modal - Teachers only */}
+      {showClassCountModal && user && user.role === "teacher" && (
+        <Suspense fallback={null}>
+          <ClassCountModal
+            teacherId={user._id}
+            onClose={() => setShowClassCountModal(false)}
           />
         </Suspense>
       )}

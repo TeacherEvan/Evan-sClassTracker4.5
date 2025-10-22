@@ -202,6 +202,208 @@ export const getTeacherClassCountDetailed = query({
 });
 
 /**
+ * Get teacher's ClassCount for CURRENT cycle with full details
+ * Teachers can view their own data - shows which classes were counted
+ */
+export const getMyClassCountDetails = query({
+    args: {
+        teacherId: v.id("users"),
+    },
+    handler: async (ctx, args) => {
+        // Get teacher
+        const teacher = await ctx.db.get(args.teacherId);
+        if (!teacher) {
+            throw new Error("Teacher not found");
+        }
+
+        // Get active cycle for this teacher
+        const activeCycle = await ctx.db
+            .query("teacherClassCountCycles")
+            .withIndex("by_teacher_and_active", (q) =>
+                q.eq("teacherId", args.teacherId).eq("isActive", true)
+            )
+            .first();
+
+        // If no active cycle, use current month as default
+        const now = Date.now();
+        const currentMonth = new Date(now);
+        const defaultStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getTime();
+        const defaultEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0, 23, 59, 59).getTime();
+
+        const startDate = activeCycle?.cycleStartDate || defaultStart;
+        const endDate = activeCycle?.cycleEndDate || defaultEnd;
+
+        // Get classes in date range
+        const classes = await ctx.db
+            .query("classes")
+            .withIndex("by_teacher_and_date", (q) =>
+                q.eq("teacherId", args.teacherId)
+                    .gte("scheduledDate", startDate)
+                    .lte("scheduledDate", endDate)
+            )
+            .filter((q) => q.eq(q.field("status"), "approved"))
+            .collect();
+
+        // Batch fetch students, schools, and locations
+        const studentIds = new Set<Id<"students">>();
+        const schoolIds = new Set<Id<"schools">>();
+        const locationIds = new Set<Id<"locations">>();
+
+        classes.forEach(cls => {
+            studentIds.add(cls.studentId);
+            schoolIds.add(cls.schoolId);
+            if (cls.locationId) locationIds.add(cls.locationId);
+            cls.additionalStudentIds?.forEach(id => studentIds.add(id));
+        });
+
+        const [students, schools, locations] = await Promise.all([
+            Promise.all(Array.from(studentIds).map(id => ctx.db.get(id))),
+            Promise.all(Array.from(schoolIds).map(id => ctx.db.get(id))),
+            Promise.all(Array.from(locationIds).map(id => ctx.db.get(id))),
+        ]);
+
+        const studentMap = new Map(students.filter(s => s !== null).map(s => [s!._id, s]));
+        const schoolMap = new Map(schools.filter(s => s !== null).map(s => [s!._id, s]));
+        const locationMap = new Map(locations.filter(l => l !== null).map(l => [l!._id, l]));
+
+        // Calculate total and build class details
+        let totalClassCount = 0;
+        const classDetails = classes.map(cls => {
+            const studentCount = 1 + (cls.additionalStudentIds?.length || 0);
+            const durationMinutes = cls.duration || 60;
+            const classCount = studentCount * (durationMinutes / 60);
+            totalClassCount += classCount;
+
+            const primaryStudent = studentMap.get(cls.studentId);
+            const school = schoolMap.get(cls.schoolId);
+            const location = cls.locationId ? locationMap.get(cls.locationId) : null;
+
+            return {
+                classId: cls._id,
+                scheduledDate: cls.scheduledDate,
+                duration: durationMinutes,
+                studentCount,
+                classCount: Math.round(classCount * 10) / 10,
+                primaryStudentName: primaryStudent
+                    ? `${primaryStudent.firstName} ${primaryStudent.lastName}`
+                    : "Unknown",
+                schoolName: school?.name || "Unknown",
+                schoolNameTh: school?.nameTh || "ไม่ทราบ",
+                locationName: location?.name || cls.pendingLocationName || "Not specified",
+                locationNameTh: location?.nameTh || cls.pendingLocationNameTh || "ไม่ระบุ",
+                acknowledgedBy: cls.status === "approved" ? "Moderator" : "System",
+                acknowledgedAt: cls.createdAt,
+            };
+        });
+
+        return {
+            cycleInfo: {
+                startDate,
+                endDate,
+                isCustomCycle: !!activeCycle,
+                notes: activeCycle?.notes,
+                notesTh: activeCycle?.notesTh,
+            },
+            summary: {
+                totalClassCount: Math.round(totalClassCount * 10) / 10,
+                totalClasses: classes.length,
+            },
+            classes: classDetails,
+        };
+    },
+});
+
+/**
+ * Moderator sets custom cycle dates for a teacher
+ * Deactivates previous cycles and creates new active cycle
+ */
+export const setTeacherCycle = mutation({
+    args: {
+        teacherId: v.id("users"),
+        cycleStartDate: v.number(),
+        cycleEndDate: v.number(),
+        notes: v.optional(v.string()),
+        notesTh: v.optional(v.string()),
+        moderatorId: v.id("users"),
+    },
+    handler: async (ctx, args) => {
+        // Verify moderator authorization
+        const moderator = await ctx.db.get(args.moderatorId);
+        if (!moderator || (moderator.role !== "moderator" && moderator.role !== "admin")) {
+            throw new Error("Unauthorized: Only moderators can set cycle dates");
+        }
+
+        // Get teacher
+        const teacher = await ctx.db.get(args.teacherId);
+        if (!teacher) {
+            throw new Error("Teacher not found");
+        }
+
+        // Verify moderator school access (moderators can only manage their school)
+        if (moderator.role === "moderator" && teacher.schoolId !== moderator.schoolId) {
+            throw new Error("Unauthorized: Moderators can only manage teachers from their school");
+        }
+
+        // Validate dates
+        if (args.cycleStartDate >= args.cycleEndDate) {
+            throw new Error("Cycle start date must be before end date");
+        }
+
+        // Deactivate existing active cycles
+        const existingCycles = await ctx.db
+            .query("teacherClassCountCycles")
+            .withIndex("by_teacher_and_active", (q) =>
+                q.eq("teacherId", args.teacherId).eq("isActive", true)
+            )
+            .collect();
+
+        for (const cycle of existingCycles) {
+            await ctx.db.patch(cycle._id, { isActive: false });
+        }
+
+        // Create new active cycle
+        const cycleId = await ctx.db.insert("teacherClassCountCycles", {
+            teacherId: args.teacherId,
+            schoolId: teacher.schoolId!,
+            cycleStartDate: args.cycleStartDate,
+            cycleEndDate: args.cycleEndDate,
+            notes: args.notes,
+            notesTh: args.notesTh,
+            createdBy: args.moderatorId,
+            createdAt: Date.now(),
+            isActive: true,
+        });
+
+        // Send notification to teacher
+        const startDateStr = new Date(args.cycleStartDate).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric'
+        });
+        const endDateStr = new Date(args.cycleEndDate).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'short', day: 'numeric'
+        });
+        const startDateStrTh = new Date(args.cycleStartDate).toLocaleDateString('th-TH', {
+            year: 'numeric', month: 'short', day: 'numeric'
+        });
+        const endDateStrTh = new Date(args.cycleEndDate).toLocaleDateString('th-TH', {
+            year: 'numeric', month: 'short', day: 'numeric'
+        });
+
+        await ctx.db.insert("notifications", {
+            title: "ClassCount Cycle Updated",
+            titleTh: "อัปเดตรอบการนับชั้นเรียน",
+            message: `Your ClassCount tracking period has been updated by ${moderator.username}. New period: ${startDateStr} - ${endDateStr}`,
+            messageTh: `รอบการนับชั้นเรียนของคุณถูกอัปเดตโดย ${moderator.username} รอบใหม่: ${startDateStrTh} - ${endDateStrTh}`,
+            type: "info",
+            userId: args.teacherId,
+            read: false,
+            createdAt: Date.now(),
+        });
+
+        return cycleId;
+    },
+});
+
+/**
  * Log when a moderator views/exports a teacher's class count
  * Creates transparency notification for the teacher
  */

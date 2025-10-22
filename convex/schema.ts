@@ -370,6 +370,11 @@ export default defineSchema({
     resolvedBy: v.optional(v.id("users")),
     resolvedAt: v.optional(v.number()),
     createdAt: v.number(),
+    // Screenshot attachment fields
+    attachmentStorageId: v.optional(v.id("_storage")), // Convex file storage ID
+    attachmentName: v.optional(v.string()), // Original filename
+    attachmentType: v.optional(v.string()), // MIME type (image/png, image/jpeg)
+    attachmentSize: v.optional(v.number()), // File size in bytes
   })
     .index("by_user", ["userId"])
     .index("by_status", ["status"])
@@ -423,4 +428,21 @@ export default defineSchema({
     .index("by_moderator", ["moderatorId"])
     .index("by_timestamp", ["timestamp"])
     .index("by_teacher_and_timestamp", ["teacherId", "timestamp"]),
+
+  teacherClassCountCycles: defineTable({
+    teacherId: v.id("users"),
+    schoolId: v.id("schools"),
+    cycleStartDate: v.number(),
+    cycleEndDate: v.number(),
+    notes: v.optional(v.string()), // Moderator notes about this cycle
+    notesTh: v.optional(v.string()),
+    createdBy: v.id("users"), // Moderator who set this cycle
+    createdAt: v.number(),
+    isActive: v.boolean(), // Current active cycle vs historical
+  })
+    .index("by_teacher", ["teacherId"])
+    .index("by_school", ["schoolId"])
+    .index("by_active", ["isActive"])
+    .index("by_teacher_and_active", ["teacherId", "isActive"])
+    .index("by_created_at", ["createdAt"]),
 });

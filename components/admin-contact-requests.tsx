@@ -37,6 +37,13 @@ export function AdminContactRequests({
     status: statusFilter === "all" ? undefined : statusFilter,
   });
 
+  const getAttachmentUrl = useQuery(
+    api.adminContactRequests.getAttachmentUrl,
+    selectedRequest?.attachmentStorageId
+      ? { storageId: selectedRequest.attachmentStorageId as Id<"_storage"> }
+      : "skip"
+  );
+
   const updateStatus = useMutation(api.adminContactRequests.updateStatus);
   const deleteRequest = useMutation(api.adminContactRequests.remove);
 
@@ -133,8 +140,8 @@ export function AdminContactRequests({
               key={status}
               onClick={() => setStatusFilter(status as RequestStatus | "all")}
               className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${statusFilter === status
-                  ? "bg-orange-500 text-white shadow-md"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                ? "bg-orange-500 text-white shadow-md"
+                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                 }`}
             >
               {t(
@@ -255,6 +262,28 @@ export function AdminContactRequests({
             </div>
 
             <div className="p-6 space-y-4">
+              {(selectedRequest.attachmentStorageId as Id<"_storage"> | undefined) && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    {t("Attached Screenshot", "ภาพหน้าจอที่แนบมา")}
+                  </label>
+                  {getAttachmentUrl ? (
+                    <div className="border border-gray-300 dark:border-gray-600 rounded-xl overflow-hidden">
+                      <img
+                        src={getAttachmentUrl}
+                        alt={(selectedRequest.attachmentName as string) || "Screenshot"}
+                        className="w-full h-auto max-h-96 object-contain bg-gray-50 dark:bg-gray-800"
+                      />
+                      <div className="p-2 bg-gray-100 dark:bg-gray-700 text-xs text-gray-600 dark:text-gray-400">
+                        {selectedRequest.attachmentName as string} ({((selectedRequest.attachmentSize as number) / 1024).toFixed(1)} KB)
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-48 rounded-xl" />
+                  )}
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   {t("Admin Notes (English)", "หมายเหตุผู้จัดการ (อังกฤษ)")}
@@ -285,12 +314,12 @@ export function AdminContactRequests({
                     key={status}
                     onClick={() => handleUpdateStatus(status)}
                     className={`px-4 py-3 rounded-xl font-medium transition-all ${status === "resolved"
-                        ? "bg-green-500 hover:bg-green-600 text-white"
-                        : status === "dismissed"
-                          ? "bg-gray-500 hover:bg-gray-600 text-white"
-                          : status === "in_progress"
-                            ? "bg-blue-500 hover:bg-blue-600 text-white"
-                            : "bg-yellow-500 hover:bg-yellow-600 text-white"
+                      ? "bg-green-500 hover:bg-green-600 text-white"
+                      : status === "dismissed"
+                        ? "bg-gray-500 hover:bg-gray-600 text-white"
+                        : status === "in_progress"
+                          ? "bg-blue-500 hover:bg-blue-600 text-white"
+                          : "bg-yellow-500 hover:bg-yellow-600 text-white"
                       }`}
                   >
                     {t(

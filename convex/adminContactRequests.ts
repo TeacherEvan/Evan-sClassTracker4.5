@@ -57,6 +57,33 @@ export const myRequests = query({
   },
 });
 
+// Generate upload URL for screenshot attachment
+export const generateUploadUrl = mutation({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    // Verify user exists
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Generate upload URL (valid for 1 hour)
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+// Query to get attachment URL
+export const getAttachmentUrl = query({
+  args: {
+    storageId: v.id("_storage"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.storage.getUrl(args.storageId);
+  },
+});
+
 // Mutation to create a contact request
 export const create = mutation({
   args: {
@@ -72,6 +99,10 @@ export const create = mutation({
     subjectTh: v.string(),
     message: v.string(),
     messageTh: v.string(),
+    attachmentStorageId: v.optional(v.id("_storage")),
+    attachmentName: v.optional(v.string()),
+    attachmentType: v.optional(v.string()),
+    attachmentSize: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     // Rate limiting: 10 requests per 10 minutes
@@ -95,6 +126,27 @@ export const create = mutation({
       throw new Error("Message is required in at least one language");
     }
 
+    // Validate attachment if provided
+    if (args.attachmentStorageId) {
+      // Verify file exists in storage
+      const fileUrl = await ctx.storage.getUrl(args.attachmentStorageId);
+      if (!fileUrl) {
+        throw new Error("Attachment file not found");
+      }
+
+      // Validate file type (images only)
+      const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"];
+      if (args.attachmentType && !allowedTypes.includes(args.attachmentType)) {
+        throw new Error("Invalid file type. Only images are allowed.");
+      }
+
+      // Validate file size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (args.attachmentSize && args.attachmentSize > maxSize) {
+        throw new Error("File size exceeds 5MB limit");
+      }
+    }
+
     // Create request
     const requestId = await ctx.db.insert("adminContactRequests", {
       userId: args.userId,
@@ -107,6 +159,10 @@ export const create = mutation({
       messageTh: args.messageTh,
       status: "pending",
       createdAt: Date.now(),
+      attachmentStorageId: args.attachmentStorageId,
+      attachmentName: args.attachmentName,
+      attachmentType: args.attachmentType,
+      attachmentSize: args.attachmentSize,
     });
 
     // Create notification for all admins

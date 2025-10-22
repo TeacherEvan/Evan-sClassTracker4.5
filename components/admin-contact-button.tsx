@@ -36,9 +36,88 @@ export function AdminContactButton({
   const [message, setMessage] = useState("");
   const [messageTh, setMessageTh] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const currentUser = useQuery(api.users.getById, { id: currentUserId });
   const createContactRequest = useMutation(api.adminContactRequests.create);
+  const generateUploadUrl = useMutation(api.adminContactRequests.generateUploadUrl);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error(
+        "Invalid file type. Please select an image file.",
+        "ประเภทไฟล์ไม่ถูกต้อง กรุณาเลือกไฟล์รูปภาพ"
+      );
+      return;
+    }
+
+    // Validate file size (5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error(
+        "File size exceeds 5MB limit",
+        "ขนาดไฟล์เกิน 5MB"
+      );
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  const uploadFile = async (): Promise<{
+    storageId: string;
+    name: string;
+    type: string;
+    size: number;
+  } | null> => {
+    if (!selectedFile) return null;
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      // Get upload URL
+      const uploadUrl = await generateUploadUrl({ userId: currentUserId });
+
+      // Upload file
+      const response = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { "Content-Type": selectedFile.type },
+        body: selectedFile,
+      });
+
+      if (!response.ok) {
+        throw new Error("File upload failed");
+      }
+
+      const { storageId } = await response.json();
+
+      setUploadProgress(100);
+
+      return {
+        storageId,
+        name: selectedFile.name,
+        type: selectedFile.type,
+        size: selectedFile.size,
+      };
+    } catch (error) {
+      console.error("File upload error:", error);
+      toast.error(
+        "Failed to upload file",
+        "อัปโหลดไฟล์ล้มเหลว"
+      );
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     // Validate input
@@ -61,6 +140,16 @@ export function AdminContactButton({
     setIsSending(true);
 
     try {
+      // Upload file if selected
+      let attachmentData = null;
+      if (selectedFile) {
+        attachmentData = await uploadFile();
+        if (!attachmentData) {
+          setIsSending(false);
+          return;
+        }
+      }
+
       await createContactRequest({
         userId: currentUserId,
         requestType,
@@ -68,6 +157,10 @@ export function AdminContactButton({
         subjectTh,
         message,
         messageTh,
+        attachmentStorageId: attachmentData?.storageId as Id<"_storage"> | undefined,
+        attachmentName: attachmentData?.name,
+        attachmentType: attachmentData?.type,
+        attachmentSize: attachmentData?.size,
       });
 
       toast.success(
@@ -80,6 +173,7 @@ export function AdminContactButton({
       setSubjectTh("");
       setMessage("");
       setMessageTh("");
+      setSelectedFile(null);
       setRequestType("general");
       setShowDialog(false);
     } catch (error) {
@@ -214,8 +308,8 @@ export function AdminContactButton({
                         key={type}
                         onClick={() => setRequestType(type)}
                         className={`p-3 rounded-xl border-2 transition-all ${isSelected
-                            ? `${info.bgColor} ${info.borderColor} shadow-md scale-[1.02]`
-                            : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow"
+                          ? `${info.bgColor} ${info.borderColor} shadow-md scale-[1.02]`
+                          : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow"
                           }`}
                       >
                         <div className="flex flex-col items-center gap-2 text-center">
@@ -302,6 +396,46 @@ export function AdminContactButton({
                   rows={5}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white resize-none transition-all mt-2"
                 />
+              </div>
+
+              {/* Screenshot Attachment */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  {t("Attach Screenshot (Optional)", "แนบภาพหน้าจอ (ไม่บังคับ)")}
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileSelect}
+                  disabled={isSending || isUploading}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50 dark:file:bg-blue-900/30 dark:file:text-blue-300"
+                />
+                {selectedFile && (
+                  <div className="flex items-center gap-2 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg mt-2">
+                    <MessageCircle className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                    <span className="text-sm text-gray-700 dark:text-gray-300 flex-1 truncate">
+                      {selectedFile.name}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {(selectedFile.size / 1024).toFixed(1)} KB
+                    </span>
+                    <button
+                      onClick={() => setSelectedFile(null)}
+                      disabled={isSending || isUploading}
+                      className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded disabled:opacity-50"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                {isUploading && (
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full transition-all"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
