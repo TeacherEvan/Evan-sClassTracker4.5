@@ -566,17 +566,6 @@ export default function Home() {
               </button>
 
               <button
-                onClick={() => setActiveTab("students")}
-                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "students"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                  }`}
-              >
-                <GraduationCap className="w-4 h-4 md:w-5 md:h-5" />
-                {t("Students", "นักเรียน")}
-              </button>
-
-              <button
                 onClick={() => setActiveTab("moderators")}
                 className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "moderators"
                   ? "border-blue-500 text-blue-600 dark:text-blue-400"
@@ -609,6 +598,20 @@ export default function Home() {
                 {t("Testing", "ทดสอบ")}
               </button>
             </>
+          )}
+
+          {/* Students tab - Available to Admin and Moderator */}
+          {(user.role === "admin" || user.role === "moderator") && (
+            <button
+              onClick={() => setActiveTab("students")}
+              className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "students"
+                ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                }`}
+            >
+              <GraduationCap className="w-4 h-4 md:w-5 md:h-5" />
+              {t("Students", "นักเรียน")}
+            </button>
           )}
         </div>
       </div>
@@ -683,7 +686,7 @@ export default function Home() {
         </Suspense>
       )}
 
-      {activeTab === "students" && user.role === "admin" && (
+      {activeTab === "students" && (user.role === "admin" || user.role === "moderator") && (
         <Suspense fallback={<LoadingFallback />}>
           <StudentManagement currentUser={user} />
         </Suspense>
