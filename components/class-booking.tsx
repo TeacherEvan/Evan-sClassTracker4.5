@@ -318,6 +318,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       await requestCancellation({
         classId,
         teacherId: userId,
+        requestType: "cancel",
         reason,
         reasonTh,
       });
