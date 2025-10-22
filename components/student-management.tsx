@@ -17,6 +17,7 @@ type Student = {
     guardianId?: Id<"users">;
     guardianTitle?: string;
     grade: string;
+    class?: string;
     guardianName?: string;
     guardianPhone?: string;
     guardianEmail?: string;
@@ -45,6 +46,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [grade, setGrade] = useState("");
+    const [studentClass, setStudentClass] = useState("");
     const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
     const [guardianName, setGuardianName] = useState("");
     const [guardianPhone, setGuardianPhone] = useState("");
@@ -109,6 +111,17 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             return;
         }
 
+        // Validate: class is required for school-linked students
+        if (schoolId && !studentClass.trim()) {
+            setError(
+                t(
+                    "Class is required for students linked to a school",
+                    "ต้องระบุคลาสสำหรับนักเรียนที่เชื่อมโยงกับโรงเรียน"
+                )
+            );
+            return;
+        }
+
         try {
             if (editingStudent) {
                 // Update existing student
@@ -117,6 +130,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     firstName,
                     lastName,
                     grade,
+                    class: studentClass || undefined,
                     guardianName: guardianName || undefined,
                     guardianPhone: guardianPhone || undefined,
                     guardianEmail: guardianEmail || undefined,
@@ -141,6 +155,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     lastName,
                     schoolId: schoolId || undefined,
                     grade,
+                    class: studentClass || undefined,
                     guardianName: guardianName || undefined,
                     guardianPhone: guardianPhone || undefined,
                     guardianEmail: guardianEmail || undefined,
@@ -185,6 +200,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         setFirstName(student.firstName);
         setLastName(student.lastName);
         setGrade(student.grade);
+        setStudentClass(student.class || "");
         setSchoolId(student.schoolId || "");
         setGuardianName(student.guardianName || "");
         setGuardianPhone(student.guardianPhone || "");
@@ -252,6 +268,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         setFirstName("");
         setLastName("");
         setGrade("");
+        setStudentClass("");
         setSchoolId("");
         setGuardianName("");
         setGuardianPhone("");
@@ -395,18 +412,37 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        {t("Grade", "ระดับชั้น")} *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={grade}
-                                        onChange={(e) => setGrade(e.target.value)}
-                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                                        placeholder={t("e.g. Grade 5, P3, M2", "เช่น ป.5, ม.2")}
-                                        required
-                                    />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            {t("Grade", "ระดับชั้น")} *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={grade}
+                                            onChange={(e) => setGrade(e.target.value)}
+                                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                            placeholder={t("e.g. Grade 5, P3, M2", "เช่น ป.5, ม.2")}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            {t("Class", "คลาส")}{schoolId ? " *" : ""}
+                                        </label>
+                                        <select
+                                            value={studentClass}
+                                            onChange={(e) => setStudentClass(e.target.value)}
+                                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                            required={!!schoolId}
+                                        >
+                                            <option value="">{t("Select Class", "เลือกคลาส")}</option>
+                                            <option value="K1">K1</option>
+                                            <option value="K2">K2</option>
+                                            <option value="K3">K3</option>
+                                        </select>
+                                    </div>
                                 </div>
 
                                 <div>
@@ -715,6 +751,9 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                         {t("Grade", "ระดับชั้น")}
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                        {t("Class", "คลาส")}
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         {t("School/Guardian", "โรงเรียน/ผู้ปกครอง")}
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -741,6 +780,9 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
                                             {student.grade}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                            {student.class || "-"}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm">

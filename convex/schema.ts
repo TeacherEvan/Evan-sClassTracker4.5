@@ -105,6 +105,7 @@ export default defineSchema({
     guardianId: v.optional(v.id("users")), // Guardian user ID if linked to guardian
     guardianTitle: v.optional(v.string()), // Guardian relationship description (e.g., "Parent", "Tutor")
     grade: v.string(),
+    class: v.optional(v.string()), // Class designation (e.g., "K1", "K2", "K3") - required for school-linked students
     guardianName: v.optional(v.string()), // Guardian name if no school
     guardianPhone: v.optional(v.string()), // Guardian contact
     guardianEmail: v.optional(v.string()), // Guardian email
