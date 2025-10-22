@@ -374,9 +374,7 @@ export const bookWithConflictCheck = mutation({
     if (args.duration && (args.duration < 1 || args.duration > 480)) {
       throw new Error("Duration must be between 1 and 480 minutes");
     }
-    if (args.scheduledDate < Date.now()) {
-      throw new Error("Cannot schedule a class in the past");
-    }
+    // Allow scheduling classes in the past - useful for makeup classes or retroactive entries
     if (!args.locationId && !args.pendingLocationName && !args.pendingLocationNameTh) {
       throw new Error("Must provide either a location or at least one pending location name");
     }
@@ -412,6 +410,7 @@ export const bookWithConflictCheck = mutation({
     }
 
     // Determine status
+    // Moderators and admins creating new classes don't need acknowledgement
     const isModerator = bookingUser.role === "moderator" || bookingUser.role === "admin";
     const status = isGuardianLinked || isModerator ? "approved" : "pending";
 
@@ -448,6 +447,7 @@ export const bookWithConflictCheck = mutation({
 
     if (!isGuardianLinked && !isModerator && school && school.moderatorId) {
       const teacher = await ctx.db.get(args.teacherId);
+      // Notification for teacher request - requires acknowledgement
       await ctx.db.insert("notifications", {
         title: `New Class Request`,
         titleTh: `คำขอชั้นเรียนใหม่`,
@@ -557,10 +557,8 @@ export const book = mutation({
       throw new Error("Duration must be between 1 and 480 minutes");
     }
 
-    // Validate scheduled date
-    if (args.scheduledDate < Date.now()) {
-      throw new Error("Cannot schedule a class in the past");
-    }
+    // Allow scheduling classes in the past - useful for makeup classes or retroactive entries
+    // The same acknowledgement workflow applies regardless of past or future dates
 
     // Validate location - either locationId or at least one pending location name must be provided
     if (!args.locationId && !args.pendingLocationName && !args.pendingLocationNameTh) {
@@ -601,8 +599,8 @@ export const book = mutation({
 
     // Determine status based on who is booking and whether it's guardian-linked
     // Guardian-linked classes are auto-approved (no moderator workflow)
-    // Moderators and admins can directly book (approved status)
-    // Teachers create requests (pending status)
+    // Moderators and admins can directly book (approved status) - NO ACKNOWLEDGEMENT NEEDED FOR NEW CLASSES
+    // Teachers create requests (pending status) - REQUIRES ACKNOWLEDGEMENT
     const isModerator = bookingUser.role === "moderator" || bookingUser.role === "admin";
     const status = isGuardianLinked || isModerator ? "approved" : "pending";
 
@@ -641,7 +639,10 @@ export const book = mutation({
     const locationTextTh = location?.nameTh || args.pendingLocationNameTh || "ไม่ทราบสถานที่";
 
     // Only send notification if it's a teacher request (pending status)
-    // Skip notification for guardian-linked classes (auto-approved)
+    // Skip notification for:
+    // 1. Guardian-linked classes (auto-approved)
+    // 2. Moderator/admin created classes (they don't need to acknowledge their own new classes)
+    // Note: Moderators DO need acknowledgement when EDITING existing classes (handled in editClass mutation)
     if (!isGuardianLinked && !isModerator && school && school.moderatorId) {
       // Get teacher information
       const teacher = await ctx.db.get(args.teacherId);
