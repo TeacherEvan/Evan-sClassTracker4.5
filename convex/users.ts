@@ -122,11 +122,39 @@ export const create = mutation({
   },
 });
 
-// Mutation to authenticate user
+// Helper to parse user agent for login tracking
+function parseUserAgent(userAgent: string) {
+  const ua = userAgent.toLowerCase();
+
+  // Detect device type
+  let deviceType = "desktop";
+  if (ua.includes("mobile")) deviceType = "mobile";
+  else if (ua.includes("tablet") || ua.includes("ipad")) deviceType = "tablet";
+
+  // Detect platform
+  let platform = "Unknown";
+  if (ua.includes("windows")) platform = "Windows";
+  else if (ua.includes("mac")) platform = "macOS";
+  else if (ua.includes("iphone") || ua.includes("ipad")) platform = "iOS";
+  else if (ua.includes("android")) platform = "Android";
+  else if (ua.includes("linux")) platform = "Linux";
+
+  // Detect browser
+  let browser = "Unknown";
+  if (ua.includes("edg/")) browser = "Edge";
+  else if (ua.includes("chrome/")) browser = "Chrome";
+  else if (ua.includes("safari/") && !ua.includes("chrome")) browser = "Safari";
+  else if (ua.includes("firefox/")) browser = "Firefox";
+
+  return { deviceType, platform, browser };
+}
+
+// Mutation to authenticate user with rate limiting and login tracking
 export const login = mutation({
   args: {
     username: v.string(),
     password: v.string(),
+    userAgent: v.optional(v.string()), // Pass from client: navigator.userAgent
   },
   handler: async (ctx, args) => {
     const user = await ctx.db
@@ -138,9 +166,69 @@ export const login = mutation({
       throw new Error("Invalid username or password");
     }
 
-    if (!verifyPassword(args.password, user.passwordHash)) {
-      throw new Error("Invalid username or password");
+    // Check if account is locked
+    const now = Date.now();
+    if (user.accountLockedUntil && user.accountLockedUntil > now) {
+      const hoursRemaining = Math.ceil((user.accountLockedUntil - now) / (1000 * 60 * 60));
+      throw new Error(
+        `Account locked due to too many failed login attempts. Try again in ${hoursRemaining} hour(s) or contact an admin to reset your password.`
+      );
     }
+
+    // Auto-unlock if 24 hours passed
+    if (user.accountLockedUntil && user.accountLockedUntil <= now) {
+      await ctx.db.patch(user._id, {
+        accountLockedUntil: undefined,
+        failedLoginAttempts: 0,
+      });
+    }
+
+    // Verify password
+    if (!verifyPassword(args.password, user.passwordHash)) {
+      // Increment failed attempts
+      const failedAttempts = (user.failedLoginAttempts || 0) + 1;
+
+      if (failedAttempts >= 5) {
+        // Lock account for 24 hours
+        const lockoutUntil = now + (24 * 60 * 60 * 1000); // 24 hours
+        await ctx.db.patch(user._id, {
+          failedLoginAttempts: failedAttempts,
+          accountLockedUntil: lockoutUntil,
+        });
+        throw new Error(
+          "Too many failed login attempts. Account locked for 24 hours. Contact an admin to reset your password earlier."
+        );
+      } else {
+        // Track failed attempt
+        await ctx.db.patch(user._id, {
+          failedLoginAttempts: failedAttempts,
+        });
+        throw new Error(`Invalid username or password. ${5 - failedAttempts} attempt(s) remaining.`);
+      }
+    }
+
+    // Successful login - reset failed attempts and track login
+    const userAgentString = args.userAgent || "Unknown";
+    const { deviceType, platform, browser } = parseUserAgent(userAgentString);
+
+    const loginEntry = {
+      timestamp: now,
+      userAgent: userAgentString,
+      deviceType,
+      platform,
+      browser,
+    };
+
+    // Keep only last 10 logins
+    const existingHistory = user.loginHistory || [];
+    const newHistory = [loginEntry, ...existingHistory].slice(0, 10);
+
+    await ctx.db.patch(user._id, {
+      failedLoginAttempts: 0,
+      accountLockedUntil: undefined,
+      lastSuccessfulLogin: now,
+      loginHistory: newHistory,
+    });
 
     // Return user without password hash
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -199,13 +287,15 @@ export const resetPassword = mutation({
       throw new Error("User not found");
     }
 
-    // Reset to default password
+    // Reset to default password AND unlock account
     const defaultPassword = `Teacher${user.username}`;
     const passwordHash = hashPassword(defaultPassword);
 
     await ctx.db.patch(args.userId, {
       passwordHash,
       requirePasswordChange: true,
+      failedLoginAttempts: 0, // Reset failed attempts
+      accountLockedUntil: undefined, // Unlock account
     });
 
     return { success: true };
@@ -276,6 +366,27 @@ export const removePushSubscription = mutation({
     });
 
     return { success: true };
+  },
+});
+
+// Query to get login history for a user (users can see their own)
+export const getLoginHistory = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return {
+      loginHistory: user.loginHistory || [],
+      lastSuccessfulLogin: user.lastSuccessfulLogin,
+      failedLoginAttempts: user.failedLoginAttempts || 0,
+      accountLockedUntil: user.accountLockedUntil,
+    };
   },
 });
 

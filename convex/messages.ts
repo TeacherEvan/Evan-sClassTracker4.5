@@ -286,6 +286,11 @@ export const sendDirectMessage = mutation({
     recipientId: v.id("users"),
     content: v.string(),
     contentTh: v.string(),
+    // File attachment fields
+    attachmentStorageId: v.optional(v.id("_storage")),
+    attachmentName: v.optional(v.string()),
+    attachmentType: v.optional(v.string()),
+    attachmentSize: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     // ✅ SECURITY: Rate limiting - max 20 messages per minute per user
@@ -355,6 +360,12 @@ export const sendDirectMessage = mutation({
       read: false,
       acknowledged: false,
       createdAt: Date.now(),
+      isActive: true,
+      // File attachment fields
+      attachmentStorageId: args.attachmentStorageId,
+      attachmentName: args.attachmentName,
+      attachmentType: args.attachmentType,
+      attachmentSize: args.attachmentSize,
     });
 
     // Create notification for recipient
@@ -380,6 +391,11 @@ export const sendGroupMessage = mutation({
     schoolId: v.id("schools"),
     content: v.string(),
     contentTh: v.string(),
+    // File attachment fields
+    attachmentStorageId: v.optional(v.id("_storage")),
+    attachmentName: v.optional(v.string()),
+    attachmentType: v.optional(v.string()),
+    attachmentSize: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     // ✅ SECURITY: Rate limiting - max 10 group messages per minute per user
@@ -407,6 +423,12 @@ export const sendGroupMessage = mutation({
       read: false,
       acknowledged: false,
       createdAt: Date.now(),
+      isActive: true,
+      // File attachment fields
+      attachmentStorageId: args.attachmentStorageId,
+      attachmentName: args.attachmentName,
+      attachmentType: args.attachmentType,
+      attachmentSize: args.attachmentSize,
     });
 
     return messageId;
@@ -532,5 +554,24 @@ export const deleteOldMessages = internalMutation({
       deleted: deletedCount,
       timestamp: Date.now(),
     };
+  },
+});
+
+// ==================== FILE ATTACHMENT SUPPORT ====================
+
+// Mutation to generate upload URL for message attachments
+export const generateUploadUrl = mutation({
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+// Query to get attachment URL from storage ID
+export const getAttachmentUrl = query({
+  args: {
+    storageId: v.id("_storage"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.storage.getUrl(args.storageId);
   },
 });

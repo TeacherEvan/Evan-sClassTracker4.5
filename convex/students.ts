@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { validateLength } from "./rateLimit";
 
 // Helper function to generate unique student ID
 function generateStudentId(firstName: string, lastName: string, schoolId: string): string {
@@ -92,6 +93,12 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // ✅ SECURITY: Input validation - student names max 100 chars
+    validateLength(args.firstName, "First name", 100, 1);
+    validateLength(args.lastName, "Last name", 100, 1);
+    if (args.nickname) validateLength(args.nickname, "Nickname", 100, 0);
+    if (args.notes) validateLength(args.notes, "Notes", 2000, 0);
+
     // Validate: class is required for school-linked students
     if (args.schoolId && !args.class) {
       throw new Error("Class is required for students linked to a school");
@@ -378,10 +385,10 @@ export const migrateClassField = mutation({
       }
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: `Successfully updated ${updatedCount} student(s) with detected class`,
-      updatedCount 
+      updatedCount
     };
   },
 });

@@ -27,7 +27,9 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     setLoading(true);
 
     try {
-      const user = await login({ username, password });
+      // Pass user agent for login tracking
+      const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : "Unknown";
+      const user = await login({ username, password, userAgent });
       onLoginSuccess(user);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");

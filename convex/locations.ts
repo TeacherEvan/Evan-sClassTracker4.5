@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { validateLength } from "./rateLimit";
 
 // Query to list all locations
 export const list = query({
@@ -49,6 +50,10 @@ export const create = mutation({
         requestedBy: v.optional(v.id("users")), // Teacher who requested
     },
     handler: async (ctx, args) => {
+        // ✅ SECURITY: Input validation - location names max 200 chars
+        validateLength(args.name, "Location name", 200, 0);
+        validateLength(args.nameTh, "Thai location name", 200, 0);
+
         // Validate inputs
         if (!args.name.trim() && !args.nameTh.trim()) {
             throw new Error("Location name is required in at least one language");

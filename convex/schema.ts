@@ -22,6 +22,18 @@ export default defineSchema({
     )),
     lastDeviceUpdate: v.optional(v.number()),
     pushSubscription: v.optional(v.string()), // JSON stringified PushSubscription
+    // Login security fields
+    failedLoginAttempts: v.optional(v.number()), // Track failed login attempts
+    accountLockedUntil: v.optional(v.number()), // Timestamp when account unlocks (24hr lockout)
+    lastSuccessfulLogin: v.optional(v.number()), // Timestamp of last successful login
+    // Login history (last 10 logins)
+    loginHistory: v.optional(v.array(v.object({
+      timestamp: v.number(),
+      userAgent: v.string(),
+      deviceType: v.string(), // mobile/tablet/desktop
+      platform: v.string(), // Windows/macOS/iOS/Android
+      browser: v.string(), // Chrome/Safari/Firefox/Edge
+    }))),
   })
     .index("by_username", ["username"])
     .index("by_school", ["schoolId"])
@@ -161,6 +173,13 @@ export default defineSchema({
     read: v.boolean(),
     acknowledged: v.boolean(), // For acknowledgment messages
     createdAt: v.number(),
+    // File attachment fields (like adminContactRequests)
+    attachmentStorageId: v.optional(v.id("_storage")), // Convex file storage ID
+    attachmentName: v.optional(v.string()), // Original filename
+    attachmentType: v.optional(v.string()), // MIME type
+    attachmentSize: v.optional(v.number()), // File size in bytes
+    // Auto-delete field
+    isActive: v.optional(v.boolean()), // false = soft deleted (for 14-day cleanup)
   })
     .index("by_sender", ["senderId"])
     .index("by_recipient", ["recipientId"])
@@ -168,7 +187,8 @@ export default defineSchema({
     .index("by_group", ["groupId"])
     .index("by_created_at", ["createdAt"])
     .index("by_conversation", ["senderId", "recipientId"])
-    .index("by_school_and_date", ["schoolId", "createdAt"]),
+    .index("by_school_and_date", ["schoolId", "createdAt"])
+    .index("by_active", ["isActive"]), // For filtering soft-deleted messages
 
   groups: defineTable({
     name: v.string(),
