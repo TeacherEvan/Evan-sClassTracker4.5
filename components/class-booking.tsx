@@ -86,6 +86,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   const [newStudentFirstName, setNewStudentFirstName] = useState("");
   const [newStudentLastName, setNewStudentLastName] = useState("");
   const [newStudentGrade, setNewStudentGrade] = useState("");
+  const [newStudentClass, setNewStudentClass] = useState("");
   const [newStudentSchoolId, setNewStudentSchoolId] = useState<Id<"schools"> | "">("");
 
   // Guardian title state
@@ -329,7 +330,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   };
 
   const handleCreateStudent = async () => {
-    if (!newStudentFirstName.trim() || !newStudentLastName.trim() || !newStudentGrade.trim() || !newStudentSchoolId) {
+    if (!newStudentFirstName.trim() || !newStudentLastName.trim() || !newStudentGrade.trim() || !newStudentClass.trim() || !newStudentSchoolId) {
       setError(t("Please fill in all student fields", "กรุณากรอกข้อมูลนักเรียนให้ครบถ้วน"));
       return;
     }
@@ -340,6 +341,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
         firstName: newStudentFirstName,
         lastName: newStudentLastName,
         grade: newStudentGrade,
+        class: newStudentClass,
         schoolId: newStudentSchoolId as Id<"schools">,
         createdBy: userId,
       });
@@ -353,6 +355,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
       setNewStudentFirstName("");
       setNewStudentLastName("");
       setNewStudentGrade("");
+      setNewStudentClass("");
       setNewStudentSchoolId("");
 
       toast.success("Student created successfully!", "สร้างข้อมูลนักเรียนสำเร็จ!");
@@ -447,6 +450,17 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
                       disabled={loading}
                     />
+                    <select
+                      value={newStudentClass}
+                      onChange={(e) => setNewStudentClass(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      disabled={loading}
+                    >
+                      <option value="">{t("Select Class", "เลือกคลาส")}</option>
+                      <option value="K1">K1</option>
+                      <option value="K2">K2</option>
+                      <option value="K3">K3</option>
+                    </select>
                     <select
                       value={newStudentSchoolId}
                       onChange={(e) => setNewStudentSchoolId(e.target.value as Id<"schools"> | "")}

@@ -73,6 +73,7 @@ export const create = mutation({
     guardianId: v.optional(v.id("users")), // Guardian user ID
     guardianTitle: v.optional(v.string()), // Relationship description
     grade: v.string(),
+    class: v.optional(v.string()), // Class designation (K1, K2, K3, etc.)
     guardianName: v.optional(v.string()),
     guardianPhone: v.optional(v.string()),
     guardianEmail: v.optional(v.string()),
@@ -91,6 +92,10 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Validate: class is required for school-linked students
+    if (args.schoolId && !args.class) {
+      throw new Error("Class is required for students linked to a school");
+    }
     // Generate unique student ID
     const schoolIdForHash = args.schoolId || "GUARDIAN";
     let studentId = generateStudentId(args.firstName, args.lastName, schoolIdForHash);
@@ -126,6 +131,7 @@ export const create = mutation({
       guardianId: args.guardianId,
       guardianTitle: args.guardianTitle,
       grade: args.grade,
+      class: args.class,
       guardianName: args.guardianName,
       guardianPhone: args.guardianPhone,
       guardianEmail: args.guardianEmail,
@@ -172,6 +178,7 @@ export const update = mutation({
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
     grade: v.optional(v.string()),
+    class: v.optional(v.string()),
     guardianId: v.optional(v.id("users")),
     guardianTitle: v.optional(v.string()),
     guardianName: v.optional(v.string()),
@@ -192,6 +199,17 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args;
+
+    // Get existing student to validate schoolId requirement
+    const student = await ctx.db.get(id);
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
+    // Validate: class is required for school-linked students
+    if (student.schoolId && updates.class === "") {
+      throw new Error("Class is required for students linked to a school");
+    }
 
     const filteredUpdates = Object.fromEntries(
       Object.entries(updates).filter(([, v]) => v !== undefined)
@@ -315,5 +333,53 @@ export const acknowledgeStudent = mutation({
     });
 
     return { success: true };
+  },
+});
+
+// Migration mutation to auto-classify existing students with "K" pattern
+export const migrateClassField = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const allStudents = await ctx.db.query("students").collect();
+    let updatedCount = 0;
+
+    for (const student of allStudents) {
+      // Skip if class is already set or student is not linked to a school
+      if (student.class || !student.schoolId) {
+        continue;
+      }
+
+      // Check grade, firstName, lastName, nickname, and notes for K1, K2, or K3
+      const searchFields = [
+        student.grade,
+        student.firstName,
+        student.lastName,
+        (student as any).nickname || "",
+        (student as any).notes || "",
+      ].join(" ").toUpperCase();
+
+      let detectedClass: string | null = null;
+
+      // Check for K1, K2, K3 patterns
+      if (/\bK1\b/.test(searchFields) || /\bK\s*1\b/.test(searchFields)) {
+        detectedClass = "K1";
+      } else if (/\bK2\b/.test(searchFields) || /\bK\s*2\b/.test(searchFields)) {
+        detectedClass = "K2";
+      } else if (/\bK3\b/.test(searchFields) || /\bK\s*3\b/.test(searchFields)) {
+        detectedClass = "K3";
+      }
+
+      // Update student if class was detected
+      if (detectedClass) {
+        await ctx.db.patch(student._id, { class: detectedClass });
+        updatedCount++;
+      }
+    }
+
+    return { 
+      success: true, 
+      message: `Successfully updated ${updatedCount} student(s) with detected class`,
+      updatedCount 
+    };
   },
 });
