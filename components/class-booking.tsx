@@ -1376,7 +1376,7 @@ function ClassItemDisplay({
               <Edit2 className="w-4 h-4" />
               {t("Edit Class", "แก้ไขคลาส")}
             </button>
-            {(userRole === "admin" || userRole === "moderator") && (
+            {(userRole === "admin" || userRole === "moderator") && classItem.scheduledDate >= Date.now() && (
               <button
                 onClick={() => onDelete(classItem._id)}
                 className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all"

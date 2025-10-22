@@ -651,6 +651,12 @@ export const deleteClass = mutation({
       requireModeratorOrAdmin: true
     });
 
+    // Check if class date has not passed yet
+    const currentTime = Date.now();
+    if (classData.scheduledDate < currentTime) {
+      throw new Error("Cannot delete classes whose dates have already passed");
+    }
+
     // Get user for notification message
     const user = await ctx.db.get(args.userId);
 
