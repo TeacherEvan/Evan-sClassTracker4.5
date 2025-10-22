@@ -79,7 +79,7 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
   const [materialsTh, setMaterialsTh] = useState("");
   const [preparationNotes, setPreparationNotes] = useState("");
   const [preparationNotesTh, setPreparationNotesTh] = useState("");
-  const [classType, setClassType] = useState<"regular" | "makeup" | "trial" | "assessment" | "special">("regular");
+  const [classType, setClassType] = useState<"regular" | "makeup" | "trial" | "assessment">("regular");
 
   // Student creation state
   const [creatingStudent, setCreatingStudent] = useState(false);
@@ -1017,7 +1017,6 @@ export function ClassBooking({ userId, userRole }: ClassBookingProps) {
                       <option value="makeup">{t("Makeup", "ชดเชย")}</option>
                       <option value="trial">{t("Trial", "ทดลอง")}</option>
                       <option value="assessment">{t("Assessment", "ประเมินผล")}</option>
-                      <option value="special">{t("Special", "พิเศษ")}</option>
                     </select>
                   </div>
                 </div>

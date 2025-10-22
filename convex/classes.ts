@@ -240,6 +240,22 @@ export const book = mutation({
     guardianTitle: v.optional(v.string()), // Guardian title for guardian-linked classes
     scheduledDate: v.number(),
     bookedByUserId: v.id("users"), // ID of the user creating the booking
+    // Optional fields
+    duration: v.optional(v.number()),
+    subject: v.optional(v.string()),
+    subjectTh: v.optional(v.string()),
+    lessonTopic: v.optional(v.string()),
+    lessonTopicTh: v.optional(v.string()),
+    materials: v.optional(v.string()),
+    materialsTh: v.optional(v.string()),
+    preparationNotes: v.optional(v.string()),
+    preparationNotesTh: v.optional(v.string()),
+    classType: v.optional(v.union(
+      v.literal("regular"),
+      v.literal("makeup"),
+      v.literal("trial"),
+      v.literal("assessment")
+    )),
   },
   handler: async (ctx, args) => {
     // ✅ SECURITY: Rate limiting - max 30 class bookings per minute per user
@@ -258,6 +274,35 @@ export const book = mutation({
     }
     if (args.guardianTitle) {
       validateLength(args.guardianTitle, "Guardian title", 100, 1);
+    }
+
+    // ✅ SECURITY: Validate optional fields if provided
+    if (args.subject) {
+      validateLength(args.subject, "Subject", 100, 1);
+    }
+    if (args.subjectTh) {
+      validateLength(args.subjectTh, "Thai subject", 100, 0);
+    }
+    if (args.lessonTopic) {
+      validateLength(args.lessonTopic, "Lesson topic", 200, 1);
+    }
+    if (args.lessonTopicTh) {
+      validateLength(args.lessonTopicTh, "Thai lesson topic", 200, 0);
+    }
+    if (args.materials) {
+      validateLength(args.materials, "Materials", 500, 1);
+    }
+    if (args.materialsTh) {
+      validateLength(args.materialsTh, "Thai materials", 500, 0);
+    }
+    if (args.preparationNotes) {
+      validateLength(args.preparationNotes, "Preparation notes", 1000, 1);
+    }
+    if (args.preparationNotesTh) {
+      validateLength(args.preparationNotesTh, "Thai preparation notes", 1000, 0);
+    }
+    if (args.duration && (args.duration < 1 || args.duration > 480)) {
+      throw new Error("Duration must be between 1 and 480 minutes");
     }
 
     // Validate scheduled date
@@ -322,6 +367,17 @@ export const book = mutation({
       status,
       scheduledDate: args.scheduledDate,
       createdAt: Date.now(),
+      // Include optional fields if provided
+      ...(args.duration && { duration: args.duration }),
+      ...(args.subject && { subject: args.subject }),
+      ...(args.subjectTh && { subjectTh: args.subjectTh }),
+      ...(args.lessonTopic && { lessonTopic: args.lessonTopic }),
+      ...(args.lessonTopicTh && { lessonTopicTh: args.lessonTopicTh }),
+      ...(args.materials && { materials: args.materials }),
+      ...(args.materialsTh && { materialsTh: args.materialsTh }),
+      ...(args.preparationNotes && { preparationNotes: args.preparationNotes }),
+      ...(args.preparationNotesTh && { preparationNotesTh: args.preparationNotesTh }),
+      ...(args.classType && { classType: args.classType }),
     });
 
     // Get the school to find the moderator
