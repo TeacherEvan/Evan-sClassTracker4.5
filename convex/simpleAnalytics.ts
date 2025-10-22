@@ -221,3 +221,171 @@ export const getLocationUtilization = query({
             .sort((a, b) => b.total - a.total);
     },
 });
+
+// Get engagement metrics - response times and approval rates
+export const getEngagementMetrics = query({
+    args: {
+        schoolId: v.id("schools"),
+        startDate: v.optional(v.number()),
+        endDate: v.optional(v.number()),
+    },
+    handler: async (ctx, args) => {
+        const start = args.startDate || Date.now() - 30 * 24 * 60 * 60 * 1000;
+        const end = args.endDate || Date.now();
+
+        const classes = await ctx.db
+            .query("classes")
+            .withIndex("by_school_and_date", (q) =>
+                q.eq("schoolId", args.schoolId).gte("scheduledDate", start).lte("scheduledDate", end)
+            )
+            .collect();
+
+        // Calculate metrics
+        let totalApprovalTime = 0;
+        let approvalCount = 0;
+        let totalAcknowledgementTime = 0;
+        let acknowledgementCount = 0;
+        let editedClassesCount = 0;
+
+        const statusCounts = {
+            pending: 0,
+            acknowledged: 0,
+            approved: 0,
+            rejected: 0,
+        };
+
+        for (const cls of classes) {
+            statusCounts[cls.status]++;
+
+            // Track edited classes
+            if (cls.isEdited) {
+                editedClassesCount++;
+            }
+
+            // For approved/rejected classes, estimate response time
+            // (In real implementation, you'd store acknowledgement/approval timestamps)
+            if (cls.status === "approved" || cls.status === "rejected") {
+                approvalCount++;
+            }
+            if (cls.status === "acknowledged" || cls.status === "approved") {
+                acknowledgementCount++;
+            }
+        }
+
+        const totalClasses = classes.length;
+        const processedClasses = statusCounts.approved + statusCounts.rejected;
+        const approvalRate = processedClasses > 0 ? (statusCounts.approved / processedClasses) * 100 : 0;
+        const editRate = totalClasses > 0 ? (editedClassesCount / totalClasses) * 100 : 0;
+
+        return {
+            totalClasses,
+            statusCounts,
+            approvalRate: Math.round(approvalRate * 100) / 100,
+            editRate: Math.round(editRate * 100) / 100,
+            editedClassesCount,
+            pendingResponseRate: totalClasses > 0 ? Math.round((statusCounts.pending / totalClasses) * 100 * 100) / 100 : 0,
+        };
+    },
+});
+
+// Get weekly trend comparison
+export const getWeeklyComparison = query({
+    args: {
+        schoolId: v.id("schools"),
+    },
+    handler: async (ctx, args) => {
+        const now = Date.now();
+        const oneWeek = 7 * 24 * 60 * 60 * 1000;
+
+        // Current week
+        const currentWeekStart = now - oneWeek;
+        const currentWeekClasses = await ctx.db
+            .query("classes")
+            .withIndex("by_school_and_date", (q) =>
+                q.eq("schoolId", args.schoolId).gte("scheduledDate", currentWeekStart).lte("scheduledDate", now)
+            )
+            .collect();
+
+        // Previous week
+        const previousWeekStart = currentWeekStart - oneWeek;
+        const previousWeekClasses = await ctx.db
+            .query("classes")
+            .withIndex("by_school_and_date", (q) =>
+                q.eq("schoolId", args.schoolId).gte("scheduledDate", previousWeekStart).lte("scheduledDate", currentWeekStart)
+            )
+            .collect();
+
+        const currentWeekStats = {
+            total: currentWeekClasses.length,
+            approved: currentWeekClasses.filter(c => c.status === "approved").length,
+            pending: currentWeekClasses.filter(c => c.status === "pending").length,
+            rejected: currentWeekClasses.filter(c => c.status === "rejected").length,
+        };
+
+        const previousWeekStats = {
+            total: previousWeekClasses.length,
+            approved: previousWeekClasses.filter(c => c.status === "approved").length,
+            pending: previousWeekClasses.filter(c => c.status === "pending").length,
+            rejected: previousWeekClasses.filter(c => c.status === "rejected").length,
+        };
+
+        // Calculate percentage changes
+        const calculateChange = (current: number, previous: number) => {
+            if (previous === 0) return current > 0 ? 100 : 0;
+            return Math.round(((current - previous) / previous) * 100);
+        };
+
+        return {
+            currentWeek: currentWeekStats,
+            previousWeek: previousWeekStats,
+            changes: {
+                total: calculateChange(currentWeekStats.total, previousWeekStats.total),
+                approved: calculateChange(currentWeekStats.approved, previousWeekStats.approved),
+                pending: calculateChange(currentWeekStats.pending, previousWeekStats.pending),
+                rejected: calculateChange(currentWeekStats.rejected, previousWeekStats.rejected),
+            },
+        };
+    },
+});
+
+// Get most active teachers
+export const getMostActiveTeachers = query({
+    args: {
+        schoolId: v.id("schools"),
+        limit: v.optional(v.number()),
+        startDate: v.optional(v.number()),
+        endDate: v.optional(v.number()),
+    },
+    handler: async (ctx, args) => {
+        const limit = args.limit || 5;
+        const start = args.startDate || Date.now() - 30 * 24 * 60 * 60 * 1000;
+        const end = args.endDate || Date.now();
+
+        const classes = await ctx.db
+            .query("classes")
+            .withIndex("by_school_and_date", (q) =>
+                q.eq("schoolId", args.schoolId).gte("scheduledDate", start).lte("scheduledDate", end)
+            )
+            .collect();
+
+        // Group by teacher
+        const teacherStats: Record<string, { count: number; username: string }> = {};
+
+        for (const cls of classes) {
+            const teacherId = cls.teacherId;
+            if (!teacherStats[teacherId]) {
+                const teacher = await ctx.db.get(teacherId);
+                teacherStats[teacherId] = {
+                    count: 0,
+                    username: teacher?.username || "Unknown",
+                };
+            }
+            teacherStats[teacherId].count++;
+        }
+
+        return Object.entries(teacherStats)
+            .map(([teacherId, stats]) => ({ teacherId, ...stats }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, limit);
+    },
+});
