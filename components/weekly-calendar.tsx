@@ -352,7 +352,11 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                     <button
                                         onClick={() => handleAddClass(day)}
                                         className="p-1 md:p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded active:scale-95 transition-all touch-manipulation"
-                                        title={t("Add class", "เพิ่มคลาส")}
+                                        title={
+                                            currentUser.role === "moderator" || currentUser.role === "admin"
+                                                ? t("Book class", "จองคลาส")
+                                                : t("Request class", "ขอจองคลาส")
+                                        }
                                     >
                                         <Plus className="w-4 h-4 md:w-4 md:h-4" />
                                     </button>
@@ -440,7 +444,9 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-gray-200 dark:border-gray-700">
                                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                    {t("Add Class", "เพิ่มคลาส")}
+                                    {currentUser.role === "moderator" || currentUser.role === "admin"
+                                        ? t("Book Class", "จองคลาส")
+                                        : t("Request Class", "ขอจองคลาส")}
                                 </h3>
                                 <button
                                     onClick={() => {
@@ -665,7 +671,9 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                         type="submit"
                                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                     >
-                                        {t("Create Class", "สร้างคลาส")}
+                                        {currentUser.role === "moderator" || currentUser.role === "admin"
+                                            ? t("Book Class", "จองคลาส")
+                                            : t("Request Class", "ขอจองคลาส")}
                                     </button>
                                     <button
                                         type="button"
