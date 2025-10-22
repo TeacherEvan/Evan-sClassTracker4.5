@@ -108,7 +108,7 @@ export function ClassDetailModal({
     const approveClass = useMutation(api.classes.approve);
     const rejectClass = useMutation(api.classes.reject);
     const createCancellationRequest = useMutation(api.cancellationRequests.create);
-    
+
     // Check for pending requests
     const pendingRequest = useQuery(
         api.cancellationRequests.list,

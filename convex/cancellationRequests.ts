@@ -102,14 +102,14 @@ export const create = mutation({
         // Check if there's already a pending request for this class
         const existingRequest = await ctx.db
             .query("cancellationRequests")
-            .withIndex("by_class_and_status", (q) => 
+            .withIndex("by_class_and_status", (q) =>
                 q.eq("classId", args.classId).eq("status", "pending")
             )
             .first();
 
         if (existingRequest) {
-            const requestTypeText = existingRequest.requestType === "cancel" 
-                ? "cancellation" 
+            const requestTypeText = existingRequest.requestType === "cancel"
+                ? "cancellation"
                 : "postponement";
             throw new Error(`A ${requestTypeText} request for this class is already pending`);
         }
@@ -149,19 +149,19 @@ export const create = mutation({
         if (school && school.moderatorId && student) {
             const locationText = location?.name || classData.pendingLocationName || "Unknown location";
             const locationTextTh = location?.nameTh || classData.pendingLocationNameTh || "ไม่ทราบสถานที่";
-            
+
             const isPostpone = args.requestType === "postpone";
-            const newDateText = args.newScheduledDate 
+            const newDateText = args.newScheduledDate
                 ? new Date(args.newScheduledDate).toLocaleDateString("en-US")
                 : "";
-            const newDateTextTh = args.newScheduledDate 
+            const newDateTextTh = args.newScheduledDate
                 ? new Date(args.newScheduledDate).toLocaleDateString("th-TH")
                 : "";
 
             await ctx.db.insert("notifications", {
                 title: isPostpone ? `Class Postponement Request` : `Class Cancellation Request`,
                 titleTh: isPostpone ? `คำขอเลื่อนชั้นเรียน` : `คำขอยกเลิกชั้นเรียน`,
-                message: isPostpone 
+                message: isPostpone
                     ? `Teacher ${teacher?.username || "Unknown"} has requested to postpone the class for ${student.firstName} ${student.lastName} at ${locationText} to ${newDateText}. Reason: ${args.reason}`
                     : `Teacher ${teacher?.username || "Unknown"} has requested to cancel the class for ${student.firstName} ${student.lastName} at ${locationText}. Reason: ${args.reason}`,
                 messageTh: isPostpone
@@ -176,10 +176,10 @@ export const create = mutation({
 
         // Log the action
         const isPostpone = args.requestType === "postpone";
-        const newDateForLog = args.newScheduledDate 
+        const newDateForLog = args.newScheduledDate
             ? new Date(args.newScheduledDate).toLocaleDateString("en-US")
             : "";
-        const newDateForLogTh = args.newScheduledDate 
+        const newDateForLogTh = args.newScheduledDate
             ? new Date(args.newScheduledDate).toLocaleDateString("th-TH")
             : "";
 
@@ -253,10 +253,10 @@ export const approve = mutation({
             const locationText = location?.name || classData?.pendingLocationName || "Unknown location";
             const locationTextTh = location?.nameTh || classData?.pendingLocationNameTh || "ไม่ทราบสถานที่";
             const isPostpone = request.requestType === "postpone";
-            const newDateText = request.newScheduledDate 
+            const newDateText = request.newScheduledDate
                 ? new Date(request.newScheduledDate).toLocaleDateString("en-US")
                 : "";
-            const newDateTextTh = request.newScheduledDate 
+            const newDateTextTh = request.newScheduledDate
                 ? new Date(request.newScheduledDate).toLocaleDateString("th-TH")
                 : "";
 
@@ -282,10 +282,10 @@ export const approve = mutation({
         // Log the action
         if (classData) {
             const isPostpone = request.requestType === "postpone";
-            const newDateForLog = request.newScheduledDate 
+            const newDateForLog = request.newScheduledDate
                 ? new Date(request.newScheduledDate).toLocaleDateString("en-US")
                 : "";
-            const newDateForLogTh = request.newScheduledDate 
+            const newDateForLogTh = request.newScheduledDate
                 ? new Date(request.newScheduledDate).toLocaleDateString("th-TH")
                 : "";
 
