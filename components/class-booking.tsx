@@ -140,7 +140,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const [creatingStudent, setCreatingStudent] = useState(false);
   const [newStudentFirstName, setNewStudentFirstName] = useState("");
   const [newStudentLastName, setNewStudentLastName] = useState("");
-  const [newStudentGrade, setNewStudentGrade] = useState("");
   const [newStudentClass, setNewStudentClass] = useState("");
   const [newStudentSchoolId, setNewStudentSchoolId] = useState<Id<"schools"> | "">("");
 
@@ -549,17 +548,25 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   };
 
   const handleCreateStudent = async () => {
-    if (!newStudentFirstName.trim() || !newStudentLastName.trim() || !newStudentGrade.trim() || !newStudentClass.trim() || !newStudentSchoolId) {
+    if (!newStudentFirstName.trim() || !newStudentLastName.trim() || !newStudentClass.trim() || !newStudentSchoolId) {
       setError(t("Please fill in all student fields", "กรุณากรอกข้อมูลนักเรียนให้ครบถ้วน"));
       return;
     }
 
     setLoading(true);
     try {
+      // Auto-derive grade from class field
+      const gradeMap: Record<string, string> = {
+        "K1": "Kindergarten 1",
+        "K2": "Kindergarten 2",
+        "K3": "Kindergarten 3",
+      };
+      const derivedGrade = gradeMap[newStudentClass] || newStudentClass;
+
       const newStudentData = await createStudent({
         firstName: newStudentFirstName,
         lastName: newStudentLastName,
-        grade: newStudentGrade,
+        grade: derivedGrade,
         class: newStudentClass,
         schoolId: newStudentSchoolId as Id<"schools">,
         createdBy: userId,
@@ -573,7 +580,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       setCreatingStudent(false);
       setNewStudentFirstName("");
       setNewStudentLastName("");
-      setNewStudentGrade("");
       setNewStudentClass("");
       setNewStudentSchoolId("");
 
@@ -658,14 +664,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       placeholder={t("Last Name", "นามสกุล")}
                       value={newStudentLastName}
                       onChange={(e) => setNewStudentLastName(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      disabled={loading}
-                    />
-                    <input
-                      type="text"
-                      placeholder={t("Grade", "ระดับชั้น")}
-                      value={newStudentGrade}
-                      onChange={(e) => setNewStudentGrade(e.target.value)}
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
                       disabled={loading}
                     />

@@ -80,6 +80,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     const [showStudentForm, setShowStudentForm] = useState(false);
     const [newStudentFirstName, setNewStudentFirstName] = useState("");
     const [newStudentLastName, setNewStudentLastName] = useState("");
+    const [newStudentClass, setNewStudentClass] = useState("");
     const createStudent = useMutation(api.students.create);
 
     // Get students and locations filtered by school (server-side)
@@ -461,6 +462,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                         setShowStudentForm(false);
                                         setNewStudentFirstName("");
                                         setNewStudentLastName("");
+                                        setNewStudentClass("");
                                     }}
                                     className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                                 >
@@ -573,25 +575,46 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
                                                 required
                                             />
+                                            <select
+                                                value={newStudentClass}
+                                                onChange={(e) => setNewStudentClass(e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                                required
+                                            >
+                                                <option value="">{t("Select Class", "เลือกคลาส")}</option>
+                                                <option value="K1">K1</option>
+                                                <option value="K2">K2</option>
+                                                <option value="K3">K3</option>
+                                            </select>
                                             <button
                                                 type="button"
                                                 onClick={async () => {
-                                                    if (!newStudentFirstName.trim() || !newStudentLastName.trim()) {
-                                                        setError(t("Please enter both first and last name", "โปรดกรอกชื่อและนามสกุล"));
+                                                    if (!newStudentFirstName.trim() || !newStudentLastName.trim() || !newStudentClass.trim()) {
+                                                        setError(t("Please fill in all fields", "โปรดกรอกข้อมูลให้ครบถ้วน"));
                                                         return;
                                                     }
                                                     try {
+                                                        // Auto-derive grade from class field
+                                                        const gradeMap: Record<string, string> = {
+                                                            "K1": "Kindergarten 1",
+                                                            "K2": "Kindergarten 2",
+                                                            "K3": "Kindergarten 3",
+                                                        };
+                                                        const derivedGrade = gradeMap[newStudentClass] || newStudentClass;
+
                                                         const result = await createStudent({
                                                             firstName: newStudentFirstName,
                                                             lastName: newStudentLastName,
                                                             schoolId: schoolId as Id<"schools">,
-                                                            grade: "",
+                                                            grade: derivedGrade,
+                                                            class: newStudentClass,
                                                             createdBy: currentUser._id,
                                                         });
                                                         setStudentId(result.id);
                                                         setShowStudentForm(false);
                                                         setNewStudentFirstName("");
                                                         setNewStudentLastName("");
+                                                        setNewStudentClass("");
                                                     } catch {
                                                         setError(t("Failed to create student", "ไม่สามารถสร้างนักเรียนได้"));
                                                     }
@@ -689,6 +712,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                             setShowStudentForm(false);
                                             setNewStudentFirstName("");
                                             setNewStudentLastName("");
+                                            setNewStudentClass("");
                                         }}
                                         className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
                                     >
