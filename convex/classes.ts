@@ -272,7 +272,7 @@ export const bookWithConflictCheck = mutation({
           .gte("scheduledDate", startRange)
           .lte("scheduledDate", endRange)
       )
-      .filter((q) => 
+      .filter((q) =>
         q.and(
           q.eq(q.field("schoolId"), args.schoolId),
           q.or(
@@ -297,10 +297,10 @@ export const bookWithConflictCheck = mutation({
       // Fetch student and location data for conflicts
       const studentIds = [...new Set(conflicts.map(c => c.studentId))];
       const locationIds = [...new Set(conflicts.map(c => c.locationId).filter(Boolean))];
-      
+
       const students = await Promise.all(studentIds.map(id => ctx.db.get(id)));
       const locations = await Promise.all(locationIds.map(id => ctx.db.get(id!)));
-      
+
       const studentMap = new Map(
         students.filter((s): s is NonNullable<typeof s> => s !== null).map(s => [s._id, s])
       );
@@ -315,12 +315,12 @@ export const bookWithConflictCheck = mutation({
         conflicts: conflicts.map(c => ({
           classId: c._id,
           studentId: c.studentId,
-          studentName: studentMap.get(c.studentId) ? 
-            `${studentMap.get(c.studentId)!.firstName} ${studentMap.get(c.studentId)!.lastName}` : 
+          studentName: studentMap.get(c.studentId) ?
+            `${studentMap.get(c.studentId)!.firstName} ${studentMap.get(c.studentId)!.lastName}` :
             "Unknown",
           locationId: c.locationId,
-          locationName: c.locationId && locationMap.get(c.locationId) ? 
-            locationMap.get(c.locationId)!.name : 
+          locationName: c.locationId && locationMap.get(c.locationId) ?
+            locationMap.get(c.locationId)!.name :
             "Unknown",
           scheduledDate: c.scheduledDate,
           status: c.status,
@@ -1260,7 +1260,7 @@ export const checkTimeConflicts = query({
           .gte("scheduledDate", startRange)
           .lte("scheduledDate", endRange)
       )
-      .filter((q) => 
+      .filter((q) =>
         q.and(
           q.eq(q.field("schoolId"), args.schoolId),
           // Only consider approved or pending classes (not rejected)
@@ -1289,10 +1289,10 @@ export const checkTimeConflicts = query({
     // Batch fetch student and location data for conflicts
     const studentIds = [...new Set(conflicts.map(c => c.studentId))];
     const locationIds = [...new Set(conflicts.map(c => c.locationId).filter(Boolean))];
-    
+
     const students = await Promise.all(studentIds.map(id => ctx.db.get(id)));
     const locations = await Promise.all(locationIds.map(id => ctx.db.get(id!)));
-    
+
     const studentMap = new Map(
       students.filter((s): s is NonNullable<typeof s> => s !== null).map(s => [s._id, s])
     );
@@ -1697,5 +1697,66 @@ export const mergeClasses = mutation({
       totalStudents: additionalStudents.size + 1,
       mergedClassIds: args.sourceClassIds,
     };
+  },
+});
+
+// Query to get upcoming classes for notification window
+export const getUpcomingForNotification = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      return [];
+    }
+
+    const now = Date.now();
+    const sevenDaysFromNow = now + 7 * 24 * 60 * 60 * 1000;
+
+    // Get approved classes for this teacher in the next 7 days
+    const classes = await ctx.db
+      .query("classes")
+      .withIndex("by_teacher_and_date", (q) =>
+        q.eq("teacherId", args.userId).gte("scheduledDate", now)
+      )
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("status"), "approved"),
+          q.lte(q.field("scheduledDate"), sevenDaysFromNow)
+        )
+      )
+      .order("asc")
+      .take(5);
+
+    // Enrich with student and location data
+    const enrichedClasses = await Promise.all(
+      classes.map(async (cls) => {
+        const student = await ctx.db.get(cls.studentId);
+        let locationName = "";
+
+        if (cls.locationId) {
+          const location = await ctx.db.get(cls.locationId);
+          locationName = location
+            ? user.role === "admin" || user.role === "moderator"
+              ? `${location.name} / ${location.nameTh}`
+              : location.name
+            : "";
+        } else if (cls.pendingLocationName) {
+          locationName = cls.pendingLocationName;
+        }
+
+        return {
+          _id: cls._id,
+          scheduledDate: cls.scheduledDate,
+          studentName: student
+            ? `${student.firstName} ${student.lastName}`
+            : "Unknown Student",
+          locationName: locationName || "No location",
+        };
+      })
+    );
+
+    return enrichedClasses;
   },
 });

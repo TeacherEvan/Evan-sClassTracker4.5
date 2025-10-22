@@ -9,6 +9,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { AdminContactButton } from "@/components/admin-contact-button";
 import { DatabaseInit } from "@/components/database-init";
 import { ToastContainer, type ToastNotification } from "@/components/desktop-notification-toast";
+import { DesktopNotificationWindow } from "@/components/desktop-notification-window";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LoginForm } from "@/components/login-form";
 import { NotificationWindow } from "@/components/notification-window";
@@ -316,6 +317,11 @@ export default function Home() {
 
       {/* Toast Notifications */}
       <ToastContainer notifications={toasts} onDismiss={dismissToast} />
+
+      {/* Gold Tablet Notification Window - Shown once per user on login */}
+      {user && (
+        <DesktopNotificationWindow userId={user._id} username={user.username} />
+      )}
 
       {/* Notification Window - Shows important announcements to users */}
       <NotificationWindow

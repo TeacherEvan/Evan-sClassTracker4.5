@@ -28,7 +28,7 @@ export function AdminContactRequests({
 }: AdminContactRequestsProps) {
   const { t, language } = useLanguage();
   const [statusFilter, setStatusFilter] = useState<RequestStatus | "all">("pending");
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [selectedRequest, setSelectedRequest] = useState<{ _id: Id<"adminContactRequests">;[key: string]: unknown } | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [adminNotesTh, setAdminNotesTh] = useState("");
 
@@ -132,11 +132,10 @@ export function AdminContactRequests({
             <button
               key={status}
               onClick={() => setStatusFilter(status as RequestStatus | "all")}
-              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
-                statusFilter === status
+              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${statusFilter === status
                   ? "bg-orange-500 text-white shadow-md"
                   : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-              }`}
+                }`}
             >
               {t(
                 status.charAt(0).toUpperCase() + status.slice(1).replace("_", " "),
@@ -285,15 +284,14 @@ export function AdminContactRequests({
                   <button
                     key={status}
                     onClick={() => handleUpdateStatus(status)}
-                    className={`px-4 py-3 rounded-xl font-medium transition-all ${
-                      status === "resolved"
+                    className={`px-4 py-3 rounded-xl font-medium transition-all ${status === "resolved"
                         ? "bg-green-500 hover:bg-green-600 text-white"
                         : status === "dismissed"
-                        ? "bg-gray-500 hover:bg-gray-600 text-white"
-                        : status === "in_progress"
-                        ? "bg-blue-500 hover:bg-blue-600 text-white"
-                        : "bg-yellow-500 hover:bg-yellow-600 text-white"
-                    }`}
+                          ? "bg-gray-500 hover:bg-gray-600 text-white"
+                          : status === "in_progress"
+                            ? "bg-blue-500 hover:bg-blue-600 text-white"
+                            : "bg-yellow-500 hover:bg-yellow-600 text-white"
+                      }`}
                   >
                     {t(
                       `Mark as ${status.replace("_", " ")}`,

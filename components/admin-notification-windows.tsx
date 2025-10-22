@@ -26,7 +26,7 @@ export function AdminNotificationWindows({
 }: AdminNotificationWindowsProps) {
   const { t, language } = useLanguage();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingWindow, setEditingWindow] = useState<any>(null);
+  const [editingWindow, setEditingWindow] = useState<{ _id: Id<"notificationWindows">;[key: string]: unknown } | null>(null);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -58,17 +58,17 @@ export function AdminNotificationWindows({
     setEditingWindow(null);
   };
 
-  const openEditModal = (window: any) => {
+  const openEditModal = (window: { _id: Id<"notificationWindows">;[key: string]: unknown }) => {
     setEditingWindow(window);
-    setTitle(window.title);
-    setTitleTh(window.titleTh);
-    setGreeting(window.greeting);
-    setGreetingTh(window.greetingTh);
-    setMessage(window.message);
-    setMessageTh(window.messageTh);
-    setShowUpdateSummary(window.showUpdateSummary);
-    setTargetRole(window.targetRole || "all");
-    setPriority(window.priority);
+    setTitle((window.title as string) || "");
+    setTitleTh((window.titleTh as string) || "");
+    setGreeting((window.greeting as string) || "");
+    setGreetingTh((window.greetingTh as string) || "");
+    setMessage((window.message as string) || "");
+    setMessageTh((window.messageTh as string) || "");
+    setShowUpdateSummary((window.showUpdateSummary as boolean) ?? true);
+    setTargetRole((window.targetRole as "all" | "teacher" | "moderator" | "admin") || "all");
+    setPriority((window.priority as number) || 5);
     setShowCreateModal(true);
   };
 
@@ -97,7 +97,7 @@ export function AdminNotificationWindows({
           showUpdateSummary,
           targetRole,
           priority,
-          isActive: editingWindow.isActive,
+          isActive: (editingWindow.isActive as boolean) ?? true,
         });
         toast.success(
           "Notification window updated successfully",
@@ -198,11 +198,10 @@ export function AdminNotificationWindows({
           windows.map((window) => (
             <div
               key={window._id}
-              className={`bg-white dark:bg-gray-800 border-2 rounded-xl p-6 transition-all ${
-                window.isActive
-                  ? "border-indigo-500 shadow-lg"
-                  : "border-gray-200 dark:border-gray-700"
-              }`}
+              className={`bg-white dark:bg-gray-800 border-2 rounded-xl p-6 transition-all ${window.isActive
+                ? "border-indigo-500 shadow-lg"
+                : "border-gray-200 dark:border-gray-700"
+                }`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
@@ -258,11 +257,10 @@ export function AdminNotificationWindows({
                   </button>
                   <button
                     onClick={() => handleToggleActive(window._id)}
-                    className={`p-2 rounded-lg transition-all ${
-                      window.isActive
-                        ? "text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
-                        : "text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
-                    }`}
+                    className={`p-2 rounded-lg transition-all ${window.isActive
+                      ? "text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+                      : "text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                      }`}
                     title={window.isActive ? t("Deactivate", "ปิดใช้งาน") : t("Activate", "เปิดใช้งาน")}
                   >
                     <Power className="w-5 h-5" />
@@ -376,7 +374,7 @@ export function AdminNotificationWindows({
                   </label>
                   <select
                     value={targetRole}
-                    onChange={(e) => setTargetRole(e.target.value as any)}
+                    onChange={(e) => setTargetRole(e.target.value as "all" | "teacher" | "moderator" | "admin")}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="all">{t("All users", "ผู้ใช้ทั้งหมด")}</option>

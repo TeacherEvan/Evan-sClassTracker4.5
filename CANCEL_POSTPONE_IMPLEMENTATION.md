@@ -9,11 +9,14 @@
 ## 🎯 Features Implemented
 
 ### 1. ✅ Enhanced Heading Styles
+
 **Files Modified:**
+
 - `components/weekly-calendar.tsx`
 - `components/class-booking.tsx`
 
 **Changes:**
+
 - Upgraded main headings from `text-xl` to `text-2xl md:text-3xl`
 - Changed `font-semibold` to `font-bold` for better visual hierarchy
 - Added `tracking-tight` for improved readability
@@ -25,19 +28,23 @@
 ---
 
 ### 2. ✅ Time Picker for Add Class Dialog
+
 **File Modified:** `components/weekly-calendar.tsx`
 
 **Problem:** Users couldn't specify time when booking classes, defaulting to midnight (00:00).
 
 **Solution:**
+
 - Added `selectedTime` state with default "09:00"
 - Created time input field in Add Class dialog
 - Combined selected date + time before creating class:
+
   ```typescript
   const dateWithTime = new Date(selectedDate);
   const [hours, minutes] = selectedTime.split(":");
   dateWithTime.setHours(Number.parseInt(hours), Number.parseInt(minutes));
   ```
+
 - Reset time to "09:00" when dialog closes
 
 **Result:** Users can now book today's classes with proper time specification.
@@ -47,7 +54,9 @@
 ### 3. ✅ Cancel/Postpone Request System
 
 #### A. Backend Schema (convex/schema.ts)
+
 **Updated `cancellationRequests` Table:**
+
 ```typescript
 cancellationRequests: defineTable({
   classId: v.id("classes"),
@@ -75,6 +84,7 @@ cancellationRequests: defineTable({
 #### B. Backend Mutations (convex/cancellationRequests.ts)
 
 **Updated `create` Mutation:**
+
 - Now accepts `requestType` parameter ("cancel" or "postpone")
 - Accepts optional `newScheduledDate` for postponement
 - Validates:
@@ -88,6 +98,7 @@ cancellationRequests: defineTable({
 - Logs action in teacher logs
 
 **Updated `approve` Mutation:**
+
 - Now handles both cancel and postpone operations
 - For cancellation: Sets class status to "rejected"
 - For postponement: Updates class `scheduledDate` to `newScheduledDate`
@@ -96,6 +107,7 @@ cancellationRequests: defineTable({
 - Logs action with proper labels
 
 **Updated `reject` Mutation:**
+
 - Accepts optional `reviewNotes` and `reviewNotesTh`
 - Sends bilingual rejection notification to teacher
 - Includes review notes in notification
@@ -103,6 +115,7 @@ cancellationRequests: defineTable({
 #### C. Frontend UI (components/class-detail-modal.tsx)
 
 **New State Variables:**
+
 ```typescript
 const [showCancelModal, setShowCancelModal] = useState(false);
 const [showPostponeModal, setShowPostponeModal] = useState(false);
@@ -115,6 +128,7 @@ const [newTime, setNewTime] = useState("09:00");
 ```
 
 **Cancel/Postpone Buttons:**
+
 - Only visible for teachers
 - Only for approved classes
 - Only for future classes
@@ -123,11 +137,13 @@ const [newTime, setNewTime] = useState("09:00");
 - Yellow "Postpone Class" button
 
 **Pending Request Notice:**
+
 - Shows yellow alert box when pending request exists
 - Displays request type (cancel/postpone)
 - Shows reason in current language
 
 **Cancel Request Modal:**
+
 - Reason input (English) - textarea
 - Reason input (Thai) - textarea
 - Submit Request button
@@ -135,6 +151,7 @@ const [newTime, setNewTime] = useState("09:00");
 - Form validation (both reasons required)
 
 **Postpone Request Modal:**
+
 - New Date picker (future dates only)
 - New Time picker
 - Reason input (English) - textarea
@@ -144,6 +161,7 @@ const [newTime, setNewTime] = useState("09:00");
 - Form validation (all fields required)
 
 **Handler Functions:**
+
 ```typescript
 handleCancelRequest() {
   - Validates both reasons provided
@@ -227,13 +245,16 @@ handlePostponeRequest() {
 ## 📊 Database Changes
 
 ### New Index
+
 ```
 cancellationRequests.by_class_and_status (classId, status)
 ```
+
 - Optimizes queries for checking pending requests
 - Deployed successfully ✅
 
 ### Schema Migration
+
 - Added `requestType` field (union type)
 - Added `newScheduledDate` (optional number)
 - Added `reviewNotes` (optional string)
@@ -244,6 +265,7 @@ cancellationRequests.by_class_and_status (classId, status)
 ## 🧪 Testing Scenarios
 
 ### ✅ Validation Tests
+
 - [x] Cannot cancel/postpone without both language reasons
 - [x] Cannot postpone without selecting new date
 - [x] Cannot select past date for postponement
@@ -252,6 +274,7 @@ cancellationRequests.by_class_and_status (classId, status)
 - [x] Cannot cancel/postpone past classes
 
 ### ✅ Workflow Tests
+
 - [x] Teacher can submit cancel request
 - [x] Teacher can submit postpone request
 - [x] Moderator receives notification
@@ -261,6 +284,7 @@ cancellationRequests.by_class_and_status (classId, status)
 - [x] Teacher receives approval/rejection notification
 
 ### ✅ UI Tests
+
 - [x] Buttons only show for teachers
 - [x] Buttons only show for approved future classes
 - [x] Buttons hidden when pending request exists
@@ -274,16 +298,19 @@ cancellationRequests.by_class_and_status (classId, status)
 ## 📝 Code Quality
 
 ### TypeScript Compilation
+
 - ✅ No type errors
 - ✅ All mutations properly typed
 - ✅ Schema validates correctly
 
 ### Build Status
+
 - ✅ `npm run build` passes
 - ✅ Turbopack compilation successful
 - ✅ All pages statically generated
 
 ### Convex Deployment
+
 - ✅ `npx convex deploy` successful
 - ✅ New index created
 - ✅ Functions deployed to production
@@ -295,6 +322,7 @@ cancellationRequests.by_class_and_status (classId, status)
 All text strings implemented in both languages:
 
 **English:**
+
 - Cancel Class / Postpone Class
 - Cancellation Request / Postponement Request
 - Cancellation Approved / Postponement Approved
@@ -305,6 +333,7 @@ All text strings implemented in both languages:
 - Submit Request
 
 **Thai:**
+
 - ยกเลิกคลาส / เลื่อนคลาส
 - คำขอยกเลิกชั้นเรียน / คำขอเลื่อนชั้นเรียน
 - อนุมัติการยกเลิก / อนุมัติการเลื่อน
@@ -319,16 +348,18 @@ All text strings implemented in both languages:
 ## 🎨 UI/UX Highlights
 
 ### Visual Design
+
 - **Cancel Button:** Red (bg-red-500) with X icon
 - **Postpone Button:** Yellow (bg-yellow-500) with Clock icon
 - **Pending Notice:** Yellow alert box with AlertTriangle icon
-- **Modals:** 
+- **Modals:**
   - Rounded corners (rounded-2xl)
   - Proper z-index (z-[60])
   - Dark mode support
   - Responsive width (max-w-md)
 
 ### User Experience
+
 - Clear visual hierarchy with icons
 - Color-coded actions (red = cancel, yellow = postpone)
 - Bilingual form labels
@@ -342,6 +373,7 @@ All text strings implemented in both languages:
 ## 📦 Deployment
 
 ### Git Commit
+
 ```
 commit cb32218
 feat: Add cancel/postpone functionality and UX improvements
@@ -355,6 +387,7 @@ feat: Add cancel/postpone functionality and UX improvements
 ```
 
 ### Convex Backend
+
 ```
 ✔ Added table indexes:
   [+] cancellationRequests.by_class_and_status
@@ -362,6 +395,7 @@ feat: Add cancel/postpone functionality and UX improvements
 ```
 
 ### Next.js Build
+
 ```
 ✓ Compiled successfully in 25.1s
 ✓ Linting and checking validity of types
@@ -373,22 +407,26 @@ feat: Add cancel/postpone functionality and UX improvements
 ## 🚀 Next Steps (Optional Enhancements)
 
 ### Moderator Interface
+
 - [ ] Create dedicated cancellation requests dashboard
 - [ ] Add filters (pending/approved/rejected)
 - [ ] Add batch approval/rejection
 - [ ] Show request history per teacher
 
 ### Analytics
+
 - [ ] Track cancellation/postponement rates
 - [ ] Identify patterns (most cancelled times/students)
 - [ ] Alert on excessive cancellations
 
 ### Email Notifications
+
 - [ ] Send email when request submitted
 - [ ] Send email when request approved/rejected
 - [ ] Daily digest for moderators
 
 ### Advanced Features
+
 - [ ] Auto-approve for certain conditions
 - [ ] Recurring class postponement
 - [ ] Bulk postponement (multiple classes)
@@ -399,12 +437,14 @@ feat: Add cancel/postpone functionality and UX improvements
 ## 📚 Documentation
 
 **Updated Files:**
+
 - `UI_UX_IMPROVEMENTS_SUMMARY.md` - Complete feature summary
 - `convex/cancellationRequests.ts` - Inline code comments
 - `components/class-detail-modal.tsx` - Component documentation
 - This document - Implementation guide
 
 **Architecture Docs:**
+
 - Schema changes documented in `convex/schema.ts`
 - API patterns follow existing conventions
 - Rate limiting: 10 requests/min (built-in)

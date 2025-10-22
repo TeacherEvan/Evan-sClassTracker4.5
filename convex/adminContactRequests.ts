@@ -20,13 +20,20 @@ export const list = query({
       throw new Error("Unauthorized: Only admins can view contact requests");
     }
 
-    let query = ctx.db.query("adminContactRequests");
-
-    if (args.status) {
-      query = query.withIndex("by_status", (q) => q.eq("status", args.status));
+    // Filter by status if provided
+    const { status } = args;
+    if (status) {
+      const requests = await ctx.db
+        .query("adminContactRequests")
+        .withIndex("by_status", (q) => q.eq("status", status))
+        .order("desc")
+        .collect();
+      return requests;
     }
 
-    const requests = await query
+    // Otherwise, return all requests
+    const requests = await ctx.db
+      .query("adminContactRequests")
       .order("desc")
       .collect();
 

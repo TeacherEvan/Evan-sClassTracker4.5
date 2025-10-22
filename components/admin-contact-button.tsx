@@ -5,15 +5,15 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import { useMutation, useQuery } from "convex/react";
-import { 
-  MessageCircle, 
-  Send, 
-  X, 
-  Lightbulb,
+import {
+  Bell,
   Bug,
   HelpCircle,
-  Bell,
-  MessageSquare
+  Lightbulb,
+  MessageCircle,
+  MessageSquare,
+  Send,
+  X
 } from "lucide-react";
 import { useState } from "react";
 
@@ -37,7 +37,7 @@ export function AdminContactButton({
   const [messageTh, setMessageTh] = useState("");
   const [isSending, setIsSending] = useState(false);
 
-  const currentUser = useQuery(api.users.getCurrentUser, { userId: currentUserId });
+  const currentUser = useQuery(api.users.getById, { id: currentUserId });
   const createContactRequest = useMutation(api.adminContactRequests.create);
 
   const handleSubmit = async () => {
@@ -203,7 +203,7 @@ export function AdminContactButton({
                   {(["general", "feature_suggestion", "bug_report", "help_request", "notification_window_request"] as RequestType[]).map((type) => {
                     const info = getRequestTypeInfo(type);
                     const isSelected = requestType === type;
-                    
+
                     // Only show notification_window_request for non-admins
                     if (type === "notification_window_request" && currentUser?.role === "admin") {
                       return null;
@@ -213,11 +213,10 @@ export function AdminContactButton({
                       <button
                         key={type}
                         onClick={() => setRequestType(type)}
-                        className={`p-3 rounded-xl border-2 transition-all ${
-                          isSelected
+                        className={`p-3 rounded-xl border-2 transition-all ${isSelected
                             ? `${info.bgColor} ${info.borderColor} shadow-md scale-[1.02]`
                             : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow"
-                        }`}
+                          }`}
                       >
                         <div className="flex flex-col items-center gap-2 text-center">
                           <div className={`${isSelected ? "text-orange-600 dark:text-orange-400" : "text-gray-600 dark:text-gray-400"}`}>

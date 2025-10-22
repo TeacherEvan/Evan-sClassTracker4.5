@@ -160,3 +160,18 @@ export const toggleActive = mutation({
         return { success: true };
     },
 });
+
+// Query to get latest updates for notification window
+export const getLatestForWindow = query({
+    args: {},
+    handler: async (ctx) => {
+        // Get up to 2 most recent active updates
+        const updates = await ctx.db
+            .query("appUpdates")
+            .withIndex("by_active", (q) => q.eq("isActive", true))
+            .order("desc")
+            .take(2);
+
+        return updates;
+    },
+});

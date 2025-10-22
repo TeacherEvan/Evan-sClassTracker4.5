@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as adminContactRequests from "../adminContactRequests.js";
 import type * as appUpdates from "../appUpdates.js";
 import type * as bulkOperations from "../bulkOperations.js";
 import type * as cancellationRequests from "../cancellationRequests.js";
@@ -19,6 +20,7 @@ import type * as init from "../init.js";
 import type * as locationProposals from "../locationProposals.js";
 import type * as locations from "../locations.js";
 import type * as messages from "../messages.js";
+import type * as notificationWindows from "../notificationWindows.js";
 import type * as notifications from "../notifications.js";
 import type * as pagination from "../pagination.js";
 import type * as postClassNotes from "../postClassNotes.js";
@@ -46,6 +48,7 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  adminContactRequests: typeof adminContactRequests;
   appUpdates: typeof appUpdates;
   bulkOperations: typeof bulkOperations;
   cancellationRequests: typeof cancellationRequests;
@@ -57,6 +60,7 @@ declare const fullApi: ApiFromModules<{
   locationProposals: typeof locationProposals;
   locations: typeof locations;
   messages: typeof messages;
+  notificationWindows: typeof notificationWindows;
   notifications: typeof notifications;
   pagination: typeof pagination;
   postClassNotes: typeof postClassNotes;
