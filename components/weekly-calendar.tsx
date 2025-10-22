@@ -68,6 +68,9 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
     const [studentId, setStudentId] = useState<Id<"students"> | "">("");
     const [locationId, setLocationId] = useState<Id<"locations"> | "">("");
+    const [teacherId, setTeacherId] = useState<Id<"users"> | "">(
+        currentUser.role === "teacher" ? currentUser._id : ""
+    );
     const [error, setError] = useState("");
 
     // Determine which school to filter by for queries
@@ -192,13 +195,18 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
             return;
         }
 
+        if (!teacherId) {
+            setError(t("Please select a teacher", "กรุณาเลือกครูผู้สอน"));
+            return;
+        }
+
         if (!selectedDate) {
             return;
         }
 
         try {
             await bookClass({
-                teacherId: currentUser._id,
+                teacherId: teacherId as Id<"users">,
                 schoolId: schoolId as Id<"schools">,
                 studentId: studentId as Id<"students">,
                 locationId: locationId as Id<"locations">,
@@ -210,6 +218,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
             setSchoolId("");
             setStudentId("");
             setLocationId("");
+            setTeacherId(currentUser.role === "teacher" ? currentUser._id : "");
             setShowAddDialog(false);
             setSelectedDate(null);
         } catch (err) {
@@ -434,6 +443,10 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                     onClick={() => {
                                         setShowAddDialog(false);
                                         setSelectedDate(null);
+                                        setSchoolId("");
+                                        setStudentId("");
+                                        setLocationId("");
+                                        setTeacherId(currentUser.role === "teacher" ? currentUser._id : "");
                                         setError("");
                                     }}
                                     className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
@@ -482,6 +495,29 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                     </select>
                                 </div>
 
+                                {/* Teacher selection for moderators and admins */}
+                                {(currentUser.role === "moderator" || currentUser.role === "admin") && (
+                                    <div>
+                                        <label htmlFor="teacherSelect" className="block text-sm font-medium mb-2">
+                                            {t("Teacher", "ครูผู้สอน")}
+                                        </label>
+                                        <select
+                                            id="teacherSelect"
+                                            value={teacherId}
+                                            onChange={(e) => setTeacherId(e.target.value as Id<"users"> | "")}
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                            required
+                                        >
+                                            <option value="">{t("-- Select Teacher --", "-- เลือกครูผู้สอน --")}</option>
+                                            {users?.map((teacher) => (
+                                                <option key={teacher._id} value={teacher._id}>
+                                                    {teacher.username}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
                                 <div>
                                     <label htmlFor="studentSelect" className="block text-sm font-medium mb-2">
                                         {t("Student", "นักเรียน")}
@@ -497,6 +533,8 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                         {students?.map((student) => (
                                             <option key={student._id} value={student._id}>
                                                 {student.firstName} {student.lastName}
+                                                {student.class ? ` (${student.class})` : ""}
+                                                {student.grade ? ` - ${student.grade}` : ""}
                                             </option>
                                         ))}
                                     </select>
@@ -534,6 +572,10 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                         onClick={() => {
                                             setShowAddDialog(false);
                                             setSelectedDate(null);
+                                            setSchoolId("");
+                                            setStudentId("");
+                                            setLocationId("");
+                                            setTeacherId(currentUser.role === "teacher" ? currentUser._id : "");
                                             setError("");
                                         }}
                                         className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
