@@ -241,10 +241,6 @@ export const getEngagementMetrics = query({
             .collect();
 
         // Calculate metrics
-        let totalApprovalTime = 0;
-        let approvalCount = 0;
-        let totalAcknowledgementTime = 0;
-        let acknowledgementCount = 0;
         let editedClassesCount = 0;
 
         const statusCounts = {
@@ -260,15 +256,6 @@ export const getEngagementMetrics = query({
             // Track edited classes
             if (cls.isEdited) {
                 editedClassesCount++;
-            }
-
-            // For approved/rejected classes, estimate response time
-            // (In real implementation, you'd store acknowledgement/approval timestamps)
-            if (cls.status === "approved" || cls.status === "rejected") {
-                approvalCount++;
-            }
-            if (cls.status === "acknowledged" || cls.status === "approved") {
-                acknowledgementCount++;
             }
         }
 
