@@ -198,6 +198,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                 grade: newStudentGrade,
                 class: newStudentClass,
                 schoolId: newStudentSchoolId as Id<"schools">,
+                createdBy: currentUser._id,
             });
 
             // Auto-select the newly created student and its school
