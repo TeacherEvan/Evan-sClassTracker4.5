@@ -9,6 +9,7 @@ import type { UserRole } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
 import { Calendar, Check, ChevronDown, ChevronUp, Edit2, MapPin, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
 import { useState } from "react";
+import { ClassConflictModal } from "./class-conflict-modal";
 import { EditClassModal } from "./edit-class-modal";
 import LocationProposalForm from "./location-proposal-form";
 import { MergeClassesModal } from "./merge-classes-modal";
@@ -52,12 +53,14 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     (userRole === "admin" || userRole === "moderator") ? { role: "teacher" } : "skip"
   );
   const bookClass = useMutation(api.classes.book);
+  const bookClassWithConflictCheck = useMutation(api.classes.bookWithConflictCheck);
   const acknowledgeClass = useMutation(api.classes.acknowledge);
   const approveClass = useMutation(api.classes.approve);
   const rejectClass = useMutation(api.classes.reject);
   const deleteClass = useMutation(api.classes.deleteClass);
   const requestCancellation = useMutation(api.cancellationRequests.create);
   const createStudent = useMutation(api.students.create);
+  const addStudentToClass = useMutation(api.classes.addStudentToClass);
   const [locationId, setLocationId] = useState<Id<"locations"> | "">("");
   // Teacher selection for admin/moderator
   const [selectedTeacherId, setSelectedTeacherId] = useState<Id<"users"> | "">(
@@ -79,6 +82,46 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
   // Merge classes state
   const [showMergeModal, setShowMergeModal] = useState(false);
+
+  // Conflict detection state
+  type ConflictClass = {
+    _id: Id<"classes">;
+    studentId: Id<"students">;
+    additionalStudentIds?: Id<"students">[];
+    locationId?: Id<"locations">;
+    scheduledDate: number;
+    status: string;
+    student: Partial<Doc<"students">> & { _id: Id<"students">; firstName: string; lastName: string } | null;
+    location: Partial<Doc<"locations">> & { _id: Id<"locations">; name: string; nameTh: string } | null;
+    teacherId: Id<"users">;
+    schoolId: Id<"schools">;
+  };
+  
+  type PendingBookingData = {
+    teacherId: Id<"users">;
+    schoolId: Id<"schools">;
+    studentId: Id<"students">;
+    locationId?: Id<"locations">;
+    pendingLocationName?: string;
+    pendingLocationNameTh?: string;
+    scheduledDate: number;
+    bookedByUserId: Id<"users">;
+    guardianTitle?: string;
+    duration?: number;
+    subject?: string;
+    subjectTh?: string;
+    lessonTopic?: string;
+    lessonTopicTh?: string;
+    materials?: string;
+    materialsTh?: string;
+    preparationNotes?: string;
+    preparationNotesTh?: string;
+    classType?: "regular" | "makeup" | "trial" | "assessment";
+  };
+  
+  const [conflictingClasses, setConflictingClasses] = useState<ConflictClass[]>([]);
+  const [showConflictModal, setShowConflictModal] = useState(false);
+  const [pendingBookingData, setPendingBookingData] = useState<PendingBookingData | null>(null);
 
   // Optional fields state
   const [showOptionalFields, setShowOptionalFields] = useState(false);
@@ -189,30 +232,85 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         ? (selectedTeacherId as Id<"users">)
         : userId;
 
-      // Book classes for all selected dates
-      const bookingPromises = datesToBook.map(timestamp =>
-        bookClass({
-          teacherId: effectiveTeacherId,
-          schoolId,
-          studentId: studentId as Id<"students">,
-          locationId: locationId ? (locationId as Id<"locations">) : undefined,
-          pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
-          pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
-          scheduledDate: timestamp,
-          bookedByUserId: userId,
-          guardianTitle: isGuardianLocation ? guardianTitle : undefined,
-          ...optionalFields,
-        })
-      );
-
-      await Promise.all(bookingPromises);
-
-      // Show success message
+      // For multiple dates, book all without conflict checking (to avoid complex UX)
       if (datesToBook.length > 1) {
+        const bookingPromises = datesToBook.map(timestamp =>
+          bookClass({
+            teacherId: effectiveTeacherId,
+            schoolId: schoolId as Id<"schools">,
+            studentId: studentId as Id<"students">,
+            locationId: locationId ? (locationId as Id<"locations">) : undefined,
+            pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
+            pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
+            scheduledDate: timestamp,
+            bookedByUserId: userId,
+            guardianTitle: isGuardianLocation ? guardianTitle : undefined,
+            ...optionalFields,
+          })
+        );
+
+        await Promise.all(bookingPromises);
         toast.success(
           `Successfully booked ${datesToBook.length} classes!`,
           `จองคลาสสำเร็จแล้ว ${datesToBook.length} คลาส!`
         );
+      } else {
+        // For single date, use conflict checking
+        const result = await bookClassWithConflictCheck({
+          teacherId: effectiveTeacherId,
+          schoolId: schoolId as Id<"schools">,
+          studentId: studentId as Id<"students">,
+          locationId: locationId ? (locationId as Id<"locations">) : undefined,
+          pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
+          pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
+          scheduledDate: datesToBook[0],
+          bookedByUserId: userId,
+          guardianTitle: isGuardianLocation ? guardianTitle : undefined,
+          ...optionalFields,
+        }) as { success: boolean; hasConflicts: boolean; conflicts?: Array<{
+          classId: Id<"classes">;
+          studentId: Id<"students">;
+          studentName: string;
+          locationId?: Id<"locations">;
+          locationName: string;
+          scheduledDate: number;
+          status: string;
+          additionalStudentIds?: Id<"students">[];
+        }>; classId?: Id<"classes"> };
+
+        if (result.hasConflicts) {
+          // Show conflict modal
+          
+          setPendingBookingData({
+            ...optionalFields,
+            teacherId: effectiveTeacherId,
+            schoolId: schoolId as Id<"schools">,
+            studentId: studentId as Id<"students">,
+            locationId: locationId ? (locationId as Id<"locations">) : undefined,
+            pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
+            pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
+            scheduledDate: datesToBook[0],
+            bookedByUserId: userId,
+            guardianTitle: isGuardianLocation ? guardianTitle : undefined,
+          });
+          setConflictingClasses((result.conflicts || []).map((c) => ({
+            _id: c.classId,
+            studentId: c.studentId,
+            additionalStudentIds: c.additionalStudentIds,
+            locationId: c.locationId,
+            scheduledDate: c.scheduledDate,
+            status: c.status,
+            student: { _id: c.studentId, firstName: c.studentName.split(" ")[0], lastName: c.studentName.split(" ")[1] || "" },
+            location: c.locationId ? { _id: c.locationId, name: c.locationName, nameTh: c.locationName } : null,
+            teacherId: effectiveTeacherId,
+            schoolId: schoolId as Id<"schools">,
+          })));
+          setShowConflictModal(true);
+          setLoading(false);
+          return; // Don't proceed with booking yet
+        }
+
+        toast.success("Class booked successfully!", "จองคลาสสำเร็จแล้ว!");
       }
 
       // Reset form
@@ -255,6 +353,125 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handler for when user confirms merge from conflict modal
+  const handleMergeFromConflict = async () => {
+    if (!pendingBookingData || conflictingClasses.length === 0) return;
+    
+    try {
+      // First, create the new class with forceCreate flag
+      const result = await bookClassWithConflictCheck({
+        ...pendingBookingData,
+        forceCreate: true,
+      }) as { success: boolean; classId?: Id<"classes"> };
+      
+      if (result.success && result.classId) {
+        // Then add the student to the first conflicting class instead
+        const targetClass = conflictingClasses[0];
+        await addStudentToClass({
+          userId,
+          classId: targetClass._id,
+          studentId: pendingBookingData.studentId,
+        });
+
+        // Delete the newly created class since we merged instead
+        // (This is a bit wasteful, but simplifies the flow)
+        // Alternatively, we could use mergeClasses mutation here
+        
+        toast.success("Student added to existing class!", "เพิ่มนักเรียนในคลาสที่มีอยู่แล้ว!");
+        
+        // Reset states
+        setPendingBookingData(null);
+        setConflictingClasses([]);
+        setShowConflictModal(false);
+        
+        // Reset form
+        setStudentId("");
+        setSchoolId("");
+        setLocationId("");
+        setScheduledDate("");
+        setSelectedDates([]);
+        setSelectedTime("09:00");
+        setPendingLocationName("");
+        setPendingLocationNameTh("");
+        setRequestingNewLocation(false);
+        setShowCalendar(false);
+        setShowForm(false);
+        setGuardianTitle("");
+        if (userRole === "admin" || userRole === "moderator") {
+          setSelectedTeacherId("");
+        }
+        setShowOptionalFields(false);
+        setDuration("");
+        setSubject("");
+        setSubjectTh("");
+        setLessonTopic("");
+        setLessonTopicTh("");
+        setMaterials("");
+        setMaterialsTh("");
+        setPreparationNotes("");
+        setPreparationNotesTh("");
+        setClassType("regular");
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to merge classes",
+        err instanceof Error ? err.message : "ไม่สามารถรวมคลาสได้"
+      );
+    }
+  };
+
+  // Handler for when user chooses to create separate from conflict modal
+  const handleCreateSeparateFromConflict = async () => {
+    if (!pendingBookingData) return;
+    
+    try {
+      await bookClassWithConflictCheck({
+        ...pendingBookingData,
+        forceCreate: true,
+      });
+      
+      toast.success("Class created separately!", "สร้างคลาสแยกแล้ว!");
+      
+      // Reset states
+      setPendingBookingData(null);
+      setConflictingClasses([]);
+      setShowConflictModal(false);
+      
+      // Reset form
+      setStudentId("");
+      setSchoolId("");
+      setLocationId("");
+      setScheduledDate("");
+      setSelectedDates([]);
+      setSelectedTime("09:00");
+      setPendingLocationName("");
+      setPendingLocationNameTh("");
+      setRequestingNewLocation(false);
+      setShowCalendar(false);
+      setShowForm(false);
+      setGuardianTitle("");
+      if (userRole === "admin" || userRole === "moderator") {
+        setSelectedTeacherId("");
+      }
+      setShowOptionalFields(false);
+      setDuration("");
+      setSubject("");
+      setSubjectTh("");
+      setLessonTopic("");
+      setLessonTopicTh("");
+      setMaterials("");
+      setMaterialsTh("");
+      setPreparationNotes("");
+      setPreparationNotesTh("");
+      setClassType("regular");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to create class",
+        err instanceof Error ? err.message : "ไม่สามารถสร้างคลาสได้"
+      );
     }
   };
 
@@ -1048,6 +1265,29 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
           onSuccess={() => {
             setShowMergeModal(false);
             // Data will auto-refresh via Convex real-time updates
+          }}
+        />
+      )}
+
+      {/* Conflict Detection Modal */}
+      {showConflictModal && pendingBookingData && conflictingClasses.length > 0 && (
+        <ClassConflictModal
+          userId={userId}
+          conflicts={conflictingClasses}
+          newClassData={{
+            studentId: pendingBookingData.studentId,
+            studentName: (students?.find(s => s._id === pendingBookingData.studentId)?.firstName || "Unknown") + " " + (students?.find(s => s._id === pendingBookingData.studentId)?.lastName || ""),
+            scheduledDate: pendingBookingData.scheduledDate,
+            locationId: pendingBookingData.locationId,
+            locationName: locations?.find(l => l._id === pendingBookingData.locationId)?.name || pendingBookingData.pendingLocationName || "Unknown",
+          }}
+          onMerge={handleMergeFromConflict}
+          onCreateSeparate={handleCreateSeparateFromConflict}
+          onCancel={() => {
+            setShowConflictModal(false);
+            setPendingBookingData(null);
+            setConflictingClasses([]);
+            setLoading(false);
           }}
         />
       )}
