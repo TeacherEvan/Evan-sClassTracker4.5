@@ -350,12 +350,14 @@ export const migrateClassField = mutation({
       }
 
       // Check grade, firstName, lastName, nickname, and notes for K1, K2, or K3
+      const nickname = "nickname" in student ? student.nickname : "";
+      const notes = "notes" in student ? student.notes : "";
       const searchFields = [
         student.grade,
         student.firstName,
         student.lastName,
-        (student as any).nickname || "",
-        (student as any).notes || "",
+        nickname || "",
+        notes || "",
       ].join(" ").toUpperCase();
 
       let detectedClass: string | null = null;
