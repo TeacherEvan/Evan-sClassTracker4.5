@@ -343,4 +343,70 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_update", ["updateId"])
     .index("by_user_and_update", ["userId", "updateId"]),
+
+  adminContactRequests: defineTable({
+    userId: v.id("users"),
+    userRole: v.string(), // Cache user role for display
+    username: v.string(), // Cache username for display
+    requestType: v.union(
+      v.literal("general"),
+      v.literal("feature_suggestion"),
+      v.literal("bug_report"),
+      v.literal("help_request"),
+      v.literal("notification_window_request")
+    ),
+    subject: v.string(),
+    subjectTh: v.string(),
+    message: v.string(),
+    messageTh: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("in_progress"),
+      v.literal("resolved"),
+      v.literal("dismissed")
+    ),
+    adminNotes: v.optional(v.string()),
+    adminNotesTh: v.optional(v.string()),
+    resolvedBy: v.optional(v.id("users")),
+    resolvedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_status", ["status"])
+    .index("by_type", ["requestType"])
+    .index("by_created_at", ["createdAt"])
+    .index("by_user_and_status", ["userId", "status"]),
+
+  notificationWindows: defineTable({
+    title: v.string(),
+    titleTh: v.string(),
+    greeting: v.string(), // Greeting template with {username} placeholder
+    greetingTh: v.string(),
+    message: v.string(),
+    messageTh: v.string(),
+    showUpdateSummary: v.boolean(), // Whether to show app updates section
+    targetRole: v.optional(v.union(
+      v.literal("all"),
+      v.literal("teacher"),
+      v.literal("moderator"),
+      v.literal("admin")
+    )), // Target specific role or all users
+    isActive: v.boolean(),
+    priority: v.number(), // Higher priority shown first
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_active", ["isActive"])
+    .index("by_priority", ["priority"])
+    .index("by_created_at", ["createdAt"])
+    .index("by_active_and_priority", ["isActive", "priority"]),
+
+  notificationWindowViews: defineTable({
+    userId: v.id("users"),
+    windowId: v.id("notificationWindows"),
+    viewedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_window", ["windowId"])
+    .index("by_user_and_window", ["userId", "windowId"]),
 });

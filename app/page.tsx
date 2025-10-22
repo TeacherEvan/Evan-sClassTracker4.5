@@ -11,6 +11,7 @@ import { DatabaseInit } from "@/components/database-init";
 import { ToastContainer, type ToastNotification } from "@/components/desktop-notification-toast";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LoginForm } from "@/components/login-form";
+import { NotificationWindow } from "@/components/notification-window";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
 import { api } from "@/convex/_generated/api";
 import { isDesktopDevice } from "@/lib/device-detection";
@@ -40,13 +41,15 @@ const GuardianDashboard = lazy(() => import("@/components/guardian-dashboard").t
 const DeviceTestingDashboard = lazy(() => import("@/components/device-testing-dashboard"));
 const PostClassNotesModal = lazy(() => import("@/components/post-class-notes-modal").then(m => ({ default: m.PostClassNotesModal })));
 const UpdateAnnouncementModal = lazy(() => import("@/components/update-announcement-modal").then(m => ({ default: m.UpdateAnnouncementModal })));
+const AdminContactRequests = lazy(() => import("@/components/admin-contact-requests").then(m => ({ default: m.AdminContactRequests })));
+const AdminNotificationWindows = lazy(() => import("@/components/admin-notification-windows").then(m => ({ default: m.AdminNotificationWindows })));
 
 export default function Home() {
   const { t } = useLanguage();
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "testing" | "logs">("calendar");
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "testing" | "logs" | "contact_requests" | "notification_windows">("calendar");
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
   const [showPostClassNotes, setShowPostClassNotes] = useState(false);
@@ -313,6 +316,12 @@ export default function Home() {
 
       {/* Toast Notifications */}
       <ToastContainer notifications={toasts} onDismiss={dismissToast} />
+
+      {/* Notification Window - Shows important announcements to users */}
+      <NotificationWindow
+        currentUserId={user._id}
+        currentUsername={user.username}
+      />
 
       {showPasswordChange && (
         <PasswordChangeDialog
@@ -597,6 +606,28 @@ export default function Home() {
                 <FlaskConical className="w-4 h-4 md:w-5 md:h-5" />
                 {t("Testing", "ทดสอบ")}
               </button>
+
+              <button
+                onClick={() => setActiveTab("contact_requests")}
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "contact_requests"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
+                {t("Contact Requests", "คำขอติดต่อ")}
+              </button>
+
+              <button
+                onClick={() => setActiveTab("notification_windows")}
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "notification_windows"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <Bell className="w-4 h-4 md:w-5 md:h-5" />
+                {t("Notification Windows", "หน้าต่างประกาศ")}
+              </button>
             </>
           )}
 
@@ -707,6 +738,18 @@ export default function Home() {
       {activeTab === "testing" && user.role === "admin" && (
         <Suspense fallback={<LoadingFallback />}>
           <DeviceTestingDashboard />
+        </Suspense>
+      )}
+
+      {activeTab === "contact_requests" && user.role === "admin" && (
+        <Suspense fallback={<LoadingFallback />}>
+          <AdminContactRequests currentUserId={user._id} />
+        </Suspense>
+      )}
+
+      {activeTab === "notification_windows" && user.role === "admin" && (
+        <Suspense fallback={<LoadingFallback />}>
+          <AdminNotificationWindows currentUserId={user._id} />
         </Suspense>
       )}
 
