@@ -22,11 +22,20 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     // Only load teachers since we only display teacher names in calendar
     const users = useQuery(api.users.list, { role: "teacher" });
     const bookClass = useMutation(api.classes.book);
+    const createStudent = useMutation(api.students.create);
 
     const [currentDate, setCurrentDate] = useState(new Date());
     const [showAddDialog, setShowAddDialog] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedSchoolId, setSelectedSchoolId] = useState<Id<"schools"> | "">("");
+
+    // Student creation state
+    const [creatingStudent, setCreatingStudent] = useState(false);
+    const [newStudentFirstName, setNewStudentFirstName] = useState("");
+    const [newStudentLastName, setNewStudentLastName] = useState("");
+    const [newStudentGrade, setNewStudentGrade] = useState("");
+    const [newStudentClass, setNewStudentClass] = useState("");
+    const [newStudentSchoolId, setNewStudentSchoolId] = useState<Id<"schools"> | "">("");
 
     // Class detail modal state - using enriched class type from listWithDetails
     type ClassWithDetails = {
@@ -176,6 +185,37 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
         }
     };
 
+    const handleCreateStudent = async () => {
+        if (!newStudentFirstName.trim() || !newStudentLastName.trim() || !newStudentGrade.trim() || !newStudentClass.trim() || !newStudentSchoolId) {
+            setError(t("Please fill in all student fields", "กรุณากรอกข้อมูลนักเรียนให้ครบทุกช่อง"));
+            return;
+        }
+
+        try {
+            const newStudentData = await createStudent({
+                firstName: newStudentFirstName,
+                lastName: newStudentLastName,
+                grade: newStudentGrade,
+                class: newStudentClass,
+                schoolId: newStudentSchoolId as Id<"schools">,
+            });
+
+            // Auto-select the newly created student and its school
+            setStudentId(newStudentData.id);
+            setSchoolId(newStudentSchoolId as Id<"schools">);
+
+            // Reset creation form
+            setCreatingStudent(false);
+            setNewStudentFirstName("");
+            setNewStudentLastName("");
+            setNewStudentGrade("");
+            setNewStudentClass("");
+            setNewStudentSchoolId("");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to create student");
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
@@ -221,6 +261,13 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
             setTeacherId(currentUser.role === "teacher" ? currentUser._id : "");
             setShowAddDialog(false);
             setSelectedDate(null);
+            // Reset student creation form
+            setCreatingStudent(false);
+            setNewStudentFirstName("");
+            setNewStudentLastName("");
+            setNewStudentGrade("");
+            setNewStudentClass("");
+            setNewStudentSchoolId("");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to create class");
         }
@@ -448,6 +495,13 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                         setLocationId("");
                                         setTeacherId(currentUser.role === "teacher" ? currentUser._id : "");
                                         setError("");
+                                        // Reset student creation form
+                                        setCreatingStudent(false);
+                                        setNewStudentFirstName("");
+                                        setNewStudentLastName("");
+                                        setNewStudentGrade("");
+                                        setNewStudentClass("");
+                                        setNewStudentSchoolId("");
                                     }}
                                     className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                                 >
@@ -519,25 +573,93 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                 )}
 
                                 <div>
-                                    <label htmlFor="studentSelect" className="block text-sm font-medium mb-2">
-                                        {t("Student", "นักเรียน")}
-                                    </label>
-                                    <select
-                                        id="studentSelect"
-                                        value={studentId}
-                                        onChange={(e) => setStudentId(e.target.value as Id<"students"> | "")}
-                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-                                        required
-                                    >
-                                        <option value="">{t("-- Select Student --", "-- เลือกนักเรียน --")}</option>
-                                        {students?.map((student) => (
-                                            <option key={student._id} value={student._id}>
-                                                {student.firstName} {student.lastName}
-                                                {student.class ? ` (${student.class})` : ""}
-                                                {student.grade ? ` - ${student.grade}` : ""}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label htmlFor="studentSelect" className="block text-sm font-medium">
+                                            {t("Student", "นักเรียน")}
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setCreatingStudent(!creatingStudent)}
+                                            className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+                                        >
+                                            {creatingStudent
+                                                ? t("← Select Existing", "← เลือกนักเรียนที่มีอยู่")
+                                                : t("+ Create New", "+ สร้างใหม่")
+                                            }
+                                        </button>
+                                    </div>
+
+                                    {creatingStudent ? (
+                                        <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                            <input
+                                                type="text"
+                                                placeholder={t("First Name", "ชื่อ")}
+                                                value={newStudentFirstName}
+                                                onChange={(e) => setNewStudentFirstName(e.target.value)}
+                                                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800"
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder={t("Last Name", "นามสกุล")}
+                                                value={newStudentLastName}
+                                                onChange={(e) => setNewStudentLastName(e.target.value)}
+                                                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800"
+                                            />
+                                            <input
+                                                type="text"
+                                                placeholder={t("Grade", "ระดับชั้น")}
+                                                value={newStudentGrade}
+                                                onChange={(e) => setNewStudentGrade(e.target.value)}
+                                                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800"
+                                            />
+                                            <select
+                                                value={newStudentClass}
+                                                onChange={(e) => setNewStudentClass(e.target.value)}
+                                                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800"
+                                            >
+                                                <option value="">{t("Select Class", "เลือกคลาส")}</option>
+                                                <option value="K1">K1</option>
+                                                <option value="K2">K2</option>
+                                                <option value="K3">K3</option>
+                                            </select>
+                                            <select
+                                                value={newStudentSchoolId}
+                                                onChange={(e) => setNewStudentSchoolId(e.target.value as Id<"schools"> | "")}
+                                                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800"
+                                            >
+                                                <option value="">{t("Select School", "เลือกโรงเรียน")}</option>
+                                                {schools?.map((school) => (
+                                                    <option key={school._id} value={school._id}>
+                                                        {language === "en" ? school.name : school.nameTh}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <button
+                                                type="button"
+                                                onClick={handleCreateStudent}
+                                                className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
+                                            >
+                                                {t("✓ Create & Select Student", "✓ สร้างและเลือกนักเรียน")}
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <select
+                                            id="studentSelect"
+                                            value={studentId}
+                                            onChange={(e) => setStudentId(e.target.value as Id<"students"> | "")}
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                            required
+                                        >
+                                            <option value="">{t("-- Select Student --", "-- เลือกนักเรียน --")}</option>
+                                            {students?.map((student) => (
+                                                <option key={student._id} value={student._id}>
+                                                    {student.firstName} {student.lastName}
+                                                    {student.class ? ` (${student.class})` : ""}
+                                                    {student.grade ? ` - ${student.grade}` : ""}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
                                 </div>
 
                                 <div>
@@ -577,6 +699,13 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                             setLocationId("");
                                             setTeacherId(currentUser.role === "teacher" ? currentUser._id : "");
                                             setError("");
+                                            // Reset student creation form
+                                            setCreatingStudent(false);
+                                            setNewStudentFirstName("");
+                                            setNewStudentLastName("");
+                                            setNewStudentGrade("");
+                                            setNewStudentClass("");
+                                            setNewStudentSchoolId("");
                                         }}
                                         className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
                                     >
