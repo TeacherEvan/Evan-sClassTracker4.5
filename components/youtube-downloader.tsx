@@ -100,26 +100,46 @@ export function YouTubeDownloader() {
         setIsLoading(true);
 
         try {
-            // Extract video ID
+            // Extract video ID for history
             const videoId = extractVideoId(url);
-            if (!videoId) {
-                throw new Error("Could not extract video ID");
+
+            // Call API to download
+            const response = await fetch("/api/download", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    url,
+                    type: selectedType,
+                    quality: selectedQuality,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Download failed");
             }
 
-            // In a real implementation, this would call a backend API or third-party service
-            // For now, we'll simulate the download process and provide instructions
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+            // Get filename from response headers or use default
+            const contentDisposition = response.headers.get("Content-Disposition");
+            const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
+            const filename = filenameMatch?.[1] || `download.${selectedType === "audio" ? "mp3" : "mp4"}`;
 
-            // Create download instructions
-            const quality = selectedType === "video" ? selectedQuality : selectedQuality;
-            const downloadUrl = `https://www.y2mate.com/youtube/${videoId}`;
+            // Download file
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = downloadUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(downloadUrl);
+            document.body.removeChild(a);
 
             // Add to history
             const newEntry: DownloadHistory = {
                 id: Date.now().toString(),
-                title: `Video ID: ${videoId}`,
+                title: `Video ID: ${videoId || "Unknown"}`,
                 url: url,
-                quality: quality,
+                quality: selectedQuality,
                 type: selectedType,
                 timestamp: Date.now(),
                 status: "completed",
@@ -128,24 +148,22 @@ export function YouTubeDownloader() {
 
             setSuccess(
                 t(
-                    `Ready to download! Quality: ${quality}, Type: ${selectedType}`,
-                    `พร้อมดาวน์โหลด! คุณภาพ: ${quality}, ประเภท: ${selectedType}`
+                    `Download complete! File saved to your Downloads folder.`,
+                    `ดาวน์โหลดเสร็จสิ้น! ไฟล์บันทึกในโฟลเดอร์ดาวน์โหลดของคุณแล้ว`
                 )
             );
-
-            // Open Y2Mate in new tab as a helper tool
-            window.open(downloadUrl, "_blank");
 
             // Clear URL after successful processing
             setTimeout(() => {
                 setUrl("");
                 setSuccess("");
             }, 5000);
-        } catch {
+        } catch (error) {
+            console.error("Download error:", error);
             setError(
                 t(
-                    "Download failed. Please check the URL and try again.",
-                    "การดาวน์โหลดล้มเหลว กรุณาตรวจสอบ URL และลองอีกครั้ง"
+                    "Download failed. Make sure yt-dlp is installed on the server.",
+                    "การดาวน์โหลดล้มเหลว ตรวจสอบว่า yt-dlp ติดตั้งบนเซิร์ฟเวอร์แล้ว"
                 )
             );
         } finally {
@@ -175,7 +193,7 @@ export function YouTubeDownloader() {
             </div>
 
             {/* Copyright Disclaimer */}
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4">
                 <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-amber-800 dark:text-amber-200">
@@ -186,6 +204,24 @@ export function YouTubeDownloader() {
                             {t(
                                 "Only download videos you have permission to use. Respect copyright laws and YouTube's Terms of Service. This tool is for educational purposes only.",
                                 "ดาวน์โหลดเฉพาะวิดีโอที่คุณได้รับอนุญาตให้ใช้เท่านั้น เคารพกฎหมายลิขสิทธิ์และข้อกำหนดการให้บริการของ YouTube เครื่องมือนี้มีไว้เพื่อการศึกษาเท่านั้น"
+                            )}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Privacy Notice */}
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
+                <div className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-green-800 dark:text-green-200">
+                        <p className="font-semibold mb-1">
+                            {t("Privacy & Local Storage", "ความเป็นส่วนตัวและการจัดเก็บในเครื่อง")}
+                        </p>
+                        <p>
+                            {t(
+                                "All downloads are saved directly to your device's local storage (Downloads folder). No files are uploaded to cloud storage or our servers. Your downloads remain private on your device.",
+                                "การดาวน์โหลดทั้งหมดจะบันทึกลงในที่เก็บข้อมูลในเครื่องของอุปกรณ์คุณโดยตรง (โฟลเดอร์ดาวน์โหลด) ไม่มีการอัปโหลดไฟล์ไปยังระบบคลาวด์หรือเซิร์ฟเวอร์ของเรา การดาวน์โหลดของคุณเป็นส่วนตัวบนอุปกรณ์ของคุณ"
                             )}
                         </p>
                     </div>
@@ -225,8 +261,8 @@ export function YouTubeDownloader() {
                             }}
                             disabled={isLoading}
                             className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${selectedType === "video"
-                                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                                    : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+                                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                                : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
                                 } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                             <Video className="w-5 h-5" />
@@ -241,8 +277,8 @@ export function YouTubeDownloader() {
                             }}
                             disabled={isLoading}
                             className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${selectedType === "audio"
-                                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                                    : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+                                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                                : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
                                 } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                         >
                             <Music className="w-5 h-5" />
@@ -266,8 +302,8 @@ export function YouTubeDownloader() {
                                     onClick={() => setSelectedQuality(option.quality)}
                                     disabled={isLoading}
                                     className={`px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all ${selectedQuality === option.quality
-                                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                                            : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+                                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                                        : "border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
                                         } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                                 >
                                     {option.quality}
@@ -324,8 +360,8 @@ export function YouTubeDownloader() {
                             </span>
                             <span>
                                 {t(
-                                    "Copy the YouTube video URL from your browser",
-                                    "คัดลอก URL วิดีโอ YouTube จากเบราว์เซอร์ของคุณ"
+                                    "Paste YouTube video URL",
+                                    "วาง URL วิดีโอ YouTube"
                                 )}
                             </span>
                         </li>
@@ -335,8 +371,8 @@ export function YouTubeDownloader() {
                             </span>
                             <span>
                                 {t(
-                                    "Paste it in the URL field above",
-                                    "วางใน URL ช่องด้านบน"
+                                    "Select Video or Audio Only",
+                                    "เลือกวิดีโอหรือเสียงเท่านั้น"
                                 )}
                             </span>
                         </li>
@@ -346,8 +382,8 @@ export function YouTubeDownloader() {
                             </span>
                             <span>
                                 {t(
-                                    "Select download type (Video or Audio Only)",
-                                    "เลือกประเภทการดาวน์โหลด (วิดีโอหรือเสียงเท่านั้น)"
+                                    "Choose quality",
+                                    "เลือกคุณภาพ"
                                 )}
                             </span>
                         </li>
@@ -357,19 +393,8 @@ export function YouTubeDownloader() {
                             </span>
                             <span>
                                 {t(
-                                    "Choose your preferred quality",
-                                    "เลือกคุณภาพที่คุณต้องการ"
-                                )}
-                            </span>
-                        </li>
-                        <li className="flex items-start gap-2">
-                            <span className="font-semibold text-blue-600 dark:text-blue-400">
-                                5.
-                            </span>
-                            <span>
-                                {t(
-                                    "Click Download - a helper site will open in a new tab",
-                                    "คลิกดาวน์โหลด - เว็บไซต์ช่วยเหลือจะเปิดในแท็บใหม่"
+                                    "Click Download - file saves directly to your Downloads folder",
+                                    "คลิกดาวน์โหลด - ไฟล์บันทึกโดยตรงไปยังโฟลเดอร์ดาวน์โหลดของคุณ"
                                 )}
                             </span>
                         </li>
