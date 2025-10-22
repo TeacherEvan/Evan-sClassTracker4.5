@@ -228,6 +228,258 @@ export const listWithDetails = query({
   },
 });
 
+// Mutation to book a class with conflict detection
+export const bookWithConflictCheck = mutation({
+  args: {
+    teacherId: v.id("users"),
+    schoolId: v.id("schools"),
+    studentId: v.id("students"),
+    locationId: v.optional(v.id("locations")),
+    pendingLocationName: v.optional(v.string()),
+    pendingLocationNameTh: v.optional(v.string()),
+    guardianTitle: v.optional(v.string()),
+    scheduledDate: v.number(),
+    bookedByUserId: v.id("users"),
+    // Optional fields
+    duration: v.optional(v.number()),
+    subject: v.optional(v.string()),
+    subjectTh: v.optional(v.string()),
+    lessonTopic: v.optional(v.string()),
+    lessonTopicTh: v.optional(v.string()),
+    materials: v.optional(v.string()),
+    materialsTh: v.optional(v.string()),
+    preparationNotes: v.optional(v.string()),
+    preparationNotesTh: v.optional(v.string()),
+    classType: v.optional(v.union(
+      v.literal("regular"),
+      v.literal("makeup"),
+      v.literal("trial"),
+      v.literal("assessment")
+    )),
+    // Conflict handling
+    forceCreate: v.optional(v.boolean()), // If true, create despite conflicts
+  },
+  handler: async (ctx, args) => {
+    // Check for time conflicts first
+    const TIME_TOLERANCE = 5 * 60 * 1000; // 5 minutes
+    const startRange = args.scheduledDate - TIME_TOLERANCE;
+    const endRange = args.scheduledDate + TIME_TOLERANCE;
+
+    const potentialConflicts = await ctx.db
+      .query("classes")
+      .withIndex("by_teacher_and_date", (q) =>
+        q.eq("teacherId", args.teacherId)
+          .gte("scheduledDate", startRange)
+          .lte("scheduledDate", endRange)
+      )
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("schoolId"), args.schoolId),
+          q.or(
+            q.eq(q.field("status"), "approved"),
+            q.eq(q.field("status"), "pending"),
+            q.eq(q.field("status"), "acknowledged")
+          )
+        )
+      )
+      .collect();
+
+    // Filter by location if provided
+    const conflicts = potentialConflicts.filter((cls) => {
+      if (args.locationId && cls.locationId !== args.locationId) {
+        return false;
+      }
+      return true;
+    });
+
+    // If conflicts found and not forced, return conflict data
+    if (conflicts.length > 0 && !args.forceCreate) {
+      // Fetch student and location data for conflicts
+      const studentIds = [...new Set(conflicts.map(c => c.studentId))];
+      const locationIds = [...new Set(conflicts.map(c => c.locationId).filter(Boolean))];
+      
+      const students = await Promise.all(studentIds.map(id => ctx.db.get(id)));
+      const locations = await Promise.all(locationIds.map(id => ctx.db.get(id!)));
+      
+      const studentMap = new Map(
+        students.filter((s): s is NonNullable<typeof s> => s !== null).map(s => [s._id, s])
+      );
+      const locationMap = new Map(
+        locations.filter((l): l is NonNullable<typeof l> => l !== null).map(l => [l._id, l])
+      );
+
+      // Return conflict information
+      return {
+        success: false,
+        hasConflicts: true,
+        conflicts: conflicts.map(c => ({
+          classId: c._id,
+          studentId: c.studentId,
+          studentName: studentMap.get(c.studentId) ? 
+            `${studentMap.get(c.studentId)!.firstName} ${studentMap.get(c.studentId)!.lastName}` : 
+            "Unknown",
+          locationId: c.locationId,
+          locationName: c.locationId && locationMap.get(c.locationId) ? 
+            locationMap.get(c.locationId)!.name : 
+            "Unknown",
+          scheduledDate: c.scheduledDate,
+          status: c.status,
+          additionalStudentIds: c.additionalStudentIds || [],
+        })),
+      };
+    }
+
+    // No conflicts or force create - proceed with booking using existing logic
+    // (Copy from original book mutation)
+    await checkRateLimit(ctx, {
+      key: `book-class:${args.bookedByUserId}`,
+      limit: 30,
+      windowMs: 60000,
+    });
+
+    // Validation (copied from original)
+    if (args.pendingLocationName) {
+      validateLength(args.pendingLocationName, "Location name", 200, 1);
+    }
+    if (args.pendingLocationNameTh) {
+      validateLength(args.pendingLocationNameTh, "Thai location name", 200, 0);
+    }
+    if (args.guardianTitle) {
+      validateLength(args.guardianTitle, "Guardian title", 100, 1);
+    }
+    if (args.subject) {
+      validateLength(args.subject, "Subject", 100, 1);
+    }
+    if (args.subjectTh) {
+      validateLength(args.subjectTh, "Thai subject", 100, 0);
+    }
+    if (args.lessonTopic) {
+      validateLength(args.lessonTopic, "Lesson topic", 200, 1);
+    }
+    if (args.lessonTopicTh) {
+      validateLength(args.lessonTopicTh, "Thai lesson topic", 200, 0);
+    }
+    if (args.materials) {
+      validateLength(args.materials, "Materials", 500, 1);
+    }
+    if (args.materialsTh) {
+      validateLength(args.materialsTh, "Thai materials", 500, 0);
+    }
+    if (args.preparationNotes) {
+      validateLength(args.preparationNotes, "Preparation notes", 1000, 1);
+    }
+    if (args.preparationNotesTh) {
+      validateLength(args.preparationNotesTh, "Thai preparation notes", 1000, 0);
+    }
+    if (args.duration && (args.duration < 1 || args.duration > 480)) {
+      throw new Error("Duration must be between 1 and 480 minutes");
+    }
+    if (args.scheduledDate < Date.now()) {
+      throw new Error("Cannot schedule a class in the past");
+    }
+    if (!args.locationId && !args.pendingLocationName && !args.pendingLocationNameTh) {
+      throw new Error("Must provide either a location or at least one pending location name");
+    }
+
+    // Verify student exists
+    const student = await ctx.db.get(args.studentId);
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
+    // Check if this is a guardian-linked class
+    let isGuardianLinked = false;
+    if (args.locationId) {
+      const location = await ctx.db.get(args.locationId);
+      if (!location) {
+        throw new Error("Location not found");
+      }
+      if (!location.isActive) {
+        throw new Error("Selected location is not available");
+      }
+      if (location.type === "guardian") {
+        isGuardianLinked = true;
+        if (!args.guardianTitle?.trim()) {
+          throw new Error("Guardian title is required for guardian-linked classes");
+        }
+      }
+    }
+
+    // Get the user who is booking
+    const bookingUser = await ctx.db.get(args.bookedByUserId);
+    if (!bookingUser) {
+      throw new Error("User not found");
+    }
+
+    // Determine status
+    const isModerator = bookingUser.role === "moderator" || bookingUser.role === "admin";
+    const status = isGuardianLinked || isModerator ? "approved" : "pending";
+
+    // Create the class
+    const classId = await ctx.db.insert("classes", {
+      teacherId: args.teacherId,
+      schoolId: args.schoolId,
+      studentId: args.studentId,
+      locationId: args.locationId,
+      pendingLocationName: args.pendingLocationName,
+      pendingLocationNameTh: args.pendingLocationNameTh,
+      guardianTitle: args.guardianTitle,
+      isGuardianLinked,
+      status,
+      scheduledDate: args.scheduledDate,
+      createdAt: Date.now(),
+      ...(args.duration && { duration: args.duration }),
+      ...(args.subject && { subject: args.subject }),
+      ...(args.subjectTh && { subjectTh: args.subjectTh }),
+      ...(args.lessonTopic && { lessonTopic: args.lessonTopic }),
+      ...(args.lessonTopicTh && { lessonTopicTh: args.lessonTopicTh }),
+      ...(args.materials && { materials: args.materials }),
+      ...(args.materialsTh && { materialsTh: args.materialsTh }),
+      ...(args.preparationNotes && { preparationNotes: args.preparationNotes }),
+      ...(args.preparationNotesTh && { preparationNotesTh: args.preparationNotesTh }),
+      ...(args.classType && { classType: args.classType }),
+    });
+
+    // Notifications and logging (same as original)
+    const school = await ctx.db.get(args.schoolId);
+    const location = args.locationId ? await ctx.db.get(args.locationId) : null;
+    const locationText = location?.name || args.pendingLocationName || "Unknown location";
+    const locationTextTh = location?.nameTh || args.pendingLocationNameTh || "ไม่ทราบสถานที่";
+
+    if (!isGuardianLinked && !isModerator && school && school.moderatorId) {
+      const teacher = await ctx.db.get(args.teacherId);
+      await ctx.db.insert("notifications", {
+        title: `New Class Request`,
+        titleTh: `คำขอชั้นเรียนใหม่`,
+        message: `Teacher ${teacher?.username || "Unknown"} has requested a class for ${student.firstName} ${student.lastName} at ${locationText}. Please review and acknowledge.`,
+        messageTh: `ครู ${teacher?.username || "ไม่ทราบ"} ได้ขอชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} กรุณาตรวจสอบและรับทราบ`,
+        type: "warning",
+        userId: school.moderatorId,
+        read: false,
+        createdAt: Date.now(),
+      });
+    }
+
+    await ctx.db.insert("teacherLogs", {
+      teacherId: args.teacherId,
+      schoolId: args.schoolId,
+      action: isModerator ? "class_booked" : "class_requested",
+      actionTh: isModerator ? "จองชั้นเรียน" : "ขอชั้นเรียน",
+      details: `${isModerator ? "Booked" : "Requested"} class for ${student.firstName} ${student.lastName} at ${locationText} on ${new Date(args.scheduledDate).toLocaleDateString()}`,
+      detailsTh: `${isModerator ? "จอง" : "ขอ"}ชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} วันที่ ${new Date(args.scheduledDate).toLocaleDateString("th-TH")}`,
+      relatedClassId: classId,
+      relatedStudentId: args.studentId,
+      createdAt: Date.now(),
+    });
+
+    return {
+      success: true,
+      hasConflicts: false,
+      classId,
+    };
+  },
+});
+
 // Mutation to book a class
 export const book = mutation({
   args: {
@@ -975,6 +1227,78 @@ export const addDatesToClass = mutation({
       createdCount: createdClassIds.length,
       classIds: createdClassIds
     };
+  },
+});
+
+// Query to check for time conflicts when booking a class
+export const checkTimeConflicts = query({
+  args: {
+    teacherId: v.id("users"),
+    schoolId: v.id("schools"),
+    scheduledDate: v.number(),
+    locationId: v.optional(v.id("locations")),
+    excludeClassId: v.optional(v.id("classes")), // Exclude a specific class (for edits)
+  },
+  handler: async (ctx, args) => {
+    // Time tolerance: classes within ±5 minutes are considered conflicting
+    const TIME_TOLERANCE = 5 * 60 * 1000; // 5 minutes in milliseconds
+    const startRange = args.scheduledDate - TIME_TOLERANCE;
+    const endRange = args.scheduledDate + TIME_TOLERANCE;
+
+    // Query classes for the same teacher, school, and time range
+    const potentialConflicts = await ctx.db
+      .query("classes")
+      .withIndex("by_teacher_and_date", (q) =>
+        q.eq("teacherId", args.teacherId)
+          .gte("scheduledDate", startRange)
+          .lte("scheduledDate", endRange)
+      )
+      .filter((q) => 
+        q.and(
+          q.eq(q.field("schoolId"), args.schoolId),
+          // Only consider approved or pending classes (not rejected)
+          q.or(
+            q.eq(q.field("status"), "approved"),
+            q.eq(q.field("status"), "pending"),
+            q.eq(q.field("status"), "acknowledged")
+          )
+        )
+      )
+      .collect();
+
+    // Filter by location if provided and exclude specific class if needed
+    const conflicts = potentialConflicts.filter((cls) => {
+      // Exclude the class being edited
+      if (args.excludeClassId && cls._id === args.excludeClassId) {
+        return false;
+      }
+      // If location is specified, only flag conflicts at the same location
+      if (args.locationId && cls.locationId !== args.locationId) {
+        return false;
+      }
+      return true;
+    });
+
+    // Batch fetch student and location data for conflicts
+    const studentIds = [...new Set(conflicts.map(c => c.studentId))];
+    const locationIds = [...new Set(conflicts.map(c => c.locationId).filter(Boolean))];
+    
+    const students = await Promise.all(studentIds.map(id => ctx.db.get(id)));
+    const locations = await Promise.all(locationIds.map(id => ctx.db.get(id!)));
+    
+    const studentMap = new Map(
+      students.filter((s): s is NonNullable<typeof s> => s !== null).map(s => [s._id, s])
+    );
+    const locationMap = new Map(
+      locations.filter((l): l is NonNullable<typeof l> => l !== null).map(l => [l._id, l])
+    );
+
+    // Return enriched conflict data
+    return conflicts.map(c => ({
+      ...c,
+      student: studentMap.get(c.studentId) || null,
+      location: c.locationId ? locationMap.get(c.locationId) || null : null,
+    }));
   },
 });
 
