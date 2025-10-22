@@ -443,6 +443,10 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                     onClick={() => {
                                         setShowAddDialog(false);
                                         setSelectedDate(null);
+                                        setSchoolId("");
+                                        setStudentId("");
+                                        setLocationId("");
+                                        setTeacherId(currentUser.role === "teacher" ? currentUser._id : "");
                                         setError("");
                                     }}
                                     className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
@@ -568,6 +572,10 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                         onClick={() => {
                                             setShowAddDialog(false);
                                             setSelectedDate(null);
+                                            setSchoolId("");
+                                            setStudentId("");
+                                            setLocationId("");
+                                            setTeacherId(currentUser.role === "teacher" ? currentUser._id : "");
                                             setError("");
                                         }}
                                         className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
