@@ -221,3 +221,46 @@ export const getLocationUtilization = query({
             .sort((a, b) => b.total - a.total);
     },
 });
+
+// Get completed class count for a teacher
+// Formula: numberOfStudents × (duration / 60)
+// A class is considered "completed" if it has postClassNotes
+export const getTeacherCompletedClassCount = query({
+    args: {
+        teacherId: v.id("users"),
+    },
+    handler: async (ctx, args) => {
+        // Get all postClassNotes for this teacher
+        const postClassNotes = await ctx.db
+            .query("postClassNotes")
+            .withIndex("by_teacher", (q) => q.eq("teacherId", args.teacherId))
+            .collect();
+
+        // Get unique class IDs from postClassNotes
+        const completedClassIds = [...new Set(postClassNotes.map((note) => note.classId))];
+
+        // Fetch all completed classes
+        const classes = await Promise.all(
+            completedClassIds.map((id) => ctx.db.get(id))
+        );
+
+        // Calculate total class count
+        let totalCount = 0;
+        for (const cls of classes) {
+            if (!cls) continue;
+
+            // Count students (1 primary + additional students)
+            const studentCount = 1 + (cls.additionalStudentIds?.length || 0);
+
+            // Get duration in minutes (default 60)
+            const duration = cls.duration || 60;
+
+            // Calculate: students × (duration / 60)
+            const classValue = studentCount * (duration / 60);
+            totalCount += classValue;
+        }
+
+        // Round to 2 decimal places
+        return Math.round(totalCount * 100) / 100;
+    },
+});

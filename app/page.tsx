@@ -64,6 +64,12 @@ export default function Home() {
     user?.role === "teacher" ? { userId: user._id } : "skip"
   );
 
+  // Query completed class count for teachers
+  const completedClassCount = useQuery(
+    api.simpleAnalytics.getTeacherCompletedClassCount,
+    user?.role === "teacher" ? { teacherId: user._id } : "skip"
+  );
+
   // Query active app update
   const activeUpdate = useQuery(api.appUpdates.getActive);
 
@@ -325,9 +331,27 @@ export default function Home() {
       <header className="max-w-4xl mx-auto mb-3 md:mb-8 p-3 md:p-0">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4">
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl md:text-3xl font-bold truncate">
-              {t("Class Tracker", "ติดตามชั้นเรียน")}
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl md:text-3xl font-bold truncate">
+                {t("Class Tracker", "ติดตามชั้นเรียน")}
+              </h1>
+              {/* Class Count Badge - Only for teachers */}
+              {user.role === "teacher" && completedClassCount !== undefined && (
+                <div
+                  className="text-base md:text-xl font-bold px-2 md:px-3 py-1 rounded-full whitespace-nowrap"
+                  style={{
+                    background: "linear-gradient(135deg, #D4AF37 0%, #F4E5B0 25%, #D4AF37 50%, #F4E5B0 75%, #D4AF37 100%)",
+                    backgroundSize: "200% 200%",
+                    animation: "goldPulse 3s ease-in-out infinite",
+                    color: "#1F2937",
+                    textShadow: "0 1px 2px rgba(0, 0, 0, 0.1)",
+                    boxShadow: "0 2px 8px rgba(212, 175, 55, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.3)",
+                  }}
+                >
+                  {completedClassCount}
+                </div>
+              )}
+            </div>
             <p className="text-xs md:text-base text-gray-600 dark:text-gray-400 mt-1 truncate">
               {t(`Welcome, ${user.username}`, `ยินดีต้อนรับ, ${user.username}`)}
               {" · "}
