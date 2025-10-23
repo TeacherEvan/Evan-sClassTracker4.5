@@ -143,6 +143,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     guardianName: guardianName || undefined,
                     guardianPhone: guardianPhone || undefined,
                     guardianEmail: guardianEmail || undefined,
+                    updatedBy: currentUser._id,
                     // Optional fields
                     nickname: nickname || undefined,
                     dateOfBirth: dateOfBirth ? new Date(dateOfBirth).getTime() : undefined,
@@ -239,8 +240,25 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const confirmDelete = async () => {
         if (!pendingDeleteStudent) return;
 
+        const reason = prompt(
+            t(
+                `Delete student "${pendingDeleteStudent.name}"? Please provide a reason:`,
+                `ลบนักเรียน "${pendingDeleteStudent.name}"? กรุณาระบุเหตุผล:`
+            )
+        );
+
+        if (!reason || reason.trim() === "") {
+            setShowDeleteConfirm(false);
+            setPendingDeleteStudent(null);
+            return; // User cancelled or provided no reason
+        }
+
         try {
-            await removeStudent({ id: pendingDeleteStudent.id });
+            await removeStudent({
+                id: pendingDeleteStudent.id,
+                deletedBy: currentUser._id,
+                reason: reason.trim()
+            });
             setSuccess(t("Student deleted!", "ลบนักเรียนแล้ว!"));
             setShowDeleteConfirm(false);
             setPendingDeleteStudent(null);
@@ -268,10 +286,23 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     };
 
     const handleBulkDelete = async () => {
+        const reason = prompt(
+            t(
+                `Delete ${selectedStudents.size} student(s)? Please provide a reason:`,
+                `ลบนักเรียน ${selectedStudents.size} คน? กรุณาระบุเหตุผล:`
+            )
+        );
+
+        if (!reason || reason.trim() === "") {
+            setShowBulkDeleteConfirm(false);
+            return; // User cancelled or provided no reason
+        }
+
         try {
             const result = await bulkDeleteStudents({
                 studentIds: Array.from(selectedStudents),
                 userId: currentUser._id,
+                reason: reason.trim(),
             });
 
             if (result.successful > 0) {
@@ -305,7 +336,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
     const toggleSelectAll = () => {
         if (!filteredStudents) return;
-        
+
         if (selectedStudents.size === filteredStudents.length) {
             // Deselect all
             setSelectedStudents(new Set());
@@ -850,88 +881,87 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                 {filteredStudents.map((student) => {
                                     const isSelected = selectedStudents.has(student._id);
                                     return (
-                                    <tr key={student._id} className={`hover:bg-gray-50 dark:hover:bg-gray-900 ${
-                                        isSelected ? "bg-blue-50 dark:bg-blue-900/20" : ""
-                                    }`}>
-                                        <td className="px-3 py-4">
-                                            <input
-                                                type="checkbox"
-                                                checked={isSelected}
-                                                onChange={() => toggleStudentSelection(student._id)}
-                                                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                                            />
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-white">
-                                            {student.studentId}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center gap-2">
-                                                <UserIcon className="w-4 h-4 text-gray-400" />
-                                                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                                    {student.firstName} {student.lastName}
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                            {student.grade}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                            {student.class || "-"}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm">
-                                                <div className="font-medium text-gray-900 dark:text-white">
-                                                    {student.schoolId ? getSchoolName(student.schoolId) : student.guardianName}
+                                        <tr key={student._id} className={`hover:bg-gray-50 dark:hover:bg-gray-900 ${isSelected ? "bg-blue-50 dark:bg-blue-900/20" : ""
+                                            }`}>
+                                            <td className="px-3 py-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    onChange={() => toggleStudentSelection(student._id)}
+                                                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-white">
+                                                {student.studentId}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center gap-2">
+                                                    <UserIcon className="w-4 h-4 text-gray-400" />
+                                                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                                        {student.firstName} {student.lastName}
+                                                    </span>
                                                 </div>
-                                                {!student.schoolId && student.guardianName && (
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                        {t("Guardian", "ผู้ปกครอง")}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                                {student.grade}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                                {student.class || "-"}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm">
+                                                    <div className="font-medium text-gray-900 dark:text-white">
+                                                        {student.schoolId ? getSchoolName(student.schoolId) : student.guardianName}
+                                                    </div>
+                                                    {!student.schoolId && student.guardianName && (
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                            {t("Guardian", "ผู้ปกครอง")}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
+                                                {student.guardianPhone && (
+                                                    <div className="flex items-center gap-1 text-xs">
+                                                        <Phone className="w-3 h-3" />
+                                                        {student.guardianPhone}
                                                     </div>
                                                 )}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                                            {student.guardianPhone && (
-                                                <div className="flex items-center gap-1 text-xs">
-                                                    <Phone className="w-3 h-3" />
-                                                    {student.guardianPhone}
-                                                </div>
-                                            )}
-                                            {student.guardianEmail && (
-                                                <div className="flex items-center gap-1 text-xs mt-1">
-                                                    <Mail className="w-3 h-3" />
-                                                    {student.guardianEmail}
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex items-center justify-end gap-2">
-                                                {!student.schoolId && student.guardianName && (
-                                                    <button
-                                                        onClick={() => handleDuplicate(student._id, `${student.firstName} ${student.lastName}`)}
-                                                        className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                                                        title={t("Duplicate", "คัดลอก")}
-                                                    >
-                                                        <Copy className="w-4 h-4" />
-                                                    </button>
+                                                {student.guardianEmail && (
+                                                    <div className="flex items-center gap-1 text-xs mt-1">
+                                                        <Mail className="w-3 h-3" />
+                                                        {student.guardianEmail}
+                                                    </div>
                                                 )}
-                                                <button
-                                                    onClick={() => handleEdit(student)}
-                                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                    title={t("Edit", "แก้ไข")}
-                                                >
-                                                    <Pencil className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(student._id, `${student.firstName} ${student.lastName}`)}
-                                                    className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                                                    title={t("Delete", "ลบ")}
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    {!student.schoolId && student.guardianName && (
+                                                        <button
+                                                            onClick={() => handleDuplicate(student._id, `${student.firstName} ${student.lastName}`)}
+                                                            className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                                                            title={t("Duplicate", "คัดลอก")}
+                                                        >
+                                                            <Copy className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => handleEdit(student)}
+                                                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                                                        title={t("Edit", "แก้ไข")}
+                                                    >
+                                                        <Pencil className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(student._id, `${student.firstName} ${student.lastName}`)}
+                                                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                                                        title={t("Delete", "ลบ")}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     );
                                 })}
                             </tbody>

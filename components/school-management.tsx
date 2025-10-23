@@ -3,11 +3,16 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import type { User } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
 import { Building2, Pencil, Plus, Trash2, UserCheck } from "lucide-react";
 import { useMemo, useState } from "react";
 
-export function SchoolManagement() {
+interface SchoolManagementProps {
+    currentUser: User;
+}
+
+export function SchoolManagement({ currentUser }: SchoolManagementProps) {
     const { t } = useLanguage();
     const schools = useQuery(api.schools.list, {});
     const users = useQuery(api.users.list, {});
@@ -49,6 +54,7 @@ export function SchoolManagement() {
                     await updateModerator({
                         schoolId: editingSchool,
                         moderatorId: moderatorId as Id<"users">,
+                        adminId: currentUser._id,
                     });
                 }
                 setSuccess(t("School updated!", "อัปเดตโรงเรียนแล้ว!"));
@@ -58,6 +64,7 @@ export function SchoolManagement() {
                     name,
                     nameTh,
                     moderatorId: moderatorId || undefined,
+                    adminId: currentUser._id,
                 });
                 setSuccess(t("School created!", "สร้างโรงเรียนแล้ว!"));
             }
@@ -84,19 +91,23 @@ export function SchoolManagement() {
     };
 
     const handleDelete = async (schoolId: Id<"schools">, schoolName: string) => {
-        if (
-            !confirm(
-                t(
-                    `Delete school "${schoolName}"? This cannot be undone.`,
-                    `ลบโรงเรียน "${schoolName}"? การกระทำนี้ไม่สามารถย้อนกลับได้`
-                )
+        const reason = prompt(
+            t(
+                `Delete school "${schoolName}"? Please provide a reason:`,
+                `ลบโรงเรียน "${schoolName}"? กรุณาระบุเหตุผล:`
             )
-        ) {
-            return;
+        );
+
+        if (!reason || reason.trim() === "") {
+            return; // User cancelled or provided no reason
         }
 
         try {
-            await deleteSchool({ id: schoolId });
+            await deleteSchool({
+                id: schoolId,
+                adminId: currentUser._id,
+                reason: reason.trim()
+            });
             setSuccess(t("School deleted!", "ลบโรงเรียนแล้ว!"));
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to delete school");

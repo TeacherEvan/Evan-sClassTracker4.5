@@ -1,7 +1,7 @@
 /**
  * Audit Logging Helper Utilities
  * 
- * Simplifies adding audit logs throughout the application.
+ * Simplifies adding audit logs throughout the application with enhanced tracking.
  * Import and use these helpers in mutations that need audit trails.
  */
 
@@ -9,7 +9,65 @@ import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 
 /**
- * Quick audit log helper - logs an action with minimal required fields
+ * Enhanced device and browser detection from user agent
+ */
+function parseUserAgent(userAgent: string) {
+    const ua = userAgent.toLowerCase();
+
+    // Detect device type
+    let deviceType = "desktop";
+    if (ua.includes("mobile")) deviceType = "mobile";
+    else if (ua.includes("tablet") || ua.includes("ipad")) deviceType = "tablet";
+
+    // Detect OS and version
+    let os = "Unknown";
+    let osVersion = "";
+    if (ua.includes("windows nt 10")) { os = "Windows"; osVersion = "10/11"; }
+    else if (ua.includes("windows nt 6.3")) { os = "Windows"; osVersion = "8.1"; }
+    else if (ua.includes("windows nt 6.2")) { os = "Windows"; osVersion = "8"; }
+    else if (ua.includes("windows nt 6.1")) { os = "Windows"; osVersion = "7"; }
+    else if (ua.includes("mac os x")) {
+        os = "macOS";
+        const match = ua.match(/mac os x (\d+[._]\d+)/);
+        osVersion = match ? match[1].replace("_", ".") : "";
+    } else if (ua.includes("iphone") || ua.includes("ipad")) {
+        os = "iOS";
+        const match = ua.match(/os (\d+[._]\d+)/);
+        osVersion = match ? match[1].replace("_", ".") : "";
+    } else if (ua.includes("android")) {
+        os = "Android";
+        const match = ua.match(/android (\d+(\.\d+)?)/);
+        osVersion = match ? match[1] : "";
+    } else if (ua.includes("linux")) {
+        os = "Linux";
+    }
+
+    // Detect browser and version
+    let browser = "Unknown";
+    let browserVersion = "";
+    if (ua.includes("edg/")) {
+        browser = "Edge";
+        const match = ua.match(/edg\/(\d+(\.\d+)?)/);
+        browserVersion = match ? match[1] : "";
+    } else if (ua.includes("chrome/")) {
+        browser = "Chrome";
+        const match = ua.match(/chrome\/(\d+(\.\d+)?)/);
+        browserVersion = match ? match[1] : "";
+    } else if (ua.includes("safari/") && !ua.includes("chrome")) {
+        browser = "Safari";
+        const match = ua.match(/version\/(\d+(\.\d+)?)/);
+        browserVersion = match ? match[1] : "";
+    } else if (ua.includes("firefox/")) {
+        browser = "Firefox";
+        const match = ua.match(/firefox\/(\d+(\.\d+)?)/);
+        browserVersion = match ? match[1] : "";
+    }
+
+    return { deviceType, os, osVersion, browser, browserVersion };
+}
+
+/**
+ * Enhanced audit log helper with performance and hardware tracking
  */
 export async function logAudit(
     ctx: MutationCtx,
@@ -23,6 +81,19 @@ export async function logAudit(
         affectedCount?: number;
         schoolId?: Id<"schools">;
         details?: Record<string, unknown>;
+
+        // ✨ ENHANCED: Optional tracking metadata
+        userAgent?: string;
+        ipAddress?: string;
+        screenResolution?: string;
+        timezone?: string;
+        locale?: string;
+        executionTime?: number;
+        queryCount?: number;
+        dataSize?: number;
+        sessionId?: string;
+        previousAction?: string;
+        referrer?: string;
     }
 ) {
     // Get user info
@@ -32,8 +103,18 @@ export async function logAudit(
         return;
     }
 
-    // Insert audit log
+    // Parse user agent if provided
+    const deviceInfo = params.userAgent ? parseUserAgent(params.userAgent) : {
+        deviceType: undefined,
+        os: undefined,
+        osVersion: undefined,
+        browser: undefined,
+        browserVersion: undefined,
+    };
+
+    // Insert enhanced audit log
     await ctx.db.insert("auditLogs", {
+        // Core audit fields
         userId: params.userId,
         username: user.username,
         userRole: user.role,
@@ -46,6 +127,28 @@ export async function logAudit(
         schoolId: params.schoolId,
         details: params.details ? JSON.stringify(params.details) : undefined,
         timestamp: Date.now(),
+
+        // ✨ ENHANCED: Hardware & Environment
+        ipAddress: params.ipAddress,
+        userAgent: params.userAgent,
+        deviceType: deviceInfo.deviceType,
+        browser: deviceInfo.browser,
+        browserVersion: deviceInfo.browserVersion,
+        os: deviceInfo.os,
+        osVersion: deviceInfo.osVersion,
+        screenResolution: params.screenResolution,
+        timezone: params.timezone,
+        locale: params.locale,
+
+        // ✨ ENHANCED: Performance Metrics
+        executionTime: params.executionTime,
+        queryCount: params.queryCount,
+        dataSize: params.dataSize,
+
+        // ✨ ENHANCED: Session Tracking
+        sessionId: params.sessionId,
+        previousAction: params.previousAction,
+        referrer: params.referrer,
     });
 }
 

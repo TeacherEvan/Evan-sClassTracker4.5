@@ -93,6 +93,30 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // ✅ SECURITY: Verify user permissions
+    const creator = await ctx.db.get(args.createdBy);
+    if (!creator) {
+      throw new Error("Creator user not found");
+    }
+
+    // ✅ SECURITY: Role-based access control
+    if (args.schoolId) {
+      // School-linked students require school access
+      if (creator.role === "teacher" || creator.role === "moderator") {
+        // Teachers and moderators can only create students for their own school
+        if (creator.schoolId !== args.schoolId) {
+          throw new Error("Unauthorized: Cannot create students for other schools");
+        }
+      } else if (creator.role !== "admin") {
+        throw new Error("Unauthorized: Only teachers, moderators, and admins can create school-linked students");
+      }
+    } else {
+      // Guardian-linked students
+      if (creator.role === "guardian" && args.guardianId !== creator._id) {
+        throw new Error("Guardians can only create students linked to themselves");
+      }
+    }
+
     // ✅ SECURITY: Input validation - student names max 100 chars
     validateLength(args.firstName, "First name", 100, 1);
     validateLength(args.lastName, "Last name", 100, 1);
@@ -182,6 +206,7 @@ export const create = mutation({
 export const update = mutation({
   args: {
     id: v.id("students"),
+    updatedBy: v.id("users"), // Required: user making the update
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
     grade: v.optional(v.string()),
@@ -203,15 +228,57 @@ export const update = mutation({
     specialNeeds: v.optional(v.string()),
     medicalNotes: v.optional(v.string()),
     notes: v.optional(v.string()),
+    // Optional: Client-side performance tracking
+    userAgent: v.optional(v.string()),
+    screenResolution: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    locale: v.optional(v.string()),
+    sessionId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { id, ...updates } = args;
+    const {
+      id,
+      updatedBy,
+      userAgent: _userAgent,
+      screenResolution: _screenResolution,
+      timezone: _timezone,
+      locale: _locale,
+      sessionId: _sessionId,
+      ...updates
+    } = args;
 
     // Get existing student to validate schoolId requirement
     const student = await ctx.db.get(id);
     if (!student) {
       throw new Error("Student not found");
     }
+
+    // ✅ SECURITY: Verify user permissions
+    const user = await ctx.db.get(updatedBy);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // ✅ SECURITY: Role-based access control
+    if (user.role === "teacher" || user.role === "moderator") {
+      // Teachers/moderators can only modify students from their school
+      if (!student.schoolId || student.schoolId !== user.schoolId) {
+        throw new Error("Unauthorized: Cannot modify students from other schools");
+      }
+    } else if (user.role === "guardian") {
+      // Guardians can only modify their own students
+      if (student.guardianId !== user._id) {
+        throw new Error("Unauthorized: Can only modify your own students");
+      }
+    } else if (user.role !== "admin") {
+      throw new Error("Unauthorized: Insufficient permissions");
+    }
+
+    // ✅ SECURITY: Input validation for updated fields
+    if (updates.firstName) validateLength(updates.firstName, "First name", 100, 1);
+    if (updates.lastName) validateLength(updates.lastName, "Last name", 100, 1);
+    if (updates.nickname) validateLength(updates.nickname, "Nickname", 100, 0);
+    if (updates.notes) validateLength(updates.notes, "Notes", 2000, 0);
 
     // Validate: class is required for school-linked students
     if (student.schoolId && updates.class === "") {
@@ -232,9 +299,72 @@ export const update = mutation({
 export const remove = mutation({
   args: {
     id: v.id("students"),
+    deletedBy: v.id("users"), // Required: user deleting the student
+    reason: v.string(), // Required: reason for deletion (audit trail)
+    // Optional: Client-side performance tracking
+    userAgent: v.optional(v.string()),
+    screenResolution: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    locale: v.optional(v.string()),
+    sessionId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
+    const {
+      userAgent: _userAgent,
+      screenResolution: _screenResolution,
+      timezone: _timezone,
+      locale: _locale,
+      sessionId: _sessionId,
+      ...operationArgs
+    } = args;
+
+    // Get student details before deletion
+    const student = await ctx.db.get(operationArgs.id);
+    if (!student) {
+      throw new Error("Student not found");
+    }
+
+    // ✅ SECURITY: Verify user permissions
+    const user = await ctx.db.get(operationArgs.deletedBy);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // ✅ SECURITY: Role-based access control
+    if (user.role === "teacher" || user.role === "moderator") {
+      // Teachers/moderators can only delete students from their school
+      if (!student.schoolId || student.schoolId !== user.schoolId) {
+        throw new Error("Unauthorized: Cannot delete students from other schools");
+      }
+    } else if (user.role === "guardian") {
+      // Guardians can only delete their own students
+      if (student.guardianId !== user._id) {
+        throw new Error("Unauthorized: Can only delete your own students");
+      }
+    } else if (user.role !== "admin") {
+      throw new Error("Unauthorized: Insufficient permissions");
+    }
+
+    // Check for active classes with this student
+    const activeClasses = await ctx.db
+      .query("classes")
+      .withIndex("by_student", (q) => q.eq("studentId", operationArgs.id))
+      .collect();
+
+    if (activeClasses.length > 0) {
+      // Get count by status
+      const pendingOrApproved = activeClasses.filter(
+        (c) => c.status === "pending" || c.status === "acknowledged" || c.status === "approved"
+      ).length;
+
+      if (pendingOrApproved > 0) {
+        throw new Error(
+          `Cannot delete student with ${pendingOrApproved} active/pending classes. Please cancel or complete classes first.`
+        );
+      }
+    }
+
+    await ctx.db.delete(operationArgs.id);
 
     return { success: true };
   },

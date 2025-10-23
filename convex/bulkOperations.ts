@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
+import { checkRateLimit, validateLength } from "./rateLimit";
 
 // Helper function to generate unique student ID
 function generateStudentId(firstName: string, lastName: string, schoolId: string): string {
@@ -30,6 +31,29 @@ export const bulkCreateStudents = mutation({
         createdBy: v.id("users"),
     },
     handler: async (ctx, args) => {
+        // ✅ SECURITY: Verify user has permission for bulk operations
+        const creator = await ctx.db.get(args.createdBy);
+        if (!creator) {
+            throw new Error("Creator user not found");
+        }
+
+        // ✅ SECURITY: Only admins and moderators can bulk create students
+        if (creator.role !== "admin" && creator.role !== "moderator") {
+            throw new Error("Unauthorized: Only admins and moderators can bulk create students");
+        }
+
+        // ✅ SECURITY: Validate batch size to prevent DoS
+        if (args.students.length > 100) {
+            throw new Error("Maximum 100 students per bulk operation");
+        }
+
+        // ✅ SECURITY: Rate limiting
+        await checkRateLimit(ctx, {
+            key: `bulk-create-students-${args.createdBy}`,
+            limit: 5,
+            windowMs: 60000, // 5 bulk operations per minute
+        });
+
         const results = [];
         const errors = [];
 
@@ -183,24 +207,55 @@ export const bulkCreateUsers = mutation({
 export const bulkDeleteStudents = mutation({
     args: {
         studentIds: v.array(v.id("students")),
-        userId: v.optional(v.id("users")), // User performing the deletion (for rate limiting)
+        userId: v.id("users"), // Required: User performing the deletion
+        reason: v.string(), // Required: Reason for bulk deletion
+        // Optional: Client-side performance tracking
+        userAgent: v.optional(v.string()),
+        screenResolution: v.optional(v.string()),
+        timezone: v.optional(v.string()),
+        locale: v.optional(v.string()),
+        sessionId: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
-        // Rate limiting if userId provided
-        if (args.userId) {
-            const { checkRateLimit } = await import("./rateLimit");
-            await checkRateLimit(ctx, {
-                key: `bulk-delete-students-${args.userId}`,
-                limit: 10,
-                windowMs: 60000, // 10 operations per minute
-            });
+        const {
+            userAgent: _userAgent,
+            screenResolution: _screenResolution,
+            timezone: _timezone,
+            locale: _locale,
+            sessionId: _sessionId,
+            ...operationArgs
+        } = args;
+
+        // ✅ SECURITY: Verify user has admin privileges
+        const user = await ctx.db.get(operationArgs.userId);
+        if (!user) {
+            throw new Error("User not found");
         }
+
+        if (user.role !== "admin") {
+            throw new Error("Unauthorized: Only admins can bulk delete students");
+        }
+
+        // ✅ SECURITY: Validate batch size to prevent DoS
+        if (operationArgs.studentIds.length > 100) {
+            throw new Error("Maximum 100 students per bulk deletion");
+        }
+
+        // ✅ SECURITY: Validate reason
+        validateLength(operationArgs.reason, "Deletion reason", 500, 10);
+
+        // ✅ SECURITY: Rate limiting
+        await checkRateLimit(ctx, {
+            key: `bulk-delete-students-${operationArgs.userId}`,
+            limit: 5, // Reduced from 10 to 5
+            windowMs: 60000, // 5 operations per minute
+        });
 
         const results = [];
         const errors = [];
 
-        for (let i = 0; i < args.studentIds.length; i++) {
-            const studentId = args.studentIds[i];
+        for (let i = 0; i < operationArgs.studentIds.length; i++) {
+            const studentId = operationArgs.studentIds[i];
             try {
                 // Check if student exists
                 const student = await ctx.db.get(studentId);
@@ -242,7 +297,7 @@ export const bulkDeleteStudents = mutation({
         }
 
         return {
-            total: args.studentIds.length,
+            total: operationArgs.studentIds.length,
             successful: results.length,
             failed: errors.length,
             results,

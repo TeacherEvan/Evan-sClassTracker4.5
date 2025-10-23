@@ -520,8 +520,28 @@ export default defineSchema({
     affectedCount: v.optional(v.number()), // For bulk operations (e.g., 50 classes deleted)
     schoolId: v.optional(v.id("schools")), // Associated school (for scoped queries)
     timestamp: v.number(), // When action occurred
-    ipAddress: v.optional(v.string()), // IP address (if available)
-    userAgent: v.optional(v.string()), // Browser/device info
+
+    // ✨ ENHANCED: Performance & Hardware Tracking
+    ipAddress: v.optional(v.string()), // IP address (if available from headers)
+    userAgent: v.optional(v.string()), // Full user agent string
+    deviceType: v.optional(v.string()), // mobile, tablet, desktop
+    browser: v.optional(v.string()), // Chrome, Safari, Firefox, Edge
+    browserVersion: v.optional(v.string()), // Browser version
+    os: v.optional(v.string()), // Windows, macOS, iOS, Android, Linux
+    osVersion: v.optional(v.string()), // OS version
+    screenResolution: v.optional(v.string()), // e.g., "1920x1080"
+    timezone: v.optional(v.string()), // User's timezone (e.g., "Asia/Bangkok")
+    locale: v.optional(v.string()), // User's locale (e.g., "en-US", "th-TH")
+
+    // ✨ ENHANCED: Performance Metrics
+    executionTime: v.optional(v.number()), // Time taken to execute action (ms)
+    queryCount: v.optional(v.number()), // Number of database queries made
+    dataSize: v.optional(v.number()), // Size of data processed (bytes)
+
+    // ✨ ENHANCED: Session Tracking
+    sessionId: v.optional(v.string()), // Session identifier for grouping actions
+    previousAction: v.optional(v.string()), // Previous action in session (breadcrumb)
+    referrer: v.optional(v.string()), // Page/action that led to this action
   })
     .index("by_user", ["userId"])
     .index("by_timestamp", ["timestamp"])
@@ -529,5 +549,8 @@ export default defineSchema({
     .index("by_target_type", ["targetType"])
     .index("by_school", ["schoolId"])
     .index("by_user_and_timestamp", ["userId", "timestamp"])
-    .index("by_action_and_timestamp", ["action", "timestamp"]),
+    .index("by_action_and_timestamp", ["action", "timestamp"])
+    .index("by_session", ["sessionId"])
+    .index("by_device_type", ["deviceType"])
+    .index("by_ip_address", ["ipAddress"]),
 });

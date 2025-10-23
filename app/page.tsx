@@ -772,7 +772,7 @@ export default function Home() {
 
         {activeTab === "schools" && user.role === "admin" && (
           <Suspense fallback={<LoadingFallback />}>
-            <SchoolManagement />
+            <SchoolManagement currentUser={user} />
           </Suspense>
         )}
 

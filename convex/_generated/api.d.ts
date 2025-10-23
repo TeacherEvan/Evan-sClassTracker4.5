@@ -28,6 +28,7 @@ import type * as migrateSangsomStudentsToEvents from "../migrateSangsomStudentsT
 import type * as notificationWindows from "../notificationWindows.js";
 import type * as notifications from "../notifications.js";
 import type * as pagination from "../pagination.js";
+import type * as performanceMonitoring from "../performanceMonitoring.js";
 import type * as postClassNotes from "../postClassNotes.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as schools from "../schools.js";
@@ -76,6 +77,7 @@ declare const fullApi: ApiFromModules<{
   notificationWindows: typeof notificationWindows;
   notifications: typeof notifications;
   pagination: typeof pagination;
+  performanceMonitoring: typeof performanceMonitoring;
   postClassNotes: typeof postClassNotes;
   rateLimit: typeof rateLimit;
   schools: typeof schools;

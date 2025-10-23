@@ -1,83 +1,23 @@
-﻿# Copilot / AI Agent Instructions — Evan's Class Tracker 4.5
+﻿# AI Agent Instructions - Evan's Class Tracker 4.5
 
-Short, practical guidance for an AI agent editing this repo. Keep changes minimal and follow the project's non-negotiable patterns.
-
-## High level
-- Frontend: Next.js 15 + React 19 (app/ directory). Backend: Convex server functions (convex/).
-- Bilingual-first: every user-facing string has English + Thai fields (title / titleTh, message / messageTh).
-- Convex schema is the source of truth: `convex/schema.ts`. Do not edit `convex/_generated/`.
-
-## Critical constraints (must follow)
-- Provider order in `app/layout.tsx` is load-bearing. NEVER reorder or remove providers; it will break runtime behavior. See `app/layout.tsx`.
-- Always use index-based queries with `.withIndex(...)` in Convex functions to avoid table scans. See examples in `convex/*.ts` and indexes defined in `convex/schema.ts`.
-- Avoid N+1 queries: batch fetch related records and build lookup maps (examples in docs/ and convex code).
-- Use toast-based notifications instead of alert/confirm. See `lib/toast.ts` and `components/desktop-notification-toast.tsx`.
-- Soft deletes: use `isActive` booleans; do not hard-delete records. Schema contains `isActive` on tables where applicable.
-
-## YouTube Downloader Pattern (yt-dlp integration)
-- **NO external website redirects** (no y2mate, yt5s, savefrom, etc.) — everything stays in-app
-- **Server-side download**: Next.js API route (`app/api/download/route.ts`) runs yt-dlp on server
-- **Client triggers download**: Frontend calls API, receives file blob, triggers browser download to user's Downloads folder
-- **Files stored locally**: Downloads go directly to user's device via browser download (NOT uploaded to cloud/Convex)
-- **Implementation**: 
-  - API route runs `yt-dlp` command in temp directory
-  - Extracts video title for proper filename
-  - Streams file buffer to client with Content-Disposition header
-  - Cleans up temp file after sending
-  - Client uses `window.URL.createObjectURL(blob)` to trigger download
-- **Never**: Copy commands to clipboard, open external sites, or ask user to run terminal commands
-
-## Authentication & security notes (observed in repo)
-- Authentication is custom (not Convex built-in). Sessions are stored in localStorage and passwords are currently encoded with `btoa()` (see `convex/users.ts`) — this is not production secure. Do not change auth assumptions without asking.
-- Login attempts currently lack rate-limiting; add `checkRateLimit` for mutations when implementing auth changes.
-
-## Developer workflows / commands
-- **⚠️ LOCALHOST ISSUES**: Local development server has known issues. **Always test on production deployment** after pushing changes to main branch.
-- Local dev (PowerShell) - **NOT RELIABLE**:
-  - `npm install`
-  - `npx convex dev`  (start Convex first — Next.js needs NEXT_PUBLIC_CONVEX_URL)
-  - `npm run dev`     (Next.js with Turbopack)
-- **Production deployment workflow** (REQUIRED for testing):
-  1. Make changes locally
-  2. `git add .`
-  3. `git commit -m "description"`
-  4. `git push origin main`
-  5. `npx convex deploy` (deploy backend functions)
-  6. Test on production URL (vercel.app)
-- Build:
-  - `npm run build`
-  - `npx convex deploy` (to deploy Convex functions)
-  - `npx tsc --noEmit` (typecheck)
-
-## Code patterns & examples to follow
-- Bilingual UI: `lib/language-context.tsx` provides `t(en, th)`. Mirror both languages when adding UI strings.
-- Convex read/write: use `useQuery(api.xxx.list, {})` and `useMutation(api.xxx.action)`. Pass userId explicitly to mutations.
-- Rate limiting: reuse `convex/rateLimit.ts` and `checkRateLimit(...)` when adding mutations (bookings/messages are rate-limited).
-- Unique student ID generation: use the existing pattern in `convex/students.ts` — do not change the format.
-
-## Files to inspect before making changes
-- `app/layout.tsx` (provider order)
-- `convex/schema.ts` (indexes, fields — source of truth)
-- `convex/classes.ts`, `convex/users.ts`, `convex/students.ts` (state machines, ID generation, auth)
-- `lib/language-context.tsx`, `lib/toast.ts` (i18n + notifications)
-- `components/notification-form.tsx`, `components/database-init.tsx` (bilingual examples)
-
-## When to ask before changing
-- Reordering/removing providers in `app/layout.tsx`.
-- Changing schema indexes or student ID generation format.
-- Replacing custom auth or session storage approach.
-- Any change that affects cross-cutting behavior (rate limits, notification delivery, provider dependency order).
-
-## Quick examples (copy patterns)
-- Indexed Convex query:
-  - `ctx.db.query('classes').withIndex('by_school_and_date', q => q.eq('schoolId', schoolId).gte('scheduledDate', start)).collect()`
-- Batch fetch pattern:
-  - `const ids = [...new Set(items.map(i => i.studentId))]; const students = await Promise.all(ids.map(id => ctx.db.get(id))); const map = new Map(students.map(s => [s._id, s]));`
+Bilingual (English/Thai) class tracking system built with **Next.js 15**, **React 19**, **Convex** real-time backend, and **Tailwind v4**. Recent optimizations (Oct 2025) achieved **40-50% faster loads** and **10-100x faster queries** via N+1 elimination.
 
 ---
-If any section is unclear or you'd like richer examples (tests, migrations, or a task-specific checklist), tell me which area to expand and I'll iterate.
 
-Changelog: trimmed and merged original longer guidance into a concise 40-line agent guide (2025-10-23).
+## Quick Start Context
+
+### Tech Stack
+- **Frontend**: Next.js 15 + React 19 (App Router)
+- **Backend**: Convex (real-time serverless)
+- **Styling**: Tailwind CSS v4
+- **Language**: TypeScript + bilingual UI (English/Thai)
+
+### Critical Files
+- `convex/schema.ts` - Database schema (source of truth)
+- `app/layout.tsx` - Provider hierarchy (DO NOT reorder)
+- `.github/copilot-instructions.md` - This file
+
+---
 # AI Agent Instructions - Evan's Class Tracker 4.5
 
 Bilingual (English/Thai) class tracking system built with **Next.js 15**, **React 19**, **Convex** real-time backend, and **Tailwind v4**. Recent optimizations (Oct 2025) achieved **40-50% faster loads** and **10-100x faster queries** via N+1 elimination.

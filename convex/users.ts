@@ -256,15 +256,32 @@ export const changePassword = mutation({
     newPassword: v.string(),
   },
   handler: async (ctx, args) => {
+    // ✅ SECURITY: Rate limiting to prevent password change abuse
+    await checkRateLimit(ctx, {
+      key: `password-change-${args.userId}`,
+      limit: 5, // 5 password changes
+      windowMs: 3600000, // per hour
+    });
+
     // Validate password is not empty
     if (!args.newPassword || args.newPassword.length < 1) {
       throw new Error("Password cannot be empty");
+    }
+
+    // ✅ SECURITY: Enforce minimum password length
+    if (args.newPassword.length < 8) {
+      throw new Error("Password must be at least 8 characters long");
     }
 
     const user = await ctx.db.get(args.userId);
 
     if (!user) {
       throw new Error("User not found");
+    }
+
+    // Check if account is locked
+    if (user.accountLockedUntil && user.accountLockedUntil > Date.now()) {
+      throw new Error("Account is locked. Please try again later or contact admin.");
     }
 
     // Verify current password
