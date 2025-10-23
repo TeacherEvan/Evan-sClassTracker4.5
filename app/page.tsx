@@ -15,6 +15,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { LoginForm } from "@/components/login-form";
 import { NotificationWindow } from "@/components/notification-window";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
+import { RollingVitruvianMen } from "@/components/rolling-vitruvian-men";
 import { api } from "@/convex/_generated/api";
 import { isDesktopDevice } from "@/lib/device-detection";
 import { initServiceWorker } from "@/lib/init-sw";
