@@ -37,17 +37,17 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
         const fish: Fish[] = [];
 
         for (let i = 0; i < 50; i++) {
-            // SNAILS - spread WAYYY out, smaller size (20% smaller)
+            // SNAILS - SUPER SPREAD OUT, slow speed
             fish.push({
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
                 vx: (Math.random() - 0.5) * 1.5, // SLOW like snails
                 vy: (Math.random() - 0.5) * 1.5,
                 pulsePhase: Math.random() * Math.PI * 2,
-                neighborhoodRadius: 350, // WAY MORE spread (200->350)
+                neighborhoodRadius: 400, // DOUBLE THE SPREAD (was 200)
                 maxSpeed: 2, // SNAIL PACE
-                maxForce: 0.1, // Even gentler (avoid clumping)
-                size: 4.8, // 20% smaller (6 * 0.8 = 4.8)
+                maxForce: 0.08, // EVEN MORE GENTLE (was 0.15)
+                size: 6,
                 trail: [], // Slime trail
             });
         }
@@ -147,10 +147,10 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
                 cohesion.y = cohesion.y / neighborCount - fish.y;
             }
 
-            // Apply forces with different weights - REDUCE flocking to avoid streaks
-            const separationWeight = 2.0; // Higher separation (avoid clumping)
-            const alignmentWeight = 0.3; // Lower alignment (less streaks)
-            const cohesionWeight = 0.3; // Lower cohesion (more spread out)
+            // Apply forces with different weights
+            const separationWeight = 1.5;
+            const alignmentWeight = 1.0;
+            const cohesionWeight = 1.0;
 
             fish.vx += separation.x * separationWeight * fish.maxForce;
             fish.vy += separation.y * separationWeight * fish.maxForce;
@@ -204,7 +204,7 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
                 // Draw trail as fading SLIME line
                 if (fish.trail.length > 1) {
                     for (let i = 0; i < fish.trail.length - 1; i++) {
-                        const alpha = (i / fish.trail.length) * 0.3; // More transparent slime
+                        const alpha = (i / fish.trail.length) * 0.24; // 20% MORE TRANSPARENT (was 0.3)
                         const width = (i / fish.trail.length) * fish.size * 2.5; // Wider slime trail
 
                         ctx.beginPath();
@@ -217,15 +217,15 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
                     }
                 }
 
-                // Draw snail body
+                // Draw snail body - 20% MORE TRANSPARENT
                 ctx.beginPath();
                 ctx.arc(fish.x, fish.y, fish.size, 0, Math.PI * 2);
-                ctx.fillStyle = `hsla(45, 100%, 50%, 0.7)`;
+                ctx.fillStyle = `hsla(45, 100%, 50%, 0.56)`; // Was 0.7, now 0.56 (20% less)
                 ctx.fill();
 
-                // Subtle slime glow
+                // Subtle slime glow - also more transparent
                 ctx.shadowBlur = 8;
-                ctx.shadowColor = `hsla(45, 100%, 50%, 0.4)`;
+                ctx.shadowColor = `hsla(45, 100%, 50%, 0.32)`; // Was 0.4, now 0.32
                 ctx.fill();
                 ctx.shadowBlur = 0;
             });

@@ -138,7 +138,7 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
                     width: "auto",
                     height: "95vh", // HUGE
                     zIndex: 1, // BACK
-                    opacity: 0.35, // Even more transparent (layered effect)
+                    opacity: 0.60, // Even more transparent (layered effect)
                 }}
             >
                 <img
@@ -152,7 +152,7 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 />
             </div>
 
-            {/* Small Da Vinci - rolls behind "Class Tracker" title */}
+            {/* Small Da Vinci - rolls BEHIND "Class Tracker" title */}
             {isLoggedIn && (
                 <div
                     className="fixed pointer-events-none transition-none"
@@ -162,7 +162,7 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
                         transform: "translate(-50%, -50%)",
                         width: "auto",
                         height: "180px", // Smaller for title area
-                        zIndex: 5, // ABOVE content but BELOW header
+                        zIndex: 2, // BEHIND title (header is probably z-10+)
                         opacity: 0.5, // MORE VISIBLE
                     }}
                 >
