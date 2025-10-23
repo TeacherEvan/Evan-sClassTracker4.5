@@ -434,7 +434,9 @@ export default function Home() {
             onClick={() => setActiveTab("messages")}
             className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95 ${activeTab === "messages"
               ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-              : "text-gray-600 dark:text-gray-400"
+              : unreadCount && unreadCount > 0
+                ? "text-red-500 dark:text-red-400 pulse-red"
+                : "text-gray-600 dark:text-gray-400"
               }`}
           >
             <MessageSquare className="w-6 h-6" />
@@ -496,17 +498,13 @@ export default function Home() {
             onClick={() => setActiveTab("messages")}
             className={`relative flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "messages"
               ? "border-blue-500 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+              : unreadCount && unreadCount > 0
+                ? "border-transparent text-red-500 dark:text-red-400 pulse-red hover:text-red-600 dark:hover:text-red-300"
+                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
               }`}
           >
             <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
             {t("Messages", "ข้อความ")}
-            {/* Unread message badge */}
-            {unreadCount && unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 pulse-red rounded-full px-2 py-1 text-xs font-bold shadow-lg">
-                {unreadCount}
-              </span>
-            )}
           </button>
 
           {/* Teacher's Helper tab - hide from moderators */}

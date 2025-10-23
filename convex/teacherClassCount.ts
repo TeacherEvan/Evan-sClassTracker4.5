@@ -5,7 +5,12 @@ import { mutation, query } from "./_generated/server";
 /**
  * Calculate teacher's total weighted class count
  * 
- * Formula: For each approved class:
+ * UPDATED: Only counts classes that have post-class notes recorded
+ * (even if skipped). This ensures the counter only increments when
+ * the post-class feedback window is shown, regardless of whether
+ * the teacher answered it or not.
+ * 
+ * Formula: For each approved class WITH post-class notes:
  *   studentCount × (duration / 60) = class count
  * 
  * Examples:
@@ -13,13 +18,22 @@ import { mutation, query } from "./_generated/server";
  *   - 6 students + 90min = 6 × 1.5 = 9 classes
  *   - 2 students + 120min = 2 × 2 = 4 classes
  * 
- * Updates reactively when classes are approved
+ * Updates reactively when post-class notes are submitted
  */
 export const getTeacherClassCount = query({
     args: {
         teacherId: v.id("users"),
     },
     handler: async (ctx, args) => {
+        // Get all post-class notes for this teacher
+        const postClassNotes = await ctx.db
+            .query("postClassNotes")
+            .withIndex("by_teacher", (q) => q.eq("teacherId", args.teacherId))
+            .collect();
+
+        // Get unique class IDs that have notes
+        const classIdsWithNotes = new Set(postClassNotes.map((note) => note.classId));
+
         // Use indexed query for performance
         const classes = await ctx.db
             .query("classes")
@@ -27,10 +41,13 @@ export const getTeacherClassCount = query({
             .filter((q) => q.eq(q.field("status"), "approved")) // Only count approved classes
             .collect();
 
+        // Filter classes to only those with post-class notes
+        const classesWithNotes = classes.filter((cls) => classIdsWithNotes.has(cls._id));
+
         // Calculate weighted class count
         let totalClassCount = 0;
 
-        for (const classItem of classes) {
+        for (const classItem of classesWithNotes) {
             // Student count: primary student + additional students
             const studentCount = 1 + (classItem.additionalStudentIds?.length || 0);
 
@@ -50,6 +67,7 @@ export const getTeacherClassCount = query({
             total: roundedTotal,
             rawTotal: totalClassCount,
             approvedClassesCount: classes.length,
+            countedClassesCount: classesWithNotes.length, // Classes that were actually counted
         };
     },
 });
@@ -101,9 +119,20 @@ export const getTeacherClassCountDetailed = query({
             .filter((q) => q.eq(q.field("status"), "approved"))
             .collect();
 
-        // Batch fetch all students to avoid N+1
+        // Only include classes that have a post-class notes record (including skipped)
+        const allNotesForTeacher = await ctx.db
+            .query("postClassNotes")
+            .withIndex("by_teacher", (q) => q.eq("teacherId", args.teacherId))
+            .collect();
+
+        const classIdsWithNotes = new Set(allNotesForTeacher.map(n => n.classId));
+
+        // Filter classes to those with notes
+        const classesFiltered = classes.filter(c => classIdsWithNotes.has(c._id));
+
+        // Batch fetch all students to avoid N+1 (only for classes that were counted)
         const studentIds = new Set<string>();
-        classes.forEach(cls => {
+        classesFiltered.forEach(cls => {
             studentIds.add(cls.studentId);
             cls.additionalStudentIds?.forEach(id => studentIds.add(id));
         });
@@ -133,7 +162,7 @@ export const getTeacherClassCountDetailed = query({
             }>;
         }> = {};
 
-        for (const classItem of classes) {
+        for (const classItem of classesFiltered) {
             const studentCount = 1 + (classItem.additionalStudentIds?.length || 0);
             const durationMinutes = classItem.duration || 60;
 
@@ -193,7 +222,7 @@ export const getTeacherClassCountDetailed = query({
             },
             summary: {
                 totalClassCount: Math.round(totalClassCount * 10) / 10,
-                totalApprovedClasses: classes.length,
+                totalApprovedClasses: classesFiltered.length,
                 totalStudents: breakdown.length,
             },
             studentBreakdown: breakdown,
@@ -244,12 +273,21 @@ export const getMyClassCountDetails = query({
             .filter((q) => q.eq(q.field("status"), "approved"))
             .collect();
 
+        // Only count classes where a post-class note record exists (including skipped)
+        const allNotesForTeacher = await ctx.db
+            .query("postClassNotes")
+            .withIndex("by_teacher", (q) => q.eq("teacherId", args.teacherId))
+            .collect();
+
+        const classIdsWithNotes = new Set(allNotesForTeacher.map(n => n.classId));
+        const classesFiltered = classes.filter(c => classIdsWithNotes.has(c._id));
+
         // Batch fetch students, schools, and locations
         const studentIds = new Set<Id<"students">>();
         const schoolIds = new Set<Id<"schools">>();
         const locationIds = new Set<Id<"locations">>();
 
-        classes.forEach(cls => {
+        classesFiltered.forEach(cls => {
             studentIds.add(cls.studentId);
             schoolIds.add(cls.schoolId);
             if (cls.locationId) locationIds.add(cls.locationId);
@@ -266,9 +304,9 @@ export const getMyClassCountDetails = query({
         const schoolMap = new Map(schools.filter(s => s !== null).map(s => [s!._id, s]));
         const locationMap = new Map(locations.filter(l => l !== null).map(l => [l!._id, l]));
 
-        // Calculate total and build class details
+        // Calculate total and build class details (only for classes that were counted)
         let totalClassCount = 0;
-        const classDetails = classes.map(cls => {
+        const classDetails = classesFiltered.map(cls => {
             const studentCount = 1 + (cls.additionalStudentIds?.length || 0);
             const durationMinutes = cls.duration || 60;
             const classCount = studentCount * (durationMinutes / 60);
@@ -306,7 +344,7 @@ export const getMyClassCountDetails = query({
             },
             summary: {
                 totalClassCount: Math.round(totalClassCount * 10) / 10,
-                totalClasses: classes.length,
+                totalClasses: classesFiltered.length,
             },
             classes: classDetails,
         };
