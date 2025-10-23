@@ -306,8 +306,8 @@ export default function Home() {
 
   return (
     <div className="min-h-[100dvh] pb-20 md:pb-0 md:p-8 relative overflow-hidden">
-      {/* Animated fish school background - colorful for logged-in users */}
-      <FishSchoolBackground isLoggedIn={true} className="opacity-30" />
+      {/* Animated fish school background */}
+      <FishSchoolBackground className="opacity-30" />
 
       {/* Pull-to-Refresh Indicator - Mobile only */}
       {!isDesktop && (
