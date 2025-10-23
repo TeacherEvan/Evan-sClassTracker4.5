@@ -14,6 +14,7 @@ import type * as bulkOperations from "../bulkOperations.js";
 import type * as cancellationRequests from "../cancellationRequests.js";
 import type * as classes from "../classes.js";
 import type * as crons from "../crons.js";
+import type * as deleteSangsomData from "../deleteSangsomData.js";
 import type * as events from "../events.js";
 import type * as exports from "../exports.js";
 import type * as groups from "../groups.js";
@@ -59,6 +60,7 @@ declare const fullApi: ApiFromModules<{
   cancellationRequests: typeof cancellationRequests;
   classes: typeof classes;
   crons: typeof crons;
+  deleteSangsomData: typeof deleteSangsomData;
   events: typeof events;
   exports: typeof exports;
   groups: typeof groups;
