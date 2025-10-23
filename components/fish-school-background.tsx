@@ -37,17 +37,17 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
         const fish: Fish[] = [];
 
         for (let i = 0; i < 50; i++) {
-            // SNAILS - spread out more across canvas, slow speed
+            // SNAILS - spread WAYYY out, smaller size (20% smaller)
             fish.push({
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
                 vx: (Math.random() - 0.5) * 1.5, // SLOW like snails
                 vy: (Math.random() - 0.5) * 1.5,
                 pulsePhase: Math.random() * Math.PI * 2,
-                neighborhoodRadius: 200, // Spread out more
+                neighborhoodRadius: 350, // WAY MORE spread (200->350)
                 maxSpeed: 2, // SNAIL PACE
-                maxForce: 0.15, // Gentle movement
-                size: 6,
+                maxForce: 0.1, // Even gentler (avoid clumping)
+                size: 4.8, // 20% smaller (6 * 0.8 = 4.8)
                 trail: [], // Slime trail
             });
         }
@@ -147,10 +147,10 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
                 cohesion.y = cohesion.y / neighborCount - fish.y;
             }
 
-            // Apply forces with different weights
-            const separationWeight = 1.5;
-            const alignmentWeight = 1.0;
-            const cohesionWeight = 1.0;
+            // Apply forces with different weights - REDUCE flocking to avoid streaks
+            const separationWeight = 2.0; // Higher separation (avoid clumping)
+            const alignmentWeight = 0.3; // Lower alignment (less streaks)
+            const cohesionWeight = 0.3; // Lower cohesion (more spread out)
 
             fish.vx += separation.x * separationWeight * fish.maxForce;
             fish.vy += separation.y * separationWeight * fish.maxForce;
