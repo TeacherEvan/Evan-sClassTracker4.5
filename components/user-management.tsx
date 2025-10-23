@@ -15,10 +15,12 @@ interface UserManagementProps {
 export function UserManagement({ currentUserId }: UserManagementProps) {
   const { t } = useLanguage();
   const users = useQuery(api.users.list, {});
+  const currentUser = users?.find(u => u._id === currentUserId);
   const schools = useQuery(api.schools.list, {});
   const createUser = useMutation(api.users.create);
   const resetPassword = useMutation(api.users.resetPassword);
   const deleteUser = useMutation(api.users.deleteUser);
+  const bulkDeleteUsers = useMutation(api.users.bulkDeleteUsers);
 
   const [username, setUsername] = useState("");
   const [role, setRole] = useState<"teacher" | "moderator" | "admin">("teacher");
@@ -26,6 +28,8 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<Set<Id<"users">>>(new Set());
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,6 +135,89 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (!currentUserId) {
+      toast.error(
+        "Cannot determine user",
+        "ไม่สามารถระบุผู้ใช้ได้"
+      );
+      return;
+    }
+
+    try {
+      const result = await bulkDeleteUsers({
+        adminOrModeratorId: currentUserId,
+        userIdsToDelete: Array.from(selectedUsers),
+      });
+
+      if (result.successful > 0) {
+        toast.success(
+          `Successfully deleted ${result.successful} user(s)`,
+          `ลบผู้ใช้สำเร็จ ${result.successful} คน`
+        );
+      }
+
+      if (result.failed > 0) {
+        toast.error(
+          `Failed to delete ${result.failed} user(s). Check console for details.`,
+          `ไม่สามารถลบผู้ใช้ได้ ${result.failed} คน ตรวจสอบคอนโซลสำหรับรายละเอียด`
+        );
+        console.error("Bulk delete errors:", result.errors);
+      }
+
+      setSelectedUsers(new Set());
+      setShowBulkDeleteConfirm(false);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to bulk delete users",
+        err instanceof Error ? err.message : "ไม่สามารถลบผู้ใช้จำนวนมากได้"
+      );
+    }
+  };
+
+  const toggleUserSelection = (userId: Id<"users">) => {
+    const newSelection = new Set(selectedUsers);
+    if (newSelection.has(userId)) {
+      newSelection.delete(userId);
+    } else {
+      newSelection.add(userId);
+    }
+    setSelectedUsers(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (!users) return;
+    
+    if (selectedUsers.size === selectableUsers.length) {
+      // Deselect all
+      setSelectedUsers(new Set());
+    } else {
+      // Select all selectable users
+      setSelectedUsers(new Set(selectableUsers.map(u => u._id)));
+    }
+  };
+
+  // Filter users that can be selected for deletion
+  const selectableUsers = users?.filter(user => {
+    // Cannot select yourself
+    if (user._id === currentUserId) return false;
+    
+    // Moderators can only select teachers
+    if (currentUser?.role === "moderator") {
+      return user.role === "teacher";
+    }
+    
+    // Admins can select anyone except other admins
+    if (currentUser?.role === "admin") {
+      return user.role !== "admin";
+    }
+    
+    return false;
+  }) || [];
+
+  // Check if user can perform bulk delete (admin or moderator)
+  const canBulkDelete = currentUser?.role === "admin" || currentUser?.role === "moderator";
+
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
       <h2 className="text-2xl font-semibold mb-6">
@@ -234,56 +321,105 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
 
       {/* Users List */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-        <h3 className="text-xl font-semibold mb-4">
-          {t("Users", "ผู้ใช้")}
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-semibold">
+            {t("Users", "ผู้ใช้")}
+          </h3>
+          
+          {/* Bulk Delete Controls */}
+          {canBulkDelete && selectableUsers.length > 0 && (
+            <div className="flex items-center gap-2">
+              {selectedUsers.size > 0 && (
+                <>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {t(`${selectedUsers.size} selected`, `เลือก ${selectedUsers.size} คน`)}
+                  </span>
+                  <button
+                    onClick={() => setShowBulkDeleteConfirm(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    {t("Delete Selected", "ลบที่เลือก")}
+                  </button>
+                </>
+              )}
+              <button
+                onClick={toggleSelectAll}
+                className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+              >
+                {selectedUsers.size === selectableUsers.length
+                  ? t("Deselect All", "ยกเลิกทั้งหมด")
+                  : t("Select All", "เลือกทั้งหมด")}
+              </button>
+            </div>
+          )}
+        </div>
 
         <div className="space-y-2">
-          {users?.map((user) => (
-            <div
-              key={user._id}
-              className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
-            >
-              <div className="flex-1">
-                <div className="font-medium">{user.username}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {t(
-                    user.role.charAt(0).toUpperCase() + user.role.slice(1),
-                    user.role === "teacher"
-                      ? "ครู"
-                      : user.role === "moderator"
-                        ? "ผู้ดูแล"
-                        : "ผู้จัดการ"
+          {users?.map((user) => {
+            const isSelectable = selectableUsers.some(u => u._id === user._id);
+            const isSelected = selectedUsers.has(user._id);
+            
+            return (
+              <div
+                key={user._id}
+                className={`flex items-center justify-between p-3 border rounded-lg ${
+                  isSelected
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                    : "border-gray-200 dark:border-gray-700"
+                }`}
+              >
+                <div className="flex items-center gap-3 flex-1">
+                  {isSelectable && canBulkDelete && (
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleUserSelection(user._id)}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                    />
                   )}
-                  {user.requirePasswordChange && (
-                    <span className="ml-2 text-yellow-600 dark:text-yellow-400">
-                      ({t("Requires password change", "ต้องเปลี่ยนรหัสผ่าน")})
-                    </span>
+                  <div className="flex-1">
+                    <div className="font-medium">{user.username}</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {t(
+                        user.role.charAt(0).toUpperCase() + user.role.slice(1),
+                        user.role === "teacher"
+                          ? "ครู"
+                          : user.role === "moderator"
+                            ? "ผู้ดูแล"
+                            : "ผู้จัดการ"
+                      )}
+                      {user.requirePasswordChange && (
+                        <span className="ml-2 text-yellow-600 dark:text-yellow-400">
+                          ({t("Requires password change", "ต้องเปลี่ยนรหัสผ่าน")})
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleResetPassword(user._id, user.username)}
+                    className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                    title={t("Reset Password", "รีเซ็ตรหัสผ่าน")}
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    {t("Reset", "รีเซ็ต")}
+                  </button>
+                  {currentUserId && user._id !== currentUserId && (
+                    <button
+                      onClick={() => handleDeleteUser(user._id, user.username)}
+                      className="flex items-center gap-2 px-3 py-1 text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                      title={t("Delete User", "ลบผู้ใช้")}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {t("Delete", "ลบ")}
+                    </button>
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleResetPassword(user._id, user.username)}
-                  className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
-                  title={t("Reset Password", "รีเซ็ตรหัสผ่าน")}
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  {t("Reset", "รีเซ็ต")}
-                </button>
-                {currentUserId && user._id !== currentUserId && (
-                  <button
-                    onClick={() => handleDeleteUser(user._id, user.username)}
-                    className="flex items-center gap-2 px-3 py-1 text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                    title={t("Delete User", "ลบผู้ใช้")}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    {t("Delete", "ลบ")}
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
 
           {users && users.length === 0 && (
             <p className="text-gray-500 dark:text-gray-400 text-center py-4">
@@ -292,6 +428,43 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
           )}
         </div>
       </div>
+
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-4">
+              {t("⚠️ Confirm Bulk Deletion", "⚠️ ยืนยันการลบจำนวนมาก")}
+            </h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              {t(
+                `You are about to permanently delete ${selectedUsers.size} user(s). This action cannot be undone!`,
+                `คุณกำลังจะลบผู้ใช้ ${selectedUsers.size} คนอย่างถาวร การดำเนินการนี้ไม่สามารถยกเลิกได้!`
+              )}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              {t(
+                "Are you absolutely sure you want to continue?",
+                "คุณแน่ใจหรือไม่ว่าต้องการดำเนินการต่อ?"
+              )}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowBulkDeleteConfirm(false)}
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                {t("Cancel", "ยกเลิก")}
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                {t("Delete All", "ลบทั้งหมด")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
