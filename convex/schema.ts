@@ -506,4 +506,28 @@ export default defineSchema({
     .index("by_school_and_date", ["schoolId", "eventDate"])
     .index("by_creator_and_date", ["createdBy", "eventDate"])
     .index("by_visibility_and_date", ["visibility", "eventDate"]),
+
+  auditLogs: defineTable({
+    userId: v.id("users"), // Who performed the action
+    username: v.string(), // Cached for easier display
+    userRole: v.string(), // Role at time of action (admin, moderator)
+    action: v.string(), // Action type: "delete_class", "update_user", "create_school", etc.
+    targetType: v.string(), // Type of target: "classes", "users", "schools", "students", etc.
+    targetId: v.optional(v.string()), // ID of affected entity (optional for bulk operations)
+    targetName: v.optional(v.string()), // Name/description of target for display
+    details: v.optional(v.string()), // JSON string with additional details
+    reason: v.optional(v.string()), // Reason provided by user (e.g., for deletions)
+    affectedCount: v.optional(v.number()), // For bulk operations (e.g., 50 classes deleted)
+    schoolId: v.optional(v.id("schools")), // Associated school (for scoped queries)
+    timestamp: v.number(), // When action occurred
+    ipAddress: v.optional(v.string()), // IP address (if available)
+    userAgent: v.optional(v.string()), // Browser/device info
+  })
+    .index("by_user", ["userId"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_action", ["action"])
+    .index("by_target_type", ["targetType"])
+    .index("by_school", ["schoolId"])
+    .index("by_user_and_timestamp", ["userId", "timestamp"])
+    .index("by_action_and_timestamp", ["action", "timestamp"]),
 });

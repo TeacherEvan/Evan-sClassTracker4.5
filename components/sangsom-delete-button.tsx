@@ -7,6 +7,35 @@ import { useMutation } from "convex/react";
 import { Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 
+// Type definitions for mutation results
+type CheckDataResult = {
+    exists: boolean;
+    schoolName: string;
+    schoolId: Id<"schools">;
+    counts: {
+        events: number;
+        students: number;
+        classes: number;
+        users: number;
+        locations: number;
+    };
+    details: {
+        teacher: string | null;
+        moderator: string | null;
+    };
+};
+
+type DeleteDataResult = {
+    success: boolean;
+    message: string;
+    eventsDeleted: number;
+    studentsDeleted: number;
+    classesDeleted: number;
+    usersDeleted: number;
+    locationsDeleted: number;
+    schoolDeleted: boolean;
+};
+
 interface SangsomDeleteButtonProps {
     userId: Id<"users">;
 }
@@ -14,26 +43,10 @@ interface SangsomDeleteButtonProps {
 export function SangsomDeleteButton({ userId }: SangsomDeleteButtonProps) {
     const { t } = useLanguage();
     // Use string-based mutation calls that work with dynamic API
-    const checkData = useMutation("deleteSangsomData:checkSangsomDataToDelete" as never);
-    const deleteData = useMutation("deleteSangsomData:deleteSangsomData" as never);
+    const checkData = useMutation("deleteSangsomData:checkSangsomDataToDelete" as never) as unknown as (args: Record<string, unknown>) => Promise<CheckDataResult>;
+    const deleteData = useMutation("deleteSangsomData:deleteSangsomData" as never) as unknown as (args: { adminId: Id<"users">; deleteSchool: boolean }) => Promise<DeleteDataResult>;
     const [loading, setLoading] = useState(false);
-    const [dataInfo, setDataInfo] = useState<{
-        exists: boolean;
-        schoolName: string;
-        schoolId: Id<"schools">;
-        counts: {
-            events: number;
-            students: number;
-            classes: number;
-            users: number;
-            locations: number;
-        };
-        details: {
-            teacher: string | null;
-            moderator: string | null;
-            locationNames: string[];
-        };
-    } | null>(null);
+    const [dataInfo, setDataInfo] = useState<CheckDataResult | null>(null);
 
     const handleCheckData = async () => {
         setLoading(true);

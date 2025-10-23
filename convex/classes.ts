@@ -933,6 +933,19 @@ export const deleteClass = mutation({
     // Delete class
     await ctx.db.delete(args.classId);
 
+    // Log the deletion for audit trail
+    await ctx.db.insert("auditLogs", {
+      userId: args.userId,
+      username: user!.username,
+      userRole: user!.role,
+      action: "delete_class",
+      targetType: "classes",
+      targetId: args.classId,
+      targetName: student ? `${student.firstName} ${student.lastName} - ${new Date(classData.scheduledDate).toLocaleDateString()}` : undefined,
+      schoolId: classData.schoolId,
+      timestamp: Date.now(),
+    });
+
     return { success: true };
   },
 });

@@ -10,6 +10,8 @@
 
 import type * as adminContactRequests from "../adminContactRequests.js";
 import type * as appUpdates from "../appUpdates.js";
+import type * as auditHelpers from "../auditHelpers.js";
+import type * as auditLogs from "../auditLogs.js";
 import type * as bulkOperations from "../bulkOperations.js";
 import type * as cancellationRequests from "../cancellationRequests.js";
 import type * as classes from "../classes.js";
@@ -56,6 +58,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   adminContactRequests: typeof adminContactRequests;
   appUpdates: typeof appUpdates;
+  auditHelpers: typeof auditHelpers;
+  auditLogs: typeof auditLogs;
   bulkOperations: typeof bulkOperations;
   cancellationRequests: typeof cancellationRequests;
   classes: typeof classes;

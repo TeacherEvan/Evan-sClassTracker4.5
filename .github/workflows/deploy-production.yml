@@ -1,0 +1,65 @@
+name: Deploy to Production
+
+on:
+    push:
+        branches: [main]
+    workflow_dispatch: # Allow manual triggers
+
+jobs:
+    deploy-convex:
+        runs-on: ubuntu-latest
+        environment: production
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Deploy Convex backend
+              run: npx convex deploy --cmd 'npm run build'
+              env:
+                  CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+
+            - name: Get Convex URL
+              id: convex
+              run: |
+                  # Extract Convex URL from deployment output
+                  echo "CONVEX_URL=$(npx convex url)" >> $GITHUB_OUTPUT
+              env:
+                  CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+
+        outputs:
+            convex_url: ${{ steps.convex.outputs.CONVEX_URL }}
+
+    deploy-vercel:
+        needs: deploy-convex
+        runs-on: ubuntu-latest
+        environment: production
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Deploy to Vercel
+              uses: amondnet/vercel-action@v25
+              with:
+                  vercel-token: ${{ secrets.VERCEL_TOKEN }}
+                  vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+                  vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+                  vercel-args: "--prod"
+              env:
+                  NEXT_PUBLIC_CONVEX_URL: ${{ needs.deploy-convex.outputs.convex_url }}
+
+            - name: Deployment summary
+              run: |
+                  echo "✅ Production deployment complete!"
+                  echo "🔗 Convex URL: ${{ needs.deploy-convex.outputs.convex_url }}"
+                  echo "🚀 Vercel deployment: https://vercel.com/${{ secrets.VERCEL_ORG_ID }}/${{ secrets.VERCEL_PROJECT_ID }}"

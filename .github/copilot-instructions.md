@@ -244,6 +244,147 @@ ctx.db.query("teacherResources")
 await ctx.db.patch(resourceId, { isActive: false });
 ```
 
+### 9. File Upload Pattern (Convex Storage)
+
+**For file attachments** (messages, contact requests), use Convex `_storage`:
+
+```typescript
+// Generate upload URL (frontend calls this first)
+export const generateUploadUrl = mutation(async (ctx) => {
+  return await ctx.storage.generateUploadUrl();
+});
+
+// Store attachment metadata after upload
+await ctx.db.insert("messages", {
+  attachmentStorageId: storageId,  // From upload response
+  attachmentName: "document.pdf",
+  attachmentType: "application/pdf",
+  attachmentSize: 102400, // bytes
+  // ... other fields
+});
+
+// Retrieve download URL
+const url = await ctx.storage.getUrl(storageId);
+```
+
+**Storage limits**: Convex free tier = 1GB storage, 5GB bandwidth/month
+
+**Pattern location**: See `convex/messages.ts` and `convex/adminContactRequests.ts`
+
+### 10. Login Security Pattern (Account Lockout)
+
+**Automatic 24-hour lockout** after 5 failed login attempts:
+
+```typescript
+// In login mutation (convex/users.ts)
+const user = await ctx.db.query("users")
+  .withIndex("by_username", q => q.eq("username", username))
+  .first();
+
+// Check if account is locked
+if (user.accountLockedUntil && user.accountLockedUntil > Date.now()) {
+  throw new Error("Account locked. Try again later or contact admin.");
+}
+
+// Increment failed attempts on wrong password
+await ctx.db.patch(user._id, {
+  failedLoginAttempts: (user.failedLoginAttempts || 0) + 1,
+  accountLockedUntil: attempts >= 4 ? Date.now() + 86400000 : undefined // 24hrs
+});
+
+// Reset on successful login
+await ctx.db.patch(user._id, {
+  failedLoginAttempts: 0,
+  accountLockedUntil: undefined,
+  lastSuccessfulLogin: Date.now()
+});
+```
+
+**Admin bypass**: Reset password to `Teacher{username}` to unlock account early
+
+### 11. Bulk Deletion Pattern (Security-Critical)
+
+**Admin-only bulk operations** require strict authorization checks:
+
+```typescript
+export const bulkDelete = mutation({
+  handler: async (ctx, { ids, adminId, reason }) => {
+    // 1. Verify admin role
+    const admin = await ctx.db.get(adminId);
+    if (!admin || admin.role !== "admin") {
+      throw new Error("Admin access required");
+    }
+
+    // 2. Validate reasonable batch size
+    if (ids.length > 100) {
+      throw new Error("Maximum 100 deletions per request");
+    }
+
+    // 3. Log the operation (audit trail)
+    await ctx.db.insert("auditLog", {
+      action: "bulk_delete",
+      performedBy: adminId,
+      affectedCount: ids.length,
+      reason,
+      timestamp: Date.now()
+    });
+
+    // 4. Soft delete (preserve data)
+    await Promise.all(ids.map(id => 
+      ctx.db.patch(id, { isActive: false, deletedAt: Date.now() })
+    ));
+  }
+});
+```
+
+**Key safeguards** (from `SECURITY_REVIEW_BULK_DELETION.md`):
+- Admin role verification (no bypass)
+- Batch size limits (prevent DoS)
+- Audit logging (track who deleted what)
+- Soft deletes (data recovery possible)
+- Confirmation UI (requires reason + double-check)
+
+**Example**: See `convex/classes.ts` `bulkDelete` mutation and `components/sangsom-delete-button.tsx`
+
+### 12. Audit Logging Pattern
+
+**All significant administrative actions** should be logged for compliance:
+
+```typescript
+import { logAudit, AuditActions, AuditTargetTypes } from "./auditHelpers";
+
+export const deleteUser = mutation({
+  handler: async (ctx, args) => {
+    // Perform action
+    await ctx.db.delete(userId);
+    
+    // Log for audit trail
+    await logAudit(ctx, {
+      userId: args.adminId,
+      action: AuditActions.DELETE_USER,
+      targetType: AuditTargetTypes.USERS,
+      targetId: userId,
+      targetName: user.username,
+      reason: args.reason,
+      schoolId: user.schoolId,
+    });
+  }
+});
+```
+
+**Actions to audit** (see `docs/AUDIT_LOGGING_IMPLEMENTATION.md`):
+- User management (create, delete, update, password reset)
+- Bulk operations (bulk delete, bulk import)
+- Administrative changes (schools, locations, notifications)
+- Security-sensitive actions (role changes, account unlocks)
+
+**Helpers available**:
+- `logAudit()` - Quick logging function
+- `AuditActions` - Standard action constants
+- `AuditTargetTypes` - Standard target type constants
+
+**Admin UI**: `components/audit-logs.tsx` provides full audit log viewer with filters, statistics, and CSV export.
+
 ## Security Considerations ⚠️
 
 ### Known Limitations (NOT Production-Ready)
@@ -259,7 +400,8 @@ This project has **known security issues** suitable for development/testing only
 2. **No Authentication Rate Limiting**
    - Issue: Login endpoint unprotected against brute force
    - Default password pattern `Teacher{username}` is predictable
-   - **TODO**: Add `checkRateLimit` to login mutation (5 attempts per 5min)
+   - **UPDATED Oct 2025**: 24-hour account lockout after 5 failed attempts (see "Login Security Pattern")
+   - **TODO**: Consider shorter lockout (e.g., 1-hour) with progressive delays
 
 3. **localStorage for Sessions (XSS Risk)**
    - Issue: Accessible to any JavaScript, no HttpOnly protection
@@ -298,11 +440,53 @@ npx tsc --noEmit     # Typecheck without emitting files
 
 **Turbopack is required** - do not remove `--turbopack` flags from `package.json` scripts.
 
+### CI/CD Pipeline (Automated)
+
+**GitHub Actions workflows** are configured for automated testing and deployment:
+
+```yaml
+.github/workflows/
+├── ci.yml                    # TypeScript + ESLint checks on PRs
+├── deploy-staging.yml        # Auto-deploy develop branch
+└── deploy-production.yml     # Auto-deploy main branch
+```
+
+**Workflow triggers**:
+- CI checks run on all PRs and pushes
+- Staging deploys automatically on push to `develop`
+- Production deploys automatically on push to `main`
+- Manual deployments available via Actions tab
+
+**Setup required**: See `docs/CI_CD_SETUP_GUIDE.md` for:
+- GitHub Secrets configuration (Convex, Vercel)
+- Environment protection rules
+- Deployment testing procedures
+
 ### Environment Setup
 
 - `.env.local` contains `NEXT_PUBLIC_CONVEX_URL` (auto-created by `npx convex dev`)
 - Already in `.gitignore` - never commit
 - Production: Set `NEXT_PUBLIC_CONVEX_URL` in Vercel dashboard
+
+### Testing New Features
+
+**Quick test workflow** (see `docs/TESTING_GUIDE.md` for comprehensive guide):
+
+1. **Start services**: `npx convex dev` + `npm run dev`
+2. **Login with test users**:
+   - Admin: `admin` / `TeacherAdmin`
+   - Moderator: `moderator1` / `TeacherModerator1`
+   - Teacher: `Evan` / `TeacherEvan`
+3. **Test bilingual behavior**: Use language switcher (🇬🇧/🇹🇭 icon)
+4. **Verify toast notifications**: Check bottom-right corner for feedback
+5. **Check role-based access**: Features should appear/hide based on role
+6. **Test real-time updates**: Open two browser windows with different users
+
+**Common test scenarios**:
+- Class booking → moderator notification → approval/rejection
+- Message sending → unread badge → read status update
+- Student creation → auto-generated ID → appears in dropdown
+- Location proposal → moderator approval → available for booking
 
 ## Common Pitfalls
 

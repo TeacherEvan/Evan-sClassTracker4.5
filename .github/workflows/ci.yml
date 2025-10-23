@@ -1,0 +1,62 @@
+name: CI - Type Check & Lint
+
+on:
+    pull_request:
+        branches: [main, develop]
+    push:
+        branches: [main, develop]
+
+jobs:
+    type-check-and-lint:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: TypeScript type check
+              run: npx tsc --noEmit
+
+            - name: Run ESLint
+              run: npm run lint
+
+            - name: Build check (Next.js)
+              run: npm run build
+              env:
+                  # Use a dummy Convex URL for build validation
+                  NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL || 'https://dummy.convex.cloud' }}
+
+    convex-check:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Validate Convex schema
+              run: |
+                  echo "Checking Convex schema syntax..."
+                  npx tsc convex/schema.ts --noEmit --skipLibCheck
+
+            - name: Check Convex functions
+              run: |
+                  echo "Checking all Convex functions..."
+                  find convex -name "*.ts" -not -path "convex/_generated/*" -exec npx tsc {} --noEmit --skipLibCheck \;
