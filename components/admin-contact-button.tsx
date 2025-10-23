@@ -243,8 +243,8 @@ export function AdminContactButton({
         {t("Contact Admin", "ติดต่อผู้จัดการ")}
       </button>
 
-      {/* Enhanced Contact Dialog */}
-      {showDialog && (
+      {/* Enhanced Contact Dialog - Rendered via Portal to escape stacking context */}
+      {showDialog && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Dialog Header */}
@@ -463,7 +463,8 @@ export function AdminContactButton({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

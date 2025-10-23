@@ -53,7 +53,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 relative shadow-[0_0_40px_rgba(255,215,0,0.6)]">
           {/* Geometric/Henna Border replacing the simple gold border */}
           <GeometricBorder />
-          
+
           {/* Logo with Slogan */}
           <div className="mb-8 relative z-20">
             <Logo size="md" showSlogan={true} />

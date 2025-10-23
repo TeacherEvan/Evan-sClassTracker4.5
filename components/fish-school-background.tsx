@@ -44,13 +44,13 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
             fish.push({
                 x: centerX + (Math.random() - 0.5) * spread,
                 y: centerY + (Math.random() - 0.5) * spread,
-                vx: Math.cos(angle) * 1.5,
-                vy: Math.sin(angle) * 1.5,
+                vx: Math.cos(angle) * 4.5,
+                vy: Math.sin(angle) * 4.5,
                 pulsePhase: Math.random() * Math.PI * 2,
-                neighborhoodRadius: 100,
-                maxSpeed: 2.5,
-                maxForce: 0.1,
-                size: 9,
+                neighborhoodRadius: 120,
+                maxSpeed: 6.5,
+                maxForce: 0.3,
+                size: 8,
             });
         }
         fishRef.current = fish;
