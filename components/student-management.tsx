@@ -271,6 +271,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         try {
             const result = await bulkDeleteStudents({
                 studentIds: Array.from(selectedStudents),
+                userId: currentUser._id,
             });
 
             if (result.successful > 0) {

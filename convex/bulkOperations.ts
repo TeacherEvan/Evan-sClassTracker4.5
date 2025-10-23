@@ -183,8 +183,19 @@ export const bulkCreateUsers = mutation({
 export const bulkDeleteStudents = mutation({
     args: {
         studentIds: v.array(v.id("students")),
+        userId: v.optional(v.id("users")), // User performing the deletion (for rate limiting)
     },
     handler: async (ctx, args) => {
+        // Rate limiting if userId provided
+        if (args.userId) {
+            const { checkRateLimit } = await import("./rateLimit");
+            await checkRateLimit(ctx, {
+                key: `bulk-delete-students-${args.userId}`,
+                limit: 10,
+                windowMs: 60000, // 10 operations per minute
+            });
+        }
+
         const results = [];
         const errors = [];
 
