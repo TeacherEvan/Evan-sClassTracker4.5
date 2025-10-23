@@ -14,26 +14,22 @@ import { useState } from "react";
  */
 export function SangsomSeedButton() {
   const { t } = useLanguage();
-  // @ts-expect-error - API will be generated after running convex dev
-  const seedSangsomProject = useMutation(api.seedSangsomProject?.seedSangsomProject);
-  // @ts-expect-error - API will be generated after running convex dev
-  const checkSangsomData = useMutation(api.seedSangsomProject?.checkSangsomData);
+  const seedSangsomProject = useMutation(api.seedSangsomProject.seedSangsomProject);
+  const checkSangsomData = useMutation(api.seedSangsomProject.checkSangsomData);
 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{
     success: boolean;
-    studentsCreated: number;
-    classesCreated: number;
+    eventsCreated: number;
     credentials?: {
       teacher: { username: string; password: string };
       moderator: { username: string; password: string };
     };
-    classes?: Array<{ date: string; time: string; classCode: string; topic: string }>;
+    events?: Array<{ date: string; time: string; classCode: string; topic: string }>;
   } | null>(null);
   const [existingData, setExistingData] = useState<{
     exists: boolean;
-    classCount?: number;
-    studentCount?: number;
+    eventCount?: number;
   } | null>(null);
 
   const handleCheckData = async () => {
@@ -41,11 +37,11 @@ export function SangsomSeedButton() {
     try {
       const data = await checkSangsomData({});
       setExistingData(data);
-      
+
       if (data.exists) {
         toast.info(
-          `Found Sangsom data: ${data.classCount} classes, ${data.studentCount} students`,
-          `พบข้อมูลสังสม: ${data.classCount} คลาส, ${data.studentCount} นักเรียน`
+          `Found Sangsom data: ${data.eventCount} events`,
+          `พบข้อมูลสังสม: ${data.eventCount} กิจกรรม`
         );
       } else {
         toast.info(
@@ -66,14 +62,14 @@ export function SangsomSeedButton() {
   const handleSeed = async () => {
     setLoading(true);
     setResult(null);
-    
+
     try {
       const res = await seedSangsomProject({});
       setResult(res);
-      
+
       toast.success(
-        `Successfully created ${res.classesCreated} classes for ${res.studentsCreated} students!`,
-        `สร้าง ${res.classesCreated} คลาสสำหรับ ${res.studentsCreated} นักเรียนสำเร็จ!`
+        `Successfully created ${res.eventsCreated} events!`,
+        `สร้าง ${res.eventsCreated} กิจกรรมสำเร็จ!`
       );
     } catch (err) {
       toast.error(
@@ -95,8 +91,8 @@ export function SangsomSeedButton() {
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             {t(
-              "Import November 2025 schedule from paper document",
-              "นำเข้าตารางเรียนเดือนพฤศจิกายน 2568 จากเอกสาร"
+              "Import November 2025 schedule as EVENTS from paper document",
+              "นำเข้าตารางเดือนพฤศจิกายน 2568 เป็นกิจกรรมจากเอกสาร"
             )}
           </p>
         </div>
@@ -109,8 +105,7 @@ export function SangsomSeedButton() {
               <>
                 {t("Existing data found:", "พบข้อมูลที่มีอยู่:")}
                 <br />
-                {t(`${existingData.classCount} classes`, `${existingData.classCount} คลาส`)},{" "}
-                {t(`${existingData.studentCount} students`, `${existingData.studentCount} นักเรียน`)}
+                {t(`${existingData.eventCount} events`, `${existingData.eventCount} กิจกรรม`)}
               </>
             ) : (
               t("No existing data found", "ไม่พบข้อมูลที่มีอยู่")
@@ -123,8 +118,8 @@ export function SangsomSeedButton() {
         <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
           <p className="text-sm text-yellow-800 dark:text-yellow-200">
             {t(
-              "This will create Sangsom School, teacher พงศกร หน่อไฟ, students for all class codes (K.1/1 through K.3/10), and all scheduled classes for November 3-24, 2025.",
-              "จะสร้างโรงเรียนสังสม, ครู พงศกร หน่อไฟ, นักเรียนสำหรับทุกคลาส (K.1/1 ถึง K.3/10), และทุกคลาสที่กำหนดไว้วันที่ 3-24 พฤศจิกายน 2568"
+              "This will create Sangsom School, teacher พงศกร หน่อไฟ, and all scheduled EVENTS for November 3-24, 2025. No students or classes will be created.",
+              "จะสร้างโรงเรียนสังสม, ครู พงศกร หน่อไฟ, และกิจกรรมทั้งหมดที่กำหนดไว้วันที่ 3-24 พฤศจิกายน 2568 จะไม่สร้างนักเรียนหรือคลาส"
             )}
           </p>
         </div>
@@ -139,7 +134,7 @@ export function SangsomSeedButton() {
               ? t("Checking...", "กำลังตรวจสอบ...")
               : t("Check Existing Data", "ตรวจสอบข้อมูลที่มีอยู่")}
           </button>
-          
+
           <button
             onClick={handleSeed}
             disabled={loading}
@@ -147,7 +142,7 @@ export function SangsomSeedButton() {
           >
             {loading
               ? t("Seeding...", "กำลังเพิ่มข้อมูล...")
-              : t("Seed Sangsom Data", "เพิ่มข้อมูลสังสม")}
+              : t("Seed Sangsom Events", "เพิ่มกิจกรรมสังสม")}
           </button>
         </div>
       </div>
@@ -188,14 +183,8 @@ export function SangsomSeedButton() {
             <ul className="space-y-1 text-blue-700 dark:text-blue-300">
               <li>
                 {t(
-                  `✓ Created ${result.studentsCreated} students`,
-                  `✓ สร้าง ${result.studentsCreated} นักเรียน`
-                )}
-              </li>
-              <li>
-                {t(
-                  `✓ Created ${result.classesCreated} classes`,
-                  `✓ สร้าง ${result.classesCreated} คลาส`
+                  `✓ Created ${result.eventsCreated} events`,
+                  `✓ สร้าง ${result.eventsCreated} กิจกรรม`
                 )}
               </li>
               <li>
@@ -204,25 +193,31 @@ export function SangsomSeedButton() {
                   "✓ ช่วงเวลา: 3-24 พฤศจิกายน 2568"
                 )}
               </li>
+              <li>
+                {t(
+                  "✓ Events visible on calendar",
+                  "✓ กิจกรรมแสดงบนปฏิทิน"
+                )}
+              </li>
             </ul>
           </div>
 
-          {result.classes && result.classes.length > 0 && (
+          {result.events && result.events.length > 0 && (
             <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-lg max-h-60 overflow-y-auto">
               <p className="font-medium text-sm mb-2">
-                {t("Created Classes (sample):", "คลาสที่สร้าง (ตัวอย่าง):")}
+                {t("Created Events (sample):", "กิจกรรมที่สร้าง (ตัวอย่าง):")}
               </p>
               <ul className="space-y-1 text-xs">
-                {result.classes.slice(0, 10).map((cls, i: number) => (
+                {result.events.slice(0, 10).map((evt, i: number) => (
                   <li key={i} className="text-gray-600 dark:text-gray-400">
-                    {cls.date} {cls.time} - {cls.classCode}: {cls.topic}
+                    {evt.date} {evt.time} - {evt.classCode}: {evt.topic}
                   </li>
                 ))}
-                {result.classes.length > 10 && (
+                {result.events.length > 10 && (
                   <li className="text-gray-500 dark:text-gray-500 italic">
                     {t(
-                      `... and ${result.classes.length - 10} more`,
-                      `... และอีก ${result.classes.length - 10} คลาส`
+                      `... and ${result.events.length - 10} more`,
+                      `... และอีก ${result.events.length - 10} กิจกรรม`
                     )}
                   </li>
                 )}

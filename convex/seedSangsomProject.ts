@@ -1,5 +1,5 @@
-import { mutation } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
+import { mutation } from "./_generated/server";
 
 /**
  * Seed script for Sangsom Project schedule (November 2025)
@@ -7,10 +7,10 @@ import type { Id } from "./_generated/dataModel";
  * 
  * This script creates:
  * - Sangsom School
- * - Teacher user
- * - Student records for each class code
- * - Location (Sangsom Classroom)
- * - Class bookings with lesson topics and activities
+ * - Teacher user (พงศกร หน่อไฟ)
+ * - EVENTS for each scheduled class session
+ * 
+ * NOTE: Creates EVENTS, not classes with students!
  */
 
 // Helper function for password hashing (consistent with users.ts)
@@ -372,28 +372,28 @@ export const seedSangsomProject = mutation({
     if (existingSchool) {
       console.log("Sangsom School already exists, using existing school");
       schoolId = existingSchool._id;
-      
+
       // Get existing teacher and moderator
       const existingTeacher = await ctx.db
         .query("users")
         .withIndex("by_username", (q) => q.eq("username", "sangsom_teacher"))
         .first();
-      
+
       const existingModerator = await ctx.db
         .query("users")
         .withIndex("by_username", (q) => q.eq("username", "sangsom_moderator"))
         .first();
-      
+
       const existingLocation = await ctx.db
         .query("locations")
         .withIndex("by_school", (q) => q.eq("schoolId", schoolId))
         .filter((q) => q.eq(q.field("name"), "Sangsom Classroom"))
         .first();
-      
+
       if (!existingTeacher || !existingModerator || !existingLocation) {
         throw new Error("Sangsom school exists but missing teacher, moderator, or location");
       }
-      
+
       teacherId = existingTeacher._id;
       moderatorId = existingModerator._id;
       locationId = existingLocation._id;
@@ -444,110 +444,52 @@ export const seedSangsomProject = mutation({
       });
     }
 
-    // Get or create students for each unique class code
-    const uniqueClasses = [...new Set(
-      SCHEDULE_DATA.map(item => `${item.grade}${item.classNumber}`)
-    )];
+    // Create EVENTS for each scheduled item
+    const createdEvents = [];
 
-    const studentMap = new Map<string, Id<"students">>();
-    
-    for (const classCode of uniqueClasses) {
-      const grade = classCode.split("/")[0];
-      const classNumber = "/" + classCode.split("/")[1];
-      
-      // Check if student already exists
-      const existingStudent = await ctx.db
-        .query("students")
-        .withIndex("by_school", (q) => q.eq("schoolId", schoolId))
-        .filter((q) => 
-          q.and(
-            q.eq(q.field("grade"), grade),
-            q.eq(q.field("class"), classNumber)
-          )
-        )
-        .first();
-      
-      if (existingStudent) {
-        studentMap.set(classCode, existingStudent._id);
-        continue;
-      }
-      
-      // Generate unique student ID
-      const timestamp = Date.now().toString(36);
-      const gradeHash = grade.replace(".", "").substring(0, 2).toUpperCase();
-      const schoolHash = "SANG";
-      const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-      const studentId = `${schoolHash}-${gradeHash}-${timestamp}-${random}`;
-      
-      // Create student
-      const newStudentId = await ctx.db.insert("students", {
-        firstName: `Student ${classCode}`,
-        lastName: "Sangsom",
-        studentId: studentId,
-        schoolId: schoolId,
-        grade: grade,
-        class: classNumber,
-        nickname: classCode,
-        createdBy: teacherId,
-        createdAt: Date.now(),
-      });
-      
-      studentMap.set(classCode, newStudentId);
-    }
-
-    // Create classes for each scheduled item
-    const createdClasses = [];
-    
     for (const item of SCHEDULE_DATA) {
       const classCode = `${item.grade}${item.classNumber}`;
-      const studentId = studentMap.get(classCode);
-      
-      if (!studentId) {
-        console.error(`Student not found for class code: ${classCode}`);
-        continue;
-      }
-      
+
       // Parse date and time
       const [year, month, day] = item.date.split("-").map(Number);
       const [hour, minute] = item.time.split(":").map(Number);
-      const scheduledDate = new Date(year, month - 1, day, hour, minute).getTime();
-      
-      // Check if class already exists
-      const existingClass = await ctx.db
-        .query("classes")
-        .withIndex("by_teacher_and_date", (q) =>
-          q.eq("teacherId", teacherId)
-            .eq("scheduledDate", scheduledDate)
+      const eventDate = new Date(year, month - 1, day, hour, minute).getTime();
+
+      // Check if event already exists
+      const existingEvent = await ctx.db
+        .query("events")
+        .withIndex("by_creator_and_date", (q) =>
+          q.eq("createdBy", teacherId)
+            .eq("eventDate", eventDate)
         )
-        .filter((q) => q.eq(q.field("studentId"), studentId))
+        .filter((q) => q.eq(q.field("title"), `${classCode} - ${item.topicEn}`))
         .first();
-      
-      if (existingClass) {
-        console.log(`Class already exists for ${classCode} on ${item.date} at ${item.time}`);
+
+      if (existingEvent) {
+        console.log(`Event already exists for ${classCode} on ${item.date} at ${item.time}`);
         continue;
       }
-      
-      // Create class
-      const classId = await ctx.db.insert("classes", {
-        teacherId: teacherId,
+
+      // Create event
+      const eventId = await ctx.db.insert("events", {
+        title: `${classCode} - ${item.topicEn}`,
+        titleTh: `${classCode} - ${item.topic}`,
+        description: `Activity: ${item.activity}\nDuration: ${item.duration} minutes`,
+        descriptionTh: `กิจกรรม: ${item.activityTh}\nระยะเวลา: ${item.duration} นาที`,
+        eventDate: eventDate,
+        allDay: false,
+        eventType: "event",
+        visibility: "school",
         schoolId: schoolId,
-        studentId: studentId,
-        locationId: locationId,
-        status: "approved", // Auto-approve for seeded data
-        scheduledDate: scheduledDate,
-        duration: item.duration,
-        subject: "Sangsom Project",
-        subjectTh: "โครงสังสม",
-        lessonTopic: item.topicEn,
-        lessonTopicTh: item.topic,
-        materials: item.activity,
-        materialsTh: item.activityTh,
-        classType: "regular",
+        createdBy: teacherId,
         createdAt: Date.now(),
+        isActive: true,
+        location: "Sangsom Classroom",
+        locationTh: "ห้องเรียนสังสม",
       });
-      
-      createdClasses.push({
-        classId,
+
+      createdEvents.push({
+        eventId,
         date: item.date,
         time: item.time,
         classCode,
@@ -557,14 +499,13 @@ export const seedSangsomProject = mutation({
 
     return {
       success: true,
-      message: "Sangsom Project schedule seeded successfully",
+      message: "Sangsom Project events seeded successfully",
       schoolId,
       teacherId,
       moderatorId,
       locationId,
-      studentsCreated: studentMap.size,
-      classesCreated: createdClasses.length,
-      classes: createdClasses,
+      eventsCreated: createdEvents.length,
+      events: createdEvents,
       credentials: {
         teacher: { username: "sangsom_teacher", password: "TeacherPongsak" },
         moderator: { username: "sangsom_moderator", password: "TeacherSangsomModerator" },
@@ -586,21 +527,15 @@ export const checkSangsomData = mutation({
       return { exists: false };
     }
 
-    const classes = await ctx.db
-      .query("classes")
-      .withIndex("by_school", (q) => q.eq("schoolId", school._id))
-      .collect();
-
-    const students = await ctx.db
-      .query("students")
+    const events = await ctx.db
+      .query("events")
       .withIndex("by_school", (q) => q.eq("schoolId", school._id))
       .collect();
 
     return {
       exists: true,
       schoolId: school._id,
-      classCount: classes.length,
-      studentCount: students.length,
+      eventCount: events.length,
     };
   },
 });
