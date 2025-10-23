@@ -90,8 +90,7 @@ export function ModeratorListView() {
                   <button
                     className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
                     onClick={() => {
-                      // This would open a messaging dialog or navigate to messaging
-                      console.log("Contact moderator:", moderator._id);
+                      // TODO: Implement messaging dialog or navigation to messaging
                     }}
                   >
                     <Mail className="w-4 h-4" />

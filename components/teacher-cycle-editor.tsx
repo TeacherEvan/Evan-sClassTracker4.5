@@ -21,7 +21,7 @@ export function TeacherCycleEditor({
     moderatorId,
     onComplete,
 }: TeacherCycleEditorProps) {
-    const { t, language } = useLanguage();
+    const { t } = useLanguage();
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [notes, setNotes] = useState("");
