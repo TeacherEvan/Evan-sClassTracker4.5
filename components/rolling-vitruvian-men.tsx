@@ -24,7 +24,7 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
     const [man2Position, setMan2Position] = useState(-30);
     const [smallManPosition, setSmallManPosition] = useState(-30);
     const [smallManPaused, setSmallManPaused] = useState(false);
-    
+
     // Randomly select different Da Vinci images for variety
     const [man1Image] = useState(DA_VINCI_IMAGES[0]); // Always Vitruvian Man
     const [man2Image] = useState(DA_VINCI_IMAGES[Math.floor(Math.random() * DA_VINCI_IMAGES.length)]);
@@ -104,75 +104,75 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
     return (
         <>
-            {/* Large Da Vinci #1 - rolls continuously */}
+            {/* Large Da Vinci #1 - MASSIVE SIZE - almost touching screen edges */}
             <div
                 className="fixed pointer-events-none transition-none"
                 style={{
                     left: `${man1Position}%`,
                     top: "50%",
                     transform: "translate(-50%, -50%)",
-                    width: "min(40vw, 350px)",
-                    height: "min(40vw, 350px)",
+                    width: "auto",
+                    height: "95vh", // HUGE - almost touching top/bottom
                     zIndex: 1000, // FRONT of all layers
-                    opacity: 0.65,
+                    opacity: 0.45, // More transparent to hide paper border
                 }}
             >
-                <img 
-                    src={man1Image} 
+                <img
+                    src={man1Image}
                     alt="Da Vinci Vitruvian Man"
-                    className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(255,215,0,0.8)] rounded-lg"
-                    style={{ 
-                        filter: "sepia(0.3) brightness(1.1) contrast(1.1)",
-                        mixBlendMode: "screen"
+                    className="w-full h-full object-contain drop-shadow-[0_0_40px_rgba(255,215,0,0.6)]"
+                    style={{
+                        filter: "sepia(0.5) brightness(1.2) contrast(1.15) saturate(0.8)",
+                        mixBlendMode: "lighten" // Better blend to hide paper
                     }}
                 />
             </div>
 
-            {/* Large Da Vinci #2 - offset roll */}
+            {/* Large Da Vinci #2 - offset roll - MASSIVE */}
             <div
                 className="fixed pointer-events-none transition-none"
                 style={{
                     left: `${man2Position}%`,
                     top: "50%",
                     transform: "translate(-50%, -50%)",
-                    width: "min(40vw, 350px)",
-                    height: "min(40vw, 350px)",
+                    width: "auto",
+                    height: "95vh", // HUGE
                     zIndex: 1000,
-                    opacity: 0.65,
+                    opacity: 0.45, // More transparent
                 }}
             >
-                <img 
-                    src={man2Image} 
+                <img
+                    src={man2Image}
                     alt="Da Vinci Artwork"
-                    className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(255,215,0,0.8)] rounded-lg"
-                    style={{ 
-                        filter: "sepia(0.3) brightness(1.1) contrast(1.1)",
-                        mixBlendMode: "screen"
+                    className="w-full h-full object-contain drop-shadow-[0_0_40px_rgba(255,215,0,0.6)]"
+                    style={{
+                        filter: "sepia(0.5) brightness(1.2) contrast(1.15) saturate(0.8)",
+                        mixBlendMode: "lighten"
                     }}
                 />
             </div>
 
-            {/* Small Da Vinci - rolls to logo once per minute when logged in */}
+            {/* Small Da Vinci - behind "Class Tracker" title */}
             {isLoggedIn && (
                 <div
                     className="fixed pointer-events-none transition-none"
                     style={{
                         left: `${smallManPosition}%`,
-                        top: "15%", // Near logo position
+                        top: "80px", // Behind Class Tracker title (adjusted for header)
                         transform: "translate(-50%, -50%)",
-                        width: "min(20vw, 175px)", // 50% smaller
-                        height: "min(20vw, 175px)",
-                        zIndex: 999, // Behind logo but in front of content
-                        opacity: 0.65,
+                        width: "auto",
+                        height: "180px", // Smaller for title area
+                        zIndex: 0, // Behind everything except background
+                        opacity: 0.35, // Very transparent
                     }}
                 >
-                    <img 
-                        src={smallManImage} 
+                    <img
+                        src={smallManImage}
                         alt="Da Vinci Vitruvian Man"
-                        className="w-full h-full object-contain drop-shadow-[0_0_20px_rgba(255,215,0,0.8)] rounded-lg"
-                        style={{ 
-                            filter: "sepia(0.3) brightness(1.1) contrast(1.1)",
-                            mixBlendMode: "screen"
+                        className="w-full h-full object-contain drop-shadow-[0_0_25px_rgba(255,215,0,0.5)]"
+                        style={{
+                            filter: "sepia(0.5) brightness(1.2) contrast(1.15) saturate(0.8)",
+                            mixBlendMode: "lighten"
                         }}
                     />
                 </div>
