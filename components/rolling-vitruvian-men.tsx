@@ -12,8 +12,8 @@ import { useEffect, useState } from "react";
 
 // Space/Galaxy images with math formulas - Using only 2 images
 const SPACE_IMAGES = [
-    "/images/space-galaxy-blue.jpg",   // Blue/teal galaxy with formulas
-    "/images/space-galaxy-pink.jpg",   // Pink/purple galaxy with formulas  
+    "/images/mathematical-physical-formulas-against-background-galaxy-universe-space-background.1600x0.webp",   // Galaxy with formulas
+    "/images/Gemini_Generated_Image_cy50ktcy50ktcy50.png",   // Generated galaxy image
 ];
 
 export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {

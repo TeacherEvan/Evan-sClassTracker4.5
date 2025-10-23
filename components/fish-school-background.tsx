@@ -44,9 +44,9 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
                 vx: (Math.random() - 0.5) * 1.5, // SLOW like snails
                 vy: (Math.random() - 0.5) * 1.5,
                 pulsePhase: Math.random() * Math.PI * 2,
-                neighborhoodRadius: 400, // DOUBLE THE SPREAD (was 200)
+                neighborhoodRadius: 600, // EVEN MORE SPREAD OUT (was 400)
                 maxSpeed: 1, // SNAIL PACE
-                maxForce: 0.20, // EVEN MORE GENTLE (was 0.15)
+                maxForce: 0.10, // SUPER GENTLE - they barely react to each other
                 size: 3,
                 trail: [], // Slime trail
             });
@@ -121,8 +121,8 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
 
                     const dist = Math.sqrt(distSq);
 
-                    // Separation: steer away from neighbors
-                    if (dist < 25) {
+                    // Separation: steer away from neighbors - INCREASED DISTANCE
+                    if (dist < 80) { // Was 25, now they avoid each other from much further away
                         separation.x -= dx / dist;
                         separation.y -= dy / dist;
                     }
