@@ -37,6 +37,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const updateStudent = useMutation(api.students.update);
     const removeStudent = useMutation(api.students.remove);
     const duplicateStudent = useMutation(api.students.duplicate);
+    const bulkDeleteStudents = useMutation(api.bulkOperations.bulkDeleteStudents);
 
     const [selectedSchoolId, setSelectedSchoolId] = useState<Id<"schools"> | "guardian" | "all">("all");
     const [showForm, setShowForm] = useState(false);
@@ -71,6 +72,10 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const [pendingDeleteStudent, setPendingDeleteStudent] = useState<{ id: Id<"students">; name: string } | null>(null);
     const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false);
     const [pendingDuplicateStudent, setPendingDuplicateStudent] = useState<{ id: Id<"students">; name: string } | null>(null);
+
+    // Bulk deletion state
+    const [selectedStudents, setSelectedStudents] = useState<Set<Id<"students">>>(new Set());
+    const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
     // Query students based on filter
     const students = useQuery(
@@ -262,6 +267,54 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         }
     };
 
+    const handleBulkDelete = async () => {
+        try {
+            const result = await bulkDeleteStudents({
+                studentIds: Array.from(selectedStudents),
+                userId: currentUser._id,
+            });
+
+            if (result.successful > 0) {
+                setSuccess(t(`Successfully deleted ${result.successful} student(s)`, `ลบนักเรียนสำเร็จ ${result.successful} คน`));
+            }
+
+            if (result.failed > 0) {
+                setError(t(
+                    `Failed to delete ${result.failed} student(s). Students with classes cannot be deleted.`,
+                    `ไม่สามารถลบนักเรียนได้ ${result.failed} คน นักเรียนที่มีคลาสไม่สามารถลบได้`
+                ));
+                console.error("Bulk delete errors:", result.errors);
+            }
+
+            setSelectedStudents(new Set());
+            setShowBulkDeleteConfirm(false);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to bulk delete students");
+        }
+    };
+
+    const toggleStudentSelection = (studentId: Id<"students">) => {
+        const newSelection = new Set(selectedStudents);
+        if (newSelection.has(studentId)) {
+            newSelection.delete(studentId);
+        } else {
+            newSelection.add(studentId);
+        }
+        setSelectedStudents(newSelection);
+    };
+
+    const toggleSelectAll = () => {
+        if (!filteredStudents) return;
+        
+        if (selectedStudents.size === filteredStudents.length) {
+            // Deselect all
+            setSelectedStudents(new Set());
+        } else {
+            // Select all
+            setSelectedStudents(new Set(filteredStudents.map(s => s._id)));
+        }
+    };
+
     const resetForm = () => {
         setNickname("");
         setGrade("");
@@ -323,24 +376,54 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                 </button>
             </div>
 
-            {/* Filter */}
-            <div className="flex items-center gap-4">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {t("Filter by:", "กรองโดย:")}
-                </label>
-                <select
-                    value={selectedSchoolId}
-                    onChange={(e) => setSelectedSchoolId(e.target.value as Id<"schools"> | "guardian" | "all")}
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                >
-                    <option value="all">{t("All Students", "นักเรียนทั้งหมด")}</option>
-                    <option value="guardian">{t("Guardian Only", "ผู้ปกครองเท่านั้น")}</option>
-                    {schools?.map((school) => (
-                        <option key={school._id} value={school._id}>
-                            {school.name}
-                        </option>
-                    ))}
-                </select>
+            {/* Filter and Bulk Actions */}
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {t("Filter by:", "กรองโดย:")}
+                    </label>
+                    <select
+                        value={selectedSchoolId}
+                        onChange={(e) => setSelectedSchoolId(e.target.value as Id<"schools"> | "guardian" | "all")}
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="all">{t("All Students", "นักเรียนทั้งหมด")}</option>
+                        <option value="guardian">{t("Guardian Only", "ผู้ปกครองเท่านั้น")}</option>
+                        {schools?.map((school) => (
+                            <option key={school._id} value={school._id}>
+                                {school.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Bulk Delete Controls */}
+                {filteredStudents && filteredStudents.length > 0 && (
+                    <div className="flex items-center gap-2">
+                        {selectedStudents.size > 0 && (
+                            <>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                    {t(`${selectedStudents.size} selected`, `เลือก ${selectedStudents.size} คน`)}
+                                </span>
+                                <button
+                                    onClick={() => setShowBulkDeleteConfirm(true)}
+                                    className="flex items-center gap-2 px-3 py-1.5 text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    {t("Delete Selected", "ลบที่เลือก")}
+                                </button>
+                            </>
+                        )}
+                        <button
+                            onClick={toggleSelectAll}
+                            className="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                        >
+                            {selectedStudents.size === filteredStudents.length
+                                ? t("Deselect All", "ยกเลิกทั้งหมด")
+                                : t("Select All", "เลือกทั้งหมด")}
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Success/Error Messages */}
@@ -732,6 +815,14 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                         <table className="w-full">
                             <thead className="bg-gray-50 dark:bg-gray-900">
                                 <tr>
+                                    <th className="px-3 py-3 text-left">
+                                        <input
+                                            type="checkbox"
+                                            checked={filteredStudents.length > 0 && selectedStudents.size === filteredStudents.length}
+                                            onChange={toggleSelectAll}
+                                            className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                                        />
+                                    </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                         {t("Student ID", "รหัสนักเรียน")}
                                     </th>
@@ -756,8 +847,20 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                {filteredStudents.map((student) => (
-                                    <tr key={student._id} className="hover:bg-gray-50 dark:hover:bg-gray-900">
+                                {filteredStudents.map((student) => {
+                                    const isSelected = selectedStudents.has(student._id);
+                                    return (
+                                    <tr key={student._id} className={`hover:bg-gray-50 dark:hover:bg-gray-900 ${
+                                        isSelected ? "bg-blue-50 dark:bg-blue-900/20" : ""
+                                    }`}>
+                                        <td className="px-3 py-4">
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => toggleStudentSelection(student._id)}
+                                                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                                            />
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-white">
                                             {student.studentId}
                                         </td>
@@ -829,12 +932,56 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
                 )}
             </div>
+
+            {/* Bulk Delete Confirmation Modal */}
+            {showBulkDeleteConfirm && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+                        <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-4">
+                            {t("⚠️ Confirm Bulk Deletion", "⚠️ ยืนยันการลบจำนวนมาก")}
+                        </h3>
+                        <p className="text-gray-700 dark:text-gray-300 mb-4">
+                            {t(
+                                `You are about to permanently delete ${selectedStudents.size} student(s). This action cannot be undone!`,
+                                `คุณกำลังจะลบนักเรียน ${selectedStudents.size} คนอย่างถาวร การดำเนินการนี้ไม่สามารถยกเลิกได้!`
+                            )}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            {t(
+                                "Note: Students with associated classes cannot be deleted.",
+                                "หมายเหตุ: นักเรียนที่มีคลาสที่เกี่ยวข้องไม่สามารถลบได้"
+                            )}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                            {t(
+                                "Are you absolutely sure you want to continue?",
+                                "คุณแน่ใจหรือไม่ว่าต้องการดำเนินการต่อ?"
+                            )}
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowBulkDeleteConfirm(false)}
+                                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={handleBulkDelete}
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                            >
+                                {t("Delete All", "ลบทั้งหมด")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Delete Confirmation Dialog */}
             {showDeleteConfirm && pendingDeleteStudent && (

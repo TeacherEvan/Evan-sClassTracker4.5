@@ -79,6 +79,8 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     // Inline student creation
     const [showStudentForm, setShowStudentForm] = useState(false);
     const [newStudentNickname, setNewStudentNickname] = useState("");
+    const [newStudentGrade, setNewStudentGrade] = useState("");
+    const [newStudentClass, setNewStudentClass] = useState("");
     const createStudent = useMutation(api.students.create);
 
     // Get students and locations filtered by school (server-side)
@@ -527,6 +529,8 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                         setError("");
                                         setShowStudentForm(false);
                                         setNewStudentNickname("");
+                                        setNewStudentGrade("");
+                                        setNewStudentClass("");
                                     }}
                                     className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                                 >
@@ -616,6 +620,8 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                                     onClick={() => {
                                                         setShowStudentForm(false);
                                                         setNewStudentNickname("");
+                                                        setNewStudentGrade("");
+                                                        setNewStudentClass("");
                                                     }}
                                                     className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                                                 >
@@ -630,11 +636,54 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
                                                 required
                                             />
+                                            <select
+                                                value={newStudentGrade}
+                                                onChange={(e) => setNewStudentGrade(e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                                required
+                                            >
+                                                <option value="">{t("-- Select Grade --", "-- เลือกชั้น --")}</option>
+                                                <option value="K1">K1</option>
+                                                <option value="K2">K2</option>
+                                                <option value="K3">K3</option>
+                                                <option value="P1">P1</option>
+                                                <option value="P2">P2</option>
+                                                <option value="P3">P3</option>
+                                                <option value="P4">P4</option>
+                                                <option value="P5">P5</option>
+                                                <option value="P6">P6</option>
+                                            </select>
+                                            <select
+                                                value={newStudentClass}
+                                                onChange={(e) => setNewStudentClass(e.target.value)}
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                                required
+                                            >
+                                                <option value="">{t("-- Select Class --", "-- เลือกห้อง --")}</option>
+                                                <option value="/1">/1</option>
+                                                <option value="/2">/2</option>
+                                                <option value="/3">/3</option>
+                                                <option value="/4">/4</option>
+                                                <option value="/5">/5</option>
+                                                <option value="/6">/6</option>
+                                                <option value="/7">/7</option>
+                                                <option value="/8">/8</option>
+                                                <option value="/9">/9</option>
+                                                <option value="/10">/10</option>
+                                            </select>
                                             <button
                                                 type="button"
                                                 onClick={async () => {
                                                     if (!newStudentNickname.trim()) {
                                                         setError(t("Please enter a nickname", "โปรดกรอกชื่อเล่น"));
+                                                        return;
+                                                    }
+                                                    if (!newStudentGrade) {
+                                                        setError(t("Please select a grade", "โปรดเลือกชั้น"));
+                                                        return;
+                                                    }
+                                                    if (!newStudentClass) {
+                                                        setError(t("Please select a class", "โปรดเลือกห้อง"));
                                                         return;
                                                     }
                                                     try {
@@ -643,12 +692,15 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                                             lastName: "",
                                                             nickname: newStudentNickname,
                                                             schoolId: schoolId as Id<"schools">,
-                                                            grade: "",
+                                                            grade: newStudentGrade,
+                                                            class: newStudentClass,
                                                             createdBy: currentUser._id,
                                                         });
                                                         setStudentId(result.id);
                                                         setShowStudentForm(false);
                                                         setNewStudentNickname("");
+                                                        setNewStudentGrade("");
+                                                        setNewStudentClass("");
                                                     } catch {
                                                         setError(t("Failed to create student", "ไม่สามารถสร้างนักเรียนได้"));
                                                     }

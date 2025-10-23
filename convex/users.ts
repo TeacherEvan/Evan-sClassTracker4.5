@@ -468,3 +468,95 @@ export const deleteUser = mutation({
     };
   },
 });
+
+/**
+ * Bulk delete users (Admin can delete all roles, Moderators can only delete teachers)
+ * WARNING: This action cannot be undone!
+ */
+export const bulkDeleteUsers = mutation({
+  args: {
+    adminOrModeratorId: v.id("users"),
+    userIdsToDelete: v.array(v.id("users")),
+  },
+  handler: async (ctx, args) => {
+    // Rate limiting
+    await checkRateLimit(ctx, {
+      key: `bulk-delete-users-${args.adminOrModeratorId}`,
+      limit: 5,
+      windowMs: 60000, // 5 bulk operations per minute max
+    });
+
+    // Verify authorization
+    const admin = await ctx.db.get(args.adminOrModeratorId);
+    if (!admin) {
+      throw new Error("User not found");
+    }
+
+    // Only admins and moderators can bulk delete
+    if (admin.role !== "admin" && admin.role !== "moderator") {
+      throw new Error("Only admins and moderators can bulk delete users");
+    }
+
+    const results = [];
+    const errors = [];
+
+    for (let i = 0; i < args.userIdsToDelete.length; i++) {
+      const userIdToDelete = args.userIdsToDelete[i];
+      try {
+        // Prevent deleting yourself
+        if (args.adminOrModeratorId === userIdToDelete) {
+          throw new Error("You cannot delete your own account");
+        }
+
+        // Get the user to delete
+        const userToDelete = await ctx.db.get(userIdToDelete);
+        if (!userToDelete) {
+          throw new Error("User not found");
+        }
+
+        // Moderators can only delete teachers
+        if (admin.role === "moderator" && userToDelete.role !== "teacher") {
+          throw new Error("Moderators can only delete teacher accounts");
+        }
+
+        // Admin-specific validation: cannot delete other admins
+        if (admin.role === "admin" && userToDelete.role === "admin" && args.adminOrModeratorId !== userIdToDelete) {
+          throw new Error("Admins cannot delete other admin accounts");
+        }
+
+        // Check if user is a moderator with a school
+        if (userToDelete.role === "moderator" && userToDelete.schoolId) {
+          // Remove moderator from school
+          await ctx.db.patch(userToDelete.schoolId, {
+            moderatorId: undefined,
+          });
+        }
+
+        // Delete the user
+        await ctx.db.delete(userIdToDelete);
+
+        results.push({
+          index: i,
+          userId: userIdToDelete,
+          username: userToDelete.username,
+          role: userToDelete.role,
+          success: true,
+        });
+      } catch (error) {
+        errors.push({
+          index: i,
+          userId: userIdToDelete,
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }
+
+    return {
+      total: args.userIdsToDelete.length,
+      successful: results.length,
+      failed: errors.length,
+      results,
+      errors,
+    };
+  },
+});
