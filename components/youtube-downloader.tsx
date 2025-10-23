@@ -210,24 +210,6 @@ export function YouTubeDownloader() {
                 </div>
             </div>
 
-            {/* Privacy Notice */}
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6">
-                <div className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-                    <div className="text-sm text-green-800 dark:text-green-200">
-                        <p className="font-semibold mb-1">
-                            {t("Privacy & Local Storage", "ความเป็นส่วนตัวและการจัดเก็บในเครื่อง")}
-                        </p>
-                        <p>
-                            {t(
-                                "All downloads are saved directly to your device's local storage (Downloads folder). No files are uploaded to cloud storage or our servers. Your downloads remain private on your device.",
-                                "การดาวน์โหลดทั้งหมดจะบันทึกลงในที่เก็บข้อมูลในเครื่องของอุปกรณ์คุณโดยตรง (โฟลเดอร์ดาวน์โหลด) ไม่มีการอัปโหลดไฟล์ไปยังระบบคลาวด์หรือเซิร์ฟเวอร์ของเรา การดาวน์โหลดของคุณเป็นส่วนตัวบนอุปกรณ์ของคุณ"
-                            )}
-                        </p>
-                    </div>
-                </div>
-            </div>
-
             {/* Main Downloader Card */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
                 {/* URL Input */}

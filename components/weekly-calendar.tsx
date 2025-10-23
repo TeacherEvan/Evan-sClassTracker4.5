@@ -78,8 +78,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
 
     // Inline student creation
     const [showStudentForm, setShowStudentForm] = useState(false);
-    const [newStudentFirstName, setNewStudentFirstName] = useState("");
-    const [newStudentLastName, setNewStudentLastName] = useState("");
+    const [newStudentNickname, setNewStudentNickname] = useState("");
     const createStudent = useMutation(api.students.create);
 
     // Get students and locations filtered by school (server-side)
@@ -459,8 +458,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                         setSelectedTime("09:00");
                                         setError("");
                                         setShowStudentForm(false);
-                                        setNewStudentFirstName("");
-                                        setNewStudentLastName("");
+                                        setNewStudentNickname("");
                                     }}
                                     className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
                                 >
@@ -549,8 +547,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                                     type="button"
                                                     onClick={() => {
                                                         setShowStudentForm(false);
-                                                        setNewStudentFirstName("");
-                                                        setNewStudentLastName("");
+                                                        setNewStudentNickname("");
                                                     }}
                                                     className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                                                 >
@@ -559,39 +556,31 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                             </div>
                                             <input
                                                 type="text"
-                                                placeholder={t("First Name", "ชื่อ")}
-                                                value={newStudentFirstName}
-                                                onChange={(e) => setNewStudentFirstName(e.target.value)}
-                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-                                                required
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder={t("Last Name", "นามสกุล")}
-                                                value={newStudentLastName}
-                                                onChange={(e) => setNewStudentLastName(e.target.value)}
+                                                placeholder={t("Nickname", "ชื่อเล่น")}
+                                                value={newStudentNickname}
+                                                onChange={(e) => setNewStudentNickname(e.target.value)}
                                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
                                                 required
                                             />
                                             <button
                                                 type="button"
                                                 onClick={async () => {
-                                                    if (!newStudentFirstName.trim() || !newStudentLastName.trim()) {
-                                                        setError(t("Please enter both first and last name", "โปรดกรอกชื่อและนามสกุล"));
+                                                    if (!newStudentNickname.trim()) {
+                                                        setError(t("Please enter a nickname", "โปรดกรอกชื่อเล่น"));
                                                         return;
                                                     }
                                                     try {
                                                         const result = await createStudent({
-                                                            firstName: newStudentFirstName,
-                                                            lastName: newStudentLastName,
+                                                            firstName: newStudentNickname,
+                                                            lastName: "",
+                                                            nickname: newStudentNickname,
                                                             schoolId: schoolId as Id<"schools">,
                                                             grade: "",
                                                             createdBy: currentUser._id,
                                                         });
                                                         setStudentId(result.id);
                                                         setShowStudentForm(false);
-                                                        setNewStudentFirstName("");
-                                                        setNewStudentLastName("");
+                                                        setNewStudentNickname("");
                                                     } catch {
                                                         setError(t("Failed to create student", "ไม่สามารถสร้างนักเรียนได้"));
                                                     }
@@ -614,8 +603,8 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                                 {formStudents?.map((student) => (
                                                     <option key={student._id} value={student._id}>
                                                         {student.firstName} {student.lastName}
-                                                        {student.class ? ` (${student.class})` : ""}
-                                                        {student.grade ? ` - ${student.grade}` : ""}
+                                                        {student.grade ? ` (${student.grade}` : ""}
+                                                        {student.class ? `${student.class})` : student.grade ? ")" : ""}
                                                     </option>
                                                 ))}
                                             </select>
@@ -687,8 +676,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                             setSelectedTime("09:00");
                                             setError("");
                                             setShowStudentForm(false);
-                                            setNewStudentFirstName("");
-                                            setNewStudentLastName("");
+                                            setNewStudentNickname("");
                                         }}
                                         className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
                                     >

@@ -73,8 +73,8 @@ export const create = mutation({
     schoolId: v.optional(v.id("schools")), // Optional for guardian-linked students
     guardianId: v.optional(v.id("users")), // Guardian user ID
     guardianTitle: v.optional(v.string()), // Relationship description
-    grade: v.string(),
-    class: v.optional(v.string()), // Class designation (K1, K2, K3, etc.)
+    grade: v.string(), // Grade level (K1, K2, K3)
+    class: v.optional(v.string()), // Class number (/1, /2, ..., /10)
     guardianName: v.optional(v.string()),
     guardianPhone: v.optional(v.string()),
     guardianEmail: v.optional(v.string()),

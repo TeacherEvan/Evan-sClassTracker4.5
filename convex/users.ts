@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { checkRateLimit } from "./rateLimit";
 
 // Simple password hashing (in production, use bcrypt or similar)
 // TODO: Replace with bcrypt for production use
@@ -157,6 +158,13 @@ export const login = mutation({
     userAgent: v.optional(v.string()), // Pass from client: navigator.userAgent
   },
   handler: async (ctx, args) => {
+    // Rate limit login attempts: 5 attempts per 5 minutes per username
+    await checkRateLimit(ctx, {
+      key: `login-${args.username}`,
+      limit: 5,
+      windowMs: 5 * 60 * 1000, // 5 minutes
+    });
+
     const user = await ctx.db
       .query("users")
       .withIndex("by_username", (q) => q.eq("username", args.username))

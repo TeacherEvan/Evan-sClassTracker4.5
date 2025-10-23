@@ -96,7 +96,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     teacherId: Id<"users">;
     schoolId: Id<"schools">;
   };
-  
+
   type PendingBookingData = {
     teacherId: Id<"users">;
     schoolId: Id<"schools">;
@@ -118,7 +118,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     preparationNotesTh?: string;
     classType?: "regular" | "makeup" | "trial" | "assessment";
   };
-  
+
   const [conflictingClasses, setConflictingClasses] = useState<ConflictClass[]>([]);
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [pendingBookingData, setPendingBookingData] = useState<PendingBookingData | null>(null);
@@ -138,14 +138,20 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
   // Student creation state
   const [creatingStudent, setCreatingStudent] = useState(false);
-  const [newStudentFirstName, setNewStudentFirstName] = useState("");
-  const [newStudentLastName, setNewStudentLastName] = useState("");
+  const [newStudentNickname, setNewStudentNickname] = useState("");
   const [newStudentGrade, setNewStudentGrade] = useState("");
   const [newStudentClass, setNewStudentClass] = useState("");
   const [newStudentSchoolId, setNewStudentSchoolId] = useState<Id<"schools"> | "">("");
 
   // Guardian title state
   const [guardianTitle, setGuardianTitle] = useState("");
+
+  // Confirmation dialog states (for parent-level modals)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<Id<"classes"> | null>(null);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [pendingRejectId, setPendingRejectId] = useState<Id<"classes"> | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
 
   // Query locations for selected school
   const locations = useQuery(
@@ -267,20 +273,22 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
           bookedByUserId: userId,
           guardianTitle: isGuardianLocation ? guardianTitle : undefined,
           ...optionalFields,
-        }) as { success: boolean; hasConflicts: boolean; conflicts?: Array<{
-          classId: Id<"classes">;
-          studentId: Id<"students">;
-          studentName: string;
-          locationId?: Id<"locations">;
-          locationName: string;
-          scheduledDate: number;
-          status: string;
-          additionalStudentIds?: Id<"students">[];
-        }>; classId?: Id<"classes"> };
+        }) as {
+          success: boolean; hasConflicts: boolean; conflicts?: Array<{
+            classId: Id<"classes">;
+            studentId: Id<"students">;
+            studentName: string;
+            locationId?: Id<"locations">;
+            locationName: string;
+            scheduledDate: number;
+            status: string;
+            additionalStudentIds?: Id<"students">[];
+          }>; classId?: Id<"classes">
+        };
 
         if (result.hasConflicts) {
           // Show conflict modal
-          
+
           setPendingBookingData({
             ...optionalFields,
             teacherId: effectiveTeacherId,
@@ -359,14 +367,14 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   // Handler for when user confirms merge from conflict modal
   const handleMergeFromConflict = async () => {
     if (!pendingBookingData || conflictingClasses.length === 0) return;
-    
+
     try {
       // First, create the new class with forceCreate flag
       const result = await bookClassWithConflictCheck({
         ...pendingBookingData,
         forceCreate: true,
       }) as { success: boolean; classId?: Id<"classes"> };
-      
+
       if (result.success && result.classId) {
         // Then add the student to the first conflicting class instead
         const targetClass = conflictingClasses[0];
@@ -379,14 +387,14 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         // Delete the newly created class since we merged instead
         // (This is a bit wasteful, but simplifies the flow)
         // Alternatively, we could use mergeClasses mutation here
-        
+
         toast.success("Student added to existing class!", "เพิ่มนักเรียนในคลาสที่มีอยู่แล้ว!");
-        
+
         // Reset states
         setPendingBookingData(null);
         setConflictingClasses([]);
         setShowConflictModal(false);
-        
+
         // Reset form
         setStudentId("");
         setSchoolId("");
@@ -426,20 +434,20 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   // Handler for when user chooses to create separate from conflict modal
   const handleCreateSeparateFromConflict = async () => {
     if (!pendingBookingData) return;
-    
+
     try {
       await bookClassWithConflictCheck({
         ...pendingBookingData,
         forceCreate: true,
       });
-      
+
       toast.success("Class created separately!", "สร้างคลาสแยกแล้ว!");
-      
+
       // Reset states
       setPendingBookingData(null);
       setConflictingClasses([]);
       setShowConflictModal(false);
-      
+
       // Reset form
       setStudentId("");
       setSchoolId("");
@@ -497,12 +505,23 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     }
   };
 
-  const handleReject = async (classId: Id<"classes">) => {
-    const reason = prompt(t("Reason for rejection:", "เหตุผลในการปฏิเสธ:"));
-    if (!reason) return;
+  const handleReject = (classId: Id<"classes">) => {
+    setPendingRejectId(classId);
+    setRejectionReason("");
+    setShowRejectDialog(true);
+  };
+
+  const confirmReject = async () => {
+    if (!pendingRejectId || !rejectionReason.trim()) {
+      toast.error("Please enter a reason", "กรุณาระบุเหตุผล");
+      return;
+    }
 
     try {
-      await rejectClass({ userId, classId, reason, reasonTh: reason });
+      await rejectClass({ userId, classId: pendingRejectId, reason: rejectionReason, reasonTh: rejectionReason });
+      setShowRejectDialog(false);
+      setPendingRejectId(null);
+      setRejectionReason("");
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to reject class",
@@ -511,17 +530,19 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     }
   };
 
-  const handleDelete = async (classId: Id<"classes">) => {
-    if (!window.confirm(t(
-      "Are you sure you want to delete this class? The teacher will be notified.",
-      "คุณแน่ใจหรือไม่ที่จะลบคลาสนี้? ครูจะได้รับการแจ้งเตือน"
-    ))) {
-      return;
-    }
+  const handleDelete = (classId: Id<"classes">) => {
+    setPendingDeleteId(classId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
 
     try {
-      await deleteClass({ classId, userId });
+      await deleteClass({ classId: pendingDeleteId, userId });
       toast.success("Class deleted successfully", "ลบคลาสสำเร็จแล้ว");
+      setShowDeleteConfirm(false);
+      setPendingDeleteId(null);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to delete class",
@@ -549,7 +570,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   };
 
   const handleCreateStudent = async () => {
-    if (!newStudentFirstName.trim() || !newStudentLastName.trim() || !newStudentGrade.trim() || !newStudentClass.trim() || !newStudentSchoolId) {
+    if (!newStudentNickname.trim() || !newStudentGrade.trim() || !newStudentClass.trim() || !newStudentSchoolId) {
       setError(t("Please fill in all student fields", "กรุณากรอกข้อมูลนักเรียนให้ครบถ้วน"));
       return;
     }
@@ -557,8 +578,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     setLoading(true);
     try {
       const newStudentData = await createStudent({
-        firstName: newStudentFirstName,
-        lastName: newStudentLastName,
+        firstName: newStudentNickname, // Use nickname as firstName
+        lastName: "", // Empty lastName
+        nickname: newStudentNickname, // Also save as nickname field
         grade: newStudentGrade,
         class: newStudentClass,
         schoolId: newStudentSchoolId as Id<"schools">,
@@ -571,8 +593,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
       // Reset student creation form
       setCreatingStudent(false);
-      setNewStudentFirstName("");
-      setNewStudentLastName("");
+      setNewStudentNickname("");
       setNewStudentGrade("");
       setNewStudentClass("");
       setNewStudentSchoolId("");
@@ -647,28 +668,23 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                     <input
                       type="text"
-                      placeholder={t("First Name", "ชื่อ")}
-                      value={newStudentFirstName}
-                      onChange={(e) => setNewStudentFirstName(e.target.value)}
+                      placeholder={t("Nickname", "ชื่อเล่น")}
+                      value={newStudentNickname}
+                      onChange={(e) => setNewStudentNickname(e.target.value)}
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
                       disabled={loading}
                     />
-                    <input
-                      type="text"
-                      placeholder={t("Last Name", "นามสกุล")}
-                      value={newStudentLastName}
-                      onChange={(e) => setNewStudentLastName(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      disabled={loading}
-                    />
-                    <input
-                      type="text"
-                      placeholder={t("Grade", "ระดับชั้น")}
+                    <select
                       value={newStudentGrade}
                       onChange={(e) => setNewStudentGrade(e.target.value)}
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
                       disabled={loading}
-                    />
+                    >
+                      <option value="">{t("Grade", "ระดับชั้น")}</option>
+                      <option value="K1">K1</option>
+                      <option value="K2">K2</option>
+                      <option value="K3">K3</option>
+                    </select>
                     <select
                       value={newStudentClass}
                       onChange={(e) => setNewStudentClass(e.target.value)}
@@ -676,9 +692,16 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       disabled={loading}
                     >
                       <option value="">{t("Select Class", "เลือกคลาส")}</option>
-                      <option value="K1">K1</option>
-                      <option value="K2">K2</option>
-                      <option value="K3">K3</option>
+                      <option value="/1">/1</option>
+                      <option value="/2">/2</option>
+                      <option value="/3">/3</option>
+                      <option value="/4">/4</option>
+                      <option value="/5">/5</option>
+                      <option value="/6">/6</option>
+                      <option value="/7">/7</option>
+                      <option value="/8">/8</option>
+                      <option value="/9">/9</option>
+                      <option value="/10">/10</option>
                     </select>
                     <select
                       value={newStudentSchoolId}
@@ -1291,6 +1314,82 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
           }}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4 text-red-600 dark:text-red-400">
+              {t("Confirm Delete", "ยืนยันการลบ")}
+            </h3>
+            <p className="mb-6 text-gray-700 dark:text-gray-300">
+              {t(
+                "Are you sure you want to delete this class? The teacher will be notified.",
+                "คุณแน่ใจหรือไม่ที่จะลบคลาสนี้? ครูจะได้รับการแจ้งเตือน"
+              )}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setPendingDeleteId(null);
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                {t("Cancel", "ยกเลิก")}
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                {t("Delete", "ลบ")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Dialog */}
+      {showRejectDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4 text-red-600 dark:text-red-400">
+              {t("Reject Class", "ปฏิเสธคลาส")}
+            </h3>
+            <label className="block mb-4">
+              <span className="text-gray-700 dark:text-gray-300 font-medium">
+                {t("Reason for rejection:", "เหตุผลในการปฏิเสธ:")}
+              </span>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                className="mt-2 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                rows={3}
+                placeholder={t("Enter reason...", "ระบุเหตุผล...")}
+              />
+            </label>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowRejectDialog(false);
+                  setPendingRejectId(null);
+                  setRejectionReason("");
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                {t("Cancel", "ยกเลิก")}
+              </button>
+              <button
+                onClick={confirmReject}
+                disabled={!rejectionReason.trim()}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {t("Reject", "ปฏิเสธ")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1362,6 +1461,8 @@ function ClassItemDisplay({
   const [showAddStudent, setShowAddStudent] = useState(false);
   const [selectedStudentToAdd, setSelectedStudentToAdd] = useState<Id<"students"> | "">("");
   const [addingStudent, setAddingStudent] = useState(false);
+  const [showRemoveStudentConfirm, setShowRemoveStudentConfirm] = useState(false);
+  const [pendingRemoveStudentId, setPendingRemoveStudentId] = useState<Id<"students"> | null>(null);
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -1427,17 +1528,23 @@ function ClassItemDisplay({
     }
   };
 
-  const handleRemoveStudent = async (studentId: Id<"students">) => {
-    if (!confirm(t("Remove this student from the class?", "ลบนักเรียนคนนี้ออกจากคลาสหรือไม่?"))) {
-      return;
-    }
+  const handleRemoveStudent = (studentId: Id<"students">) => {
+    setPendingRemoveStudentId(studentId);
+    setShowRemoveStudentConfirm(true);
+  };
+
+  const confirmRemoveStudent = async () => {
+    if (!pendingRemoveStudentId) return;
+
     try {
       await removeStudentFromClass({
         userId,
         classId: classItem._id,
-        studentId,
+        studentId: pendingRemoveStudentId,
       });
       toast.success("Student removed successfully!", "ลบนักเรียนสำเร็จ!");
+      setShowRemoveStudentConfirm(false);
+      setPendingRemoveStudentId(null);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to remove student",
@@ -1734,6 +1841,37 @@ function ClassItemDisplay({
           <p className="text-sm text-yellow-800 dark:text-yellow-400">
             {t("Cancellation request pending moderator approval", "คำขอยกเลิกรอการอนุมัติจากผู้ดูแล")}
           </p>
+        </div>
+      )}
+
+      {/* Remove Student Confirmation Dialog */}
+      {showRemoveStudentConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4 text-orange-600 dark:text-orange-400">
+              {t("Confirm Remove", "ยืนยันการลบ")}
+            </h3>
+            <p className="mb-6 text-gray-700 dark:text-gray-300">
+              {t("Remove this student from the class?", "ลบนักเรียนคนนี้ออกจากคลาสหรือไม่?")}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowRemoveStudentConfirm(false);
+                  setPendingRemoveStudentId(null);
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                {t("Cancel", "ยกเลิก")}
+              </button>
+              <button
+                onClick={confirmRemoveStudent}
+                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+              >
+                {t("Remove", "ลบ")}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

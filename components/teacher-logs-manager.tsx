@@ -23,7 +23,7 @@ export default function TeacherLogsManager({ currentUser }: TeacherLogsManagerPr
     // Get users (teachers) for admin/moderator to filter
     const teachers = useQuery(
         api.users.list,
-        currentUser.role === "admin" || currentUser.role === "moderator"
+        currentUser && (currentUser.role === "admin" || currentUser.role === "moderator")
             ? { role: "teacher" }
             : "skip"
     );
@@ -31,30 +31,33 @@ export default function TeacherLogsManager({ currentUser }: TeacherLogsManagerPr
     // Get pending logs for admins/moderators
     const pendingLogs = useQuery(
         api.teacherLogs.listPendingLogs,
-        currentUser.role === "admin" || currentUser.role === "moderator"
+        currentUser && (currentUser.role === "admin" || currentUser.role === "moderator")
             ? { userId: currentUser._id, schoolId: currentUser.schoolId }
             : "skip"
     );
 
     // Get all logs based on filters
-    const allLogs = useQuery(api.teacherLogs.list, {
-        teacherId: selectedTeacherId || (currentUser.role === "teacher" ? currentUser._id : undefined),
-        startDate: startDate ? new Date(startDate).getTime() : undefined,
-        endDate: endDate ? new Date(endDate).getTime() : undefined,
-    });
+    const allLogs = useQuery(
+        api.teacherLogs.list,
+        currentUser ? {
+            teacherId: selectedTeacherId || (currentUser.role === "teacher" ? currentUser._id : undefined),
+            startDate: startDate ? new Date(startDate).getTime() : undefined,
+            endDate: endDate ? new Date(endDate).getTime() : undefined,
+        } : "skip"
+    );
 
     // Acknowledge log mutation
     const acknowledgeLog = useMutation(api.teacherLogs.acknowledgeLog);
 
-    // Export logs query for download
+    // Export logs query for download (conditional - only runs when currentUser is available)
     const exportLogs = useQuery(
         api.exports.exportTeacherLogs,
-        {
+        currentUser ? {
             userId: currentUser._id,
             teacherId: selectedTeacherId || (currentUser.role === "teacher" ? currentUser._id : undefined),
             startDate: startDate ? new Date(startDate).getTime() : undefined,
             endDate: endDate ? new Date(endDate).getTime() : undefined,
-        }
+        } : "skip"
     );
 
     const handleAcknowledge = async (logId: Id<"teacherLogs">) => {

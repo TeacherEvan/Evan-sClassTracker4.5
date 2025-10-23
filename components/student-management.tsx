@@ -43,8 +43,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const [editingStudent, setEditingStudent] = useState<Id<"students"> | null>(null);
 
     // Form fields
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
+    const [nickname, setNickname] = useState("");
     const [grade, setGrade] = useState("");
     const [studentClass, setStudentClass] = useState("");
     const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
@@ -56,7 +55,6 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
     // Optional fields state
     const [showOptionalFields, setShowOptionalFields] = useState(false);
-    const [nickname, setNickname] = useState("");
     const [dateOfBirth, setDateOfBirth] = useState("");
     const [parentName, setParentName] = useState("");
     const [parentPhone, setParentPhone] = useState("");
@@ -67,6 +65,12 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const [specialNeeds, setSpecialNeeds] = useState("");
     const [medicalNotes, setMedicalNotes] = useState("");
     const [notes, setNotes] = useState("");
+
+    // Confirmation dialog states
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [pendingDeleteStudent, setPendingDeleteStudent] = useState<{ id: Id<"students">; name: string } | null>(null);
+    const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false);
+    const [pendingDuplicateStudent, setPendingDuplicateStudent] = useState<{ id: Id<"students">; name: string } | null>(null);
 
     // Query students based on filter
     const students = useQuery(
@@ -95,7 +99,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         setError("");
         setSuccess("");
 
-        if (!firstName.trim() || !lastName.trim() || !grade.trim()) {
+        if (!nickname.trim() || !grade.trim()) {
             setError(t("Please fill in required fields", "กรุณากรอกข้อมูลที่จำเป็น"));
             return;
         }
@@ -127,8 +131,8 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                 // Update existing student
                 await updateStudent({
                     id: editingStudent,
-                    firstName,
-                    lastName,
+                    firstName: nickname, // Use nickname as firstName
+                    lastName: "", // Empty lastName
                     grade,
                     class: studentClass || undefined,
                     guardianName: guardianName || undefined,
@@ -151,8 +155,8 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             } else {
                 // Create new student
                 await createStudent({
-                    firstName,
-                    lastName,
+                    firstName: nickname, // Use nickname as firstName
+                    lastName: "", // Empty lastName
                     schoolId: schoolId || undefined,
                     grade,
                     class: studentClass || undefined,
@@ -197,8 +201,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         notes?: string;
     }) => {
         setEditingStudent(student._id);
-        setFirstName(student.firstName);
-        setLastName(student.lastName);
+        setNickname(student.nickname || student.firstName); // Load nickname, fallback to firstName if no nickname
         setGrade(student.grade);
         setStudentClass(student.class || "");
         setSchoolId(student.schoolId || "");
@@ -207,7 +210,6 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         setGuardianEmail(student.guardianEmail || "");
 
         // Load optional fields
-        setNickname(student.nickname || "");
         setDateOfBirth(student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : "");
         setParentName(student.parentName || "");
         setParentPhone(student.parentPhone || "");
@@ -224,49 +226,44 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         setSuccess("");
     };
 
-    const handleDelete = async (studentId: Id<"students">, studentName: string) => {
-        if (
-            !confirm(
-                t(
-                    `Delete student "${studentName}"? This cannot be undone.`,
-                    `ลบนักเรียน "${studentName}"? การกระทำนี้ไม่สามารถย้อนกลับได้`
-                )
-            )
-        ) {
-            return;
-        }
+    const handleDelete = (studentId: Id<"students">, studentName: string) => {
+        setPendingDeleteStudent({ id: studentId, name: studentName });
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!pendingDeleteStudent) return;
 
         try {
-            await removeStudent({ id: studentId });
+            await removeStudent({ id: pendingDeleteStudent.id });
             setSuccess(t("Student deleted!", "ลบนักเรียนแล้ว!"));
+            setShowDeleteConfirm(false);
+            setPendingDeleteStudent(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to delete student");
         }
     };
 
-    const handleDuplicate = async (studentId: Id<"students">, studentName: string) => {
-        if (
-            !confirm(
-                t(
-                    `Duplicate student "${studentName}"?`,
-                    `คัดลอกนักเรียน "${studentName}"?`
-                )
-            )
-        ) {
-            return;
-        }
+    const handleDuplicate = (studentId: Id<"students">, studentName: string) => {
+        setPendingDuplicateStudent({ id: studentId, name: studentName });
+        setShowDuplicateConfirm(true);
+    };
+
+    const confirmDuplicate = async () => {
+        if (!pendingDuplicateStudent) return;
 
         try {
-            await duplicateStudent({ id: studentId });
+            await duplicateStudent({ id: pendingDuplicateStudent.id });
             setSuccess(t("Student duplicated!", "คัดลอกนักเรียนแล้ว!"));
+            setShowDuplicateConfirm(false);
+            setPendingDuplicateStudent(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to duplicate student");
         }
     };
 
     const resetForm = () => {
-        setFirstName("");
-        setLastName("");
+        setNickname("");
         setGrade("");
         setStudentClass("");
         setSchoolId("");
@@ -278,7 +275,6 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
         // Reset optional fields
         setShowOptionalFields(false);
-        setNickname("");
         setDateOfBirth("");
         setParentName("");
         setParentPhone("");
@@ -384,32 +380,17 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                     {t("Student Information", "ข้อมูลนักเรียน")}
                                 </h4>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            {t("First Name", "ชื่อ")} *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={firstName}
-                                            onChange={(e) => setFirstName(e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                                            required
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            {t("Last Name", "นามสกุล")} *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={lastName}
-                                            onChange={(e) => setLastName(e.target.value)}
-                                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                                            required
-                                        />
-                                    </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                        {t("Nickname", "ชื่อเล่น")} *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={nickname}
+                                        onChange={(e) => setNickname(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -417,14 +398,17 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             {t("Grade", "ระดับชั้น")} *
                                         </label>
-                                        <input
-                                            type="text"
+                                        <select
                                             value={grade}
                                             onChange={(e) => setGrade(e.target.value)}
                                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                                            placeholder={t("e.g. Grade 5, P3, M2", "เช่น ป.5, ม.2")}
                                             required
-                                        />
+                                        >
+                                            <option value="">{t("Grade", "ระดับชั้น")}</option>
+                                            <option value="K1">K1</option>
+                                            <option value="K2">K2</option>
+                                            <option value="K3">K3</option>
+                                        </select>
                                     </div>
 
                                     <div>
@@ -438,9 +422,16 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                             required={!!schoolId}
                                         >
                                             <option value="">{t("Select Class", "เลือกคลาส")}</option>
-                                            <option value="K1">K1</option>
-                                            <option value="K2">K2</option>
-                                            <option value="K3">K3</option>
+                                            <option value="/1">/1</option>
+                                            <option value="/2">/2</option>
+                                            <option value="/3">/3</option>
+                                            <option value="/4">/4</option>
+                                            <option value="/5">/5</option>
+                                            <option value="/6">/6</option>
+                                            <option value="/7">/7</option>
+                                            <option value="/8">/8</option>
+                                            <option value="/9">/9</option>
+                                            <option value="/10">/10</option>
                                         </select>
                                     </div>
                                 </div>
@@ -844,6 +835,74 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     </div>
                 )}
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            {showDeleteConfirm && pendingDeleteStudent && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+                        <h3 className="text-xl font-bold mb-4 text-red-600 dark:text-red-400">
+                            {t("Confirm Delete", "ยืนยันการลบ")}
+                        </h3>
+                        <p className="mb-6 text-gray-700 dark:text-gray-300">
+                            {t(
+                                `Delete student "${pendingDeleteStudent.name}"? This cannot be undone.`,
+                                `ลบนักเรียน "${pendingDeleteStudent.name}"? การกระทำนี้ไม่สามารถย้อนกลับได้`
+                            )}
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => {
+                                    setShowDeleteConfirm(false);
+                                    setPendingDeleteStudent(null);
+                                }}
+                                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                            >
+                                {t("Delete", "ลบ")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Duplicate Confirmation Dialog */}
+            {showDuplicateConfirm && pendingDuplicateStudent && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+                        <h3 className="text-xl font-bold mb-4 text-blue-600 dark:text-blue-400">
+                            {t("Confirm Duplicate", "ยืนยันการคัดลอก")}
+                        </h3>
+                        <p className="mb-6 text-gray-700 dark:text-gray-300">
+                            {t(
+                                `Duplicate student "${pendingDuplicateStudent.name}"?`,
+                                `คัดลอกนักเรียน "${pendingDuplicateStudent.name}"?`
+                            )}
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => {
+                                    setShowDuplicateConfirm(false);
+                                    setPendingDuplicateStudent(null);
+                                }}
+                                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={confirmDuplicate}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                                {t("Duplicate", "คัดลอก")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

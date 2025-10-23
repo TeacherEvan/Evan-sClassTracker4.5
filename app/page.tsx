@@ -2,7 +2,7 @@
 
 // ✅ PERFORMANCE: Lazy load heavy components for code splitting (40-50% faster initial load)
 import { useMutation, useQuery } from "convex/react";
-import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, FileText, FlaskConical, GraduationCap, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, FlaskConical, GraduationCap, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
 import { lazy, Suspense, useEffect, useState } from "react";
 
 // Core components (always loaded)
@@ -37,13 +37,13 @@ const SimpleAnalytics = lazy(() => import("@/components/simple-analytics").then(
 const TeacherActivityDashboard = lazy(() => import("@/components/teacher-activity-dashboard").then(m => ({ default: m.TeacherActivityDashboard })));
 const TeacherHelper = lazy(() => import("@/components/teacher-helper").then(m => ({ default: m.TeacherHelper })));
 const TeacherHelperAdmin = lazy(() => import("@/components/teacher-helper-admin").then(m => ({ default: m.TeacherHelperAdmin })));
-const TeacherLogsManager = lazy(() => import("@/components/teacher-logs-manager"));
 const GuardianDashboard = lazy(() => import("@/components/guardian-dashboard").then(m => ({ default: m.GuardianDashboard })));
 const DeviceTestingDashboard = lazy(() => import("@/components/device-testing-dashboard"));
 const PostClassNotesModal = lazy(() => import("@/components/post-class-notes-modal").then(m => ({ default: m.PostClassNotesModal })));
 const UpdateAnnouncementModal = lazy(() => import("@/components/update-announcement-modal").then(m => ({ default: m.UpdateAnnouncementModal })));
 const AdminContactRequests = lazy(() => import("@/components/admin-contact-requests").then(m => ({ default: m.AdminContactRequests })));
 const AdminNotificationWindows = lazy(() => import("@/components/admin-notification-windows").then(m => ({ default: m.AdminNotificationWindows })));
+const AdminAppUpdates = lazy(() => import("@/components/admin-app-updates").then(m => ({ default: m.AdminAppUpdates })));
 const ClassCountModal = lazy(() => import("@/components/class-count-modal").then(m => ({ default: m.ClassCountModal })));
 
 export default function Home() {
@@ -51,7 +51,7 @@ export default function Home() {
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "testing" | "logs" | "contact_requests" | "notification_windows">("calendar");
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "testing" | "contact_requests" | "notification_windows" | "app_updates">("calendar");
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
   const [showPostClassNotes, setShowPostClassNotes] = useState(false);
@@ -531,17 +531,6 @@ export default function Home() {
               </button>
 
               <button
-                onClick={() => setActiveTab("logs")}
-                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "logs"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                  }`}
-              >
-                <FileText className="w-4 h-4 md:w-5 md:h-5" />
-                {t("Teacher Logs", "บันทึกการสอน")}
-              </button>
-
-              <button
                 onClick={() => setActiveTab("locations")}
                 className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "locations"
                   ? "border-blue-500 text-blue-600 dark:text-blue-400"
@@ -552,20 +541,6 @@ export default function Home() {
                 {t("Locations", "สถานที่")}
               </button>
             </>
-          )}
-
-          {/* Teacher Logs tab - for teachers, moderators, and admins */}
-          {(user.role === "teacher" || user.role === "moderator" || user.role === "admin") && (
-            <button
-              onClick={() => setActiveTab("logs")}
-              className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "logs"
-                ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-                }`}
-            >
-              <FileText className="w-4 h-4 md:w-5 md:h-5" />
-              {t("Teacher Logs", "บันทึกการสอน")}
-            </button>
           )}
 
           <button
@@ -657,6 +632,17 @@ export default function Home() {
                 <Bell className="w-4 h-4 md:w-5 md:h-5" />
                 {t("Notification Windows", "หน้าต่างประกาศ")}
               </button>
+
+              <button
+                onClick={() => setActiveTab("app_updates")}
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "app_updates"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
+                {t("App Updates", "ประกาศอัปเดต")}
+              </button>
             </>
           )}
 
@@ -701,6 +687,7 @@ export default function Home() {
             schoolId={user.schoolId}
             currentUserId={user._id}
             currentUserRole={user.role}
+            currentUser={user}
           />
         </Suspense>
       )}
@@ -786,9 +773,9 @@ export default function Home() {
         </Suspense>
       )}
 
-      {activeTab === "logs" && (user.role === "admin" || user.role === "moderator" || user.role === "teacher") && (
+      {activeTab === "app_updates" && user.role === "admin" && (
         <Suspense fallback={<LoadingFallback />}>
-          <TeacherLogsManager currentUser={user} />
+          <AdminAppUpdates currentUserId={user._id} />
         </Suspense>
       )}
 

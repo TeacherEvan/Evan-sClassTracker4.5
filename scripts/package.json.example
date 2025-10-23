@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "next lint",
+    "create-update": "tsx scripts/create-app-update.ts",
+    "auto-update": "tsx scripts/create-app-update.ts"
+  }
+}

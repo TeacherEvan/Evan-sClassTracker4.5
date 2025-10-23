@@ -342,30 +342,44 @@ npx tsc --noEmit     # Typecheck without emitting files
 
 **REQUIRED STEP** - After completing ANY significant feature or improvement:
 
-1. **Update App Updates Log** (`convex/appUpdates.ts`)
-   - Add new entry with version number, bilingual title/description, feature list
-   - Mark as active to show in notification windows
-   - Example format:
-     ```typescript
-     await ctx.db.insert("appUpdates", {
-       version: "4.5.3",
-       title: "Feature Name",
-       titleTh: "ชื่อฟีเจอร์",
-       description: "Brief description",
-       descriptionTh: "คำอธิบายสั้น ๆ",
-       features: ["Feature 1", "Feature 2"],
-       featuresTh: ["ฟีเจอร์ 1", "ฟีเจอร์ 2"],
-       releaseDate: Date.now(),
-       isActive: true,
-       showInWindow: true
-     });
-     ```
+#### Automated Method (Recommended for AI Agents)
 
-2. **Create/Update Notification Window** (if user-facing change)
-   - Use admin notification window form or backend mutation
-   - Set appropriate `targetRole` (all, teacher, moderator, admin) OR `targetSchool`
-   - Set `showUpdateSummary: true` to display latest updates
-   - Priority: 100 (highest) for critical updates, 50 for minor features
+```bash
+npm run create-update
+```
+
+This script automatically:
+- ✅ Reads recent implementation summaries
+- ✅ Extracts user-friendly features
+- ✅ Creates bilingual app update in database
+- ✅ Deactivates old updates
+- ✅ Notifies users of improvements
+
+**See:** `.github/AI_AGENT_WORKFLOW.md` for detailed integration guide
+
+#### Manual Method (Admin UI)
+
+1. **Use Admin "App Updates" Tab**
+   - Login as admin
+   - Go to "App Updates" tab
+   - Click "Create New Update"
+   - Fill in version, title, description, features (bilingual)
+   - Click "Create Update"
+
+2. **Or Use Convex Mutation Directly**
+   ```typescript
+   await ctx.db.insert("appUpdates", {
+     version: "4.5.3",
+     title: "Feature Name",
+     titleTh: "ชื่อฟีเจอร์",
+     description: "Brief description",
+     descriptionTh: "คำอธิบายสั้น ๆ",
+     features: [{ icon: "CheckCircle2", title: "...", titleTh: "...", description: "...", descriptionTh: "..." }],
+     releaseDate: Date.now(),
+     isActive: true,
+     showInWindow: true
+   });
+   ```
 
 3. **Document in Implementation Summary**
    - Update project README or create `IMPLEMENTATION_SUMMARY_[DATE].md`
