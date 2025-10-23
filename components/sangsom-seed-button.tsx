@@ -14,12 +14,27 @@ import { useState } from "react";
  */
 export function SangsomSeedButton() {
   const { t } = useLanguage();
-  const seedSangsomProject = useMutation(api.seedSangsomProject.seedSangsomProject);
-  const checkSangsomData = useMutation(api.seedSangsomProject.checkSangsomData);
+  // @ts-expect-error - API will be generated after running convex dev
+  const seedSangsomProject = useMutation(api.seedSangsomProject?.seedSangsomProject);
+  // @ts-expect-error - API will be generated after running convex dev
+  const checkSangsomData = useMutation(api.seedSangsomProject?.checkSangsomData);
 
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
-  const [existingData, setExistingData] = useState<any>(null);
+  const [result, setResult] = useState<{
+    success: boolean;
+    studentsCreated: number;
+    classesCreated: number;
+    credentials?: {
+      teacher: { username: string; password: string };
+      moderator: { username: string; password: string };
+    };
+    classes?: Array<{ date: string; time: string; classCode: string; topic: string }>;
+  } | null>(null);
+  const [existingData, setExistingData] = useState<{
+    exists: boolean;
+    classCount?: number;
+    studentCount?: number;
+  } | null>(null);
 
   const handleCheckData = async () => {
     setLoading(true);
@@ -198,7 +213,7 @@ export function SangsomSeedButton() {
                 {t("Created Classes (sample):", "คลาสที่สร้าง (ตัวอย่าง):")}
               </p>
               <ul className="space-y-1 text-xs">
-                {result.classes.slice(0, 10).map((cls: any, i: number) => (
+                {result.classes.slice(0, 10).map((cls, i: number) => (
                   <li key={i} className="text-gray-600 dark:text-gray-400">
                     {cls.date} {cls.time} - {cls.classCode}: {cls.topic}
                   </li>

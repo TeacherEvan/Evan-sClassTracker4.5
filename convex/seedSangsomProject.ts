@@ -1,5 +1,5 @@
 import { mutation } from "./_generated/server";
-import { v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 
 /**
  * Seed script for Sangsom Project schedule (November 2025)
@@ -364,10 +364,10 @@ export const seedSangsomProject = mutation({
       .filter((q) => q.eq(q.field("name"), "Sangsom School"))
       .first();
 
-    let schoolId;
-    let teacherId;
-    let moderatorId;
-    let locationId;
+    let schoolId: Id<"schools">;
+    let teacherId: Id<"users">;
+    let moderatorId: Id<"users">;
+    let locationId: Id<"locations">;
 
     if (existingSchool) {
       console.log("Sangsom School already exists, using existing school");
@@ -440,6 +440,7 @@ export const seedSangsomProject = mutation({
         type: "school",
         isActive: true,
         createdAt: Date.now(),
+        createdBy: moderatorId,
       });
     }
 
@@ -448,7 +449,7 @@ export const seedSangsomProject = mutation({
       SCHEDULE_DATA.map(item => `${item.grade}${item.classNumber}`)
     )];
 
-    const studentMap = new Map<string, string>();
+    const studentMap = new Map<string, Id<"students">>();
     
     for (const classCode of uniqueClasses) {
       const grade = classCode.split("/")[0];
