@@ -10,6 +10,7 @@ import { AdminContactButton } from "@/components/admin-contact-button";
 import { DatabaseInit } from "@/components/database-init";
 import { ToastContainer, type ToastNotification } from "@/components/desktop-notification-toast";
 import { DesktopNotificationWindow } from "@/components/desktop-notification-window";
+import { FishSchoolBackground } from "@/components/fish-school-background";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LoginForm } from "@/components/login-form";
 import { NotificationWindow } from "@/components/notification-window";
@@ -303,7 +304,10 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-[100dvh] pb-20 md:pb-0 md:p-8">
+    <div className="min-h-[100dvh] pb-20 md:pb-0 md:p-8 relative overflow-hidden">
+      {/* Animated fish school background - colorful for logged-in users */}
+      <FishSchoolBackground isLoggedIn={true} className="opacity-30" />
+
       {/* Pull-to-Refresh Indicator - Mobile only */}
       {!isDesktop && (
         <div
@@ -345,7 +349,7 @@ export default function Home() {
         />
       )}
 
-      <header className="max-w-4xl mx-auto mb-3 md:mb-8 p-3 md:p-0">
+      <header className="max-w-4xl mx-auto mb-3 md:mb-8 p-3 md:p-0 relative z-10">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 md:gap-3">
@@ -448,7 +452,7 @@ export default function Home() {
       </nav>
 
       {/* Desktop Tab Navigation - Hidden on mobile */}
-      <div className="max-w-7xl mx-auto mb-4 md:mb-6 hidden md:block">
+      <div className="max-w-7xl mx-auto mb-4 md:mb-6 hidden md:block relative z-10">
         <div className="flex gap-1 md:gap-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
           <button
             onClick={() => setActiveTab("calendar")}
@@ -663,153 +667,155 @@ export default function Home() {
       </div>
 
       {/* Tab Content - Wrapped with Suspense for lazy loading */}
-      {activeTab === "calendar" && (
-        <Suspense fallback={<LoadingFallback />}>
-          <WeeklyCalendar currentUser={user} />
-        </Suspense>
-      )}
+      <div className="relative z-10">
+        {activeTab === "calendar" && (
+          <Suspense fallback={<LoadingFallback />}>
+            <WeeklyCalendar currentUser={user} />
+          </Suspense>
+        )}
 
-      {activeTab === "classes" && (
-        <Suspense fallback={<LoadingFallback />}>
-          <ClassBooking userId={user._id} userRole={user.role} userSchoolId={user.schoolId} />
-        </Suspense>
-      )}
+        {activeTab === "classes" && (
+          <Suspense fallback={<LoadingFallback />}>
+            <ClassBooking userId={user._id} userRole={user.role} userSchoolId={user.schoolId} />
+          </Suspense>
+        )}
 
-      {activeTab === "messages" && user && (
-        <Suspense fallback={<LoadingFallback />}>
-          <MessagingHub currentUser={user} />
-        </Suspense>
-      )}
+        {activeTab === "messages" && user && (
+          <Suspense fallback={<LoadingFallback />}>
+            <MessagingHub currentUser={user} />
+          </Suspense>
+        )}
 
-      {activeTab === "analytics" && user.role === "moderator" && user.schoolId && (
-        <Suspense fallback={<LoadingFallback />}>
-          <SimpleAnalytics
-            schoolId={user.schoolId}
-            currentUserId={user._id}
-            currentUserRole={user.role}
-            currentUser={user}
-          />
-        </Suspense>
-      )}
+        {activeTab === "analytics" && user.role === "moderator" && user.schoolId && (
+          <Suspense fallback={<LoadingFallback />}>
+            <SimpleAnalytics
+              schoolId={user.schoolId}
+              currentUserId={user._id}
+              currentUserRole={user.role}
+              currentUser={user}
+            />
+          </Suspense>
+        )}
 
-      {activeTab === "activity" && user.role === "moderator" && user.schoolId && (
-        <Suspense fallback={<LoadingFallback />}>
-          <TeacherActivityDashboard schoolId={user.schoolId} moderatorId={user._id} />
-        </Suspense>
-      )}
+        {activeTab === "activity" && user.role === "moderator" && user.schoolId && (
+          <Suspense fallback={<LoadingFallback />}>
+            <TeacherActivityDashboard schoolId={user.schoolId} moderatorId={user._id} />
+          </Suspense>
+        )}
 
-      {activeTab === "resources" && user && (user.role === "admin" || user.role === "teacher") && (
-        <Suspense fallback={<LoadingFallback />}>
-          {user.role === "admin" ? (
-            <TeacherHelperAdmin currentUser={user} />
-          ) : (
-            <TeacherHelper currentUser={user} />
-          )}
-        </Suspense>
-      )}
+        {activeTab === "resources" && user && (user.role === "admin" || user.role === "teacher") && (
+          <Suspense fallback={<LoadingFallback />}>
+            {user.role === "admin" ? (
+              <TeacherHelperAdmin currentUser={user} />
+            ) : (
+              <TeacherHelper currentUser={user} />
+            )}
+          </Suspense>
+        )}
 
-      {/* Guardian Dashboard - Only for guardians */}
-      {user.role === "guardian" && (
-        <Suspense fallback={<LoadingFallback />}>
-          <GuardianDashboard currentUser={user} />
-        </Suspense>
-      )}
+        {/* Guardian Dashboard - Only for guardians */}
+        {user.role === "guardian" && (
+          <Suspense fallback={<LoadingFallback />}>
+            <GuardianDashboard currentUser={user} />
+          </Suspense>
+        )}
 
-      {activeTab === "notifications" && (
-        <Suspense fallback={<LoadingFallback />}>
-          {user.role === "admin" && <NotificationForm />}
-          <NotificationList userId={user._id} currentUser={user} />
-        </Suspense>
-      )}
+        {activeTab === "notifications" && (
+          <Suspense fallback={<LoadingFallback />}>
+            {user.role === "admin" && <NotificationForm />}
+            <NotificationList userId={user._id} currentUser={user} />
+          </Suspense>
+        )}
 
-      {activeTab === "schools" && user.role === "admin" && (
-        <Suspense fallback={<LoadingFallback />}>
-          <SchoolManagement />
-        </Suspense>
-      )}
+        {activeTab === "schools" && user.role === "admin" && (
+          <Suspense fallback={<LoadingFallback />}>
+            <SchoolManagement />
+          </Suspense>
+        )}
 
-      {activeTab === "locations" && (user.role === "admin" || user.role === "moderator") && (
-        <Suspense fallback={<LoadingFallback />}>
-          <LocationManagement
-            userId={user._id}
-            schoolId={user.role === "moderator" ? user.schoolId : undefined}
-          />
-        </Suspense>
-      )}
+        {activeTab === "locations" && (user.role === "admin" || user.role === "moderator") && (
+          <Suspense fallback={<LoadingFallback />}>
+            <LocationManagement
+              userId={user._id}
+              schoolId={user.role === "moderator" ? user.schoolId : undefined}
+            />
+          </Suspense>
+        )}
 
-      {activeTab === "students" && (user.role === "admin" || user.role === "moderator") && (
-        <Suspense fallback={<LoadingFallback />}>
-          <StudentManagement currentUser={user} />
-        </Suspense>
-      )}
+        {activeTab === "students" && (user.role === "admin" || user.role === "moderator") && (
+          <Suspense fallback={<LoadingFallback />}>
+            <StudentManagement currentUser={user} />
+          </Suspense>
+        )}
 
-      {activeTab === "moderators" && user.role === "admin" && (
-        <Suspense fallback={<LoadingFallback />}>
-          <ModeratorListView />
-        </Suspense>
-      )}
+        {activeTab === "moderators" && user.role === "admin" && (
+          <Suspense fallback={<LoadingFallback />}>
+            <ModeratorListView />
+          </Suspense>
+        )}
 
-      {activeTab === "users" && user.role === "admin" && (
-        <Suspense fallback={<LoadingFallback />}>
-          <UserManagement />
-        </Suspense>
-      )}
+        {activeTab === "users" && user.role === "admin" && (
+          <Suspense fallback={<LoadingFallback />}>
+            <UserManagement />
+          </Suspense>
+        )}
 
-      {activeTab === "testing" && user.role === "admin" && (
-        <Suspense fallback={<LoadingFallback />}>
-          <DeviceTestingDashboard />
-        </Suspense>
-      )}
+        {activeTab === "testing" && user.role === "admin" && (
+          <Suspense fallback={<LoadingFallback />}>
+            <DeviceTestingDashboard />
+          </Suspense>
+        )}
 
-      {activeTab === "contact_requests" && user.role === "admin" && (
-        <Suspense fallback={<LoadingFallback />}>
-          <AdminContactRequests currentUserId={user._id} />
-        </Suspense>
-      )}
+        {activeTab === "contact_requests" && user.role === "admin" && (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminContactRequests currentUserId={user._id} />
+          </Suspense>
+        )}
 
-      {activeTab === "notification_windows" && user.role === "admin" && (
-        <Suspense fallback={<LoadingFallback />}>
-          <AdminNotificationWindows currentUserId={user._id} />
-        </Suspense>
-      )}
+        {activeTab === "notification_windows" && user.role === "admin" && (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminNotificationWindows currentUserId={user._id} />
+          </Suspense>
+        )}
 
-      {activeTab === "app_updates" && user.role === "admin" && (
-        <Suspense fallback={<LoadingFallback />}>
-          <AdminAppUpdates currentUserId={user._id} />
-        </Suspense>
-      )}
+        {activeTab === "app_updates" && user.role === "admin" && (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminAppUpdates currentUserId={user._id} />
+          </Suspense>
+        )}
 
-      {/* Post-Class Notes Modal - Teachers only */}
-      {showPostClassNotes && classesNeedingFeedback && classesNeedingFeedback.length > 0 && user && (
-        <Suspense fallback={null}>
-          <PostClassNotesModal
-            classes={classesNeedingFeedback}
-            currentUserId={user._id}
-            onClose={() => setShowPostClassNotes(false)}
-            onComplete={handlePostClassNotesComplete}
-          />
-        </Suspense>
-      )}
+        {/* Post-Class Notes Modal - Teachers only */}
+        {showPostClassNotes && classesNeedingFeedback && classesNeedingFeedback.length > 0 && user && (
+          <Suspense fallback={null}>
+            <PostClassNotesModal
+              classes={classesNeedingFeedback}
+              currentUserId={user._id}
+              onClose={() => setShowPostClassNotes(false)}
+              onComplete={handlePostClassNotesComplete}
+            />
+          </Suspense>
+        )}
 
-      {/* Update Announcement Modal - All users */}
-      {showUpdateAnnouncement && activeUpdate && user && (
-        <Suspense fallback={null}>
-          <UpdateAnnouncementModal
-            update={activeUpdate}
-            onClose={handleUpdateAnnouncementClose}
-          />
-        </Suspense>
-      )}
+        {/* Update Announcement Modal - All users */}
+        {showUpdateAnnouncement && activeUpdate && user && (
+          <Suspense fallback={null}>
+            <UpdateAnnouncementModal
+              update={activeUpdate}
+              onClose={handleUpdateAnnouncementClose}
+            />
+          </Suspense>
+        )}
 
-      {/* ClassCount Details Modal - Teachers only */}
-      {showClassCountModal && user && user.role === "teacher" && (
-        <Suspense fallback={null}>
-          <ClassCountModal
-            teacherId={user._id}
-            onClose={() => setShowClassCountModal(false)}
-          />
-        </Suspense>
-      )}
+        {/* ClassCount Details Modal - Teachers only */}
+        {showClassCountModal && user && user.role === "teacher" && (
+          <Suspense fallback={null}>
+            <ClassCountModal
+              teacherId={user._id}
+              onClose={() => setShowClassCountModal(false)}
+            />
+          </Suspense>
+        )}
+      </div>
     </div>
   );
 }

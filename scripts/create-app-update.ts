@@ -19,6 +19,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { config } from "dotenv";
 import fs from "fs";
 import path from "path";
+import type { Id } from "../convex/_generated/dataModel";
 
 // Try to load from .env.local first, then fall back to .env
 const envLocalPath = path.join(process.cwd(), ".env.local");
@@ -135,7 +136,7 @@ function parseImplementationSummaries(): UpdateData | null {
 /**
  * Create app update in Convex database
  */
-async function createAppUpdate(updateData: UpdateData, adminUserId: string) {
+async function createAppUpdate(updateData: UpdateData, adminUserId: Id<"users">) {
     try {
         // Import the mutation
         const { api } = await import("../convex/_generated/api");
@@ -164,7 +165,7 @@ async function createAppUpdate(updateData: UpdateData, adminUserId: string) {
 /**
  * Get admin user ID (first admin user)
  */
-async function getAdminUserId(): Promise<string> {
+async function getAdminUserId(): Promise<Id<"users">> {
     try {
         const { api } = await import("../convex/_generated/api");
         const users = await client.query(api.users.list, { role: "admin" });

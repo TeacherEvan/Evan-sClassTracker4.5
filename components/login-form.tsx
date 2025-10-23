@@ -1,5 +1,6 @@
 "use client";
 
+import { FishSchoolBackground } from "@/components/fish-school-background";
 import { Logo } from "@/components/logo";
 import { api } from "@/convex/_generated/api";
 import { useLanguage } from "@/lib/language-context";
@@ -39,9 +40,12 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   };
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
-      <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 md:p-8">
+    <div className="min-h-[100dvh] flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900 relative overflow-hidden">
+      {/* Animated fish school background */}
+      <FishSchoolBackground isLoggedIn={false} />
+
+      <div className="w-full max-w-md relative z-10">
+        <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-lg p-6 md:p-8 border border-gray-200/50 dark:border-gray-700/50">
           {/* Logo with Slogan */}
           <div className="mb-8">
             <Logo size="md" showSlogan={true} />

@@ -8,7 +8,7 @@ Short, practical guidance for an AI agent editing this repo. Keep changes minima
 - Convex schema is the source of truth: `convex/schema.ts`. Do not edit `convex/_generated/`.
 
 ## Critical constraints (must follow)
-- Provider order in `app/layout.tsx` is load-bearing. NEVER reorder or remove providers; it will break runtime behaviour. See `app/layout.tsx`.
+- Provider order in `app/layout.tsx` is load-bearing. NEVER reorder or remove providers; it will break runtime behavior. See `app/layout.tsx`.
 - Always use index-based queries with `.withIndex(...)` in Convex functions to avoid table scans. See examples in `convex/*.ts` and indexes defined in `convex/schema.ts`.
 - Avoid N+1 queries: batch fetch related records and build lookup maps (examples in docs/ and convex code).
 - Use toast-based notifications instead of alert/confirm. See `lib/toast.ts` and `components/desktop-notification-toast.tsx`.
