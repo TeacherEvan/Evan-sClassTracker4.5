@@ -3,15 +3,32 @@
 import { useEffect, useState } from "react";
 
 /**
- * Rolling Vitruvian Men System
+ * Rolling Da Vinci Masterpieces System
+ * - Uses REAL Da Vinci artwork images from the web
  * - Two large ones continuously roll across screen (65% opacity)
  * - One small one (50% size) rolls to logo, pauses 5 sec, continues (once per minute)
  */
+
+// Real Da Vinci artwork URLs (high quality, transparent backgrounds where possible)
+const DA_VINCI_IMAGES = [
+    // Vitruvian Man - THE ICONIC ONE
+    "https://upload.wikimedia.org/wikipedia/commons/2/22/Da_Vinci_Vitruve_Luc_Viatour.jpg",
+    // Mona Lisa
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/1200px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg",
+    // The Last Supper
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/%C3%9Altima_Cena_-_Da_Vinci_5.jpg/1920px-%C3%9Altima_Cena_-_Da_Vinci_5.jpg",
+];
+
 export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
     const [man1Position, setMan1Position] = useState(-30); // Start off-screen left
     const [man2Position, setMan2Position] = useState(-30);
     const [smallManPosition, setSmallManPosition] = useState(-30);
     const [smallManPaused, setSmallManPaused] = useState(false);
+    
+    // Randomly select different Da Vinci images for variety
+    const [man1Image] = useState(DA_VINCI_IMAGES[0]); // Always Vitruvian Man
+    const [man2Image] = useState(DA_VINCI_IMAGES[Math.floor(Math.random() * DA_VINCI_IMAGES.length)]);
+    const [smallManImage] = useState(DA_VINCI_IMAGES[0]); // Small one is always Vitruvian Man
 
     // Two large men continuously roll
     useEffect(() => {
@@ -87,7 +104,7 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
     return (
         <>
-            {/* Large Vitruvian Man #1 - rolls continuously */}
+            {/* Large Da Vinci #1 - rolls continuously */}
             <div
                 className="fixed pointer-events-none transition-none"
                 style={{
@@ -100,10 +117,18 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
                     opacity: 0.65,
                 }}
             >
-                <VitruvianManSVG />
+                <img 
+                    src={man1Image} 
+                    alt="Da Vinci Vitruvian Man"
+                    className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(255,215,0,0.8)] rounded-lg"
+                    style={{ 
+                        filter: "sepia(0.3) brightness(1.1) contrast(1.1)",
+                        mixBlendMode: "screen"
+                    }}
+                />
             </div>
 
-            {/* Large Vitruvian Man #2 - offset roll */}
+            {/* Large Da Vinci #2 - offset roll */}
             <div
                 className="fixed pointer-events-none transition-none"
                 style={{
@@ -116,10 +141,18 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
                     opacity: 0.65,
                 }}
             >
-                <VitruvianManSVG />
+                <img 
+                    src={man2Image} 
+                    alt="Da Vinci Artwork"
+                    className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(255,215,0,0.8)] rounded-lg"
+                    style={{ 
+                        filter: "sepia(0.3) brightness(1.1) contrast(1.1)",
+                        mixBlendMode: "screen"
+                    }}
+                />
             </div>
 
-            {/* Small Vitruvian Man - rolls to logo once per minute when logged in */}
+            {/* Small Da Vinci - rolls to logo once per minute when logged in */}
             {isLoggedIn && (
                 <div
                     className="fixed pointer-events-none transition-none"
@@ -133,96 +166,17 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
                         opacity: 0.65,
                     }}
                 >
-                    <VitruvianManSVG />
+                    <img 
+                        src={smallManImage} 
+                        alt="Da Vinci Vitruvian Man"
+                        className="w-full h-full object-contain drop-shadow-[0_0_20px_rgba(255,215,0,0.8)] rounded-lg"
+                        style={{ 
+                            filter: "sepia(0.3) brightness(1.1) contrast(1.1)",
+                            mixBlendMode: "screen"
+                        }}
+                    />
                 </div>
             )}
         </>
-    );
-}
-
-/**
- * Vitruvian Man SVG - Reusable component
- */
-function VitruvianManSVG() {
-    return (
-        <svg
-            viewBox="0 0 400 400"
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-full h-full drop-shadow-[0_0_20px_rgba(255,215,0,0.6)]"
-        >
-            <defs>
-                <linearGradient id="vitruvianGoldRoll" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#FFD700" stopOpacity="1" />
-                    <stop offset="50%" stopColor="#FFA500" stopOpacity="1" />
-                    <stop offset="100%" stopColor="#FF8C00" stopOpacity="1" />
-                </linearGradient>
-
-                <filter id="glowRoll">
-                    <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                    <feMerge>
-                        <feMergeNode in="coloredBlur" />
-                        <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                </filter>
-            </defs>
-
-            {/* Perfect circle */}
-            <circle
-                cx="200"
-                cy="200"
-                r="150"
-                fill="none"
-                stroke="url(#vitruvianGoldRoll)"
-                strokeWidth="3"
-                filter="url(#glowRoll)"
-            />
-
-            {/* Perfect square */}
-            <rect
-                x="50"
-                y="50"
-                width="300"
-                height="300"
-                fill="none"
-                stroke="url(#vitruvianGoldRoll)"
-                strokeWidth="3"
-                filter="url(#glowRoll)"
-                opacity="0.7"
-            />
-
-            {/* Human figure - simplified Vitruvian Man */}
-            <g stroke="url(#vitruvianGoldRoll)" strokeWidth="2.5" fill="none" filter="url(#glowRoll)">
-                {/* Head */}
-                <circle cx="200" cy="120" r="25" />
-
-                {/* Body */}
-                <line x1="200" y1="145" x2="200" y2="240" />
-
-                {/* Arms spread (circle pose) */}
-                <line x1="200" y1="160" x2="120" y2="160" />
-                <line x1="200" y1="160" x2="280" y2="160" />
-
-                {/* Arms raised (square pose) - slightly transparent */}
-                <line x1="200" y1="160" x2="140" y2="100" opacity="0.6" />
-                <line x1="200" y1="160" x2="260" y2="100" opacity="0.6" />
-
-                {/* Legs spread (circle pose) */}
-                <line x1="200" y1="240" x2="140" y2="320" />
-                <line x1="200" y1="240" x2="260" y2="320" />
-
-                {/* Legs together (square pose) - slightly transparent */}
-                <line x1="200" y1="240" x2="185" y2="340" opacity="0.6" />
-                <line x1="200" y1="240" x2="215" y2="340" opacity="0.6" />
-
-                {/* Navel point (center of circle) */}
-                <circle cx="200" cy="200" r="3" fill="url(#vitruvianGoldRoll)" />
-            </g>
-
-            {/* Phi ratio markers */}
-            <g stroke="url(#vitruvianGoldRoll)" strokeWidth="1" opacity="0.5" strokeDasharray="4,4">
-                <line x1="50" y1="200" x2="350" y2="200" />
-                <line x1="200" y1="50" x2="200" y2="350" />
-            </g>
-        </svg>
     );
 }
