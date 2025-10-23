@@ -12,6 +12,7 @@ interface Fish {
     maxSpeed: number;
     maxForce: number;
     size: number;
+    trail: { x: number; y: number }[]; // Trail for motion blur effect
 }
 
 interface FishSchoolBackgroundProps {
@@ -44,13 +45,14 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
             fish.push({
                 x: centerX + (Math.random() - 0.5) * spread,
                 y: centerY + (Math.random() - 0.5) * spread,
-                vx: Math.cos(angle) * 4.5,
-                vy: Math.sin(angle) * 4.5,
+                vx: Math.cos(angle) * 8,
+                vy: Math.sin(angle) * 8,
                 pulsePhase: Math.random() * Math.PI * 2,
                 neighborhoodRadius: 120,
-                maxSpeed: 6.5,
-                maxForce: 0.3,
-                size: 8,
+                maxSpeed: 12,
+                maxForce: 0.4,
+                size: 7,
+                trail: [], // Initialize empty trail
             });
         }
         fishRef.current = fish;
@@ -170,13 +172,23 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
         };
 
         const animate = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Semi-transparent clear for trail effect
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Update spatial grid for efficient neighbor lookups
             updateSpatialGrid();
 
             // Update each fish with flocking behavior
             fishRef.current.forEach(fish => {
+                // Store current position in trail
+                fish.trail.push({ x: fish.x, y: fish.y });
+                
+                // Keep trail length at 8 points for motion blur effect
+                if (fish.trail.length > 8) {
+                    fish.trail.shift();
+                }
+
                 // Apply flocking behavior
                 applyFlockingBehavior(fish);
 
@@ -189,11 +201,27 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
                 if (fish.x > canvas.width) fish.x = 0;
                 if (fish.y < 0) fish.y = canvas.height;
                 if (fish.y > canvas.height) fish.y = 0;
-
             });
 
-            // Draw all fish as simple golden dots
+            // Draw all fish with motion blur trails
             fishRef.current.forEach(fish => {
+                // Draw trail as fading line segments
+                if (fish.trail.length > 1) {
+                    for (let i = 0; i < fish.trail.length - 1; i++) {
+                        const alpha = (i / fish.trail.length) * 0.6;
+                        const width = (i / fish.trail.length) * fish.size * 1.5;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(fish.trail[i].x, fish.trail[i].y);
+                        ctx.lineTo(fish.trail[i + 1].x, fish.trail[i + 1].y);
+                        ctx.strokeStyle = `hsla(45, 100%, 50%, ${alpha})`;
+                        ctx.lineWidth = width;
+                        ctx.lineCap = 'round';
+                        ctx.stroke();
+                    }
+                }
+
+                // Draw main dot
                 ctx.beginPath();
                 ctx.arc(fish.x, fish.y, fish.size, 0, Math.PI * 2);
                 ctx.fillStyle = `hsla(45, 100%, 50%, 0.8)`;

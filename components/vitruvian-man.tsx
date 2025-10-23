@@ -17,12 +17,12 @@ export function VitruvianMan({ className = "" }: { className?: string }) {
 
     return (
         <div
-            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-[2000ms] ease-out pointer-events-none ${isVisible ? "opacity-30 translate-x-0" : "opacity-0 -translate-x-full"
+            className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-[2000ms] ease-out pointer-events-none ${isVisible ? "opacity-40 translate-x-0" : "opacity-0 -translate-x-full"
                 } ${className}`}
             style={{
                 width: "min(50vw, 400px)",
                 height: "min(50vw, 400px)",
-                zIndex: 0,
+                zIndex: 5,
             }}
         >
             <svg
