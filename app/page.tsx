@@ -46,13 +46,14 @@ const AdminContactRequests = lazy(() => import("@/components/admin-contact-reque
 const AdminNotificationWindows = lazy(() => import("@/components/admin-notification-windows").then(m => ({ default: m.AdminNotificationWindows })));
 const AdminAppUpdates = lazy(() => import("@/components/admin-app-updates").then(m => ({ default: m.AdminAppUpdates })));
 const ClassCountModal = lazy(() => import("@/components/class-count-modal").then(m => ({ default: m.ClassCountModal })));
+const SangsomSeedButton = lazy(() => import("@/components/sangsom-seed-button").then(m => ({ default: m.SangsomSeedButton })));
 
 export default function Home() {
   const { t } = useLanguage();
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "testing" | "contact_requests" | "notification_windows" | "app_updates">("calendar");
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "testing" | "contact_requests" | "notification_windows" | "app_updates" | "data_import">("calendar");
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
   const [showPostClassNotes, setShowPostClassNotes] = useState(false);
@@ -647,6 +648,17 @@ export default function Home() {
                 <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
                 {t("App Updates", "ประกาศอัปเดต")}
               </button>
+
+              <button
+                onClick={() => setActiveTab("data_import")}
+                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "data_import"
+                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+              >
+                <Calendar className="w-4 h-4 md:w-5 md:h-5" />
+                {t("Data Import", "นำเข้าข้อมูล")}
+              </button>
             </>
           )}
 
@@ -781,6 +793,27 @@ export default function Home() {
         {activeTab === "app_updates" && user.role === "admin" && (
           <Suspense fallback={<LoadingFallback />}>
             <AdminAppUpdates currentUserId={user._id} />
+          </Suspense>
+        )}
+
+        {activeTab === "data_import" && user.role === "admin" && (
+          <Suspense fallback={<LoadingFallback />}>
+            <div className="max-w-4xl mx-auto p-4">
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">
+                    {t("Data Import & Seeding", "นำเข้าและเพิ่มข้อมูล")}
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t(
+                      "Import bulk data from external sources or seed test data",
+                      "นำเข้าข้อมูลจำนวนมากจากแหล่งภายนอกหรือเพิ่มข้อมูลทดสอบ"
+                    )}
+                  </p>
+                </div>
+                <SangsomSeedButton />
+              </div>
+            </div>
           </Suspense>
         )}
 
