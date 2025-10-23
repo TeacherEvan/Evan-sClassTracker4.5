@@ -307,7 +307,7 @@ export default function Home() {
   if (!user) {
     return (
       <>
-        <RollingVitruvianMen isLoggedIn={false} />
+        <RollingVitruvianMen />
         <LoginForm onLoginSuccess={handleLoginSuccess} />
       </>
     );
@@ -315,8 +315,8 @@ export default function Home() {
 
   return (
     <div className="min-h-[100dvh] pb-20 md:pb-0 md:p-8 relative overflow-hidden">
-      {/* Rolling Vitruvian Men - Da Vinci aesthetic */}
-      <RollingVitruvianMen isLoggedIn={true} />
+      {/* Static galaxy background */}
+      <RollingVitruvianMen />
 
       {/* Animated fish school background */}
       <FishSchoolBackground className="opacity-30" />

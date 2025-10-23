@@ -205,19 +205,31 @@ export const bulkDeleteStudents = mutation({
                 // Check if student exists
                 const student = await ctx.db.get(studentId);
                 if (!student) {
-                    throw new Error("Student not found");
+                    errors.push({
+                        index: i,
+                        studentId,
+                        error: "Student not found",
+                    });
+                    continue;
                 }
 
                 // Check if student has associated classes
-                const classes = await ctx.db
+                const classCount = await ctx.db
                     .query("classes")
                     .withIndex("by_student", (q) => q.eq("studentId", studentId))
-                    .first();
+                    .collect()
+                    .then(classes => classes.length);
 
-                if (classes) {
-                    throw new Error("Cannot delete student with associated classes");
+                if (classCount > 0) {
+                    errors.push({
+                        index: i,
+                        studentId,
+                        error: `Cannot delete student with ${classCount} associated class${classCount > 1 ? 'es' : ''}`,
+                    });
+                    continue;
                 }
 
+                // Safe to delete
                 await ctx.db.delete(studentId);
                 results.push({ index: i, studentId, success: true });
             } catch (error) {
