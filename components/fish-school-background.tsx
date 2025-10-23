@@ -45,9 +45,9 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
                 vy: (Math.random() - 0.5) * 1.5,
                 pulsePhase: Math.random() * Math.PI * 2,
                 neighborhoodRadius: 400, // DOUBLE THE SPREAD (was 200)
-                maxSpeed: 2, // SNAIL PACE
-                maxForce: 0.08, // EVEN MORE GENTLE (was 0.15)
-                size: 6,
+                maxSpeed: 1, // SNAIL PACE
+                maxForce: 0.20, // EVEN MORE GENTLE (was 0.15)
+                size: 3,
                 trail: [], // Slime trail
             });
         }

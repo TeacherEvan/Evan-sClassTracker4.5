@@ -3,57 +3,44 @@
 import { useEffect, useState } from "react";
 
 /**
- * Rolling Da Vinci Masterpieces System
- * - Uses REAL Da Vinci artwork images from the web
- * - Two large ones continuously roll across screen (65% opacity)
- * - One small one (50% size) rolls to logo, pauses 5 sec, continues (once per minute)
+ * Rotating Space/Galaxy Background System
+ * - Spins 360° over 10 minutes (continuous rotation)
+ * - Alternates between 2 space images every 40 minutes
+ * - One small one rolls behind title once per minute
+ * - Images are semi-transparent to allow UI visibility
  */
 
-// Real Da Vinci artwork URLs (high quality, transparent backgrounds where possible)
-const DA_VINCI_IMAGES = [
-    // Vitruvian Man - THE ICONIC ONE
-    "https://upload.wikimedia.org/wikipedia/commons/2/22/Da_Vinci_Vitruve_Luc_Viatour.jpg",
-    // Mona Lisa
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/1200px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg",
-    // The Last Supper
-    "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/%C3%9Altima_Cena_-_Da_Vinci_5.jpg/1920px-%C3%9Altima_Cena_-_Da_Vinci_5.jpg",
+// Space/Galaxy images with math formulas - Using only 2 images
+const SPACE_IMAGES = [
+    "/images/space-galaxy-blue.jpg",   // Blue/teal galaxy with formulas
+    "/images/space-galaxy-pink.jpg",   // Pink/purple galaxy with formulas  
 ];
 
 export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
-    const [man1Position, setMan1Position] = useState(-30); // Start off-screen left
-    const [man2Position, setMan2Position] = useState(-30);
     const [smallManPosition, setSmallManPosition] = useState(-30);
     const [smallManPaused, setSmallManPaused] = useState(false);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [rotationDegrees, setRotationDegrees] = useState(0);
 
-    // Randomly select different Da Vinci images for variety
-    const [man1Image] = useState(DA_VINCI_IMAGES[0]); // Always Vitruvian Man
-    const [man2Image] = useState(DA_VINCI_IMAGES[Math.floor(Math.random() * DA_VINCI_IMAGES.length)]);
-    const [smallManImage] = useState(DA_VINCI_IMAGES[0]); // Small one is always Vitruvian Man
-
-    // Two large men continuously roll
+    // ALTERNATING: Switch images every 40 minutes
     useEffect(() => {
-        const interval1 = setInterval(() => {
-            setMan1Position((prev) => {
-                if (prev >= 130) return -30; // Reset to left
-                return prev + 0.15; // Slow scroll
-            });
-        }, 50);
+        const alternateInterval = setInterval(() => {
+            setCurrentImageIndex((prev) => (prev + 1) % SPACE_IMAGES.length);
+        }, 40 * 60 * 1000); // 40 minutes in milliseconds
 
-        // Offset the second one
-        const interval2 = setInterval(() => {
-            setMan2Position((prev) => {
-                if (prev >= 130) return -30;
-                return prev + 0.15;
-            });
-        }, 50);
-
-        return () => {
-            clearInterval(interval1);
-            clearInterval(interval2);
-        };
+        return () => clearInterval(alternateInterval);
     }, []);
 
-    // Small man rolls once per minute when logged in
+    // ROTATION: Spin 360° over 10 minutes (continuous)
+    useEffect(() => {
+        const rotationInterval = setInterval(() => {
+            setRotationDegrees((prev) => (prev + 0.6) % 360); // 0.6° every 100ms = 360° in 10 min
+        }, 100); // Update every 100ms for smooth rotation
+
+        return () => clearInterval(rotationInterval);
+    }, []);
+
+    // Small image rolls once per minute when logged in
     useEffect(() => {
         if (!isLoggedIn) return;
 
@@ -61,14 +48,14 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
             setSmallManPosition(-30); // Start from left
             setSmallManPaused(false);
 
-            // Animate to logo position (around 48% across)
+            // Animate to title position (around 48% across)
             const animationInterval = setInterval(() => {
                 setSmallManPosition((prev) => {
                     if (prev >= 48 && !smallManPaused) {
                         setSmallManPaused(true);
                         clearInterval(animationInterval);
 
-                        // Pause for 5 seconds at logo
+                        // Pause for 5 seconds at title
                         setTimeout(() => {
                             setSmallManPaused(false);
                             // Continue rolling off screen
@@ -104,74 +91,52 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
     return (
         <>
-            {/* Large Da Vinci #1 - MASSIVE - STAYS CENTERED AT BACK */}
+            {/* Large Space/Galaxy Background - SPINS 360° in 10min + alternates every 40min */}
             <div
                 className="fixed pointer-events-none"
                 style={{
-                    left: "50%", // ALWAYS CENTERED
+                    left: "50%",
                     top: "50%",
-                    transform: "translate(-50%, -50%)",
-                    width: "auto",
-                    height: "95vh", // HUGE - almost touching top/bottom
+                    transform: `translate(-50%, -50%) rotate(${rotationDegrees}deg)`,
+                    width: "100vw",
+                    height: "100vh",
                     zIndex: 1, // BACK - behind everything except fish
-                    opacity: 0.45, // More transparent to hide paper border
+                    opacity: 0.25, // Reduced opacity for better UI visibility
                 }}
             >
                 <img
-                    src={man1Image}
-                    alt="Da Vinci Vitruvian Man"
-                    className="w-full h-full object-contain drop-shadow-[0_0_40px_rgba(255,215,0,0.6)]"
+                    key={currentImageIndex} // Force re-render on image change
+                    src={SPACE_IMAGES[currentImageIndex]}
+                    alt="Space Galaxy with Math Formulas"
+                    className="w-full h-full object-cover drop-shadow-[0_0_50px_rgba(100,200,255,0.5)]"
                     style={{
-                        filter: "sepia(0.5) brightness(1.2) contrast(1.15) saturate(0.8)",
-                        mixBlendMode: "lighten" // Better blend to hide paper
+                        filter: "brightness(1.1) contrast(1.1) saturate(1.2)",
+                        mixBlendMode: "lighten",
+                        transition: "opacity 2s ease-in-out" // Smooth image transition
                     }}
                 />
             </div>
 
-            {/* Large Da Vinci #2 - ALSO CENTERED AT BACK (slightly offset timing) */}
-            <div
-                className="fixed pointer-events-none"
-                style={{
-                    left: "50%", // ALWAYS CENTERED
-                    top: "50%",
-                    transform: "translate(-50%, -50%)",
-                    width: "auto",
-                    height: "95vh", // HUGE
-                    zIndex: 1, // BACK
-                    opacity: 0.60, // Even more transparent (layered effect)
-                }}
-            >
-                <img
-                    src={man2Image}
-                    alt="Da Vinci Artwork"
-                    className="w-full h-full object-contain drop-shadow-[0_0_40px_rgba(255,215,0,0.6)]"
-                    style={{
-                        filter: "sepia(0.5) brightness(1.2) contrast(1.15) saturate(0.8)",
-                        mixBlendMode: "lighten"
-                    }}
-                />
-            </div>
-
-            {/* Small Da Vinci - rolls BEHIND "Class Tracker" title */}
+            {/* Small Space Image - rolls BEHIND "Class Tracker" title */}
             {isLoggedIn && (
                 <div
                     className="fixed pointer-events-none transition-none"
                     style={{
                         left: `${smallManPosition}%`,
-                        top: "80px", // Behind Class Tracker title
+                        top: "80px",
                         transform: "translate(-50%, -50%)",
                         width: "auto",
-                        height: "180px", // Smaller for title area
-                        zIndex: 2, // BEHIND title (header is probably z-10+)
-                        opacity: 0.5, // MORE VISIBLE
+                        height: "180px",
+                        zIndex: 2, // BEHIND title
+                        opacity: 0.35, // Reduced opacity for better UI visibility
                     }}
                 >
                     <img
-                        src={smallManImage}
-                        alt="Da Vinci Vitruvian Man"
-                        className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(255,215,0,0.7)]"
+                        src={SPACE_IMAGES[currentImageIndex]}
+                        alt="Space Galaxy"
+                        className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(100,200,255,0.6)]"
                         style={{
-                            filter: "sepia(0.4) brightness(1.3) contrast(1.2) saturate(0.9)",
+                            filter: "brightness(1.2) contrast(1.15) saturate(1.3)",
                             mixBlendMode: "lighten"
                         }}
                     />

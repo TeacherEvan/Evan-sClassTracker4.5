@@ -362,7 +362,7 @@ export default function Home() {
         />
       )}
 
-      <header className="max-w-4xl mx-auto mb-3 md:mb-8 p-3 md:p-0 relative z-10">
+      <header className="max-w-4xl mx-auto mb-3 md:mb-8 p-3 md:p-4 relative z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-lg shadow-lg">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 md:gap-3">
@@ -416,13 +416,13 @@ export default function Home() {
       </header>
 
       {/* Mobile Bottom Navigation - Hidden on desktop */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50 md:hidden safe-area-inset-bottom">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 z-50 md:hidden safe-area-inset-bottom shadow-lg">
         <div className="flex justify-around items-center h-16 px-2">
           <button
             onClick={() => setActiveTab("calendar")}
             className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95 ${activeTab === "calendar"
-              ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-              : "text-gray-600 dark:text-gray-400"
+              ? "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 shadow-md"
+              : "text-gray-700 dark:text-gray-300 bg-gray-100/50 dark:bg-gray-700/50"
               }`}
           >
             <CalendarDays className="w-6 h-6" />
@@ -432,8 +432,8 @@ export default function Home() {
           <button
             onClick={() => setActiveTab("classes")}
             className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95 ${activeTab === "classes"
-              ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-              : "text-gray-600 dark:text-gray-400"
+              ? "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 shadow-md"
+              : "text-gray-700 dark:text-gray-300 bg-gray-100/50 dark:bg-gray-700/50"
               }`}
           >
             <Calendar className="w-6 h-6" />
@@ -443,10 +443,10 @@ export default function Home() {
           <button
             onClick={() => setActiveTab("messages")}
             className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95 ${activeTab === "messages"
-              ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+              ? "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 shadow-md"
               : unreadCount && unreadCount > 0
-                ? "text-red-500 dark:text-red-400 pulse-red"
-                : "text-gray-600 dark:text-gray-400"
+                ? "text-red-600 dark:text-red-400 pulse-red bg-red-100/50 dark:bg-red-900/30"
+                : "text-gray-700 dark:text-gray-300 bg-gray-100/50 dark:bg-gray-700/50"
               }`}
           >
             <MessageSquare className="w-6 h-6" />
@@ -456,8 +456,8 @@ export default function Home() {
           <button
             onClick={() => setActiveTab("notifications")}
             className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95 ${activeTab === "notifications"
-              ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
-              : "text-gray-600 dark:text-gray-400"
+              ? "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 shadow-md"
+              : "text-gray-700 dark:text-gray-300 bg-gray-100/50 dark:bg-gray-700/50"
               }`}
           >
             <Bell className="w-6 h-6" />
@@ -468,12 +468,12 @@ export default function Home() {
 
       {/* Desktop Tab Navigation - Hidden on mobile */}
       <div className="max-w-7xl mx-auto mb-4 md:mb-6 hidden md:block relative z-10">
-        <div className="flex gap-1 md:gap-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+        <div className="flex gap-1 md:gap-2 border-b-2 border-gray-300 dark:border-gray-600 overflow-x-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-t-lg shadow-lg p-2">
           <button
             onClick={() => setActiveTab("calendar")}
-            className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "calendar"
-              ? "border-blue-500 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+            className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "calendar"
+              ? "bg-blue-500 text-white shadow-md"
+              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
           >
             <CalendarDays className="w-4 h-4 md:w-5 md:h-5" />
@@ -482,9 +482,9 @@ export default function Home() {
 
           <button
             onClick={() => setActiveTab("events")}
-            className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "events"
-              ? "border-blue-500 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+            className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "events"
+              ? "bg-blue-500 text-white shadow-md"
+              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
           >
             <Bell className="w-4 h-4 md:w-5 md:h-5" />
@@ -493,9 +493,9 @@ export default function Home() {
 
           <button
             onClick={() => setActiveTab("classes")}
-            className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "classes"
-              ? "border-blue-500 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+            className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "classes"
+              ? "bg-blue-500 text-white shadow-md"
+              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
           >
             <Calendar className="w-4 h-4 md:w-5 md:h-5" />
@@ -506,11 +506,11 @@ export default function Home() {
 
           <button
             onClick={() => setActiveTab("messages")}
-            className={`relative flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "messages"
-              ? "border-blue-500 text-blue-600 dark:text-blue-400"
+            className={`relative flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "messages"
+              ? "bg-blue-500 text-white shadow-md"
               : unreadCount && unreadCount > 0
-                ? "border-transparent text-red-500 dark:text-red-400 pulse-red hover:text-red-600 dark:hover:text-red-300"
-                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                ? "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 pulse-red hover:bg-red-200 dark:hover:bg-red-900/60"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
           >
             <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
@@ -521,9 +521,9 @@ export default function Home() {
           {user.role !== "moderator" && (
             <button
               onClick={() => setActiveTab("resources")}
-              className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "resources"
-                ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+              className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "resources"
+                ? "bg-blue-500 text-white shadow-md"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                 }`}
             >
               <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
@@ -536,9 +536,9 @@ export default function Home() {
             <>
               <button
                 onClick={() => setActiveTab("analytics")}
-                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "analytics"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "analytics"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
                 <BarChart3 className="w-4 h-4 md:w-5 md:h-5" />
@@ -547,9 +547,9 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveTab("activity")}
-                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "activity"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "activity"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
                 <Shield className="w-4 h-4 md:w-5 md:h-5" />
@@ -558,9 +558,9 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveTab("locations")}
-                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "locations"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "locations"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
                 <MapPin className="w-4 h-4 md:w-5 md:h-5" />
@@ -571,9 +571,9 @@ export default function Home() {
 
           <button
             onClick={() => setActiveTab("notifications")}
-            className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "notifications"
-              ? "border-blue-500 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+            className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "notifications"
+              ? "bg-blue-500 text-white shadow-md"
+              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
           >
             <Bell className="w-4 h-4 md:w-5 md:h-5" />
@@ -584,9 +584,9 @@ export default function Home() {
             <>
               <button
                 onClick={() => setActiveTab("schools")}
-                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "schools"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "schools"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
                 <Building2 className="w-4 h-4 md:w-5 md:h-5" />
@@ -595,9 +595,9 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveTab("locations")}
-                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "locations"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "locations"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
                 <MapPin className="w-4 h-4 md:w-5 md:h-5" />
@@ -606,9 +606,9 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveTab("moderators")}
-                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "moderators"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "moderators"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
                 <Shield className="w-4 h-4 md:w-5 md:h-5" />
@@ -617,9 +617,9 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveTab("users")}
-                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "users"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "users"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
                 <Users className="w-4 h-4 md:w-5 md:h-5" />
@@ -628,9 +628,9 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveTab("testing")}
-                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "testing"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "testing"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
                 <FlaskConical className="w-4 h-4 md:w-5 md:h-5" />
@@ -639,9 +639,9 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveTab("contact_requests")}
-                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "contact_requests"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "contact_requests"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
                 <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
@@ -650,9 +650,9 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveTab("notification_windows")}
-                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "notification_windows"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "notification_windows"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
                 <Bell className="w-4 h-4 md:w-5 md:h-5" />
@@ -661,9 +661,9 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveTab("app_updates")}
-                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "app_updates"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "app_updates"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
                 <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
@@ -672,9 +672,9 @@ export default function Home() {
 
               <button
                 onClick={() => setActiveTab("data_import")}
-                className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "data_import"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "data_import"
+                  ? "bg-blue-500 text-white shadow-md"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
                 <Calendar className="w-4 h-4 md:w-5 md:h-5" />
@@ -687,9 +687,9 @@ export default function Home() {
           {(user.role === "admin" || user.role === "moderator") && (
             <button
               onClick={() => setActiveTab("students")}
-              className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "students"
-                ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+              className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "students"
+                ? "bg-blue-500 text-white shadow-md"
+                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
                 }`}
             >
               <GraduationCap className="w-4 h-4 md:w-5 md:h-5" />
@@ -700,7 +700,7 @@ export default function Home() {
       </div>
 
       {/* Tab Content - Wrapped with Suspense for lazy loading */}
-      <div className="relative z-10">
+      <div className="relative z-10 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-lg shadow-lg p-4 md:p-6 max-w-7xl mx-auto">
         {activeTab === "calendar" && (
           <Suspense fallback={<LoadingFallback />}>
             <WeeklyCalendar currentUser={user} />
