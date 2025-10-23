@@ -104,16 +104,16 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
 
     return (
         <>
-            {/* Large Da Vinci #1 - MASSIVE SIZE - STAYS IN CENTER when it reaches 50% */}
+            {/* Large Da Vinci #1 - MASSIVE - STAYS CENTERED AT BACK */}
             <div
-                className="fixed pointer-events-none transition-none"
+                className="fixed pointer-events-none"
                 style={{
-                    left: man1Position >= 50 ? "50%" : `${man1Position}%`, // Lock at center when reached
+                    left: "50%", // ALWAYS CENTERED
                     top: "50%",
                     transform: "translate(-50%, -50%)",
                     width: "auto",
                     height: "95vh", // HUGE - almost touching top/bottom
-                    zIndex: 1, // BACK of display (behind content)
+                    zIndex: 1, // BACK - behind everything except fish
                     opacity: 0.45, // More transparent to hide paper border
                 }}
             >
@@ -128,17 +128,17 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 />
             </div>
 
-            {/* Large Da Vinci #2 - offset roll - MASSIVE - STAYS IN CENTER */}
+            {/* Large Da Vinci #2 - ALSO CENTERED AT BACK (slightly offset timing) */}
             <div
-                className="fixed pointer-events-none transition-none"
+                className="fixed pointer-events-none"
                 style={{
-                    left: man2Position >= 50 ? "50%" : `${man2Position}%`, // Lock at center when reached
+                    left: "50%", // ALWAYS CENTERED
                     top: "50%",
                     transform: "translate(-50%, -50%)",
                     width: "auto",
                     height: "95vh", // HUGE
-                    zIndex: 1, // BACK of display
-                    opacity: 0.45, // More transparent
+                    zIndex: 1, // BACK
+                    opacity: 0.35, // Even more transparent (layered effect)
                 }}
             >
                 <img
@@ -152,8 +152,8 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
                 />
             </div>
 
-            {/* Small Da Vinci - behind "Class Tracker" title - ALWAYS VISIBLE */}
-            {isLoggedIn && smallManPosition > -30 && smallManPosition < 130 && (
+            {/* Small Da Vinci - rolls behind "Class Tracker" title */}
+            {isLoggedIn && (
                 <div
                     className="fixed pointer-events-none transition-none"
                     style={{
@@ -161,9 +161,9 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
                         top: "80px", // Behind Class Tracker title
                         transform: "translate(-50%, -50%)",
                         width: "auto",
-                        height: "200px", // Slightly bigger so it's visible
-                        zIndex: 5, // Above background but below header content
-                        opacity: 0.5, // More visible
+                        height: "180px", // Smaller for title area
+                        zIndex: 5, // ABOVE content but BELOW header
+                        opacity: 0.5, // MORE VISIBLE
                     }}
                 >
                     <img
@@ -171,7 +171,7 @@ export function RollingVitruvianMen({ isLoggedIn }: { isLoggedIn?: boolean }) {
                         alt="Da Vinci Vitruvian Man"
                         className="w-full h-full object-contain drop-shadow-[0_0_30px_rgba(255,215,0,0.7)]"
                         style={{
-                            filter: "sepia(0.5) brightness(1.3) contrast(1.2) saturate(0.8)",
+                            filter: "sepia(0.4) brightness(1.3) contrast(1.2) saturate(0.9)",
                             mixBlendMode: "lighten"
                         }}
                     />
