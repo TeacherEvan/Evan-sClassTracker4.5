@@ -13,11 +13,9 @@ interface SangsomDeleteButtonProps {
 
 export function SangsomDeleteButton({ userId }: SangsomDeleteButtonProps) {
     const { t } = useLanguage();
-    // Use dynamic import to avoid errors when API types aren't generated yet
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const checkData = useMutation("deleteSangsomData:checkSangsomDataToDelete" as any);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const deleteData = useMutation("deleteSangsomData:deleteSangsomData" as any);
+    // Use string-based mutation calls that work with dynamic API
+    const checkData = useMutation("deleteSangsomData:checkSangsomDataToDelete" as never);
+    const deleteData = useMutation("deleteSangsomData:deleteSangsomData" as never);
     const [loading, setLoading] = useState(false);
     const [dataInfo, setDataInfo] = useState<{
         exists: boolean;

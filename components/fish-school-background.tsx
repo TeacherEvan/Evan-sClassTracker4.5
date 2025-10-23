@@ -150,22 +150,24 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
                 if (fish.y > canvas.height + 20) fish.y = -20;
 
                 // Update pulse
-                fish.pulsePhase += 0.05;
+                fish.pulsePhase += 0.1; // Faster swimming motion
 
-                // Calculate motion direction for tail
-                const speed = Math.sqrt(fish.vx * fish.vx + fish.vy * fish.vy);
-                const dirX = speed > 0 ? -fish.vx / speed : 0;
-                const dirY = speed > 0 ? -fish.vy / speed : 0;
+                // Calculate motion direction for tail (reuse speed from above)
+                const angle = Math.atan2(fish.vy, fish.vx); // Direction fish is facing
+                const swimWiggle = Math.sin(fish.pulsePhase * 2) * 0.15; // Side-to-side swim motion
 
-                // Draw motion blur tail (3 segments fading behind the fish)
-                const tailLength = 25;
-                const segments = 3;
+                // Draw swimming tail that wiggles (5 segments for smooth motion)
+                const tailLength = 30;
+                const segments = 5;
                 for (let i = 1; i <= segments; i++) {
                     const t = i / segments;
-                    const tailX = fish.x + dirX * tailLength * t;
-                    const tailY = fish.y + dirY * tailLength * t;
-                    const tailAlpha = (1 - t) * 0.4; // Fade out towards the back
-                    const tailRadius = 6 * (1 - t * 0.5); // Get smaller towards the back
+                    // Tail curves based on swim wiggle
+                    const wiggleAmount = swimWiggle * t * 15;
+                    const tailAngle = angle + wiggleAmount;
+                    const tailX = fish.x - Math.cos(tailAngle) * tailLength * t;
+                    const tailY = fish.y - Math.sin(tailAngle) * tailLength * t;
+                    const tailAlpha = (1 - t) * 0.5;
+                    const tailRadius = 7 * (1 - t * 0.6);
 
                     ctx.beginPath();
                     ctx.arc(tailX, tailY, tailRadius, 0, Math.PI * 2);
@@ -173,9 +175,9 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
                     ctx.fill();
                 }
 
-                // Draw main gold pulsating fish body
-                const pulse = Math.sin(fish.pulsePhase) * 0.4 + 0.6;
-                const radius = 8 * pulse;
+                // Draw main gold pulsating fish body with slight size change for swimming
+                const pulse = Math.sin(fish.pulsePhase) * 0.2 + 0.8;
+                const radius = 9 * pulse;
 
                 ctx.beginPath();
                 ctx.arc(fish.x, fish.y, radius, 0, Math.PI * 2);
