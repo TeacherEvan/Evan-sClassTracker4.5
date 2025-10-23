@@ -32,10 +32,18 @@ Short, practical guidance for an AI agent editing this repo. Keep changes minima
 - Login attempts currently lack rate-limiting; add `checkRateLimit` for mutations when implementing auth changes.
 
 ## Developer workflows / commands
-- Local dev (PowerShell):
+- **⚠️ LOCALHOST ISSUES**: Local development server has known issues. **Always test on production deployment** after pushing changes to main branch.
+- Local dev (PowerShell) - **NOT RELIABLE**:
   - `npm install`
   - `npx convex dev`  (start Convex first — Next.js needs NEXT_PUBLIC_CONVEX_URL)
   - `npm run dev`     (Next.js with Turbopack)
+- **Production deployment workflow** (REQUIRED for testing):
+  1. Make changes locally
+  2. `git add .`
+  3. `git commit -m "description"`
+  4. `git push origin main`
+  5. `npx convex deploy` (deploy backend functions)
+  6. Test on production URL (vercel.app)
 - Build:
   - `npm run build`
   - `npx convex deploy` (to deploy Convex functions)
