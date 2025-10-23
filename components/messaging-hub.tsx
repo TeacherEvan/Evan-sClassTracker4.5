@@ -166,18 +166,13 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
         <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 md:p-6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+              <h2 className={`text-xl md:text-2xl font-bold flex items-center gap-2 ${unreadCount !== undefined && unreadCount > 0
+                  ? "text-red-500 animate-pulse"
+                  : "text-white"
+                }`}>
                 <MessageSquare className="w-5 h-5 md:w-6 md:h-6" />
                 {t("Messaging Hub", "ศูนย์ข้อความ")}
               </h2>
-              {unreadCount !== undefined && unreadCount > 0 && (
-                <p className="text-blue-100 mt-1 text-sm md:text-base">
-                  {t(
-                    `${unreadCount} unread message${unreadCount > 1 ? "s" : ""}`,
-                    `${unreadCount} ข้อความที่ยังไม่ได้อ่าน`
-                  )}
-                </p>
-              )}
             </div>
 
             {/* View Mode Toggle */}

@@ -1,7 +1,9 @@
 "use client";
 
 import { FishSchoolBackground } from "@/components/fish-school-background";
+import { GeometricBorder } from "@/components/geometric-border";
 import { Logo } from "@/components/logo";
+import { VitruvianMan } from "@/components/vitruvian-man";
 import { api } from "@/convex/_generated/api";
 import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
@@ -44,10 +46,16 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       {/* Animated fish school background */}
       <FishSchoolBackground />
 
+      {/* Da Vinci's Vitruvian Man - rolls in behind the form */}
+      <VitruvianMan />
+
       <div className="w-full max-w-md relative z-10">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 border-4 border-yellow-600 dark:border-yellow-500 shadow-[0_0_30px_rgba(234,179,8,0.5)] animate-pulse">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 relative shadow-[0_0_40px_rgba(255,215,0,0.6)]">
+          {/* Geometric/Henna Border replacing the simple gold border */}
+          <GeometricBorder />
+          
           {/* Logo with Slogan */}
-          <div className="mb-8">
+          <div className="mb-8 relative z-20">
             <Logo size="md" showSlogan={true} />
           </div>
 

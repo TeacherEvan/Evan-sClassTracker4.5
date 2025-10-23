@@ -192,45 +192,16 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
 
             });
 
-            // Draw all fish
+            // Draw all fish as simple golden dots
             fishRef.current.forEach(fish => {
-                // Update pulse
-                fish.pulsePhase += 0.1;
-
-                // Calculate motion direction for tail
-                const angle = Math.atan2(fish.vy, fish.vx);
-                const swimWiggle = Math.sin(fish.pulsePhase * 2) * 0.15;
-
-                // Draw swimming tail that wiggles (5 segments for smooth motion)
-                const tailLength = 30;
-                const segments = 5;
-                for (let i = 1; i <= segments; i++) {
-                    const t = i / segments;
-                    const wiggleAmount = swimWiggle * t * 15;
-                    const tailAngle = angle + wiggleAmount;
-                    const tailX = fish.x - Math.cos(tailAngle) * tailLength * t;
-                    const tailY = fish.y - Math.sin(tailAngle) * tailLength * t;
-                    const tailAlpha = (1 - t) * 0.5;
-                    const tailRadius = 7 * (1 - t * 0.6);
-
-                    ctx.beginPath();
-                    ctx.arc(tailX, tailY, tailRadius, 0, Math.PI * 2);
-                    ctx.fillStyle = `hsla(45, 100%, 50%, ${tailAlpha})`;
-                    ctx.fill();
-                }
-
-                // Draw main gold pulsating fish body
-                const pulse = Math.sin(fish.pulsePhase) * 0.2 + 0.8;
-                const radius = fish.size * pulse;
-
                 ctx.beginPath();
-                ctx.arc(fish.x, fish.y, radius, 0, Math.PI * 2);
-
-                ctx.fillStyle = `hsla(45, 100%, 50%, ${0.7 * pulse})`;
+                ctx.arc(fish.x, fish.y, fish.size, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(45, 100%, 50%, 0.8)`;
                 ctx.fill();
 
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = `hsla(45, 100%, 50%, ${0.8 * pulse})`;
+                // Subtle glow
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = `hsla(45, 100%, 50%, 0.6)`;
                 ctx.fill();
                 ctx.shadowBlur = 0;
             });
