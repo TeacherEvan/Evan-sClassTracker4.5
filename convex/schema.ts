@@ -465,4 +465,45 @@ export default defineSchema({
     .index("by_active", ["isActive"])
     .index("by_teacher_and_active", ["teacherId", "isActive"])
     .index("by_created_at", ["createdAt"]),
+
+  events: defineTable({
+    title: v.string(),
+    titleTh: v.string(),
+    description: v.optional(v.string()),
+    descriptionTh: v.optional(v.string()),
+    eventDate: v.number(), // Start date/time timestamp
+    endDate: v.optional(v.number()), // Optional end date/time for multi-day events
+    allDay: v.boolean(), // All-day event flag
+    eventType: v.union(
+      v.literal("reminder"), // Personal reminder (teachers only)
+      v.literal("event"), // Universal event (mods/admin)
+      v.literal("holiday"), // Holiday/school closure
+      v.literal("meeting"), // Meeting/conference
+      v.literal("deadline") // Important deadline
+    ),
+    visibility: v.union(
+      v.literal("personal"), // Only visible to creator (teachers)
+      v.literal("school"), // Visible to all users in the school
+      v.literal("all_teachers"), // Visible to all teachers across schools
+      v.literal("all_moderators"), // Visible to all moderators
+      v.literal("everyone") // Visible to everyone (admins only)
+    ),
+    schoolId: v.optional(v.id("schools")), // Required for school-scoped events
+    createdBy: v.id("users"),
+    createdAt: v.number(),
+    isActive: v.boolean(), // Soft delete flag
+    // Optional reminder settings
+    reminderMinutes: v.optional(v.number()), // Minutes before event to remind (e.g., 15, 30, 60, 1440 for 1 day)
+    location: v.optional(v.string()), // Event location
+    locationTh: v.optional(v.string()),
+  })
+    .index("by_creator", ["createdBy"])
+    .index("by_school", ["schoolId"])
+    .index("by_date", ["eventDate"])
+    .index("by_type", ["eventType"])
+    .index("by_visibility", ["visibility"])
+    .index("by_active", ["isActive"])
+    .index("by_school_and_date", ["schoolId", "eventDate"])
+    .index("by_creator_and_date", ["createdBy", "eventDate"])
+    .index("by_visibility_and_date", ["visibility", "eventDate"]),
 });

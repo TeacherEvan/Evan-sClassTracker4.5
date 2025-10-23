@@ -47,13 +47,14 @@ const AdminNotificationWindows = lazy(() => import("@/components/admin-notificat
 const AdminAppUpdates = lazy(() => import("@/components/admin-app-updates").then(m => ({ default: m.AdminAppUpdates })));
 const ClassCountModal = lazy(() => import("@/components/class-count-modal").then(m => ({ default: m.ClassCountModal })));
 const SangsomSeedButton = lazy(() => import("@/components/sangsom-seed-button").then(m => ({ default: m.SangsomSeedButton })));
+const EventManagement = lazy(() => import("@/components/event-management").then(m => ({ default: m.EventManagement })));
 
 export default function Home() {
   const { t } = useLanguage();
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "testing" | "contact_requests" | "notification_windows" | "app_updates" | "data_import">("calendar");
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "testing" | "contact_requests" | "notification_windows" | "app_updates" | "data_import" | "events">("calendar");
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
   const [showPostClassNotes, setShowPostClassNotes] = useState(false);
@@ -467,6 +468,17 @@ export default function Home() {
           </button>
 
           <button
+            onClick={() => setActiveTab("events")}
+            className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "events"
+              ? "border-blue-500 text-blue-600 dark:text-blue-400"
+              : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+              }`}
+          >
+            <Bell className="w-4 h-4 md:w-5 md:h-5" />
+            {t("Events & Reminders", "กิจกรรมและการแจ้งเตือน")}
+          </button>
+
+          <button
             onClick={() => setActiveTab("classes")}
             className={`flex items-center gap-1 md:gap-2 px-2 md:px-4 py-2 border-b-2 transition-colors whitespace-nowrap text-sm md:text-base ${activeTab === "classes"
               ? "border-blue-500 text-blue-600 dark:text-blue-400"
@@ -689,6 +701,16 @@ export default function Home() {
         {activeTab === "classes" && (
           <Suspense fallback={<LoadingFallback />}>
             <ClassBooking userId={user._id} userRole={user.role} userSchoolId={user.schoolId} />
+          </Suspense>
+        )}
+
+        {activeTab === "events" && user && (
+          <Suspense fallback={<LoadingFallback />}>
+            <EventManagement
+              userId={user._id}
+              userRole={user.role}
+              schoolId={user.schoolId}
+            />
           </Suspense>
         )}
 

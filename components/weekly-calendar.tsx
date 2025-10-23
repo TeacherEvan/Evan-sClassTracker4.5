@@ -8,7 +8,7 @@ import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
 import { useSwipeGesture } from "@/lib/use-swipe-gesture";
 import { useMutation, useQuery } from "convex/react";
-import { ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
+import { Bell, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Globe, MapPin, Plus, Users, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ClassDetailModal } from "./class-detail-modal";
 
@@ -130,6 +130,16 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                     : {}
     );
 
+    // Get events for current week
+    const events = useQuery(
+        api.events.listByDateRange,
+        {
+            userId: currentUser._id,
+            startDate: weekStart.getTime(),
+            endDate: weekEnd.getTime()
+        }
+    );
+
     // Filter classes by date range on client side (since we're using listWithDetails)
     const weekClasses = useMemo(() => {
         if (!classes) return [];
@@ -240,6 +250,29 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
         );
     };
 
+    const getEventsForDay = (day: Date) => {
+        if (!events) return [];
+        const dayStart = new Date(day);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(day);
+        dayEnd.setHours(23, 59, 59, 999);
+
+        return events.filter(
+            (e) => e.eventDate >= dayStart.getTime() && e.eventDate <= dayEnd.getTime()
+        );
+    };
+
+    const getEventIcon = (type: string) => {
+        switch (type) {
+            case "reminder": return <Bell className="w-3 h-3" />;
+            case "event": return <CalendarIcon className="w-3 h-3" />;
+            case "holiday": return <Globe className="w-3 h-3" />;
+            case "meeting": return <Users className="w-3 h-3" />;
+            case "deadline": return <Clock className="w-3 h-3" />;
+            default: return <CalendarIcon className="w-3 h-3" />;
+        }
+    };
+
     const handleClassClick = (classItem: ClassWithDetails) => {
         setSelectedClass(classItem);
     };
@@ -332,6 +365,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                 <div className="grid grid-cols-7 divide-x divide-gray-200 dark:divide-gray-700">
                     {weekDays.map((day, i) => {
                         const dayClasses = getClassesForDay(day);
+                        const dayEvents = getEventsForDay(day);
                         const today = isToday(day);
 
                         return (
@@ -362,6 +396,40 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                 </div>
 
                                 <div className="space-y-1">
+                                    {/* Render Events First */}
+                                    {dayEvents.map((event) => {
+                                        return (
+                                            <div
+                                                key={event._id}
+                                                className="w-full text-left text-xs p-1.5 md:p-2 rounded-lg md:rounded border-2 border-purple-300 dark:border-purple-600 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
+                                                title={language === "en" ? event.description : event.descriptionTh}
+                                            >
+                                                <div className="flex items-center gap-1 mb-0.5">
+                                                    {getEventIcon(event.eventType)}
+                                                    <div className="font-semibold truncate text-[11px] md:text-xs text-purple-700 dark:text-purple-300">
+                                                        {language === "en" ? event.title : event.titleTh}
+                                                    </div>
+                                                </div>
+                                                {!event.allDay && (
+                                                    <div className="text-purple-600 dark:text-purple-400 text-[9px] md:text-[10px] flex items-center gap-1">
+                                                        <Clock className="w-3 h-3" />
+                                                        {new Date(event.eventDate).toLocaleTimeString(
+                                                            language === "en" ? "en-US" : "th-TH",
+                                                            { hour: "2-digit", minute: "2-digit" }
+                                                        )}
+                                                    </div>
+                                                )}
+                                                {event.location && (
+                                                    <div className="text-purple-500 dark:text-purple-400 text-[9px] md:text-[10px] truncate flex items-center gap-1 mt-0.5">
+                                                        <MapPin className="w-2.5 h-2.5" />
+                                                        {language === "en" ? event.location : event.locationTh}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+
+                                    {/* Render Classes */}
                                     {dayClasses.map((classItem) => {
                                         const teacher = usersMap.get(classItem.teacherId);
                                         const school = schoolsMap.get(classItem.schoolId);
