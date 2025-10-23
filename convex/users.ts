@@ -406,3 +406,65 @@ export const getCurrentUser = query({
     return null;
   },
 });
+
+/**
+ * Delete a user (Admin only)
+ * This performs a hard delete - removes the user completely from the database
+ * WARNING: This action cannot be undone!
+ * 
+ * Before deleting, you may want to:
+ * - Archive or transfer the user's data
+ * - Check for associated records (classes, students, etc.)
+ */
+export const deleteUser = mutation({
+  args: {
+    adminId: v.id("users"),
+    userIdToDelete: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    // Rate limiting
+    await checkRateLimit(ctx, {
+      key: `delete-user-${args.adminId}`,
+      limit: 10,
+      windowMs: 60000, // 10 deletions per minute max
+    });
+
+    // Verify admin authorization
+    const admin = await ctx.db.get(args.adminId);
+    if (!admin || admin.role !== "admin") {
+      throw new Error("Only admins can delete users");
+    }
+
+    // Prevent admin from deleting themselves
+    if (args.adminId === args.userIdToDelete) {
+      throw new Error("You cannot delete your own account");
+    }
+
+    // Get the user to delete
+    const userToDelete = await ctx.db.get(args.userIdToDelete);
+    if (!userToDelete) {
+      throw new Error("User not found");
+    }
+
+    // Check if user is a moderator with a school
+    if (userToDelete.role === "moderator" && userToDelete.schoolId) {
+      // Remove moderator from school
+      await ctx.db.patch(userToDelete.schoolId, {
+        moderatorId: undefined,
+      });
+    }
+
+    // Delete the user
+    await ctx.db.delete(args.userIdToDelete);
+
+    return {
+      success: true,
+      message: `User ${userToDelete.username} has been deleted`,
+      deletedUser: {
+        id: args.userIdToDelete,
+        username: userToDelete.username,
+        role: userToDelete.role,
+      },
+    };
+  },
+});

@@ -21,6 +21,7 @@ import type * as init from "../init.js";
 import type * as locationProposals from "../locationProposals.js";
 import type * as locations from "../locations.js";
 import type * as messages from "../messages.js";
+import type * as migrateSangsomStudentsToEvents from "../migrateSangsomStudentsToEvents.js";
 import type * as notificationWindows from "../notificationWindows.js";
 import type * as notifications from "../notifications.js";
 import type * as pagination from "../pagination.js";
@@ -65,6 +66,7 @@ declare const fullApi: ApiFromModules<{
   locationProposals: typeof locationProposals;
   locations: typeof locations;
   messages: typeof messages;
+  migrateSangsomStudentsToEvents: typeof migrateSangsomStudentsToEvents;
   notificationWindows: typeof notificationWindows;
   notifications: typeof notifications;
   pagination: typeof pagination;

@@ -47,6 +47,7 @@ const AdminNotificationWindows = lazy(() => import("@/components/admin-notificat
 const AdminAppUpdates = lazy(() => import("@/components/admin-app-updates").then(m => ({ default: m.AdminAppUpdates })));
 const ClassCountModal = lazy(() => import("@/components/class-count-modal").then(m => ({ default: m.ClassCountModal })));
 const SangsomSeedButton = lazy(() => import("@/components/sangsom-seed-button").then(m => ({ default: m.SangsomSeedButton })));
+const SangsomMigrationButton = lazy(() => import("@/components/sangsom-migration-button").then(m => ({ default: m.SangsomMigrationButton })));
 const EventManagement = lazy(() => import("@/components/event-management").then(m => ({ default: m.EventManagement })));
 
 export default function Home() {
@@ -790,7 +791,7 @@ export default function Home() {
 
         {activeTab === "users" && user.role === "admin" && (
           <Suspense fallback={<LoadingFallback />}>
-            <UserManagement />
+            <UserManagement currentUserId={user._id} />
           </Suspense>
         )}
 
@@ -833,7 +834,10 @@ export default function Home() {
                     )}
                   </p>
                 </div>
-                <SangsomSeedButton />
+                <div className="space-y-4">
+                  <SangsomSeedButton />
+                  <SangsomMigrationButton userId={user._id} />
+                </div>
               </div>
             </div>
           </Suspense>

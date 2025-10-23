@@ -5,15 +5,20 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import { useMutation, useQuery } from "convex/react";
-import { RefreshCw, UserPlus } from "lucide-react";
+import { RefreshCw, Trash2, UserPlus } from "lucide-react";
 import { useState } from "react";
 
-export function UserManagement() {
+interface UserManagementProps {
+  currentUserId?: Id<"users">;
+}
+
+export function UserManagement({ currentUserId }: UserManagementProps) {
   const { t } = useLanguage();
   const users = useQuery(api.users.list, {});
   const schools = useQuery(api.schools.list, {});
   const createUser = useMutation(api.users.create);
   const resetPassword = useMutation(api.users.resetPassword);
+  const deleteUser = useMutation(api.users.deleteUser);
 
   const [username, setUsername] = useState("");
   const [role, setRole] = useState<"teacher" | "moderator" | "admin">("teacher");
@@ -72,6 +77,56 @@ export function UserManagement() {
       toast.error(
         err instanceof Error ? err.message : "Failed to reset password",
         err instanceof Error ? err.message : "ไม่สามารถรีเซ็ตรหัสผ่านได้"
+      );
+    }
+  };
+
+  const handleDeleteUser = async (userId: Id<"users">, username: string) => {
+    // Double confirmation for safety
+    if (
+      !confirm(
+        t(
+          `⚠️ DELETE ${username}?\n\nThis will permanently remove the user and cannot be undone!\n\nClick OK to continue.`,
+          `⚠️ ลบ ${username}?\n\nการดำเนินการนี้จะลบผู้ใช้อย่างถาวรและไม่สามารถย้อนกลับได้!\n\nคลิก OK เพื่อดำเนินการต่อ`
+        )
+      )
+    ) {
+      return;
+    }
+
+    // Second confirmation
+    if (
+      !confirm(
+        t(
+          `Are you ABSOLUTELY SURE you want to delete ${username}?\n\nThis action is PERMANENT and IRREVERSIBLE!`,
+          `คุณแน่ใจหรือไม่ว่าต้องการลบ ${username}?\n\nการดำเนินการนี้เป็นการลบถาวรและไม่สามารถยกเลิกได้!`
+        )
+      )
+    ) {
+      return;
+    }
+
+    if (!currentUserId) {
+      toast.error(
+        "Cannot determine admin user",
+        "ไม่สามารถระบุผู้ใช้ผู้ดูแลระบบได้"
+      );
+      return;
+    }
+
+    try {
+      await deleteUser({
+        adminId: currentUserId,
+        userIdToDelete: userId,
+      });
+      toast.success(
+        `User ${username} has been deleted`,
+        `ลบผู้ใช้ ${username} แล้ว`
+      );
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to delete user",
+        err instanceof Error ? err.message : "ไม่สามารถลบผู้ใช้ได้"
       );
     }
   };
@@ -189,7 +244,7 @@ export function UserManagement() {
               key={user._id}
               className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg"
             >
-              <div>
+              <div className="flex-1">
                 <div className="font-medium">{user.username}</div>
                 <div className="text-sm text-gray-500 dark:text-gray-400">
                   {t(
@@ -207,13 +262,26 @@ export function UserManagement() {
                   )}
                 </div>
               </div>
-              <button
-                onClick={() => handleResetPassword(user._id, user.username)}
-                className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-                {t("Reset Password", "รีเซ็ตรหัสผ่าน")}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleResetPassword(user._id, user.username)}
+                  className="flex items-center gap-2 px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                  title={t("Reset Password", "รีเซ็ตรหัสผ่าน")}
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  {t("Reset", "รีเซ็ต")}
+                </button>
+                {currentUserId && user._id !== currentUserId && (
+                  <button
+                    onClick={() => handleDeleteUser(user._id, user.username)}
+                    className="flex items-center gap-2 px-3 py-1 text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                    title={t("Delete User", "ลบผู้ใช้")}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    {t("Delete", "ลบ")}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
 
