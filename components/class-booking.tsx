@@ -646,25 +646,117 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
           </h3>
 
           <form onSubmit={handleBookClass} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label htmlFor="student" className="block text-sm font-medium">
-                    {t("Student Name", "ชื่อนักเรียน")}
+            {/* Step 1: School Selection - FIRST PRIORITY */}
+            <div className="space-y-4">
+              <div className="relative">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">1</span>
+                  <label htmlFor="school" className="block text-sm font-medium">
+                    {t("School", "โรงเรียน")} *
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setCreatingStudent(!creatingStudent)}
-                    className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
-                  >
-                    {creatingStudent
-                      ? t("← Select Existing", "← เลือกนักเรียนที่มีอยู่")
-                      : t("+ Create New", "+ สร้างใหม่")
+                </div>
+                <select
+                  id="school"
+                  value={schoolId}
+                  onChange={(e) => {
+                    setSchoolId(e.target.value as Id<"schools"> | "");
+                    setLocationId(""); // Reset location when school changes
+                    setStudentId(""); // Reset student when school changes
+                    if (userRole === "admin" || userRole === "moderator") {
+                      setSelectedTeacherId(""); // Reset teacher selection
                     }
-                  </button>
+                  }}
+                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border-2 border-blue-500 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-600 dark:bg-gray-800 dark:border-blue-600 touch-manipulation transition-all shadow-sm"
+                  required
+                  disabled={loading || userRole === "moderator"} // Moderators can't change their school
+                >
+                  <option value="">{t("Select a school first", "เลือกโรงเรียนก่อน")}</option>
+                  {schools === undefined ? (
+                    <option disabled>{t("Loading schools...", "กำลังโหลดโรงเรียน...")}</option>
+                  ) : (
+                    schools?.map((school) => (
+                      <option key={school._id} value={school._id}>
+                        {school.name}
+                      </option>
+                    ))
+                  )}
+                </select>
+                {userRole === "moderator" && (
+                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                    {t("Your school is pre-selected", "โรงเรียนของคุณถูกเลือกไว้แล้ว")}
+                  </p>
+                )}
+              </div>
+
+              {/* Step 2: Teacher Selection (Admin/Moderator only) */}
+              {(userRole === "admin" || userRole === "moderator") && (
+                <div className={`relative transition-opacity ${schoolId ? 'opacity-100' : 'opacity-50'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">2</span>
+                    <label htmlFor="teacher" className="block text-sm font-medium">
+                      {t("Teacher", "ครูผู้สอน")} *
+                    </label>
+                  </div>
+                  <select
+                    id="teacher"
+                    value={selectedTeacherId}
+                    onChange={(e) => setSelectedTeacherId(e.target.value as Id<"users"> | "")}
+                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-all"
+                    required
+                    disabled={loading || !schoolId}
+                  >
+                    <option value="">
+                      {schoolId
+                        ? t("Select a teacher", "เลือกครูผู้สอน")
+                        : t("Select school first", "เลือกโรงเรียนก่อน")
+                      }
+                    </option>
+                    {allTeachers === undefined ? (
+                      <option disabled>{t("Loading teachers...", "กำลังโหลดครู...")}</option>
+                    ) : (
+                      allTeachers?.map((teacher) => (
+                        <option key={teacher._id} value={teacher._id}>
+                          {teacher.username}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                    {t(
+                      "Select which teacher will teach this class",
+                      "เลือกครูที่จะสอนคลาสนี้"
+                    )}
+                  </p>
+                </div>
+              )}
+
+              {/* Step 3: Student Selection - Filtered by School */}
+              <div className={`relative transition-opacity ${schoolId ? 'opacity-100' : 'opacity-50'}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">
+                      {(userRole === "admin" || userRole === "moderator") ? "3" : "2"}
+                    </span>
+                    <label htmlFor="student" className="block text-sm font-medium">
+                      {t("Student Name", "ชื่อนักเรียน")} *
+                    </label>
+                  </div>
+                  {schoolId && (
+                    <button
+                      type="button"
+                      onClick={() => setCreatingStudent(!creatingStudent)}
+                      className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+                      disabled={!schoolId}
+                    >
+                      {creatingStudent
+                        ? t("← Select Existing", "← เลือกนักเรียนที่มีอยู่")
+                        : t("+ Create New", "+ สร้างใหม่")
+                      }
+                    </button>
+                  )}
                 </div>
 
-                {creatingStudent ? (
+                {creatingStudent && schoolId ? (
                   <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                     <input
                       type="text"
@@ -703,19 +795,13 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       <option value="/9">/9</option>
                       <option value="/10">/10</option>
                     </select>
-                    <select
-                      value={newStudentSchoolId}
-                      onChange={(e) => setNewStudentSchoolId(e.target.value as Id<"schools"> | "")}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      disabled={loading}
-                    >
-                      <option value="">{t("Select School", "เลือกโรงเรียน")}</option>
-                      {schools?.map((school) => (
-                        <option key={school._id} value={school._id}>
-                          {school.name}
-                        </option>
-                      ))}
-                    </select>
+                    <input
+                      type="text"
+                      value={schoolId}
+                      disabled
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-100 dark:bg-gray-700 dark:border-gray-600 cursor-not-allowed"
+                      placeholder={schools?.find(s => s._id === schoolId)?.name || t("School", "โรงเรียน")}
+                    />
                     <button
                       type="button"
                       onClick={handleCreateStudent}
@@ -730,81 +816,49 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     id="student"
                     value={studentId}
                     onChange={(e) => setStudentId(e.target.value as Id<"students"> | "")}
-                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-shadow"
+                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-all"
                     required
-                    disabled={loading}
+                    disabled={loading || !schoolId}
                   >
-                    <option value="">{t("Select a student", "เลือกนักเรียน")}</option>
+                    <option value="">
+                      {!schoolId
+                        ? t("Select school first", "เลือกโรงเรียนก่อน")
+                        : students === undefined
+                          ? t("Loading students...", "กำลังโหลดนักเรียน...")
+                          : students.length === 0
+                            ? t("No students found - create one above", "ไม่พบนักเรียน - สร้างใหม่ด้านบน")
+                            : t("Select a student", "เลือกนักเรียน")
+                      }
+                    </option>
                     {students?.map((student) => (
                       <option key={student._id} value={student._id}>
-                        {student.firstName} {student.lastName}
+                        {student.firstName} {student.lastName} ({student.grade}{student.class})
                       </option>
                     ))}
                   </select>
                 )}
-              </div>
-
-              <div>
-                <label htmlFor="school" className="block text-sm font-medium mb-2">
-                  {t("School", "โรงเรียน")}
-                </label>
-                <select
-                  id="school"
-                  value={schoolId}
-                  onChange={(e) => {
-                    setSchoolId(e.target.value as Id<"schools"> | "");
-                    setLocationId(""); // Reset location when school changes
-                    setStudentId(""); // Reset student when school changes
-                  }}
-                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-shadow"
-                  required
-                  disabled={loading || userRole === "moderator"} // Moderators can't change their school
-                >
-                  <option value="">{t("Select a school", "เลือกโรงเรียน")}</option>
-                  {schools?.map((school) => (
-                    <option key={school._id} value={school._id}>
-                      {school.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Teacher Selection for Admin/Moderator */}
-              {(userRole === "admin" || userRole === "moderator") && (
-                <div>
-                  <label htmlFor="teacher" className="block text-sm font-medium mb-2">
-                    {t("Teacher", "ครูผู้สอน")} *
-                  </label>
-                  <select
-                    id="teacher"
-                    value={selectedTeacherId}
-                    onChange={(e) => setSelectedTeacherId(e.target.value as Id<"users"> | "")}
-                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-shadow"
-                    required
-                    disabled={loading}
-                  >
-                    <option value="">{t("Select a teacher", "เลือกครูผู้สอน")}</option>
-                    {allTeachers?.map((teacher) => (
-                      <option key={teacher._id} value={teacher._id}>
-                        {teacher.username}
-                      </option>
-                    ))}
-                  </select>
+                {schoolId && students && students.length > 0 && (
                   <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                     {t(
-                      "Select which teacher will teach this class",
-                      "เลือกครูที่จะสอนคลาสนี้"
+                      `${students.length} student${students.length !== 1 ? 's' : ''} available at this school`,
+                      `มีนักเรียน ${students.length} คนในโรงเรียนนี้`
                     )}
                   </p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
+            {/* Step 4: Location & Date Selection */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="location" className="block text-sm font-medium mb-2">
-                  {t("Location", "สถานที่")}
-                </label>
+              <div className={`transition-opacity ${schoolId ? 'opacity-100' : 'opacity-50'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">
+                    {(userRole === "admin" || userRole === "moderator") ? "4" : "3"}
+                  </span>
+                  <label htmlFor="location" className="block text-sm font-medium">
+                    {t("Location", "สถานที่")} *
+                  </label>
+                </div>
                 <select
                   id="location"
                   value={locationId}
@@ -816,18 +870,22 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       setPendingLocationNameTh("");
                     }
                   }}
-                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-shadow"
+                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-all"
                   disabled={loading || !schoolId || requestingNewLocation}
                 >
                   <option value="">
-                    {schoolId
-                      ? t("Select a location", "เลือกสถานที่")
-                      : t("Select a school first", "เลือกโรงเรียนก่อน")
+                    {!schoolId
+                      ? t("Select school first", "เลือกโรงเรียนก่อน")
+                      : locations === undefined
+                        ? t("Loading locations...", "กำลังโหลดสถานที่...")
+                        : locations.length === 0
+                          ? t("No locations available", "ไม่มีสถานที่")
+                          : t("Select a location", "เลือกสถานที่")
                     }
                   </option>
                   {locations?.map((location) => (
                     <option key={location._id} value={location._id}>
-                      {location.name}
+                      {location.name} {location.type === "guardian" ? "👨‍👩‍👧" : ""}
                     </option>
                   ))}
                 </select>
