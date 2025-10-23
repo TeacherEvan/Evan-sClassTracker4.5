@@ -33,26 +33,22 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
-        // Initialize 50 fish in a cluster
-        const centerX = window.innerWidth / 2;
-        const centerY = window.innerHeight / 2;
+        // Initialize 50 snails spread across canvas
         const fish: Fish[] = [];
 
         for (let i = 0; i < 50; i++) {
-            // Start fish clustered in center with similar velocities
-            const angle = Math.random() * Math.PI * 2;
-            const spread = 200;
+            // SNAILS - spread out more across canvas, slow speed
             fish.push({
-                x: centerX + (Math.random() - 0.5) * spread,
-                y: centerY + (Math.random() - 0.5) * spread,
-                vx: Math.cos(angle) * 8,
-                vy: Math.sin(angle) * 8,
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 1.5, // SLOW like snails
+                vy: (Math.random() - 0.5) * 1.5,
                 pulsePhase: Math.random() * Math.PI * 2,
-                neighborhoodRadius: 120,
-                maxSpeed: 12,
-                maxForce: 0.4,
-                size: 7,
-                trail: [], // Initialize empty trail
+                neighborhoodRadius: 200, // Spread out more
+                maxSpeed: 2, // SNAIL PACE
+                maxForce: 0.15, // Gentle movement
+                size: 6,
+                trail: [], // Slime trail
             });
         }
         fishRef.current = fish;
@@ -183,9 +179,9 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
             fishRef.current.forEach(fish => {
                 // Store current position in trail
                 fish.trail.push({ x: fish.x, y: fish.y });
-                
-                // Keep trail length at 8 points for motion blur effect
-                if (fish.trail.length > 8) {
+
+                // LONGER SLIME TRAILS (20 points instead of 8)
+                if (fish.trail.length > 20) {
                     fish.trail.shift();
                 }
 
@@ -205,12 +201,12 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
 
             // Draw all fish with motion blur trails
             fishRef.current.forEach(fish => {
-                // Draw trail as fading line segments
+                // Draw trail as fading SLIME line
                 if (fish.trail.length > 1) {
                     for (let i = 0; i < fish.trail.length - 1; i++) {
-                        const alpha = (i / fish.trail.length) * 0.6;
-                        const width = (i / fish.trail.length) * fish.size * 1.5;
-                        
+                        const alpha = (i / fish.trail.length) * 0.3; // More transparent slime
+                        const width = (i / fish.trail.length) * fish.size * 2.5; // Wider slime trail
+
                         ctx.beginPath();
                         ctx.moveTo(fish.trail[i].x, fish.trail[i].y);
                         ctx.lineTo(fish.trail[i + 1].x, fish.trail[i + 1].y);
@@ -221,15 +217,15 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
                     }
                 }
 
-                // Draw main dot
+                // Draw snail body
                 ctx.beginPath();
                 ctx.arc(fish.x, fish.y, fish.size, 0, Math.PI * 2);
-                ctx.fillStyle = `hsla(45, 100%, 50%, 0.8)`;
+                ctx.fillStyle = `hsla(45, 100%, 50%, 0.7)`;
                 ctx.fill();
 
-                // Subtle glow
-                ctx.shadowBlur = 10;
-                ctx.shadowColor = `hsla(45, 100%, 50%, 0.6)`;
+                // Subtle slime glow
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = `hsla(45, 100%, 50%, 0.4)`;
                 ctx.fill();
                 ctx.shadowBlur = 0;
             });
