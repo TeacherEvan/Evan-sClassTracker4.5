@@ -34,6 +34,7 @@ See [docs/OPTIMIZATION_ANALYSIS_2025.md](docs/OPTIMIZATION_ANALYSIS_2025.md) for
 - 📄 **Data Export** - CSV/Excel export for classes, students, and analytics
 - 🚀 **Bulk Operations** - Import/create multiple students or users at once
 - 📑 **Pagination** - Efficient handling of large datasets with pagination support
+- 📥 **Data Import** - Bulk import schedules from external sources (e.g., Sangsom Project)
 
 ## User Roles
 
