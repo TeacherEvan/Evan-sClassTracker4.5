@@ -8,6 +8,10 @@ interface Fish {
     vx: number;
     vy: number;
     pulsePhase: number;
+    neighborhoodRadius: number;
+    maxSpeed: number;
+    maxForce: number;
+    size: number;
 }
 
 interface FishSchoolBackgroundProps {
@@ -18,12 +22,8 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const fishRef = useRef<Fish[]>([]);
     const animationRef = useRef<number | undefined>(undefined);
-
-    // Schooling behavior parameters
-    const PERCEPTION_RADIUS = 100; // How far fish can see
-    const SEPARATION_RADIUS = 30; // Minimum distance from neighbors
-    const MAX_SPEED = 2.5;
-    const MAX_FORCE = 0.1;
+    const spatialGridRef = useRef<Map<string, Fish[]>>(new Map());
+    const gridCellSize = 100; // For spatial partitioning
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -47,6 +47,10 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
                 vx: Math.cos(angle) * 1.5,
                 vy: Math.sin(angle) * 1.5,
                 pulsePhase: Math.random() * Math.PI * 2,
+                neighborhoodRadius: 100,
+                maxSpeed: 2.5,
+                maxForce: 0.1,
+                size: 9,
             });
         }
         fishRef.current = fish;
@@ -59,109 +63,149 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
         resizeCanvas();
         window.addEventListener("resize", resizeCanvas);
 
-        // Schooling behavior: cohesion, alignment, separation
-        const applySchooling = (fish: Fish, neighbors: Fish[]) => {
-            if (neighbors.length === 0) return { x: 0, y: 0 };
+        // Spatial partitioning helper functions
+        const getGridKey = (x: number, y: number): string => {
+            const gridX = Math.floor(x / gridCellSize);
+            const gridY = Math.floor(y / gridCellSize);
+            return `${gridX},${gridY}`;
+        };
 
-            // Cohesion: steer towards average position of neighbors
-            let avgX = 0, avgY = 0;
-            let alignX = 0, alignY = 0;
-            let separateX = 0, separateY = 0;
-            let separateCount = 0;
+        const updateSpatialGrid = () => {
+            spatialGridRef.current.clear();
+            fishRef.current.forEach(fish => {
+                const key = getGridKey(fish.x, fish.y);
+                if (!spatialGridRef.current.has(key)) {
+                    spatialGridRef.current.set(key, []);
+                }
+                spatialGridRef.current.get(key)!.push(fish);
+            });
+        };
 
-            neighbors.forEach(other => {
+        const getNeighborFish = (fish: Fish): Fish[] => {
+            const neighbors: Fish[] = [];
+            const gridX = Math.floor(fish.x / gridCellSize);
+            const gridY = Math.floor(fish.y / gridCellSize);
+
+            // Check 3x3 grid around the fish
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    const key = `${gridX + dx},${gridY + dy}`;
+                    const cellFish = spatialGridRef.current.get(key);
+                    if (cellFish) {
+                        neighbors.push(...cellFish);
+                    }
+                }
+            }
+            return neighbors;
+        };
+
+        // Boids/Flocking algorithm for fish-like movement (optimized with spatial partitioning)
+        const applyFlockingBehavior = (fish: Fish) => {
+            const separation = { x: 0, y: 0 };
+            const alignment = { x: 0, y: 0 };
+            const cohesion = { x: 0, y: 0 };
+            let neighborCount = 0;
+
+            // Get neighbors using spatial partitioning for better performance
+            const nearbyFish = getNeighborFish(fish);
+
+            // Check neighbors (only nearby fish now, huge performance improvement)
+            for (const other of nearbyFish) {
+                if (other === fish) continue;
+
                 const dx = other.x - fish.x;
                 const dy = other.y - fish.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+                const distSq = dx * dx + dy * dy; // Use squared distance to avoid sqrt
+                const maxDistSq = fish.neighborhoodRadius * fish.neighborhoodRadius;
 
-                // Cohesion
-                avgX += other.x;
-                avgY += other.y;
+                if (distSq < maxDistSq && distSq > 0) {
+                    neighborCount++;
 
-                // Alignment: match velocity
-                alignX += other.vx;
-                alignY += other.vy;
+                    const dist = Math.sqrt(distSq);
 
-                // Separation: avoid crowding
-                if (dist < SEPARATION_RADIUS && dist > 0) {
-                    separateX -= dx / dist;
-                    separateY -= dy / dist;
-                    separateCount++;
+                    // Separation: steer away from neighbors
+                    if (dist < 25) {
+                        separation.x -= dx / dist;
+                        separation.y -= dy / dist;
+                    }
+
+                    // Alignment: steer towards average heading of neighbors
+                    alignment.x += other.vx;
+                    alignment.y += other.vy;
+
+                    // Cohesion: steer towards average position of neighbors
+                    cohesion.x += other.x;
+                    cohesion.y += other.y;
                 }
-            });
-
-            // Cohesion force
-            avgX /= neighbors.length;
-            avgY /= neighbors.length;
-            const cohesionX = avgX - fish.x;
-            const cohesionY = avgY - fish.y;
-
-            // Alignment force
-            alignX /= neighbors.length;
-            alignY /= neighbors.length;
-
-            // Separation force
-            if (separateCount > 0) {
-                separateX /= separateCount;
-                separateY /= separateCount;
             }
 
-            // Combine forces with weights
-            const forceX = cohesionX * 0.001 + alignX * 0.05 + separateX * 0.05;
-            const forceY = cohesionY * 0.001 + alignY * 0.05 + separateY * 0.05;
+            if (neighborCount > 0) {
+                // Average the alignment
+                alignment.x /= neighborCount;
+                alignment.y /= neighborCount;
 
-            return { x: forceX, y: forceY };
+                // Calculate cohesion center
+                cohesion.x = cohesion.x / neighborCount - fish.x;
+                cohesion.y = cohesion.y / neighborCount - fish.y;
+            }
+
+            // Apply forces with different weights
+            const separationWeight = 1.5;
+            const alignmentWeight = 1.0;
+            const cohesionWeight = 1.0;
+
+            fish.vx += separation.x * separationWeight * fish.maxForce;
+            fish.vy += separation.y * separationWeight * fish.maxForce;
+            fish.vx += alignment.x * alignmentWeight * fish.maxForce * 0.1;
+            fish.vy += alignment.y * alignmentWeight * fish.maxForce * 0.1;
+            fish.vx += cohesion.x * cohesionWeight * fish.maxForce * 0.01;
+            fish.vy += cohesion.y * cohesionWeight * fish.maxForce * 0.01;
+
+            // Limit speed
+            const speed = Math.sqrt(fish.vx * fish.vx + fish.vy * fish.vy);
+            if (speed > fish.maxSpeed) {
+                fish.vx = (fish.vx / speed) * fish.maxSpeed;
+                fish.vy = (fish.vy / speed) * fish.maxSpeed;
+            }
         };
 
         const animate = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Update each fish with schooling behavior
+            // Update spatial grid for efficient neighbor lookups
+            updateSpatialGrid();
+
+            // Update each fish with flocking behavior
             fishRef.current.forEach(fish => {
-                // Find neighbors within perception radius
-                const neighbors = fishRef.current.filter(other => {
-                    if (other === fish) return false;
-                    const dx = other.x - fish.x;
-                    const dy = other.y - fish.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    return dist < PERCEPTION_RADIUS;
-                });
-
-                // Apply schooling forces
-                const force = applySchooling(fish, neighbors);
-                fish.vx += force.x;
-                fish.vy += force.y;
-
-                // Limit speed
-                const speed = Math.sqrt(fish.vx * fish.vx + fish.vy * fish.vy);
-                if (speed > MAX_SPEED) {
-                    fish.vx = (fish.vx / speed) * MAX_SPEED;
-                    fish.vy = (fish.vy / speed) * MAX_SPEED;
-                }
+                // Apply flocking behavior
+                applyFlockingBehavior(fish);
 
                 // Update position
                 fish.x += fish.vx;
                 fish.y += fish.vy;
 
-                // Wrap around edges (with smooth transition)
-                if (fish.x < -20) fish.x = canvas.width + 20;
-                if (fish.x > canvas.width + 20) fish.x = -20;
-                if (fish.y < -20) fish.y = canvas.height + 20;
-                if (fish.y > canvas.height + 20) fish.y = -20;
+                // Wrap around edges
+                if (fish.x < 0) fish.x = canvas.width;
+                if (fish.x > canvas.width) fish.x = 0;
+                if (fish.y < 0) fish.y = canvas.height;
+                if (fish.y > canvas.height) fish.y = 0;
 
+            });
+
+            // Draw all fish
+            fishRef.current.forEach(fish => {
                 // Update pulse
-                fish.pulsePhase += 0.1; // Faster swimming motion
+                fish.pulsePhase += 0.1;
 
-                // Calculate motion direction for tail (reuse speed from above)
-                const angle = Math.atan2(fish.vy, fish.vx); // Direction fish is facing
-                const swimWiggle = Math.sin(fish.pulsePhase * 2) * 0.15; // Side-to-side swim motion
+                // Calculate motion direction for tail
+                const angle = Math.atan2(fish.vy, fish.vx);
+                const swimWiggle = Math.sin(fish.pulsePhase * 2) * 0.15;
 
                 // Draw swimming tail that wiggles (5 segments for smooth motion)
                 const tailLength = 30;
                 const segments = 5;
                 for (let i = 1; i <= segments; i++) {
                     const t = i / segments;
-                    // Tail curves based on swim wiggle
                     const wiggleAmount = swimWiggle * t * 15;
                     const tailAngle = angle + wiggleAmount;
                     const tailX = fish.x - Math.cos(tailAngle) * tailLength * t;
@@ -175,9 +219,9 @@ export function FishSchoolBackground({ className = "" }: FishSchoolBackgroundPro
                     ctx.fill();
                 }
 
-                // Draw main gold pulsating fish body with slight size change for swimming
+                // Draw main gold pulsating fish body
                 const pulse = Math.sin(fish.pulsePhase) * 0.2 + 0.8;
-                const radius = 9 * pulse;
+                const radius = fish.size * pulse;
 
                 ctx.beginPath();
                 ctx.arc(fish.x, fish.y, radius, 0, Math.PI * 2);
