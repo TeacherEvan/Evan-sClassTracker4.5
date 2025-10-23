@@ -24,7 +24,7 @@ jobs:
               run: npm ci
 
             - name: Deploy Convex backend
-              run: npx convex deploy --cmd 'npm run build'
+              run: npx convex deploy --cmd 'npm run build' --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL
               env:
                   CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 
