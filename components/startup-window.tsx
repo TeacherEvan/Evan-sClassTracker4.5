@@ -108,8 +108,20 @@ export function StartupWindow({
     const greeting = getGreeting();
     const displayGreeting = language === "en" ? greeting.en : greeting.th;
 
+    // Menu options type
+    type MenuOption = {
+        id: string;
+        tab: string;
+        icon: React.ElementType;
+        title: string;
+        description: string;
+        color: string;
+        hoverColor: string;
+        disabled?: boolean;
+    };
+
     // Menu options
-    const menuOptions = [
+    const menuOptions: MenuOption[] = [
         {
             id: "book",
             tab: "classes",
@@ -201,8 +213,8 @@ export function StartupWindow({
             {/* Gold Tablet Container */}
             <div
                 className={`relative max-w-4xl w-full max-h-[90vh] overflow-hidden rounded-3xl shadow-2xl transform transition-all duration-500 ${isClosing
-                        ? "scale-95 opacity-0"
-                        : "scale-100 opacity-100"
+                    ? "scale-95 opacity-0"
+                    : "scale-100 opacity-100"
                     }`}
                 style={{
                     background:
@@ -304,8 +316,8 @@ export function StartupWindow({
                                         }
                                         disabled={isDisabled}
                                         className={`relative group text-left p-6 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl border-2 border-white/50 dark:border-gray-800/50 ${isDisabled
-                                                ? "opacity-50 cursor-not-allowed"
-                                                : "cursor-pointer"
+                                            ? "opacity-50 cursor-not-allowed"
+                                            : "cursor-pointer"
                                             }`}
                                         style={{
                                             background: `linear-gradient(135deg, var(--tw-gradient-stops))`,

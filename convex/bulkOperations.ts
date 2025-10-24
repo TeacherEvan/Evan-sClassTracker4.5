@@ -218,6 +218,7 @@ export const bulkDeleteStudents = mutation({
         sessionId: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
+        // Extract and ignore metadata fields (used for audit logging in future)
         const {
             userAgent: _userAgent,
             screenResolution: _screenResolution,
@@ -226,6 +227,13 @@ export const bulkDeleteStudents = mutation({
             sessionId: _sessionId,
             ...operationArgs
         } = args;
+
+        // Suppress unused variable warnings - these are extracted for future audit logging
+        void _userAgent;
+        void _screenResolution;
+        void _timezone;
+        void _locale;
+        void _sessionId;
 
         // ✅ SECURITY: Verify user has admin privileges
         const user = await ctx.db.get(operationArgs.userId);
