@@ -255,7 +255,12 @@ export default function Home() {
   };
 
   const handleStartupWindowNavigate = (tab: string) => {
-    setActiveTab(tab as typeof activeTab);
+    // Special case: "help" triggers the help window modal instead of changing tabs
+    if (tab === "help") {
+      setShowHelpWindow(true);
+    } else {
+      setActiveTab(tab as typeof activeTab);
+    }
   };
 
   const handleStartupWindowClose = () => {

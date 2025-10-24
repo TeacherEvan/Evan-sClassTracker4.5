@@ -172,16 +172,15 @@ export function StartupWindow({
         },
         {
             id: "help",
-            tab: "help",
+            tab: "help", // Special case - triggers help window modal
             icon: HelpCircle,
             title: t("Help & Features", "ช่วยเหลือและฟีเจอร์"),
             description: t(
-                "Learn about all features (Coming Soon)",
-                "เรียนรู้เกี่ยวกับฟีเจอร์ทั้งหมด (เร็วๆ นี้)"
+                "Learn about all features interactively",
+                "เรียนรู้เกี่ยวกับฟีเจอร์ทั้งหมดแบบโต้ตอบ"
             ),
             color: "from-teal-500 to-teal-600",
             hoverColor: "hover:from-teal-600 hover:to-teal-700",
-            disabled: true, // Will be enabled when help system is merged
         },
         {
             id: "dashboard",
