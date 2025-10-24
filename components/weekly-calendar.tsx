@@ -5,12 +5,14 @@ import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { getClassStatusColor } from "@/lib/constants";
 import { getWeekStart, isToday } from "@/lib/date-utils";
 import { useLanguage } from "@/lib/language-context";
+import { toast } from "@/lib/toast";
 import type { User } from "@/lib/types";
 import { useSwipeGesture } from "@/lib/use-swipe-gesture";
 import { useMutation, useQuery } from "convex/react";
-import { Bell, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Globe, MapPin, Plus, Users, X } from "lucide-react";
+import { Bell, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Edit2, Globe, MapPin, Plus, Trash2, Users, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ClassDetailModal } from "./class-detail-modal";
+import { EditClassModal } from "./edit-class-modal";
 
 type WeeklyCalendarProps = {
     currentUser: User;
@@ -22,6 +24,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     // Only load teachers since we only display teacher names in calendar
     const users = useQuery(api.users.list, { role: "teacher" });
     const bookClass = useMutation(api.classes.book);
+    const deleteClass = useMutation(api.classes.deleteClass);
 
     const [currentDate, setCurrentDate] = useState(new Date());
     const [showAddDialog, setShowAddDialog] = useState(false);
@@ -63,6 +66,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
         }>;
     };
     const [selectedClass, setSelectedClass] = useState<ClassWithDetails | null>(null);
+    const [editingClass, setEditingClass] = useState<Doc<"classes"> | null>(null);
 
     // Form fields - moderators auto-select their school
     const [schoolId, setSchoolId] = useState<Id<"schools"> | "">(
@@ -436,31 +440,78 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                         const teacher = usersMap.get(classItem.teacherId);
                                         const school = schoolsMap.get(classItem.schoolId);
                                         const student = classItem.student;
+                                        const canDelete = currentUser.role === "admin" ||
+                                            currentUser.role === "moderator" ||
+                                            (currentUser.role === "teacher" && classItem.teacherId === currentUser._id);
 
                                         return (
-                                            <button
+                                            <div
                                                 key={classItem._id}
-                                                onClick={() => handleClassClick(classItem)}
-                                                className={`w-full text-left text-xs p-1.5 md:p-2 rounded-lg md:rounded border ${getClassStatusColor(classItem.status)} hover:opacity-80 active:scale-95 transition-all touch-manipulation cursor-pointer ${!student ? 'opacity-60' : ''}`}
+                                                className={`group relative w-full text-left text-xs p-1.5 md:p-2 rounded-lg md:rounded border ${getClassStatusColor(classItem.status)} hover:shadow-md transition-all ${!student ? 'opacity-60' : ''}`}
                                             >
-                                                <div className={`font-semibold truncate text-[11px] md:text-xs ${!student ? 'text-red-600 dark:text-red-400' : ''}`}>
-                                                    {student ? `${student.firstName} ${student.lastName}` : t("⚠️ Deleted Student", "⚠️ นักเรียนถูกลบ")}
-                                                </div>
-                                                <div className="text-gray-600 dark:text-gray-300 truncate text-[10px] md:text-xs">
-                                                    {teacher?.username}
-                                                </div>
-                                                {school && (
-                                                    <div className="text-gray-500 dark:text-gray-400 text-[9px] md:text-[10px] truncate hidden md:block">
-                                                        {language === "en" ? school.name : school.nameTh}
+                                                <div
+                                                    onClick={() => handleClassClick(classItem)}
+                                                    className="cursor-pointer"
+                                                >
+                                                    <div className={`font-semibold truncate text-[11px] md:text-xs ${!student ? 'text-red-600 dark:text-red-400' : ''}`}>
+                                                        {student ? `${student.firstName} ${student.lastName}` : t("⚠️ Deleted Student", "⚠️ นักเรียนถูกลบ")}
                                                     </div>
-                                                )}
-                                                <div className="text-gray-500 dark:text-gray-400 text-[9px] md:text-[10px] mt-0.5">
-                                                    {new Date(classItem.scheduledDate).toLocaleTimeString(
-                                                        language === "en" ? "en-US" : "th-TH",
-                                                        { hour: "2-digit", minute: "2-digit" }
+                                                    <div className="text-gray-600 dark:text-gray-300 truncate text-[10px] md:text-xs">
+                                                        {teacher?.username}
+                                                    </div>
+                                                    {school && (
+                                                        <div className="text-gray-500 dark:text-gray-400 text-[9px] md:text-[10px] truncate hidden md:block">
+                                                            {language === "en" ? school.name : school.nameTh}
+                                                        </div>
+                                                    )}
+                                                    <div className="text-gray-500 dark:text-gray-400 text-[9px] md:text-[10px] mt-0.5">
+                                                        {new Date(classItem.scheduledDate).toLocaleTimeString(
+                                                            language === "en" ? "en-US" : "th-TH",
+                                                            { hour: "2-digit", minute: "2-digit" }
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                {/* Quick action buttons - visible on hover on desktop */}
+                                                <div className="absolute top-1 right-1 hidden md:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setEditingClass(classItem as unknown as Doc<"classes">);
+                                                        }}
+                                                        className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 active:scale-95 transition-all"
+                                                        title={t("Edit", "แก้ไข")}
+                                                    >
+                                                        <Edit2 className="w-3 h-3" />
+                                                    </button>
+                                                    {canDelete && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                if (confirm(t(
+                                                                    "Are you sure you want to delete this class?",
+                                                                    "คุณแน่ใจหรือไม่ว่าต้องการลบคลาสนี้?"
+                                                                ))) {
+                                                                    deleteClass({
+                                                                        userId: currentUser._id,
+                                                                        classId: classItem._id
+                                                                    }).then(() => {
+                                                                        toast.success("Class deleted", "ลบคลาสสำเร็จ");
+                                                                    }).catch((err: unknown) => {
+                                                                        toast.error(
+                                                                            err instanceof Error ? err.message : "Failed to delete",
+                                                                            err instanceof Error ? err.message : "ลบไม่สำเร็จ"
+                                                                        );
+                                                                    });
+                                                                }
+                                                            }}
+                                                            className="p-1 bg-red-500 text-white rounded hover:bg-red-600 active:scale-95 transition-all"
+                                                            title={t("Delete", "ลบ")}
+                                                        >
+                                                            <Trash2 className="w-3 h-3" />
+                                                        </button>
                                                     )}
                                                 </div>
-                                            </button>
+                                            </div>
                                         );
                                     })}
                                 </div>
@@ -807,6 +858,16 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Edit Class Modal */}
+            {editingClass && (
+                <EditClassModal
+                    classData={editingClass}
+                    currentUserId={currentUser._id}
+                    onClose={() => setEditingClass(null)}
+                    onSuccess={() => setEditingClass(null)}
+                />
             )}
         </div>
     );

@@ -24,11 +24,6 @@ async function verifyClassAccess(
     throw new Error("User not found");
   }
 
-  // Check role requirements if specified
-  if (options.requireModeratorOrAdmin && !["admin", "moderator"].includes(user.role)) {
-    throw new Error("Unauthorized: Only admins and moderators can perform this action");
-  }
-
   // Admin has access to everything
   if (user.role === "admin") {
     return;
@@ -48,6 +43,11 @@ async function verifyClassAccess(
       throw new Error("Unauthorized: You can only manage your own classes");
     }
     return;
+  }
+
+  // Check role requirements if specified (after checking teacher owner exception)
+  if (options.requireModeratorOrAdmin && !["admin", "moderator"].includes(user.role)) {
+    throw new Error("Unauthorized: Only admins and moderators can perform this action");
   }
 
   // If we get here and teacher isn't allowed, throw error
@@ -1019,9 +1019,10 @@ export const deleteClass = mutation({
       throw new Error("Class not found");
     }
 
-    // Verify authorization (replaces duplicate code)
+    // Verify authorization - allow moderators, admins, and teachers deleting their own classes
     await verifyClassAccess(ctx, args.userId, classData, {
-      requireModeratorOrAdmin: true
+      requireModeratorOrAdmin: true,
+      allowTeacherOwner: true
     });
 
     // Get user once for all checks (admins have God mode)

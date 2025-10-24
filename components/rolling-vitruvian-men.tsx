@@ -30,6 +30,7 @@ export function RollingVitruvianMen() {
                 opacity: 0.25,
             }}
         >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
                 key={currentImageIndex}
                 src={SPACE_IMAGES[currentImageIndex]}
