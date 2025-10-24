@@ -218,12 +218,13 @@ export const bulkDeleteStudents = mutation({
         sessionId: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
+        const startTime = Date.now();
         const {
-            userAgent: _userAgent,
-            screenResolution: _screenResolution,
-            timezone: _timezone,
-            locale: _locale,
-            sessionId: _sessionId,
+            userAgent,
+            screenResolution,
+            timezone,
+            locale,
+            sessionId,
             ...operationArgs
         } = args;
 
@@ -264,6 +265,7 @@ export const bulkDeleteStudents = mutation({
                     errors.push({
                         index: i,
                         studentId,
+                        studentName: "Unknown",
                         error: "Student not found",
                     });
                     continue;
@@ -281,6 +283,7 @@ export const bulkDeleteStudents = mutation({
                         errors.push({
                             index: i,
                             studentId,
+                            studentName: `${student.firstName} ${student.lastName}`,
                             error: `Cannot delete student with ${classCount} associated class${classCount > 1 ? 'es' : ''} (use force option to override)`,
                         });
                         continue;
@@ -289,15 +292,52 @@ export const bulkDeleteStudents = mutation({
 
                 // Safe to delete
                 await ctx.db.delete(studentId);
-                results.push({ index: i, studentId, success: true });
+                results.push({ 
+                    index: i, 
+                    studentId, 
+                    studentName: `${student.firstName} ${student.lastName}`,
+                    success: true 
+                });
             } catch (error) {
                 errors.push({
                     index: i,
                     studentId,
+                    studentName: "Unknown",
                     error: error instanceof Error ? error.message : "Unknown error",
                 });
             }
         }
+
+        // ✅ AUDIT: Log bulk deletion operation (import at top of file)
+        // Import: import { logAudit, AuditActions, AuditTargetTypes } from "./auditHelpers";
+        const executionTime = Date.now() - startTime;
+        
+        // Log the audit trail
+        const { logAudit, AuditActions, AuditTargetTypes } = await import("./auditHelpers");
+        await logAudit(ctx, {
+            userId: operationArgs.userId,
+            action: AuditActions.BULK_DELETE_STUDENTS,
+            targetType: AuditTargetTypes.STUDENTS,
+            reason: operationArgs.reason,
+            affectedCount: results.length,
+            schoolId: user.schoolId,
+            details: {
+                requested: operationArgs.studentIds.length,
+                successful: results.length,
+                failed: errors.length,
+                force: operationArgs.force || false,
+                failedStudents: errors.map(e => ({
+                    name: e.studentName,
+                    reason: e.error
+                }))
+            },
+            userAgent,
+            screenResolution,
+            timezone,
+            locale,
+            sessionId,
+            executionTime,
+        });
 
         return {
             total: operationArgs.studentIds.length,

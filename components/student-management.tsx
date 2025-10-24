@@ -305,22 +305,43 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                 reason: reason.trim(),
             });
 
+            // Show success message if any students were deleted
             if (result.successful > 0) {
-                setSuccess(t(`Successfully deleted ${result.successful} student(s)`, `ลบนักเรียนสำเร็จ ${result.successful} คน`));
+                setSuccess(t(
+                    `Successfully deleted ${result.successful} student(s)`,
+                    `ลบนักเรียนสำเร็จ ${result.successful} คน`
+                ));
             }
 
+            // Show detailed error message if any failed
             if (result.failed > 0) {
-                setError(t(
-                    `Failed to delete ${result.failed} student(s). Students with classes cannot be deleted.`,
-                    `ไม่สามารถลบนักเรียนได้ ${result.failed} คน นักเรียนที่มีคลาสไม่สามารถลบได้`
-                ));
+                // Build detailed error message with student names and reasons
+                const failedDetails = result.errors.map((err: any) => 
+                    `${err.studentName || 'Unknown'}: ${err.error}`
+                ).join('\n');
+                
+                const errorMsg = t(
+                    `Failed to delete ${result.failed} student(s):\n\n${failedDetails}\n\nStudents with active classes cannot be deleted. Please complete or cancel their classes first.`,
+                    `ไม่สามารถลบนักเรียนได้ ${result.failed} คน:\n\n${failedDetails}\n\nนักเรียนที่มีคลาสที่ยังใช้งานอยู่ไม่สามารถลบได้ กรุณาเสร็จสิ้นหรือยกเลิกคลาสของพวกเขาก่อน`
+                );
+                
+                setError(errorMsg);
                 console.error("Bulk delete errors:", result.errors);
             }
 
             setSelectedStudents(new Set());
             setShowBulkDeleteConfirm(false);
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to bulk delete students");
+            // Handle rate limiting and other errors
+            const errorMsg = err instanceof Error ? err.message : "Failed to bulk delete students";
+            if (errorMsg.includes("Rate limit") || errorMsg.includes("Too many requests")) {
+                setError(t(
+                    "Too many bulk delete attempts. Please wait a minute before trying again.",
+                    "พยายามลบนักเรียนจำนวนมากเกินไป กรุณารอสักครู่ก่อนลองอีกครั้ง"
+                ));
+            } else {
+                setError(errorMsg);
+            }
         }
     };
 
