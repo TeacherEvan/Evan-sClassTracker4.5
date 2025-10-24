@@ -76,6 +76,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     // Bulk deletion state
     const [selectedStudents, setSelectedStudents] = useState<Set<Id<"students">>>(new Set());
     const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+    const [forceDelete, setForceDelete] = useState(false); // Admin God mode: bypass class checks
 
     // Query students based on filter
     const students = useQuery(
@@ -295,6 +296,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
         if (!reason || reason.trim() === "") {
             setShowBulkDeleteConfirm(false);
+            setForceDelete(false); // Reset force delete
             return; // User cancelled or provided no reason
         }
 
@@ -303,6 +305,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                 studentIds: Array.from(selectedStudents),
                 userId: currentUser._id,
                 reason: reason.trim(),
+                force: forceDelete, // Use force flag if checked
             });
 
             // Show success message if any students were deleted
@@ -1010,6 +1013,32 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                 "หมายเหตุ: นักเรียนที่มีคลาสที่เกี่ยวข้องไม่สามารถลบได้"
                             )}
                         </p>
+                        
+                        {/* Admin Force Delete Option */}
+                        {currentUser.role === "admin" && (
+                            <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg">
+                                <label className="flex items-start gap-3 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={forceDelete}
+                                        onChange={(e) => setForceDelete(e.target.checked)}
+                                        className="mt-1 w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-500 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                    />
+                                    <div className="flex-1">
+                                        <div className="font-medium text-yellow-900 dark:text-yellow-100">
+                                            {t("Force Delete (Admin God Mode)", "บังคับลบ (โหมดแอดมิน)")}
+                                        </div>
+                                        <div className="text-xs text-yellow-800 dark:text-yellow-200 mt-1">
+                                            {t(
+                                                "Bypass class checks and delete students even if they have associated classes. Use with extreme caution!",
+                                                "ข้ามการตรวจสอบคลาสและลบนักเรียนแม้จะมีคลาสที่เกี่ยวข้อง ใช้ด้วยความระมัดระวังอย่างมาก!"
+                                            )}
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        )}
+                        
                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
                             {t(
                                 "Are you absolutely sure you want to continue?",
@@ -1018,7 +1047,10 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                         </p>
                         <div className="flex gap-3">
                             <button
-                                onClick={() => setShowBulkDeleteConfirm(false)}
+                                onClick={() => {
+                                    setShowBulkDeleteConfirm(false);
+                                    setForceDelete(false); // Reset force delete
+                                }}
                                 className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                             >
                                 {t("Cancel", "ยกเลิก")}
