@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
 
 type Language = "en" | "th";
 
@@ -15,7 +15,22 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 );
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>("en");
+  // Initialize from localStorage or default to Thai
+  const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("preferredLanguage");
+      return (saved as Language) || "th";
+    }
+    return "th";
+  });
+
+  // Persist language changes to localStorage
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("preferredLanguage", lang);
+    }
+  };
 
   const t = (en: string, th: string) => {
     return language === "en" ? en : th;
