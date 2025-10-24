@@ -16,6 +16,7 @@ import { LoginForm } from "@/components/login-form";
 import { NotificationWindow } from "@/components/notification-window";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
 import { RollingVitruvianMen } from "@/components/rolling-vitruvian-men";
+import { StartupWindow } from "@/components/startup-window";
 import { api } from "@/convex/_generated/api";
 import { isDesktopDevice } from "@/lib/device-detection";
 import { initServiceWorker } from "@/lib/init-sw";
@@ -63,6 +64,7 @@ export default function Home() {
   const [showPostClassNotes, setShowPostClassNotes] = useState(false);
   const [showUpdateAnnouncement, setShowUpdateAnnouncement] = useState(false);
   const [showClassCountModal, setShowClassCountModal] = useState(false);
+  const [showStartupWindow, setShowStartupWindow] = useState(false);
 
   // Query unread message count for current user
   const unreadCount = useQuery(
@@ -154,6 +156,24 @@ export default function Home() {
     }
   }, []);
 
+  // Show startup window on login (highest priority)
+  useEffect(() => {
+    if (user && !showPasswordChange && !showStartupWindow) {
+      // Check if user has dismissed startup window
+      if (typeof window !== "undefined") {
+        const dismissed = localStorage.getItem(
+          `startupWindowDismissed_${user._id}`
+        );
+        if (!dismissed) {
+          const timer = setTimeout(() => {
+            setShowStartupWindow(true);
+          }, 500);
+          return () => clearTimeout(timer);
+        }
+      }
+    }
+  }, [user, showPasswordChange, showStartupWindow]);
+
   // Check for classes needing feedback when teacher logs in
   useEffect(() => {
     if (
@@ -161,6 +181,7 @@ export default function Home() {
       classesNeedingFeedback &&
       classesNeedingFeedback.length > 0 &&
       !showPasswordChange &&
+      !showStartupWindow &&
       !showPostClassNotes
     ) {
       // Small delay to ensure UI is ready
@@ -169,7 +190,7 @@ export default function Home() {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [user, classesNeedingFeedback, showPasswordChange, showPostClassNotes]);
+  }, [user, classesNeedingFeedback, showPasswordChange, showStartupWindow, showPostClassNotes]);
 
   // Check for unviewed app updates on login
   useEffect(() => {
@@ -178,6 +199,7 @@ export default function Home() {
       activeUpdate &&
       hasViewedUpdate === false &&
       !showPasswordChange &&
+      !showStartupWindow &&
       !showPostClassNotes &&
       !showUpdateAnnouncement
     ) {
@@ -187,7 +209,7 @@ export default function Home() {
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [user, activeUpdate, hasViewedUpdate, showPasswordChange, showPostClassNotes, showUpdateAnnouncement]);
+  }, [user, activeUpdate, hasViewedUpdate, showPasswordChange, showStartupWindow, showPostClassNotes, showUpdateAnnouncement]);
 
   const handleLoginSuccess = (loggedInUser: User) => {
     setUser(loggedInUser);
@@ -227,6 +249,24 @@ export default function Home() {
     // Clear localStorage
     if (typeof window !== "undefined") {
       localStorage.removeItem("currentUser");
+    }
+  };
+
+  const handleStartupWindowNavigate = (tab: string) => {
+    setActiveTab(tab as typeof activeTab);
+  };
+
+  const handleStartupWindowClose = () => {
+    setShowStartupWindow(false);
+    // After startup window closes, show other priority modals if needed
+    if (user?.role === "teacher" && classesNeedingFeedback && classesNeedingFeedback.length > 0) {
+      setTimeout(() => {
+        setShowPostClassNotes(true);
+      }, 500);
+    } else if (activeUpdate && hasViewedUpdate === false) {
+      setTimeout(() => {
+        setShowUpdateAnnouncement(true);
+      }, 500);
     }
   };
 
@@ -850,6 +890,15 @@ export default function Home() {
               </div>
             </div>
           </Suspense>
+        )}
+
+        {/* Startup Window - All users on first login */}
+        {showStartupWindow && user && (
+          <StartupWindow
+            user={user}
+            onNavigate={handleStartupWindowNavigate}
+            onClose={handleStartupWindowClose}
+          />
         )}
 
         {/* Post-Class Notes Modal - Teachers only */}

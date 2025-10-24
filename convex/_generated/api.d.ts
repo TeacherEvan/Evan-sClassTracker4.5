@@ -31,7 +31,6 @@ import type * as pagination from "../pagination.js";
 import type * as performanceMonitoring from "../performanceMonitoring.js";
 import type * as postClassNotes from "../postClassNotes.js";
 import type * as rateLimit from "../rateLimit.js";
-import type * as resourceMonitoring from "../resourceMonitoring.js";
 import type * as schools from "../schools.js";
 import type * as search from "../search.js";
 import type * as seedAppUpdate from "../seedAppUpdate.js";
@@ -81,7 +80,6 @@ declare const fullApi: ApiFromModules<{
   performanceMonitoring: typeof performanceMonitoring;
   postClassNotes: typeof postClassNotes;
   rateLimit: typeof rateLimit;
-  resourceMonitoring: typeof resourceMonitoring;
   schools: typeof schools;
   search: typeof search;
   seedAppUpdate: typeof seedAppUpdate;

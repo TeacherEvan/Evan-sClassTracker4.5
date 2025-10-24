@@ -309,7 +309,20 @@ export function ClassDetailModal({
                                     )}
                                 </div>
                             ) : (
-                                <p className="text-red-600">{t("Student not found", "ไม่พบข้อมูลนักเรียน")}</p>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <AlertTriangle className="w-5 h-5 text-red-500" />
+                                        <p className="text-red-600 dark:text-red-400 font-semibold">
+                                            {t("Student Data Deleted", "ข้อมูลนักเรียนถูกลบ")}
+                                        </p>
+                                    </div>
+                                    <p className="text-sm text-red-500 dark:text-red-400">
+                                        {t(
+                                            "This class references a deleted student. Please delete this class or contact an administrator.",
+                                            "คลาสนี้อ้างอิงนักเรียนที่ถูกลบ กรุณาลบคลาสนี้หรือติดต่อผู้ดูแลระบบ"
+                                        )}
+                                    </p>
+                                </div>
                             )}
 
                             {/* Additional Students */}
@@ -319,12 +332,17 @@ export function ClassDetailModal({
                                         {t("Additional Students:", "นักเรียนเพิ่มเติม:")}
                                     </p>
                                     <div className="space-y-2">
-                                        {additionalStudents.map((student) => (
-                                            student && (
+                                        {additionalStudents.map((student, index) => (
+                                            student ? (
                                                 <div key={student._id} className="flex items-center gap-2 text-sm">
                                                     <User className="w-4 h-4" />
                                                     <span>{student.firstName} {student.lastName}</span>
                                                     <span className="text-xs text-gray-500">({student.grade})</span>
+                                                </div>
+                                            ) : (
+                                                <div key={`deleted-${index}`} className="flex items-center gap-2 text-sm text-red-500 dark:text-red-400">
+                                                    <AlertTriangle className="w-4 h-4" />
+                                                    <span className="italic">{t("Deleted student", "นักเรียนถูกลบ")}</span>
                                                 </div>
                                             )
                                         ))}

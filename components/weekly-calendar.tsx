@@ -441,10 +441,10 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                             <button
                                                 key={classItem._id}
                                                 onClick={() => handleClassClick(classItem)}
-                                                className={`w-full text-left text-xs p-1.5 md:p-2 rounded-lg md:rounded border ${getClassStatusColor(classItem.status)} hover:opacity-80 active:scale-95 transition-all touch-manipulation cursor-pointer`}
+                                                className={`w-full text-left text-xs p-1.5 md:p-2 rounded-lg md:rounded border ${getClassStatusColor(classItem.status)} hover:opacity-80 active:scale-95 transition-all touch-manipulation cursor-pointer ${!student ? 'opacity-60' : ''}`}
                                             >
-                                                <div className="font-semibold truncate text-[11px] md:text-xs">
-                                                    {student ? `${student.firstName} ${student.lastName}` : t("Student", "นักเรียน")}
+                                                <div className={`font-semibold truncate text-[11px] md:text-xs ${!student ? 'text-red-600 dark:text-red-400' : ''}`}>
+                                                    {student ? `${student.firstName} ${student.lastName}` : t("⚠️ Deleted Student", "⚠️ นักเรียนถูกลบ")}
                                                 </div>
                                                 <div className="text-gray-600 dark:text-gray-300 truncate text-[10px] md:text-xs">
                                                     {teacher?.username}
