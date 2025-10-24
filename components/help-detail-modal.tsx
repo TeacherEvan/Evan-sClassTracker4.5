@@ -24,7 +24,8 @@ export function HelpDetailModal({ feature, onClose, onBack }: HelpDetailModalPro
 
   // Get icon component from lucide-react
   const getIcon = (iconName: string) => {
-    const Icon = (LucideIcons as Record<string, React.ComponentType<{ className?: string }>>)[iconName] || LucideIcons.Sparkles;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const Icon = (LucideIcons as any)[iconName] || LucideIcons.Sparkles;
     return Icon;
   };
 
