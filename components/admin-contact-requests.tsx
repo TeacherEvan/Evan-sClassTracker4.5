@@ -269,6 +269,7 @@ export function AdminContactRequests({
                   </label>
                   {getAttachmentUrl ? (
                     <div className="border border-gray-300 dark:border-gray-600 rounded-xl overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={getAttachmentUrl}
                         alt={(selectedRequest.attachmentName as string) || "Screenshot"}
