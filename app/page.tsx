@@ -2,7 +2,7 @@
 
 // ✅ PERFORMANCE: Lazy load heavy components for code splitting (40-50% faster initial load)
 import { useMutation, useQuery } from "convex/react";
-import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, FlaskConical, GraduationCap, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
+import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, FlaskConical, GraduationCap, HelpCircle, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
 import { lazy, Suspense, useEffect, useState } from "react";
 
 // Core components (always loaded)
@@ -51,6 +51,7 @@ const SangsomSeedButton = lazy(() => import("@/components/sangsom-seed-button").
 const SangsomMigrationButton = lazy(() => import("@/components/sangsom-migration-button").then(m => ({ default: m.SangsomMigrationButton })));
 const SangsomDeleteButton = lazy(() => import("@/components/sangsom-delete-button").then(m => ({ default: m.SangsomDeleteButton })));
 const EventManagement = lazy(() => import("@/components/event-management").then(m => ({ default: m.EventManagement })));
+const HelpWindow = lazy(() => import("@/components/help-window").then(m => ({ default: m.HelpWindow })));
 
 export default function Home() {
   const { t } = useLanguage();
@@ -63,6 +64,7 @@ export default function Home() {
   const [showPostClassNotes, setShowPostClassNotes] = useState(false);
   const [showUpdateAnnouncement, setShowUpdateAnnouncement] = useState(false);
   const [showClassCountModal, setShowClassCountModal] = useState(false);
+  const [showHelpWindow, setShowHelpWindow] = useState(false);
 
   // Query unread message count for current user
   const unreadCount = useQuery(
@@ -399,6 +401,15 @@ export default function Home() {
             </p>
           </div>
           <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+            {/* Help Button - Available to all users */}
+            <button
+              onClick={() => setShowHelpWindow(true)}
+              className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 md:py-2 text-sm md:text-base bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/60 active:scale-95 transition-all touch-manipulation"
+              title={t("Help & Guide", "ความช่วยเหลือและคู่มือ")}
+            >
+              <HelpCircle className="w-5 h-5 md:w-5 md:h-5" />
+              <span className="hidden sm:inline">{t("Help", "ช่วยเหลือ")}</span>
+            </button>
             {/* Admin Contact Button for non-admin users */}
             {user.role !== "admin" && (
               <AdminContactButton currentUserId={user._id} />
@@ -880,6 +891,16 @@ export default function Home() {
             <ClassCountModal
               teacherId={user._id}
               onClose={() => setShowClassCountModal(false)}
+            />
+          </Suspense>
+        )}
+
+        {/* Help Window - All users */}
+        {showHelpWindow && user && (
+          <Suspense fallback={null}>
+            <HelpWindow
+              userRole={user.role}
+              onClose={() => setShowHelpWindow(false)}
             />
           </Suspense>
         )}

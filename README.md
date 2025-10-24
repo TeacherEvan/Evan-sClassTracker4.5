@@ -35,6 +35,7 @@ See [docs/OPTIMIZATION_ANALYSIS_2025.md](docs/OPTIMIZATION_ANALYSIS_2025.md) for
 - 🚀 **Bulk Operations** - Import/create multiple students or users at once
 - 📑 **Pagination** - Efficient handling of large datasets with pagination support
 - 📥 **Data Import** - Bulk import schedules from external sources (e.g., Sangsom Project)
+- ❓ **Interactive Help System** - Comprehensive bilingual guide with 20+ features documented (NEW!)
 
 ## User Roles
 
@@ -142,6 +143,38 @@ The notification system allows administrators and the system to:
 - **Success** - Positive updates and achievements
 - **Warning** - Important reminders and alerts (e.g., new class bookings)
 - **Error** - Critical issues requiring attention
+
+## Help System (NEW!)
+
+The interactive Help system provides comprehensive guidance for all users:
+
+### Features
+
+- **20+ Features Documented** - Complete coverage of all major features
+- **Bilingual Content** - Full English/Thai support for all help content
+- **Role-Based Filtering** - Users see only features relevant to their role
+- **Interactive Navigation** - Expandable categories and clickable features
+- **Step-by-Step Instructions** - Clear guidance with tips and best practices
+- **Always Available** - Green Help button in header on all pages
+
+### Access
+
+Look for the green **"Help"** button in the top-right corner of the application header after login.
+
+### Categories
+
+1. **Class Booking** - Book classes, approve bookings, view calendar
+2. **Messages & Communication** - Send messages, manage notifications
+3. **Reports & Analytics** - View analytics, track teacher activity (moderators)
+4. **Management & Administration** - Manage students, locations, users, schools
+5. **Advanced Features** - Teacher's helper, events, post-class notes, contact admin
+
+### Documentation
+
+- Quick Start Guide: [`docs/HELP_WINDOW_QUICKSTART.md`](docs/HELP_WINDOW_QUICKSTART.md)
+- Feature Documentation: [`docs/HELP_WINDOW_FEATURE.md`](docs/HELP_WINDOW_FEATURE.md)
+- UI Flow Guide: [`docs/HELP_WINDOW_UI_FLOW.md`](docs/HELP_WINDOW_UI_FLOW.md)
+- Implementation Summary: [`IMPLEMENTATION_SUMMARY_HELP_WINDOW.md`](IMPLEMENTATION_SUMMARY_HELP_WINDOW.md)
 
 ## Tech Stack
 
