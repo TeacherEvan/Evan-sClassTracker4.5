@@ -27,6 +27,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
   const [showForm, setShowForm] = useState(false);
   const [studentId, setStudentId] = useState<Id<"students"> | "">("");
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Id<"students">[]>([]); // Multi-student selection
+  const [multiSelectMode, setMultiSelectMode] = useState(false); // Toggle for multi-select UI
   const [schoolId, setSchoolId] = useState<Id<"schools"> | "">(
     // Moderators auto-select their school, others start empty
     userRole === "moderator" && userSchoolId ? userSchoolId : ""
@@ -101,6 +103,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     teacherId: Id<"users">;
     schoolId: Id<"schools">;
     studentId: Id<"students">;
+    additionalStudentIds?: Id<"students">[]; // Support multi-student booking
     locationId?: Id<"locations">;
     pendingLocationName?: string;
     pendingLocationNameTh?: string;
@@ -164,7 +167,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
   // Form validation
   const isFormValid =
-    studentId &&
+    (multiSelectMode ? selectedStudentIds.length > 0 : studentId) &&
     schoolId &&
     (locationId || requestingNewLocation) &&
     (requestingNewLocation ? (pendingLocationName.trim() || pendingLocationNameTh.trim()) : true) &&
@@ -182,8 +185,11 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       if (!schoolId) {
         throw new Error("Please select a school");
       }
-      if (!studentId) {
+      if (!multiSelectMode && !studentId) {
         throw new Error("Please select a student");
+      }
+      if (multiSelectMode && selectedStudentIds.length === 0) {
+        throw new Error(t("Please select at least one student", "กรุณาเลือกนักเรียนอย่างน้อย 1 คน"));
       }
       if (!locationId && !requestingNewLocation) {
         throw new Error("Please select a location or request a new one");
@@ -237,13 +243,22 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         ? (selectedTeacherId as Id<"users">)
         : userId;
 
+      // Prepare student IDs for multi-student booking
+      const primaryStudentId = multiSelectMode 
+        ? selectedStudentIds[0] 
+        : (studentId as Id<"students">);
+      const additionalStudentIds = multiSelectMode && selectedStudentIds.length > 1
+        ? selectedStudentIds.slice(1)
+        : undefined;
+
       // For multiple dates, book all without conflict checking (to avoid complex UX)
       if (datesToBook.length > 1) {
         const bookingPromises = datesToBook.map(timestamp =>
           bookClass({
             teacherId: effectiveTeacherId,
             schoolId: schoolId as Id<"schools">,
-            studentId: studentId as Id<"students">,
+            studentId: primaryStudentId,
+            additionalStudentIds,
             locationId: locationId ? (locationId as Id<"locations">) : undefined,
             pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
             pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
@@ -255,16 +270,18 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         );
 
         await Promise.all(bookingPromises);
+        const studentCount = multiSelectMode ? selectedStudentIds.length : 1;
         toast.success(
-          `Successfully booked ${datesToBook.length} classes!`,
-          `จองคลาสสำเร็จแล้ว ${datesToBook.length} คลาส!`
+          `Successfully booked ${datesToBook.length} class${datesToBook.length > 1 ? 'es' : ''}${studentCount > 1 ? ` with ${studentCount} students` : ''}!`,
+          `จองคลาสสำเร็จแล้ว ${datesToBook.length} คลาส${studentCount > 1 ? ` กับนักเรียน ${studentCount} คน` : ''}!`
         );
       } else {
         // For single date, use conflict checking
         const result = await bookClassWithConflictCheck({
           teacherId: effectiveTeacherId,
           schoolId: schoolId as Id<"schools">,
-          studentId: studentId as Id<"students">,
+          studentId: primaryStudentId,
+          additionalStudentIds,
           locationId: locationId ? (locationId as Id<"locations">) : undefined,
           pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
           pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
@@ -292,7 +309,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
             ...optionalFields,
             teacherId: effectiveTeacherId,
             schoolId: schoolId as Id<"schools">,
-            studentId: studentId as Id<"students">,
+            studentId: primaryStudentId,
+            additionalStudentIds,
             locationId: locationId ? (locationId as Id<"locations">) : undefined,
             pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
             pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
@@ -322,6 +340,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
       // Reset form
       setStudentId("");
+      setSelectedStudentIds([]);
+      setMultiSelectMode(false);
       setSchoolId("");
       setLocationId("");
       setScheduledDate("");
@@ -396,6 +416,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
         // Reset form
         setStudentId("");
+        setSelectedStudentIds([]);
+        setMultiSelectMode(false);
         setSchoolId("");
         setLocationId("");
         setScheduledDate("");
@@ -449,6 +471,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
       // Reset form
       setStudentId("");
+      setSelectedStudentIds([]);
+      setMultiSelectMode(false);
       setSchoolId("");
       setLocationId("");
       setScheduledDate("");
@@ -738,19 +762,52 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       {t("Student Name", "ชื่อนักเรียน")} *
                     </label>
                   </div>
-                  {schoolId && (
-                    <button
-                      type="button"
-                      onClick={() => setCreatingStudent(!creatingStudent)}
-                      className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
-                      disabled={!schoolId}
-                    >
-                      {creatingStudent
-                        ? t("← Select Existing", "← เลือกนักเรียนที่มีอยู่")
-                        : t("+ Create New", "+ สร้างใหม่")
-                      }
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {schoolId && students && students.length > 1 && !creatingStudent && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMultiSelectMode(!multiSelectMode);
+                          if (multiSelectMode) {
+                            // Switching back to single select - convert selected IDs back to single
+                            setStudentId(selectedStudentIds[0] || "");
+                            setSelectedStudentIds([]);
+                          } else {
+                            // Switching to multi-select - convert single to array
+                            setSelectedStudentIds(studentId ? [studentId as Id<"students">] : []);
+                            setStudentId("");
+                          }
+                        }}
+                        className="text-xs text-purple-600 hover:text-purple-700 dark:text-purple-400 font-medium flex items-center gap-1"
+                        disabled={!schoolId}
+                      >
+                        <Users className="w-3 h-3" />
+                        {multiSelectMode
+                          ? t("Single Student", "นักเรียนคนเดียว")
+                          : t("Multiple Students", "หลายคน")
+                        }
+                      </button>
+                    )}
+                    {schoolId && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCreatingStudent(!creatingStudent);
+                          if (creatingStudent) {
+                            // Reset multi-select when going back to selection
+                            setMultiSelectMode(false);
+                          }
+                        }}
+                        className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+                        disabled={!schoolId}
+                      >
+                        {creatingStudent
+                          ? t("← Select Existing", "← เลือกนักเรียนที่มีอยู่")
+                          : t("+ Create New", "+ สร้างใหม่")
+                        }
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {creatingStudent && schoolId ? (
@@ -808,6 +865,54 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       {t("✓ Create & Select Student", "✓ สร้างและเลือกนักเรียน")}
                     </button>
                   </div>
+                ) : multiSelectMode && schoolId ? (
+                  <div className="space-y-2 p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 max-h-60 overflow-y-auto">
+                    {students && students.length > 0 ? (
+                      <>
+                        <div className="flex items-center justify-between mb-2 pb-2 border-b border-purple-200 dark:border-purple-700">
+                          <span className="text-xs font-medium text-purple-900 dark:text-purple-100">
+                            {t(`${selectedStudentIds.length} student(s) selected`, `เลือกนักเรียน ${selectedStudentIds.length} คน`)}
+                          </span>
+                          {selectedStudentIds.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setSelectedStudentIds([])}
+                              className="text-xs text-purple-600 hover:text-purple-700 dark:text-purple-400"
+                            >
+                              {t("Clear All", "ล้างทั้งหมด")}
+                            </button>
+                          )}
+                        </div>
+                        {students.map((student) => (
+                          <label
+                            key={student._id}
+                            className="flex items-center gap-2 p-2 rounded hover:bg-purple-100 dark:hover:bg-purple-900/40 cursor-pointer transition-colors"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedStudentIds.includes(student._id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedStudentIds([...selectedStudentIds, student._id]);
+                                } else {
+                                  setSelectedStudentIds(selectedStudentIds.filter(id => id !== student._id));
+                                }
+                              }}
+                              className="w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
+                              disabled={loading}
+                            />
+                            <span className="text-sm text-gray-900 dark:text-white">
+                              {student.firstName} {student.lastName} ({student.grade}{student.class})
+                            </span>
+                          </label>
+                        ))}
+                      </>
+                    ) : (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                        {t("No students available", "ไม่มีนักเรียน")}
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <select
                     id="student"
@@ -834,12 +939,18 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     ))}
                   </select>
                 )}
-                {schoolId && students && students.length > 0 && (
+                {schoolId && students && students.length > 0 && !creatingStudent && (
                   <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                    {t(
-                      `${students.length} student${students.length !== 1 ? 's' : ''} available at this school`,
-                      `มีนักเรียน ${students.length} คนในโรงเรียนนี้`
-                    )}
+                    {multiSelectMode 
+                      ? t(
+                          `Select multiple students for a group class`,
+                          `เลือกนักเรียนหลายคนสำหรับคลาสกลุ่ม`
+                        )
+                      : t(
+                          `${students.length} student${students.length !== 1 ? 's' : ''} available at this school`,
+                          `มีนักเรียน ${students.length} คนในโรงเรียนนี้`
+                        )
+                    }
                   </p>
                 )}
               </div>

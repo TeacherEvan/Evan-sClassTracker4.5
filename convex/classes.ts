@@ -235,6 +235,7 @@ export const bookWithConflictCheck = mutation({
     teacherId: v.id("users"),
     schoolId: v.id("schools"),
     studentId: v.id("students"),
+    additionalStudentIds: v.optional(v.array(v.id("students"))), // Support multi-student classes
     locationId: v.optional(v.id("locations")),
     pendingLocationName: v.optional(v.string()),
     pendingLocationNameTh: v.optional(v.string()),
@@ -420,6 +421,7 @@ export const bookWithConflictCheck = mutation({
       teacherId: args.teacherId,
       schoolId: args.schoolId,
       studentId: args.studentId,
+      additionalStudentIds: args.additionalStudentIds,
       locationId: args.locationId,
       pendingLocationName: args.pendingLocationName,
       pendingLocationNameTh: args.pendingLocationNameTh,
@@ -487,6 +489,7 @@ export const book = mutation({
     teacherId: v.id("users"),
     schoolId: v.id("schools"),
     studentId: v.id("students"),
+    additionalStudentIds: v.optional(v.array(v.id("students"))), // Support multi-student classes
     locationId: v.optional(v.id("locations")),
     pendingLocationName: v.optional(v.string()),
     pendingLocationNameTh: v.optional(v.string()),
@@ -610,6 +613,7 @@ export const book = mutation({
       teacherId: args.teacherId,
       schoolId: args.schoolId,
       studentId: args.studentId,
+      additionalStudentIds: args.additionalStudentIds,
       locationId: args.locationId,
       pendingLocationName: args.pendingLocationName,
       pendingLocationNameTh: args.pendingLocationNameTh,
