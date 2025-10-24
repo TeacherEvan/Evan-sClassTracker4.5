@@ -39,8 +39,8 @@ export function StartupWindow({
                 `startupWindowDismissed_${user._id}`
             );
             if (!dismissed) {
-                // Set moderators to Thai by default
-                if (user.role === "moderator" && language === "en") {
+                // Set to Thai by default for all users
+                if (language === "en") {
                     setLanguage("th");
                 }
                 setIsVisible(true);

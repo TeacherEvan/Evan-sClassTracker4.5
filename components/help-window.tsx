@@ -3,9 +3,9 @@
 import { HelpDetailModal } from "@/components/help-detail-modal";
 import { getHelpForRole, type HelpFeature } from "@/lib/help-content";
 import { useLanguage } from "@/lib/language-context";
-import { BookOpen, ChevronRight, HelpCircle, X } from "lucide-react";
 import * as LucideIcons from "lucide-react";
-import { useState } from "react";
+import { BookOpen, ChevronRight, HelpCircle, X } from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface HelpWindowProps {
   userRole: "teacher" | "moderator" | "admin" | "guardian";
@@ -17,15 +17,17 @@ export function HelpWindow({ userRole, onClose }: HelpWindowProps) {
   const [selectedFeature, setSelectedFeature] = useState<HelpFeature | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
-  // Get help content filtered by user role
-  const helpCategories = getHelpForRole(userRole);
+  // Get help content filtered by user role (memoized to prevent recalculation)
+  const helpCategories = useMemo(() => getHelpForRole(userRole), [userRole]);
 
-  // Get icon component from lucide-react
-  const getIcon = (iconName: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const Icon = (LucideIcons as any)[iconName] || LucideIcons.Sparkles;
-    return Icon;
-  };
+  // Get icon component from lucide-react (memoized)
+  const getIcon = useMemo(() => {
+    return (iconName: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const Icon = (LucideIcons as any)[iconName] || LucideIcons.Sparkles;
+      return Icon;
+    };
+  }, []);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => {
@@ -142,9 +144,8 @@ export function HelpWindow({ userRole, onClose }: HelpWindowProps) {
                       </span>
                     </div>
                     <ChevronRight
-                      className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${
-                        isExpanded ? "rotate-90" : ""
-                      }`}
+                      className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isExpanded ? "rotate-90" : ""
+                        }`}
                     />
                   </button>
 

@@ -3,7 +3,7 @@
 // ✅ PERFORMANCE: Lazy load heavy components for code splitting (40-50% faster initial load)
 import { useMutation, useQuery } from "convex/react";
 import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, FlaskConical, GraduationCap, HelpCircle, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, useRef } from "react";
 
 // Core components (always loaded)
 import { AdminContactButton } from "@/components/admin-contact-button";
@@ -21,6 +21,7 @@ import { api } from "@/convex/_generated/api";
 import { isDesktopDevice } from "@/lib/device-detection";
 import { initServiceWorker } from "@/lib/init-sw";
 import { useLanguage } from "@/lib/language-context";
+import { clearUserSession, loadUserSession, saveUserSession } from "@/lib/session-utils";
 import { toast as toastManager } from "@/lib/toast";
 import type { User } from "@/lib/types";
 import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
@@ -67,6 +68,7 @@ export default function Home() {
   const [showClassCountModal, setShowClassCountModal] = useState(false);
   const [showStartupWindow, setShowStartupWindow] = useState(false);
   const [showHelpWindow, setShowHelpWindow] = useState(false);
+  const hasCheckedStartupWindow = useRef(false);
 
   // Query unread message count for current user
   const unreadCount = useQuery(
@@ -139,42 +141,37 @@ export default function Home() {
   const needsInit = users !== undefined && users.length === 0;
   const isLoading = users === undefined;
 
-  // Restore user session from localStorage on mount
+  // Restore user session from localStorage on mount (with expiration check)
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedUser = localStorage.getItem("currentUser");
-      if (savedUser) {
-        try {
-          const parsedUser = JSON.parse(savedUser);
-          setUser(parsedUser);
-          if (parsedUser.requirePasswordChange) {
-            setShowPasswordChange(true);
-          }
-        } catch (e) {
-          console.error("Failed to parse saved user:", e);
-          localStorage.removeItem("currentUser");
-        }
+    const session = loadUserSession();
+    if (session) {
+      setUser(session);
+      if (session.requirePasswordChange) {
+        setShowPasswordChange(true);
       }
     }
   }, []);
 
-  // Show startup window on login (highest priority)
+  // Show startup window on login (highest priority) - MODERATORS ONLY
   useEffect(() => {
-    if (user && !showPasswordChange && !showStartupWindow) {
+    if (user && user.role === "moderator" && !showPasswordChange && !hasCheckedStartupWindow.current) {
       // Check if user has dismissed startup window
       if (typeof window !== "undefined") {
         const dismissed = localStorage.getItem(
           `startupWindowDismissed_${user._id}`
         );
         if (!dismissed) {
+          hasCheckedStartupWindow.current = true; // Mark as checked
           const timer = setTimeout(() => {
             setShowStartupWindow(true);
           }, 500);
           return () => clearTimeout(timer);
+        } else {
+          hasCheckedStartupWindow.current = true; // Mark as checked even if dismissed
         }
       }
     }
-  }, [user, showPasswordChange, showStartupWindow]);
+  }, [user, showPasswordChange]);
 
   // Check for classes needing feedback when teacher logs in
   useEffect(() => {
@@ -237,10 +234,8 @@ export default function Home() {
     if (user) {
       const updatedUser = { ...user, requirePasswordChange: false };
       setUser(updatedUser);
-      // Update localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
-      }
+      // Update localStorage with session expiration
+      saveUserSession(updatedUser);
     }
   };
 
@@ -249,9 +244,7 @@ export default function Home() {
     setShowPasswordChange(false);
     setActiveTab("calendar");
     // Clear localStorage
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("currentUser");
-    }
+    clearUserSession();
   };
 
   const handleStartupWindowNavigate = (tab: string) => {
