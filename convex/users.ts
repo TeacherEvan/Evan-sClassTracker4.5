@@ -536,10 +536,8 @@ export const bulkDeleteUsers = mutation({
           throw new Error("Moderators can only delete teacher accounts");
         }
 
-        // Admin-specific validation: cannot delete other admins
-        if (admin.role === "admin" && userToDelete.role === "admin" && args.adminOrModeratorId !== userIdToDelete) {
-          throw new Error("Admins cannot delete other admin accounts");
-        }
+        // Admin has God mode - no restrictions on deleting other admins
+        // (Removed admin-to-admin deletion restriction)
 
         // Check if user is a moderator with a school
         if (userToDelete.role === "moderator" && userToDelete.schoolId) {

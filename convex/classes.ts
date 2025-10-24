@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, MutationCtx, query } from "./_generated/server";
+import { logAudit } from "./auditHelpers";
 import { checkRateLimit, validateLength } from "./rateLimit";
 
 /**
@@ -869,18 +870,137 @@ export const updateClass = mutation({
     // Get student info for notification
     const student = await ctx.db.get(args.studentId || classData.studentId);
 
-    // Create notification to teacher
+    // Get location info
+    const locationId = args.locationId || classData.locationId;
+    const location = locationId ? await ctx.db.get(locationId) : null;
+
+    // Create detailed notification to teacher based on status change
     if (student && user) {
-      await ctx.db.insert("notifications", {
-        userId: classData.teacherId,
-        title: "Class Updated",
-        titleTh: "มีการอัปเดตคลาส",
-        message: `Your class with ${student.firstName} ${student.lastName} has been updated by ${user.username}`,
-        messageTh: `คลาสของคุณกับ ${student.firstName} ${student.lastName} ถูกอัปเดตโดย ${user.username}`,
-        type: "info",
-        read: false,
-        createdAt: Date.now(),
-      });
+      // Status-specific notifications with full class details
+      if (args.status === "approved") {
+        // Class approved by moderator - send detailed notification
+        const dateStr = new Date(args.scheduledDate || classData.scheduledDate).toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        const timeStr = new Date(args.scheduledDate || classData.scheduledDate).toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        // Get updated class data for additional details
+        const updatedClass = await ctx.db.get(args.classId);
+
+        let detailsMessage = `✅ Class Approved!\n\n`;
+        detailsMessage += `📅 Date & Time: ${dateStr} at ${timeStr}\n`;
+        detailsMessage += `👤 Student: ${student.firstName} ${student.lastName}`;
+        if (student.grade) detailsMessage += ` (Grade ${student.grade})`;
+        detailsMessage += `\n`;
+
+        if (location) {
+          detailsMessage += `📍 Location: ${location.name}\n`;
+        } else if (classData.pendingLocationName) {
+          detailsMessage += `📍 Location: ${classData.pendingLocationName} (Pending approval)\n`;
+        }
+
+        if (updatedClass?.subject) {
+          detailsMessage += `📚 Subject: ${updatedClass.subject}\n`;
+        }
+        if (updatedClass?.lessonTopic) {
+          detailsMessage += `📖 Topic: ${updatedClass.lessonTopic}\n`;
+        }
+        if (updatedClass?.duration) {
+          detailsMessage += `⏱️ Duration: ${updatedClass.duration} minutes\n`;
+        }
+        if (updatedClass?.materials) {
+          detailsMessage += `📦 Materials: ${updatedClass.materials}\n`;
+        }
+
+        detailsMessage += `\nApproved by: ${user.username}`;
+
+        // Thai version
+        const dateStrTh = new Date(args.scheduledDate || classData.scheduledDate).toLocaleDateString('th-TH', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+
+        let detailsMessageTh = `✅ คลาสได้รับการอนุมัติแล้ว!\n\n`;
+        detailsMessageTh += `📅 วันที่และเวลา: ${dateStrTh} เวลา ${timeStr}\n`;
+        detailsMessageTh += `👤 นักเรียน: ${student.firstName} ${student.lastName}`;
+        if (student.grade) detailsMessageTh += ` (ชั้น ${student.grade})`;
+        detailsMessageTh += `\n`;
+
+        if (location) {
+          detailsMessageTh += `📍 สถานที่: ${location.nameTh || location.name}\n`;
+        } else if (classData.pendingLocationNameTh) {
+          detailsMessageTh += `📍 สถานที่: ${classData.pendingLocationNameTh} (รอการอนุมัติ)\n`;
+        }
+
+        if (updatedClass?.subjectTh) {
+          detailsMessageTh += `📚 วิชา: ${updatedClass.subjectTh}\n`;
+        }
+        if (updatedClass?.lessonTopicTh) {
+          detailsMessageTh += `📖 หัวข้อ: ${updatedClass.lessonTopicTh}\n`;
+        }
+        if (updatedClass?.duration) {
+          detailsMessageTh += `⏱️ ระยะเวลา: ${updatedClass.duration} นาที\n`;
+        }
+        if (updatedClass?.materialsTh) {
+          detailsMessageTh += `📦 อุปกรณ์: ${updatedClass.materialsTh}\n`;
+        }
+
+        detailsMessageTh += `\nอนุมัติโดย: ${user.username}`;
+
+        await ctx.db.insert("notifications", {
+          userId: classData.teacherId,
+          title: "Class Approved - Ready to Teach",
+          titleTh: "คลาสได้รับการอนุมัติ - พร้อมสอน",
+          message: detailsMessage,
+          messageTh: detailsMessageTh,
+          type: "success",
+          read: false,
+          createdAt: Date.now(),
+        });
+      } else if (args.status === "acknowledged") {
+        // Class acknowledged by moderator
+        await ctx.db.insert("notifications", {
+          userId: classData.teacherId,
+          title: "Class Acknowledged",
+          titleTh: "คลาสรับทราบแล้ว",
+          message: `Your class request with ${student.firstName} ${student.lastName} has been acknowledged by ${user.username}. Awaiting final approval.`,
+          messageTh: `คำขอคลาสของคุณกับ ${student.firstName} ${student.lastName} ได้รับการรับทราบโดย ${user.username} กำลังรอการอนุมัติขั้นสุดท้าย`,
+          type: "info",
+          read: false,
+          createdAt: Date.now(),
+        });
+      } else if (args.status === "rejected") {
+        // Class rejected by moderator
+        await ctx.db.insert("notifications", {
+          userId: classData.teacherId,
+          title: "Class Request Rejected",
+          titleTh: "คำขอคลาสถูกปฏิเสธ",
+          message: `Your class request with ${student.firstName} ${student.lastName} has been rejected by ${user.username}. Please contact the moderator for details.`,
+          messageTh: `คำขอคลาสของคุณกับ ${student.firstName} ${student.lastName} ถูกปฏิเสธโดย ${user.username} กรุณาติดต่อผู้ดูแลเพื่อสอบถามรายละเอียด`,
+          type: "error",
+          read: false,
+          createdAt: Date.now(),
+        });
+      } else {
+        // General update notification
+        await ctx.db.insert("notifications", {
+          userId: classData.teacherId,
+          title: "Class Updated",
+          titleTh: "มีการอัปเดตคลาส",
+          message: `Your class with ${student.firstName} ${student.lastName} has been updated by ${user.username}`,
+          messageTh: `คลาสของคุณกับ ${student.firstName} ${student.lastName} ถูกอัปเดตโดย ${user.username}`,
+          type: "info",
+          read: false,
+          createdAt: Date.now(),
+        });
+      }
     }
 
     return args.classId;
@@ -904,14 +1024,16 @@ export const deleteClass = mutation({
       requireModeratorOrAdmin: true
     });
 
-    // Check if class date has not passed yet
-    const currentTime = Date.now();
-    if (classData.scheduledDate < currentTime) {
-      throw new Error("Cannot delete classes whose dates have already passed");
-    }
-
-    // Get user for notification message
+    // Get user once for all checks (admins have God mode)
     const user = await ctx.db.get(args.userId);
+
+    // Check if class date has not passed yet (EXCEPT for admins - they have God mode)
+    if (user?.role !== "admin") {
+      const currentTime = Date.now();
+      if (classData.scheduledDate < currentTime) {
+        throw new Error("Cannot delete classes whose dates have already passed");
+      }
+    }
 
     // Get student info for notification
     const student = await ctx.db.get(classData.studentId);
@@ -1771,5 +1893,77 @@ export const getUpcomingForNotification = query({
     );
 
     return enrichedClasses;
+  },
+});
+
+/**
+ * Bulk delete classes (admin God mode - no restrictions)
+ */
+export const bulkDeleteClasses = mutation({
+  args: {
+    classIds: v.array(v.id("classes")),
+    userId: v.id("users"), // Admin performing the deletion
+    reason: v.optional(v.string()), // Optional reason for audit trail
+  },
+  handler: async (ctx, args) => {
+    // Rate limiting
+    await checkRateLimit(ctx, {
+      key: `bulkDeleteClasses-${args.userId}`,
+      limit: 5,
+      windowMs: 60000, // 5 deletions per minute
+    });
+
+    // Verify user is admin
+    const admin = await ctx.db.get(args.userId);
+    if (!admin || admin.role !== "admin") {
+      throw new Error("Admin access required for bulk class deletion");
+    }
+
+    // Validate batch size
+    if (args.classIds.length > 100) {
+      throw new Error("Maximum 100 classes can be deleted at once");
+    }
+
+    const results = {
+      successful: [] as string[],
+      failed: [] as { classId: string; error: string }[],
+    };
+
+    // Delete each class
+    for (const classId of args.classIds) {
+      try {
+        const classData = await ctx.db.get(classId);
+        if (!classData) {
+          results.failed.push({
+            classId: classId.toString(),
+            error: "Class not found",
+          });
+          continue;
+        }
+
+        // Admin has God mode - no date restrictions, no approval checks
+        // Just delete it
+        await ctx.db.delete(classId);
+        results.successful.push(classId.toString());
+
+        // Log the deletion
+        await logAudit(ctx, {
+          userId: args.userId,
+          action: "DELETE_CLASS" as const,
+          targetType: "CLASSES" as const,
+          targetId: classId,
+          targetName: `Class on ${new Date(classData.scheduledDate).toLocaleDateString()}`,
+          reason: args.reason || "Bulk deletion by admin",
+          schoolId: admin.schoolId,
+        });
+      } catch (error) {
+        results.failed.push({
+          classId: classId.toString(),
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }
+
+    return results;
   },
 });

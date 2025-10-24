@@ -209,6 +209,7 @@ export const bulkDeleteStudents = mutation({
         studentIds: v.array(v.id("students")),
         userId: v.id("users"), // Required: User performing the deletion
         reason: v.string(), // Required: Reason for bulk deletion
+        force: v.optional(v.boolean()), // Admin God mode: bypass class checks
         // Optional: Client-side performance tracking
         userAgent: v.optional(v.string()),
         screenResolution: v.optional(v.string()),
@@ -268,20 +269,22 @@ export const bulkDeleteStudents = mutation({
                     continue;
                 }
 
-                // Check if student has associated classes
-                const classCount = await ctx.db
-                    .query("classes")
-                    .withIndex("by_student", (q) => q.eq("studentId", studentId))
-                    .collect()
-                    .then(classes => classes.length);
+                // Check if student has associated classes (unless force=true for admin God mode)
+                if (!operationArgs.force) {
+                    const classCount = await ctx.db
+                        .query("classes")
+                        .withIndex("by_student", (q) => q.eq("studentId", studentId))
+                        .collect()
+                        .then(classes => classes.length);
 
-                if (classCount > 0) {
-                    errors.push({
-                        index: i,
-                        studentId,
-                        error: `Cannot delete student with ${classCount} associated class${classCount > 1 ? 'es' : ''}`,
-                    });
-                    continue;
+                    if (classCount > 0) {
+                        errors.push({
+                            index: i,
+                            studentId,
+                            error: `Cannot delete student with ${classCount} associated class${classCount > 1 ? 'es' : ''} (use force option to override)`,
+                        });
+                        continue;
+                    }
                 }
 
                 // Safe to delete
