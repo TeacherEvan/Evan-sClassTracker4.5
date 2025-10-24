@@ -5,14 +5,9 @@ import { checkRateLimit } from "./rateLimit";
 /**
  * Events and Reminders System
  * - Moderators/Admin can create universal viewable events
- * - Teachers can only create personal reminders
+ * - Teachers can create personal reminders and share with school/all teachers
  * - Events appear on calendar alongside classes
  */
-
-// Authorization helper
-async function canCreateUniversalEvent(role: string): Promise<boolean> {
-    return role === "moderator" || role === "admin";
-}
 
 // Validation helper
 function validateEventDates(eventDate: number, endDate?: number) {
@@ -71,17 +66,22 @@ export const create = mutation({
         if (!user) throw new Error("User not found");
 
         const role = user.role;
-        const isUniversalEvent = args.visibility !== "personal";
 
         // Authorization check
-        if (isUniversalEvent && !await canCreateUniversalEvent(role)) {
-            throw new Error("Only moderators and admins can create universal events");
+        // Teachers can create: personal, school, all_teachers
+        // Moderators/Admins can create: all of the above + all_moderators, everyone (admin only)
+        if (role === "teacher") {
+            // Teachers cannot create all_moderators or everyone visibility events
+            if (args.visibility === "all_moderators" || args.visibility === "everyone") {
+                throw new Error("Teachers cannot create events visible to moderators or everyone");
+            }
+        } else if (role === "moderator") {
+            // Moderators cannot create everyone visibility events
+            if (args.visibility === "everyone") {
+                throw new Error("Only admins can create events visible to everyone");
+            }
         }
-
-        // Teachers can only create personal reminders
-        if (role === "teacher" && args.visibility !== "personal") {
-            throw new Error("Teachers can only create personal reminders");
-        }
+        // Admins have no restrictions
 
         // Validate dates
         validateEventDates(args.eventDate, args.endDate);
@@ -96,12 +96,12 @@ export const create = mutation({
             throw new Error("Only admins can create events visible to everyone");
         }
 
-        // For personal reminders, ensure it's the user's school
-        if (args.visibility === "personal" && args.schoolId && user.schoolId !== args.schoolId) {
+        // For personal and school events, ensure it's the user's school
+        if ((args.visibility === "personal" || args.visibility === "school") && args.schoolId && user.schoolId !== args.schoolId) {
             throw new Error("Cannot create events for other schools");
         }
 
-        // Set schoolId for school-scoped events
+        // Set schoolId for school-scoped and personal events
         const finalSchoolId = args.visibility === "school" || args.visibility === "personal"
             ? (args.schoolId || user.schoolId)
             : undefined;

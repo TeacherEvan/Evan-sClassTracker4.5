@@ -427,9 +427,14 @@ export function EventManagement({ userId, userRole, schoolId }: EventManagementP
                                 value={formData.visibility}
                                 onChange={(e) => setFormData({ ...formData, visibility: e.target.value as EventFormData["visibility"] })}
                                 className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600"
-                                disabled={!editingEvent && userRole === "teacher"}
                             >
                                 <option value="personal">{t("Personal (Only Me)", "ส่วนตัว (เฉพาะฉัน)")}</option>
+                                {userRole === "teacher" && (
+                                    <>
+                                        <option value="school">{t("School (All in School)", "โรงเรียน (ทุกคนในโรงเรียน)")}</option>
+                                        <option value="all_teachers">{t("All Teachers", "ครูทุกคน")}</option>
+                                    </>
+                                )}
                                 {canCreateUniversal && (
                                     <>
                                         <option value="school">{t("School (All in School)", "โรงเรียน (ทุกคนในโรงเรียน)")}</option>
