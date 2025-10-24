@@ -1546,12 +1546,70 @@ function ClassItemDisplay({
   const student = classItem.student;
   const location = classItem.location;
 
+  // CRITICAL FIX: If student was deleted, show warning instead of infinite loading spinner
   if (!student) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6">
-        <div className="flex items-center gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <p className="text-gray-500">{t("Student data not found", "ไม่พบข้อมูลนักเรียน")}</p>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 border-2 border-yellow-500 dark:border-yellow-600">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+              <Users className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                {t("Student Data Missing", "ข้อมูลนักเรียนหายไป")}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {t("The student for this class was deleted", "นักเรียนสำหรับคลาสนี้ถูกลบไปแล้ว")}
+              </p>
+            </div>
+          </div>
+          
+          {/* Show class details that are still available */}
+          <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-2 text-sm">
+            <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+              <Calendar className="w-4 h-4" />
+              <span>{new Date(classItem.scheduledDate).toLocaleDateString()}</span>
+              <span>{new Date(classItem.scheduledDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+              <MapPin className="w-4 h-4" />
+              <span>
+                {location
+                  ? (language === "en" ? location.name : location.nameTh)
+                  : t("Location not specified", "ไม่ได้ระบุสถานที่")}
+              </span>
+            </div>
+            <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {t(
+                  "Status: ",
+                  "สถานะ: "
+                )}
+                <span className={`font-medium ${
+                  classItem.status === "approved" ? "text-green-600 dark:text-green-400" :
+                  classItem.status === "pending" ? "text-yellow-600 dark:text-yellow-400" :
+                  classItem.status === "acknowledged" ? "text-blue-600 dark:text-blue-400" :
+                  "text-red-600 dark:text-red-400"
+                }`}>
+                  {getStatusText(classItem.status)}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          {/* Admin/Moderator action button */}
+          {(userRole === "admin" || userRole === "moderator") && (
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() => onDelete(classItem._id)}
+                className="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg flex items-center justify-center gap-2 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                {t("Delete Class", "ลบคลาส")}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
