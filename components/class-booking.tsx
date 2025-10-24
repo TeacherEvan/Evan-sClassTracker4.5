@@ -141,7 +141,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const [newStudentNickname, setNewStudentNickname] = useState("");
   const [newStudentGrade, setNewStudentGrade] = useState("");
   const [newStudentClass, setNewStudentClass] = useState("");
-  const [newStudentSchoolId, setNewStudentSchoolId] = useState<Id<"schools"> | "">("");
 
   // Guardian title state
   const [guardianTitle, setGuardianTitle] = useState("");
@@ -570,7 +569,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   };
 
   const handleCreateStudent = async () => {
-    if (!newStudentNickname.trim() || !newStudentGrade.trim() || !newStudentClass.trim() || !newStudentSchoolId) {
+    if (!newStudentNickname.trim() || !newStudentGrade.trim() || !newStudentClass.trim() || !schoolId) {
       setError(t("Please fill in all student fields", "กรุณากรอกข้อมูลนักเรียนให้ครบถ้วน"));
       return;
     }
@@ -583,20 +582,18 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         nickname: newStudentNickname, // Also save as nickname field
         grade: newStudentGrade,
         class: newStudentClass,
-        schoolId: newStudentSchoolId as Id<"schools">,
+        schoolId: schoolId as Id<"schools">,
         createdBy: userId,
       });
 
       // Auto-select the newly created student
       setStudentId(newStudentData.id);
-      setSchoolId(newStudentSchoolId as Id<"schools">);
 
       // Reset student creation form
       setCreatingStudent(false);
       setNewStudentNickname("");
       setNewStudentGrade("");
       setNewStudentClass("");
-      setNewStudentSchoolId("");
 
       toast.success("Student created successfully!", "สร้างข้อมูลนักเรียนสำเร็จ!");
     } catch (err) {
