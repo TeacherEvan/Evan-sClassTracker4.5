@@ -9,7 +9,7 @@ export default defineSchema({
       v.literal("teacher"),
       v.literal("moderator"),
       v.literal("admin"),
-      v.literal("guardian")
+      v.literal("guardian") // DEPRECATED: Guardian workflow being redesigned for pvt students. Do not create new guardian users.
     ),
     schoolId: v.optional(v.id("schools")),
     requirePasswordChange: v.boolean(),
@@ -57,8 +57,8 @@ export default defineSchema({
     locationId: v.optional(v.id("locations")), // Optional if using pending location
     pendingLocationName: v.optional(v.string()), // For teacher-requested locations (English)
     pendingLocationNameTh: v.optional(v.string()), // For teacher-requested locations (Thai)
-    guardianTitle: v.optional(v.string()), // Guardian relationship title for guardian-linked classes
-    isGuardianLinked: v.optional(v.boolean()), // Flag for guardian-linked classes (bypasses moderator approval)
+    guardianTitle: v.optional(v.string()), // DEPRECATED: Guardian workflow being redesigned
+    isGuardianLinked: v.optional(v.boolean()), // DEPRECATED: Guardian workflow being redesigned
     status: v.union(
       v.literal("pending"),
       v.literal("acknowledged"),
@@ -114,14 +114,14 @@ export default defineSchema({
     lastName: v.string(),
     studentId: v.string(), // Unique identifier
     schoolId: v.optional(v.id("schools")), // Optional - null if linked to guardian
-    guardianId: v.optional(v.id("users")), // Guardian user ID if linked to guardian
-    guardianTitle: v.optional(v.string()), // Guardian relationship description (e.g., "Parent", "Tutor")
+    guardianId: v.optional(v.id("users")), // DEPRECATED: Guardian workflow being redesigned. Use parentName instead.
+    guardianTitle: v.optional(v.string()), // DEPRECATED: Guardian workflow being redesigned.
     grade: v.string(), // Grade level (e.g., "K1", "K2", "K3")
     class: v.optional(v.string()), // Class number (e.g., "/1", "/2", "/3", ..., "/10") - required for school-linked students
-    guardianName: v.optional(v.string()), // Guardian name if no school
-    guardianPhone: v.optional(v.string()), // Guardian contact
-    guardianEmail: v.optional(v.string()), // Guardian email
-    acknowledged: v.optional(v.boolean()), // For guardian-acknowledged students (optional for backward compatibility)
+    guardianName: v.optional(v.string()), // DEPRECATED: Use parentName instead
+    guardianPhone: v.optional(v.string()), // DEPRECATED: Use parentPhone instead
+    guardianEmail: v.optional(v.string()), // DEPRECATED: Use parentEmail instead
+    acknowledged: v.optional(v.boolean()), // DEPRECATED: Guardian workflow feature
     createdBy: v.optional(v.id("users")), // Teacher who created the student (optional for backward compatibility)
     createdAt: v.number(),
     // NEW OPTIONAL FIELDS

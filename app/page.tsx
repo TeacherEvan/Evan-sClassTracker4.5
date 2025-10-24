@@ -39,7 +39,7 @@ const SimpleAnalytics = lazy(() => import("@/components/simple-analytics").then(
 const TeacherActivityDashboard = lazy(() => import("@/components/teacher-activity-dashboard").then(m => ({ default: m.TeacherActivityDashboard })));
 const TeacherHelper = lazy(() => import("@/components/teacher-helper").then(m => ({ default: m.TeacherHelper })));
 const TeacherHelperAdmin = lazy(() => import("@/components/teacher-helper-admin").then(m => ({ default: m.TeacherHelperAdmin })));
-const GuardianDashboard = lazy(() => import("@/components/guardian-dashboard").then(m => ({ default: m.GuardianDashboard })));
+// Guardian dashboard removed - workflow being redesigned for pvt students
 const DeviceTestingDashboard = lazy(() => import("@/components/device-testing-dashboard"));
 const PostClassNotesModal = lazy(() => import("@/components/post-class-notes-modal").then(m => ({ default: m.PostClassNotesModal })));
 const UpdateAnnouncementModal = lazy(() => import("@/components/update-announcement-modal").then(m => ({ default: m.UpdateAnnouncementModal })));
@@ -767,11 +767,16 @@ export default function Home() {
           </Suspense>
         )}
 
-        {/* Guardian Dashboard - Only for guardians */}
+        {/* Guardian Dashboard - REMOVED: Workflow being redesigned for pvt students */}
         {user.role === "guardian" && (
-          <Suspense fallback={<LoadingFallback />}>
-            <GuardianDashboard currentUser={user} />
-          </Suspense>
+          <div className="max-w-4xl mx-auto mt-8 p-6 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg">
+            <h2 className="text-xl font-bold text-yellow-900 dark:text-yellow-100 mb-2">
+              Guardian Feature Temporarily Unavailable
+            </h2>
+            <p className="text-yellow-800 dark:text-yellow-200">
+              The guardian workflow is being redesigned. Please contact an administrator for assistance with private student management.
+            </p>
+          </div>
         )}
 
         {activeTab === "notifications" && (
