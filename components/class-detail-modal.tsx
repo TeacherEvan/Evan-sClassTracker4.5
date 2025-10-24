@@ -18,6 +18,7 @@ import {
     MapPin,
     Package,
     School,
+    Trash2,
     User,
     Users,
     X
@@ -96,6 +97,7 @@ export function ClassDetailModal({
     const [showMergeModal, setShowMergeModal] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showPostponeModal, setShowPostponeModal] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [cancelReason, setCancelReason] = useState("");
     const [cancelReasonTh, setCancelReasonTh] = useState("");
     const [postponeReason, setPostponeReason] = useState("");
@@ -108,6 +110,7 @@ export function ClassDetailModal({
     const approveClass = useMutation(api.classes.approve);
     const rejectClass = useMutation(api.classes.reject);
     const createCancellationRequest = useMutation(api.cancellationRequests.create);
+    const deleteClass = useMutation(api.classes.deleteClass);
 
     // Check for pending requests
     const pendingRequest = useQuery(
@@ -223,6 +226,23 @@ export function ClassDetailModal({
         }
     };
 
+    const handleDeleteClass = async () => {
+        try {
+            await deleteClass({
+                userId: currentUserId,
+                classId: classData._id,
+            });
+            toast.success("Class deleted successfully", "ลบคลาสสำเร็จ");
+            setShowDeleteConfirm(false);
+            onClose();
+        } catch (err) {
+            toast.error(
+                err instanceof Error ? err.message : "Failed to delete class",
+                err instanceof Error ? err.message : "ไม่สามารถลบคลาสได้"
+            );
+        }
+    };
+
     const getStatusBadge = (status: string) => {
         const badges = {
             pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
@@ -261,42 +281,42 @@ export function ClassDetailModal({
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
                     {/* Header */}
-                    <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex justify-between items-start">
+                    <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-start">
                         <div className="flex-1">
-                            <h2 className="text-2xl font-bold mb-2">
+                            <h2 className="text-xl font-bold mb-1.5">
                                 {t("Class Details", "รายละเอียดคลาส")}
                             </h2>
-                            <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(classData.status)}`}>
+                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(classData.status)}`}>
                                 {getStatusText(classData.status)}
                             </span>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                         >
-                            <X className="w-6 h-6" />
+                            <X className="w-5 h-5" />
                         </button>
                     </div>
 
                     {/* Content */}
-                    <div className="p-6 space-y-6">
+                    <div className="p-4 space-y-4">
                         {/* Student Information */}
-                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4">
-                            <div className="flex items-center gap-2 mb-3">
-                                <User className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                                <h3 className="font-semibold text-lg">
+                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                                <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                <h3 className="font-semibold text-sm">
                                     {t("Student Information", "ข้อมูลนักเรียน")}
                                 </h3>
                                 {totalStudents > 1 && (
-                                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded text-xs font-medium">
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded text-xs font-medium">
                                         <Users className="w-3 h-3" />
                                         {totalStudents} {t("students", "คน")}
                                     </span>
                                 )}
                             </div>
                             {studentData ? (
-                                <div className="space-y-2">
-                                    <p className="text-lg font-medium">
+                                <div className="space-y-1">
+                                    <p className="font-medium">
                                         {studentData.firstName} {studentData.lastName}
                                     </p>
                                     <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -309,20 +329,20 @@ export function ClassDetailModal({
                                     )}
                                 </div>
                             ) : (
-                                <p className="text-red-600">{t("Student not found", "ไม่พบข้อมูลนักเรียน")}</p>
+                                <p className="text-red-600 text-sm">{t("Student not found", "ไม่พบข้อมูลนักเรียน")}</p>
                             )}
 
                             {/* Additional Students */}
                             {additionalStudents && additionalStudents.length > 0 && (
-                                <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
-                                    <p className="text-sm font-medium mb-2">
+                                <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-800">
+                                    <p className="text-xs font-medium mb-1.5">
                                         {t("Additional Students:", "นักเรียนเพิ่มเติม:")}
                                     </p>
-                                    <div className="space-y-2">
+                                    <div className="space-y-1">
                                         {additionalStudents.map((student) => (
                                             student && (
-                                                <div key={student._id} className="flex items-center gap-2 text-sm">
-                                                    <User className="w-4 h-4" />
+                                                <div key={student._id} className="flex items-center gap-1.5 text-sm">
+                                                    <User className="w-3.5 h-3.5" />
                                                     <span>{student.firstName} {student.lastName}</span>
                                                     <span className="text-xs text-gray-500">({student.grade})</span>
                                                 </div>
@@ -334,28 +354,28 @@ export function ClassDetailModal({
                         </div>
 
                         {/* Class Details Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {/* School */}
-                            <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                                <School className="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5" />
+                            <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <School className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-0.5" />
                                 <div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                    <p className="text-xs text-gray-600 dark:text-gray-400">
                                         {t("School", "โรงเรียน")}
                                     </p>
-                                    <p className="font-medium">
+                                    <p className="font-medium text-sm">
                                         {schoolData ? (language === "en" ? schoolData.name : schoolData.nameTh) : t("Not specified", "ไม่ระบุ")}
                                     </p>
                                 </div>
                             </div>
 
                             {/* Location */}
-                            <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                                <MapPin className="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5" />
+                            <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <MapPin className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-0.5" />
                                 <div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                    <p className="text-xs text-gray-600 dark:text-gray-400">
                                         {t("Location", "สถานที่")}
                                     </p>
-                                    <p className="font-medium">
+                                    <p className="font-medium text-sm">
                                         {locationData
                                             ? (language === "en" ? locationData.name : locationData.nameTh)
                                             : classData.pendingLocationName
@@ -364,7 +384,7 @@ export function ClassDetailModal({
                                         }
                                     </p>
                                     {locationData?.type === "guardian" && classData.guardianTitle && (
-                                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
                                             {t("Guardian:", "ผู้ปกครอง:")} {classData.guardianTitle}
                                         </p>
                                     )}
@@ -372,37 +392,37 @@ export function ClassDetailModal({
                             </div>
 
                             {/* Date & Time */}
-                            <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                                <Calendar className="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5" />
+                            <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <Calendar className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-0.5" />
                                 <div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                    <p className="text-xs text-gray-600 dark:text-gray-400">
                                         {t("Date", "วันที่")}
                                     </p>
-                                    <p className="font-medium">
+                                    <p className="font-medium text-sm">
                                         {new Date(classData.scheduledDate).toLocaleDateString(
                                             language === "en" ? "en-US" : "th-TH",
-                                            { weekday: "long", year: "numeric", month: "long", day: "numeric" }
+                                            { weekday: "short", year: "numeric", month: "short", day: "numeric" }
                                         )}
                                     </p>
                                 </div>
                             </div>
 
                             {/* Time */}
-                            <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                                <Clock className="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5" />
+                            <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <Clock className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-0.5" />
                                 <div>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                    <p className="text-xs text-gray-600 dark:text-gray-400">
                                         {t("Time", "เวลา")}
                                     </p>
-                                    <p className="font-medium">
+                                    <p className="font-medium text-sm">
                                         {new Date(classData.scheduledDate).toLocaleTimeString(
                                             language === "en" ? "en-US" : "th-TH",
                                             { hour: "2-digit", minute: "2-digit" }
                                         )}
                                     </p>
                                     {classData.duration && (
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            {t("Duration:", "ระยะเวลา:")} {classData.duration} {t("minutes", "นาที")}
+                                        <p className="text-xs text-gray-500">
+                                            {t("Duration:", "ระยะเวลา:")} {classData.duration} {t("min", "นาที")}
                                         </p>
                                     )}
                                 </div>
@@ -410,13 +430,13 @@ export function ClassDetailModal({
 
                             {/* Teacher */}
                             {teacherData && (
-                                <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl md:col-span-2">
-                                    <User className="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5" />
+                                <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg md:col-span-2">
+                                    <User className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-0.5" />
                                     <div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">
                                             {t("Teacher", "ครูผู้สอน")}
                                         </p>
-                                        <p className="font-medium">
+                                        <p className="font-medium text-sm">
                                             {teacherData.username}
                                         </p>
                                     </div>
@@ -426,23 +446,23 @@ export function ClassDetailModal({
 
                         {/* Optional Fields */}
                         {(classData.classType && classData.classType !== "regular") && (
-                            <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                            <div className="p-2.5 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                <p className="text-xs text-gray-600 dark:text-gray-400">
                                     {t("Class Type", "ประเภทคลาส")}
                                 </p>
-                                <p className="font-medium">{getClassTypeText(classData.classType)}</p>
+                                <p className="font-medium text-sm">{getClassTypeText(classData.classType)}</p>
                             </div>
                         )}
 
                         {classData.subject && (
-                            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                                <div className="flex items-start gap-3">
-                                    <BookOpen className="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5" />
+                            <div className="p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <div className="flex items-start gap-2">
+                                    <BookOpen className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-0.5" />
                                     <div className="flex-1">
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">
                                             {t("Subject", "วิชา")}
                                         </p>
-                                        <p className="font-medium">
+                                        <p className="font-medium text-sm">
                                             {language === "en" ? classData.subject : classData.subjectTh}
                                         </p>
                                     </div>
@@ -451,14 +471,14 @@ export function ClassDetailModal({
                         )}
 
                         {classData.lessonTopic && (
-                            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                                <div className="flex items-start gap-3">
-                                    <FileText className="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5" />
+                            <div className="p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <div className="flex items-start gap-2">
+                                    <FileText className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-0.5" />
                                     <div className="flex-1">
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">
                                             {t("Lesson Topic", "หัวข้อบทเรียน")}
                                         </p>
-                                        <p className="font-medium">
+                                        <p className="font-medium text-sm">
                                             {language === "en" ? classData.lessonTopic : classData.lessonTopicTh}
                                         </p>
                                     </div>
@@ -467,14 +487,14 @@ export function ClassDetailModal({
                         )}
 
                         {classData.materials && (
-                            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                                <div className="flex items-start gap-3">
-                                    <Package className="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5" />
+                            <div className="p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <div className="flex items-start gap-2">
+                                    <Package className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-0.5" />
                                     <div className="flex-1">
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">
                                             {t("Materials", "อุปกรณ์")}
                                         </p>
-                                        <p className="font-medium whitespace-pre-wrap">
+                                        <p className="font-medium text-sm whitespace-pre-wrap">
                                             {language === "en" ? classData.materials : classData.materialsTh}
                                         </p>
                                     </div>
@@ -483,14 +503,14 @@ export function ClassDetailModal({
                         )}
 
                         {classData.preparationNotes && (
-                            <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                                <div className="flex items-start gap-3">
-                                    <ClipboardList className="w-5 h-5 text-gray-600 dark:text-gray-400 mt-0.5" />
+                            <div className="p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                                <div className="flex items-start gap-2">
+                                    <ClipboardList className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-0.5" />
                                     <div className="flex-1">
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">
                                             {t("Preparation Notes", "หมายเหตุการเตรียมตัว")}
                                         </p>
-                                        <p className="font-medium whitespace-pre-wrap">
+                                        <p className="font-medium text-sm whitespace-pre-wrap">
                                             {language === "en" ? classData.preparationNotes : classData.preparationNotesTh}
                                         </p>
                                     </div>
@@ -500,16 +520,16 @@ export function ClassDetailModal({
 
                         {/* Edit History */}
                         {classData.isEdited && classData.editHistory && classData.editHistory.length > 0 && (
-                            <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <Edit2 className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                                    <h3 className="font-semibold">
+                            <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                                <div className="flex items-center gap-1.5 mb-2">
+                                    <Edit2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                                    <h3 className="font-semibold text-sm">
                                         {t("Edit History", "ประวัติการแก้ไข")}
                                     </h3>
                                 </div>
-                                <div className="space-y-2 text-sm">
+                                <div className="space-y-1.5 text-xs">
                                     {classData.editHistory.slice(-3).reverse().map((edit, index) => (
-                                        <div key={index} className="pb-2 border-b border-amber-200 dark:border-amber-800 last:border-0">
+                                        <div key={index} className="pb-1.5 border-b border-amber-200 dark:border-amber-800 last:border-0">
                                             <p className="font-medium">
                                                 {edit.editedByName} ({edit.editedByRole})
                                             </p>
@@ -529,33 +549,33 @@ export function ClassDetailModal({
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6">
+                    <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3">
                         {/* Moderator/Admin Action Buttons for Pending Classes */}
                         {(currentUserRole === "moderator" || currentUserRole === "admin") && classData.status === "pending" && (
-                            <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
                                     {t("Class Actions:", "การจัดการคลาส:")}
                                 </p>
-                                <div className="flex flex-wrap gap-3">
+                                <div className="flex flex-wrap gap-2">
                                     <button
                                         onClick={handleAcknowledge}
-                                        className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:scale-95 transition-all font-medium"
+                                        className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:scale-95 transition-all font-medium"
                                     >
-                                        <Check className="w-5 h-5" />
+                                        <Check className="w-4 h-4" />
                                         {t("Acknowledge", "รับทราบ")}
                                     </button>
                                     <button
                                         onClick={handleApprove}
-                                        className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95 transition-all font-medium"
+                                        className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95 transition-all font-medium"
                                     >
-                                        <Check className="w-5 h-5" />
+                                        <Check className="w-4 h-4" />
                                         {t("Approve", "อนุมัติ")}
                                     </button>
                                     <button
                                         onClick={handleReject}
-                                        className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
+                                        className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
                                     >
-                                        <X className="w-5 h-5" />
+                                        <X className="w-4 h-4" />
                                         {t("Reject", "ปฏิเสธ")}
                                     </button>
                                 </div>
@@ -564,23 +584,23 @@ export function ClassDetailModal({
 
                         {/* Moderator/Admin Action Buttons for Acknowledged Classes */}
                         {(currentUserRole === "moderator" || currentUserRole === "admin") && classData.status === "acknowledged" && (
-                            <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
                                     {t("Class Actions:", "การจัดการคลาส:")}
                                 </p>
-                                <div className="flex flex-wrap gap-3">
+                                <div className="flex flex-wrap gap-2">
                                     <button
                                         onClick={handleApprove}
-                                        className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95 transition-all font-medium"
+                                        className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95 transition-all font-medium"
                                     >
-                                        <Check className="w-5 h-5" />
+                                        <Check className="w-4 h-4" />
                                         {t("Approve", "อนุมัติ")}
                                     </button>
                                     <button
                                         onClick={handleReject}
-                                        className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
+                                        className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
                                     >
-                                        <X className="w-5 h-5" />
+                                        <X className="w-4 h-4" />
                                         {t("Reject", "ปฏิเสธ")}
                                     </button>
                                 </div>
@@ -589,23 +609,23 @@ export function ClassDetailModal({
 
                         {/* Cancel/Postpone Buttons for Teachers */}
                         {currentUserRole === "teacher" && classData.status === "approved" && classData.scheduledDate > Date.now() && !pendingRequest && (
-                            <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                            <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
                                     {t("Request Changes:", "ขอเปลี่ยนแปลง:")}
                                 </p>
-                                <div className="flex flex-wrap gap-3">
+                                <div className="flex flex-wrap gap-2">
                                     <button
                                         onClick={() => setShowCancelModal(true)}
-                                        className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
+                                        className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
                                     >
-                                        <X className="w-5 h-5" />
+                                        <X className="w-4 h-4" />
                                         {t("Cancel Class", "ยกเลิกคลาส")}
                                     </button>
                                     <button
                                         onClick={() => setShowPostponeModal(true)}
-                                        className="flex-1 min-w-[150px] flex items-center justify-center gap-2 px-4 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 active:scale-95 transition-all font-medium"
+                                        className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 active:scale-95 transition-all font-medium"
                                     >
-                                        <Clock className="w-5 h-5" />
+                                        <Clock className="w-4 h-4" />
                                         {t("Postpone Class", "เลื่อนคลาส")}
                                     </button>
                                 </div>
@@ -614,40 +634,51 @@ export function ClassDetailModal({
 
                         {/* Pending Request Notice */}
                         {pendingRequest && (
-                            <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                                <div className="flex items-center gap-2 text-yellow-800 dark:text-yellow-400">
-                                    <AlertTriangle className="w-5 h-5" />
-                                    <p className="font-medium">
+                            <div className="mb-3 p-2.5 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                                <div className="flex items-center gap-1.5 text-yellow-800 dark:text-yellow-400">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    <p className="font-medium text-sm">
                                         {t(
                                             `${pendingRequest.requestType === "cancel" ? "Cancellation" : "Postponement"} request pending approval`,
                                             `คำขอ${pendingRequest.requestType === "cancel" ? "ยกเลิก" : "เลื่อน"}รอการอนุมัติ`
                                         )}
                                     </p>
                                 </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                                     {language === "en" ? pendingRequest.reason : pendingRequest.reasonTh}
                                 </p>
                             </div>
                         )}
 
-                        {/* Edit and Merge Buttons */}
-                        <div className="flex flex-wrap gap-3">
+                        {/* Edit, Merge, and Delete Buttons */}
+                        <div className="flex flex-wrap gap-2">
                             <button
                                 onClick={() => setShowEditModal(true)}
-                                className="flex-1 min-w-[200px] flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:scale-95 transition-all font-medium"
+                                className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:scale-95 transition-all font-medium"
                             >
-                                <Edit2 className="w-5 h-5" />
+                                <Edit2 className="w-4 h-4" />
                                 {t("Edit Class", "แก้ไขคลาส")}
                             </button>
                             {allClasses && allClasses.length > 1 && (currentUserRole === "admin" || currentUserRole === "moderator") && (
                                 <button
                                     onClick={() => setShowMergeModal(true)}
-                                    className="flex-1 min-w-[200px] flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:scale-95 transition-all font-medium"
+                                    className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:scale-95 transition-all font-medium"
                                 >
-                                    <Users className="w-5 h-5" />
+                                    <Users className="w-4 h-4" />
                                     {t("Merge Classes", "รวมคลาส")}
                                 </button>
                             )}
+                            {(currentUserRole === "admin" ||
+                                currentUserRole === "moderator" ||
+                                (currentUserRole === "teacher" && classData.teacherId === currentUserId)) && (
+                                    <button
+                                        onClick={() => setShowDeleteConfirm(true)}
+                                        className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-medium"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                        {t("Delete", "ลบ")}
+                                    </button>
+                                )}
                         </div>
                     </div>
                 </div>
@@ -832,6 +863,55 @@ export function ClassDetailModal({
                                 className="flex-1 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 active:scale-95 transition-all font-medium"
                             >
                                 {t("Submit Request", "ส่งคำขอ")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+                            </div>
+                            <h3 className="text-xl font-bold">
+                                {t("Delete Class", "ลบคลาส")}
+                            </h3>
+                        </div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                            {t(
+                                "Are you sure you want to delete this class? This action cannot be undone.",
+                                "คุณแน่ใจหรือไม่ว่าต้องการลบคลาสนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้"
+                            )}
+                        </p>
+                        {studentData && (
+                            <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg mb-4">
+                                <p className="text-sm font-medium">
+                                    {studentData.firstName} {studentData.lastName}
+                                </p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                    {new Date(classData.scheduledDate).toLocaleString(
+                                        language === "en" ? "en-US" : "th-TH",
+                                        { weekday: "short", year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }
+                                    )}
+                                </p>
+                            </div>
+                        )}
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={handleDeleteClass}
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-medium"
+                            >
+                                {t("Delete", "ลบ")}
                             </button>
                         </div>
                     </div>

@@ -34,11 +34,22 @@ export function EditClassModal({
     );
     const editClass = useMutation(api.classes.editClass);
 
+    // Helper function to convert UTC timestamp to local datetime-local format
+    const toLocalDatetimeString = (timestamp: number): string => {
+        const date = new Date(timestamp);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
     // Form state
     const [studentId, setStudentId] = useState<Id<"students">>(classData.studentId);
     const [locationId, setLocationId] = useState<Id<"locations"> | "">(classData.locationId || "");
     const [scheduledDate, setScheduledDate] = useState(
-        new Date(classData.scheduledDate).toISOString().slice(0, 16)
+        toLocalDatetimeString(classData.scheduledDate)
     );
     const [duration, setDuration] = useState(classData.duration?.toString() || "60");
     const [subject, setSubject] = useState(classData.subject || "");
