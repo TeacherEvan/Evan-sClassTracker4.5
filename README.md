@@ -92,7 +92,7 @@ npm run dev
 ```
 
 4. **Initialize database**:
-   - Open [http://localhost:3000](http://localhost:3000)
+   - Open [http://localhost:3001](http://localhost:3001)
    - Click "Initialize Database" button
    - Note the default credentials displayed
    - **⚠️ Change all default passwords after first login!**

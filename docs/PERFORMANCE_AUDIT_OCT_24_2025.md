@@ -400,7 +400,7 @@ npm run build
 npx @next/bundle-analyzer
 
 # 3. Run Lighthouse audit
-npx lighthouse http://localhost:3000 --view
+npx lighthouse http://localhost:3001 --view
 
 # 4. Check Convex query performance
 # Navigate to https://dashboard.convex.dev > Logs > Filter by slow queries

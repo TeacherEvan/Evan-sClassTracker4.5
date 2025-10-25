@@ -80,7 +80,7 @@ services:
     depends_on:
       - convex
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "curl", "-f", "http://localhost:3001"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -512,7 +512,7 @@ export default defineConfig({
     ['junit', { outputFile: 'test-results/junit.xml' }],
   ],
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    baseURL: process.env.BASE_URL || 'http://localhost:3001',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -537,7 +537,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3000',
+    url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
   },
 });

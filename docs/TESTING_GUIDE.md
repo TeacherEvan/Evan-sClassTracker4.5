@@ -10,7 +10,7 @@ npx convex dev    # Terminal 1 - Backend
 npm run dev       # Terminal 2 - Frontend
 ```
 
-Open: `http://localhost:3000`
+Open: `http://localhost:3001`
 
 ---
 
@@ -125,7 +125,7 @@ Open: `http://localhost:3000`
 
 ### Test Update Class
 
-1. Open Convex Dashboard: `http://localhost:3000/_convex`
+1. Open Convex Dashboard: `http://localhost:3001/_convex`
 2. Navigate to **Functions** → **classes** → **updateClass**
 3. Call mutation with params:
 
