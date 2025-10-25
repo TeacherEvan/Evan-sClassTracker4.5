@@ -2,7 +2,17 @@
 
 Bilingual English/Thai class tracker for teachers and schools - Built with Next.js 15, React 19, Convex & Tailwind v4
 
-## ✨ Recent Optimizations (Oct 2025)
+## ✨ Recent Updates (Oct 25, 2025)
+
+🔧 **Critical UX Fixes:**
+
+- **Language persistence** - Startup window no longer auto-reverts to Thai
+- **Optional bilingual input** - Forms accept single language (EN or TH) instead of requiring both
+- **Student creation fix** - Button enables correctly when all fields filled
+- **Bulk deletion** - Accepts short reasons (3+ chars) for Thai/English convenience
+- **Validation pattern change** - Migrated from `||` to `&&` logic for bilingual fields
+
+See [IMPLEMENTATION_SUMMARY_UX_FIXES_OCT_25_2025.md](IMPLEMENTATION_SUMMARY_UX_FIXES_OCT_25_2025.md) for technical details.
 
 🚀 **Performance Enhancements:**
 
@@ -14,7 +24,7 @@ Bilingual English/Thai class tracker for teachers and schools - Built with Next.
 - **Toast notifications** - Modern, non-blocking bilingual feedback system
 - **Index-first queries** - Optimized database access patterns
 
-See [docs/OPTIMIZATION_ANALYSIS_2025.md](docs/OPTIMIZATION_ANALYSIS_2025.md) for details.
+See [docs/PERFORMANCE_AUDIT_OCT_24_2025.md](docs/PERFORMANCE_AUDIT_OCT_24_2025.md) for performance analysis.
 
 ## Features
 

@@ -1,11 +1,12 @@
 ﻿# Documentation Index
 
-**Last Updated:** October 24, 2025  
+**Last Updated:** October 25, 2025  
 **Status:** Cleaned & Reorganized  
 **Recent Changes:**
 
-- Archived 21 dated implementation summaries and reviews
-- Moved optimization analysis to archive (consolidated in PERFORMANCE_AUDIT)
+- Added IMPLEMENTATION_SUMMARY_UX_FIXES_OCT_25_2025.md (validation pattern changes)
+- Updated copilot-instructions.md with bilingual validation pattern
+- Removed redundant root-level documentation files
 - All major consolidation tasks complete
 
 ---
@@ -66,6 +67,11 @@
 
 ### Implementation Status
 
+- **[../IMPLEMENTATION_SUMMARY_UX_FIXES_OCT_25_2025.md](../IMPLEMENTATION_SUMMARY_UX_FIXES_OCT_25_2025.md)** - Latest UX fixes (validation patterns)
+- **[../IMPLEMENTATION_SUMMARY_OCT_25_2025.md](../IMPLEMENTATION_SUMMARY_OCT_25_2025.md)** - Session expiration & BilingualInput component
+- **[../IMPLEMENTATION_SUMMARY_CYCLE_EDITOR.md](../IMPLEMENTATION_SUMMARY_CYCLE_EDITOR.md)** - Teacher cycle editor
+- **[../IMPLEMENTATION_SUMMARY_HELP_WINDOW.md](../IMPLEMENTATION_SUMMARY_HELP_WINDOW.md)** - Help window system
+- **[../IMPLEMENTATION_SUMMARY_STARTUP_WINDOW.md](../IMPLEMENTATION_SUMMARY_STARTUP_WINDOW.md)** - Startup window
 - **[../TODO.md](../TODO.md)** - Active tasks
 - **[FEATURE_COMPLETION_SUMMARY.md](FEATURE_COMPLETION_SUMMARY.md)** - Feature status
 - **[IMPLEMENTATION_REVIEW_2025.md](IMPLEMENTATION_REVIEW_2025.md)** - Latest review

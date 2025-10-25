@@ -103,7 +103,36 @@ import { BilingualInput } from "@/components/bilingual-input";
 
 **Example**: `components/notification-form.tsx` and `components/bilingual-input.tsx`
 
-### 2. Index-First Queries (Performance Critical)
+### 2. Bilingual Validation Pattern (CRITICAL - Updated Oct 2025)
+
+**NEW STANDARD**: Use `&&` (AND) for optional bilingual inputs, not `||` (OR)
+
+```typescript
+// ✅ CORRECT - Requires AT LEAST ONE language
+if (!nameEn.trim() && !nameTh.trim()) {
+  toast.error("Please provide name in at least one language", 
+              "กรุณากรอกชื่อในอย่างน้อยหนึ่งภาษา");
+  return;
+}
+
+// ❌ WRONG - Requires BOTH languages (too strict!)
+if (!nameEn.trim() || !nameTh.trim()) {
+  // This forces users to fill both fields
+  return;
+}
+```
+
+**Logic explanation**:
+- `||` (OR): True if EITHER empty → Requires BOTH filled
+- `&&` (AND): True if BOTH empty → Requires AT LEAST ONE filled
+
+**When to use**:
+- **Use `&&`**: Location names, cancel reasons, postpone reasons, notification messages
+- **Use `||`**: Only when backend absolutely requires both (check schema first!)
+
+**Related**: See `IMPLEMENTATION_SUMMARY_UX_FIXES_OCT_25_2025.md` for validation pattern migration
+
+### 3. Index-First Queries (Performance Critical)
 
 **Always use `.withIndex()`** to avoid table scans. Check `convex/schema.ts` for `.index()` definitions.
 
@@ -124,7 +153,7 @@ return all.filter(c => c.schoolId === schoolId);
 - `classes`: `by_teacher`, `by_school`, `by_student`, `by_status`, `by_scheduled_date`, `by_school_and_date`, `by_teacher_and_date`
 - `students`: `by_student_id`, `by_school`, `by_guardian`, `by_guardian_id`
 
-### 3. Avoid N+1 Query Problems
+### 4. Avoid N+1 Query Problems
 
 **NEVER query inside loops**. Use batch fetch + lookup map pattern.
 
@@ -143,7 +172,7 @@ const studentMap = new Map(students.map(s => [s._id, s]));
 
 See `docs/OPTIMIZATION_ANALYSIS_2025.md` for identified bottlenecks and fixes.
 
-### 4. Toast Notifications (Replace alert/confirm)
+### 5. Toast Notifications (Replace alert/confirm)
 
 ```tsx
 import { toast } from "@/lib/toast";
@@ -159,7 +188,7 @@ confirm("Are you sure?");
 
 See `lib/toast.ts` for implementation, `components/desktop-notification-toast.tsx` for UI.
 
-### 5. Rate Limiting on Mutations
+### 6. Rate Limiting on Mutations
 
 ```typescript
 import { checkRateLimit } from "./rateLimit";
@@ -180,7 +209,7 @@ export const book = mutation({
 - Class bookings: 30/min
 - Messages: 20/min
 
-### 6. Unique Student IDs (Do Not Replace)
+### 7. Unique Student IDs (Do Not Replace)
 
 **Deterministic format**: `{SchoolHash}-{NameHash}-{Timestamp}-{Random}`
 
@@ -197,7 +226,7 @@ function generateStudentId(firstName: string, lastName: string, schoolId: string
 
 **Example**: `BANG-EVTH-abc123-XY4Z`
 
-### 7. Class Booking State Machine
+### 8. Class Booking State Machine
 
 ```
 Teacher books → "pending"
@@ -211,7 +240,7 @@ EXCEPTION: isGuardianLinked: true → auto-approve (bypasses moderator)
 
 See `convex/classes.ts` for state transitions and validation.
 
-### 8. Soft Deletes (No Hard Deletes)
+### 9. Soft Deletes (No Hard Deletes)
 
 Use `isActive` boolean instead of deleting records.
 
@@ -225,7 +254,7 @@ ctx.db.query("teacherResources")
 await ctx.db.patch(resourceId, { isActive: false });
 ```
 
-### 9. File Upload Pattern (Convex Storage)
+### 10. File Upload Pattern (Convex Storage)
 
 **For file attachments** (messages, contact requests), use Convex `_storage`:
 
@@ -252,7 +281,7 @@ const url = await ctx.storage.getUrl(storageId);
 
 **Pattern location**: See `convex/messages.ts` and `convex/adminContactRequests.ts`
 
-### 10. Login Security Pattern (Account Lockout)
+### 11. Login Security Pattern (Account Lockout)
 
 **Automatic 24-hour lockout** after 5 failed login attempts:
 
@@ -283,7 +312,7 @@ await ctx.db.patch(user._id, {
 
 **Admin bypass**: Reset password to `Teacher{username}` to unlock account early
 
-### 11. Bulk Deletion Pattern (Security-Critical)
+### 12. Bulk Deletion Pattern (Security-Critical)
 
 **Admin-only bulk operations** require strict authorization checks:
 
@@ -327,7 +356,7 @@ export const bulkDelete = mutation({
 
 **Example**: See `convex/classes.ts` `bulkDelete` mutation and `components/sangsom-delete-button.tsx`
 
-### 12. Audit Logging Pattern
+### 13. Audit Logging Pattern
 
 **All significant administrative actions** should be logged for compliance:
 
@@ -366,7 +395,7 @@ export const deleteUser = mutation({
 
 **Admin UI**: `components/audit-logs.tsx` provides full audit log viewer with filters, statistics, and CSV export.
 
-### 13. Teacher Cycle Editor Pattern (NEW Oct 2025)
+### 14. Teacher Cycle Editor Pattern (NEW Oct 2025)
 
 **Nested modal with confirmation flow** for moderators/admins to edit teacher ClassCount cycles:
 
