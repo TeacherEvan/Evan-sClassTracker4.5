@@ -744,7 +744,13 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   {schoolId && (
                     <button
                       type="button"
-                      onClick={() => setCreatingStudent(!creatingStudent)}
+                      onClick={() => {
+                        setCreatingStudent(!creatingStudent);
+                        // Auto-set school ID when creating new student
+                        if (!creatingStudent && schoolId) {
+                          setNewStudentSchoolId(schoolId);
+                        }
+                      }}
                       className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
                       disabled={!schoolId}
                     >

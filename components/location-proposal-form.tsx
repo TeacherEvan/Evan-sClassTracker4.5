@@ -35,9 +35,9 @@ export default function LocationProposalForm({
     setLoading(true);
 
     try {
-      if (!name.trim() || !nameTh.trim()) {
+      if (!name.trim() && !nameTh.trim()) {
         throw new Error(
-          t("Please fill in both location names", "กรุณากรอกชื่อสถานที่ทั้งสองภาษา")
+          t("Please fill in at least one location name", "กรุณากรอกชื่อสถานที่อย่างน้อยหนึ่งภาษา")
         );
       }
 

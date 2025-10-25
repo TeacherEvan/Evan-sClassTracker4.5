@@ -161,8 +161,8 @@ export function ClassDetailModal({
     };
 
     const handleCancelRequest = async () => {
-        if (!cancelReason.trim() || !cancelReasonTh.trim()) {
-            toast.error("Please provide reasons in both languages", "กรุณาระบุเหตุผลทั้งสองภาษา");
+        if (!cancelReason.trim() && !cancelReasonTh.trim()) {
+            toast.error("Please provide a reason in at least one language", "กรุณาระบุเหตุผลอย่างน้อยหนึ่งภาษา");
             return;
         }
 
@@ -188,8 +188,8 @@ export function ClassDetailModal({
     };
 
     const handlePostponeRequest = async () => {
-        if (!postponeReason.trim() || !postponeReasonTh.trim()) {
-            toast.error("Please provide reasons in both languages", "กรุณาระบุเหตุผลทั้งสองภาษา");
+        if (!postponeReason.trim() && !postponeReasonTh.trim()) {
+            toast.error("Please provide a reason in at least one language", "กรุณาระบุเหตุผลอย่างน้อยหนึ่งภาษา");
             return;
         }
 

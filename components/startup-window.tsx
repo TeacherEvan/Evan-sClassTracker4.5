@@ -39,14 +39,11 @@ export function StartupWindow({
                 `startupWindowDismissed_${user._id}`
             );
             if (!dismissed) {
-                // Set to Thai by default for all users
-                if (language === "en") {
-                    setLanguage("th");
-                }
+                // Don't force language - let user choose
                 setIsVisible(true);
             }
         }
-    }, [user._id, user.role, language, setLanguage]);
+    }, [user._id, user.role]);
 
     const handleClose = (dontShowAgain: boolean = false) => {
         setIsClosing(true);

@@ -250,8 +250,8 @@ export const bulkDeleteStudents = mutation({
             throw new Error("Maximum 100 students per bulk deletion");
         }
 
-        // ✅ SECURITY: Validate reason
-        validateLength(operationArgs.reason, "Deletion reason", 500, 10);
+        // ✅ SECURITY: Validate reason (minimum 3 characters)
+        validateLength(operationArgs.reason, "Deletion reason", 500, 3);
 
         // ✅ SECURITY: Rate limiting
         await checkRateLimit(ctx, {
