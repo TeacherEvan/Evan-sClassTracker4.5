@@ -139,7 +139,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     firstName: nickname, // Use nickname as firstName
                     lastName: "", // Empty lastName
                     grade,
-                    class: studentClass || undefined,
+                    class: studentClass && studentClass.trim() ? studentClass.trim() : undefined,
                     guardianName: guardianName || undefined,
                     guardianPhone: guardianPhone || undefined,
                     guardianEmail: guardianEmail || undefined,
@@ -165,7 +165,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     lastName: "", // Empty lastName
                     schoolId: schoolId || undefined,
                     grade,
-                    class: studentClass || undefined,
+                    class: studentClass && studentClass.trim() ? studentClass.trim() : undefined,
                     guardianName: guardianName || undefined,
                     guardianPhone: guardianPhone || undefined,
                     guardianEmail: guardianEmail || undefined,
