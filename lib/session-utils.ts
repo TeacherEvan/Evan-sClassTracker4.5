@@ -81,7 +81,7 @@ export function getSessionTimeRemaining(): number {
         const session: UserSession = JSON.parse(saved);
         const remaining = session.expiresAt - Date.now();
         return Math.max(0, remaining);
-    } catch (error) {
+    } catch {
         return 0;
     }
 }
