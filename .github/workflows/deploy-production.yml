@@ -75,4 +75,4 @@ jobs:
         run: |
           echo "✅ Production deployment complete!"
           echo "🔗 Convex URL: ${{ needs.deploy-convex.outputs.convex_url }}"
-          echo "🚀 Vercel deployment: https://vercel.com/${{ secrets.VERCEL_ORG_ID }}/${{ secrets.VERCEL_PROJECT_ID }}"
+          echo "🚀 Vercel deployment completed successfully"
