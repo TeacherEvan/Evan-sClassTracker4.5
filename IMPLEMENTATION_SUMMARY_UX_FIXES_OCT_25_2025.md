@@ -16,6 +16,7 @@ Fixed 4 critical user experience issues reported by moderators and teachers prev
 **Root Cause**: useEffect dependency loop causing forced language switch on mount
 
 **Fix**:
+
 ```typescript
 // REMOVED - This was causing the jump-back
 useEffect(() => {
@@ -33,12 +34,14 @@ useEffect(() => {
 
 **Issue**: Forms required BOTH English AND Thai input even though backend accepted either
 **Affected Components**:
+
 - `components/location-proposal-form.tsx`
 - `components/class-detail-modal.tsx` (2 instances)
 
 **Root Cause**: Frontend validation used OR (||) logic requiring both fields, backend used AND (&&) allowing either
 
 **Pattern Change**:
+
 ```typescript
 // BEFORE - Requires BOTH languages (too strict)
 if (!name.trim() || !nameTh.trim()) {
@@ -54,6 +57,7 @@ if (!name.trim() && !nameTh.trim()) {
 ```
 
 **Impact**:
+
 - Location proposals: Can submit with single language ✅
 - Cancel requests: Can provide reason in either language ✅
 - Postpone requests: Can provide reason in either language ✅
@@ -68,6 +72,7 @@ if (!name.trim() && !nameTh.trim()) {
 **Root Cause**: `newStudentSchoolId` never populated when toggling "Create New Student"
 
 **Fix**:
+
 ```typescript
 // Added auto-population of schoolId when toggling Create New
 onClick={() => {
@@ -79,6 +84,7 @@ onClick={() => {
 ```
 
 **Button Logic** (already correct, just needed schoolId):
+
 ```typescript
 const isNewStudentValid = 
   newStudentFirstName.trim() && 
@@ -98,12 +104,14 @@ const isNewStudentValid =
 **Root Cause**: Validation required 10+ character deletion reason, users typing shorter reasons like "ลบ" (delete)
 
 **Error**:
+
 ```
 [CONVEX M(bulkOperations.bulkDeleteStudents)] Server Error
 Called by client
 ```
 
 **Fix**:
+
 ```typescript
 // BEFORE - Too restrictive
 validateLength(operationArgs.reason, "Deletion reason", 500, 10);
@@ -113,6 +121,7 @@ validateLength(operationArgs.reason, "Deletion reason", 500, 3);
 ```
 
 **Reasoning**:
+
 - Thai words can be very short (2-3 chars convey full meaning)
 - English short phrases like "old" or "test" are valid
 - Still enforces 3-char minimum to prevent accidental empty deletions
@@ -141,10 +150,12 @@ if (!fieldEn.trim() || !fieldTh.trim()) {
 ```
 
 **Logic Breakdown**:
+
 - `||` (OR): True if EITHER field empty → Requires BOTH filled
 - `&&` (AND): True if BOTH fields empty → Requires AT LEAST ONE filled
 
 **When to use each**:
+
 - **Use `&&`**: Bilingual inputs where either language acceptable
 - **Use `||`**: Critical fields requiring both (rare - check backend first!)
 
@@ -185,12 +196,14 @@ if (!fieldEn.trim() || !fieldTh.trim()) {
 ## Impact
 
 **User Experience**:
+
 - ✅ Moderators can work in their preferred language
 - ✅ Teachers can submit forms in either language
 - ✅ Student creation works intuitively
 - ✅ Bulk operations accept natural short reasons
 
 **Code Quality**:
+
 - Frontend/backend validation now consistent
 - Removed unnecessary language restrictions
 - Improved form usability
