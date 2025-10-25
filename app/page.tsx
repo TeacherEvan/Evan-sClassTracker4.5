@@ -3,7 +3,7 @@
 // ✅ PERFORMANCE: Lazy load heavy components for code splitting (40-50% faster initial load)
 import { useMutation, useQuery } from "convex/react";
 import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, FlaskConical, GraduationCap, HelpCircle, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
-import { lazy, Suspense, useEffect, useState, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 // Core components (always loaded)
 import { AdminContactButton } from "@/components/admin-contact-button";

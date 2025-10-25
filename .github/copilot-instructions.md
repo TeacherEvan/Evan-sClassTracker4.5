@@ -18,9 +18,6 @@ Bilingual (English/Thai) class tracking system built with **Next.js 15**, **Reac
 - `.github/copilot-instructions.md` - This file
 
 ---
-# AI Agent Instructions - Evan's Class Tracker 4.5
-
-Bilingual (English/Thai) class tracking system built with **Next.js 15**, **React 19**, **Convex** real-time backend, and **Tailwind v4**. Recent optimizations (Oct 2025) achieved **40-50% faster loads** and **10-100x faster queries** via N+1 elimination.
 
 ## Architecture Essentials
 
@@ -44,18 +41,34 @@ All components need `"use client"` directive. Never reorder or remove these prov
 - **Never edit** `convex/_generated/` - auto-regenerated from schema
 - **Client pattern**: `useQuery(api.users.list, {})` for reads, `useMutation(api.classes.book)` for writes
 - **Pass userId explicitly** - no built-in `ctx.auth.getUserIdentity()`, uses custom session auth
+- **All components require `"use client"`** - Next.js App Router requires this for client-side hooks
 
-### Authentication (Custom, Not Built-In)
+### Authentication & Session Management
+
+**Custom authentication** (not Convex built-in auth):
 
 ```tsx
-// Session stored in localStorage (not sessionStorage as docs claim)
-const savedUser = localStorage.getItem("currentUser");
+// Session stored in localStorage with 24-hour expiration
+import { saveUserSession, loadUserSession, clearUserSession } from "@/lib/session-utils";
+
+// On login - saves with auto-expiration
+saveUserSession(user);
+
+// On page load - validates expiration
+const user = loadUserSession(); // Returns null if expired
+
+// On logout
+clearUserSession();
 ```
 
+**Session security features**:
+- **24-hour auto-expiration**: Sessions expire after 24 hours (NEW Oct 2025)
+- **Auto-extension on activity**: Each page load resets the timer
 - **Default password**: `Teacher{username}` (e.g., `TeacherEvan`)
 - **First login**: Forced password change via `requirePasswordChange` flag
 - **Admin powers**: Create/reset passwords, cannot view existing passwords
 - **Password hashing**: Uses `btoa()` (⚠️ NOT production-secure, noted in `convex/users.ts`)
+- **Account lockout**: 24-hour lockout after 5 failed login attempts (see Login Security Pattern below)
 
 ## Non-Negotiable Patterns
 
@@ -66,9 +79,29 @@ const savedUser = localStorage.getItem("currentUser");
 ```tsx
 const { t } = useLanguage(); // Helper from lib/language-context.tsx
 <h1>{t("Book Class", "จองคลาส")}</h1>
+
+// For forms - use BilingualInput component (NEW Oct 2025)
+import { BilingualInput } from "@/components/bilingual-input";
+
+<BilingualInput
+  labelEn="Location Name"
+  labelTh="ชื่อสถานที่"
+  valueEn={nameEn}
+  valueTh={nameTh}
+  onChangeEn={setNameEn}
+  onChangeTh={setNameTh}
+  type="text"
+  required
+/>
 ```
 
-**Example**: `components/notification-form.tsx` shows parallel input fields for both languages.
+**BilingualInput benefits**:
+- Automatic 300ms debouncing (50% fewer re-renders)
+- Consistent dark mode styling
+- Type-safe props
+- Reduces 200+ lines of duplicate code across components
+
+**Example**: `components/notification-form.tsx` and `components/bilingual-input.tsx`
 
 ### 2. Index-First Queries (Performance Critical)
 
@@ -333,6 +366,89 @@ export const deleteUser = mutation({
 
 **Admin UI**: `components/audit-logs.tsx` provides full audit log viewer with filters, statistics, and CSV export.
 
+### 13. Teacher Cycle Editor Pattern (NEW Oct 2025)
+
+**Nested modal with confirmation flow** for moderators/admins to edit teacher ClassCount cycles:
+
+```tsx
+// Parent modal (teacher-class-count-modal.tsx)
+const [showCycleEditor, setShowCycleEditor] = useState(false);
+
+// Escape key handler - prevents conflicts with parent modal
+useEffect(() => {
+  const handleEscape = (e: KeyboardEvent) => {
+    if (e.key === "Escape" && showCycleEditor) {
+      setShowCycleEditor(false); // Only closes nested modal
+    }
+  };
+  if (showCycleEditor) {
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }
+}, [showCycleEditor]);
+
+// Nested modal with higher z-index (z-60 > z-50)
+{showCycleEditor && (
+  <div className="fixed inset-0 z-[60]" role="dialog">
+    <TeacherCycleEditor
+      teacherId={teacherId}
+      moderatorId={moderatorId}
+      onComplete={() => setShowCycleEditor(false)}
+    />
+  </div>
+)}
+```
+
+**Backend confirmation pattern** (teacherClassCount.ts):
+
+```typescript
+export const setTeacherCycle = mutation({
+  args: {
+    teacherId: v.id("users"),
+    cycleStartDate: v.number(),
+    cycleEndDate: v.number(),
+    confirmed: v.optional(v.boolean()), // For override confirmation
+    moderatorId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    // Check for existing active cycle
+    const existingCycle = await ctx.db
+      .query("teacherClassCountCycles")
+      .withIndex("by_teacher_and_active", q => 
+        q.eq("teacherId", args.teacherId).eq("isActive", true))
+      .first();
+
+    // Require confirmation if replacing existing cycle
+    if (existingCycle && !args.confirmed) {
+      return {
+        requiresConfirmation: true,
+        existingCycle: {
+          startDate: existingCycle.cycleStartDate,
+          endDate: existingCycle.cycleEndDate,
+        },
+      };
+    }
+
+    // Deactivate existing cycle (soft delete)
+    if (existingCycle) {
+      await ctx.db.patch(existingCycle._id, { isActive: false });
+    }
+
+    // Create new cycle
+    await ctx.db.insert("teacherClassCountCycles", { ... });
+  }
+});
+```
+
+**Key features**:
+- **Auto-focus**: First input field auto-focused on mount (accessibility)
+- **Confirmation flow**: Warns before replacing existing cycle
+- **Role-based access**: Only moderators/admins see "Edit Cycle" button
+- **Visual indicator**: Active cycle shown with gradient UI banner
+- **Accessibility**: ARIA labels, escape key handling, keyboard navigation
+
+**Example**: See `components/teacher-cycle-editor.tsx` and `IMPLEMENTATION_SUMMARY_CYCLE_EDITOR.md`
+
 ## Security Considerations ⚠️
 
 ### Known Limitations (NOT Production-Ready)
@@ -353,8 +469,8 @@ This project has **known security issues** suitable for development/testing only
 
 3. **localStorage for Sessions (XSS Risk)**
    - Issue: Accessible to any JavaScript, no HttpOnly protection
-   - Sessions never expire (no timeout)
-   - **TODO**: Add session expiration or migrate to secure cookies
+   - **UPDATED Oct 2025**: 24-hour session expiration implemented (see `lib/session-utils.ts`)
+   - **TODO**: Migrate to secure HttpOnly cookies for production
 
 4. **Missing Rate Limits**
    - ✅ Class bookings: 30/min (protected)
@@ -590,14 +706,18 @@ if (window.targetSchool) {
 - `convex/classes.ts` - State machine, workflow, edit audit trail, authorization helpers
 - `convex/students.ts` - Unique ID generation pattern
 - `convex/users.ts` - Authentication, password hashing
+- `convex/teacherClassCount.ts` - ClassCount tracking, cycle management, confirmation flow
 
 ### UI Components
 - `components/class-booking.tsx` - Multi-date booking, optional fields, conflict detection
 - `components/edit-class-modal.tsx` - Full edit modal with audit trail
 - `components/desktop-notification-toast.tsx` - Toast notification UI
+- `components/teacher-cycle-editor.tsx` - Nested modal with confirmation flow pattern
+- `components/teacher-class-count-modal.tsx` - Cycle editor integration example
 
 ### Feature Documentation
 - `GOLD_TABLET_NOTIFICATION_WINDOW.md` - Notification window implementation guide
+- `IMPLEMENTATION_SUMMARY_CYCLE_EDITOR.md` - Nested modal, confirmation flow, active cycle indicator
 - `convex/notificationWindows.ts` - One-time notification window system
 - `convex/appUpdates.ts` - Feature update logging and changelog
 

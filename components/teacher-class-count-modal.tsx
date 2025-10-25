@@ -5,13 +5,15 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import { useMutation, useQuery } from "convex/react";
-import { Calendar, ChevronDown, ChevronRight, Download, Printer, X } from "lucide-react";
-import { useState } from "react";
+import { Calendar, ChevronDown, ChevronRight, Download, Edit2, Printer, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { TeacherCycleEditor } from "./teacher-cycle-editor";
 
 interface TeacherClassCountModalProps {
     teacherId: Id<"users">;
     teacherUsername: string;
     moderatorId: Id<"users">;
+    moderatorRole?: "moderator" | "admin"; // For authorization checks
     onClose: () => void;
 }
 
@@ -19,9 +21,13 @@ export function TeacherClassCountModal({
     teacherId,
     teacherUsername,
     moderatorId,
+    moderatorRole,
     onClose,
 }: TeacherClassCountModalProps) {
     const { t, language } = useLanguage();
+
+    // Cycle editor state
+    const [showCycleEditor, setShowCycleEditor] = useState(false);
 
     // Date range state (default: last 30 days)
     const [startDate, setStartDate] = useState(() => {
@@ -35,6 +41,20 @@ export function TeacherClassCountModal({
 
     // Expanded students tracking
     const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set());
+
+    // Escape key handler for cycle editor
+    useEffect(() => {
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === "Escape" && showCycleEditor) {
+                setShowCycleEditor(false);
+            }
+        };
+
+        if (showCycleEditor) {
+            window.addEventListener("keydown", handleEscape);
+            return () => window.removeEventListener("keydown", handleEscape);
+        }
+    }, [showCycleEditor]);
 
     // Query detailed class count
     const classCountData = useQuery(
@@ -183,6 +203,41 @@ export function TeacherClassCountModal({
                     </div>
                 </div>
 
+                {/* Active Cycle Indicator */}
+                {classCountData.cycleInfo.isCustomCycle && (
+                    <div className="mx-6 mt-6 p-4 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 border-l-4 border-indigo-500 rounded-r-lg shadow-sm">
+                        <div className="flex items-start gap-3">
+                            <Calendar className="w-5 h-5 text-indigo-600 dark:text-indigo-400 mt-0.5 flex-shrink-0" />
+                            <div className="flex-1">
+                                <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                                    <span>{t("Active ClassCount Cycle:", "รอบการนับชั้นเรียนที่ใช้งาน:")}</span>
+                                    <span className="text-indigo-600 dark:text-indigo-400">
+                                        {new Date(classCountData.cycleInfo.startDate).toLocaleDateString(language === "en" ? "en-US" : "th-TH", {
+                                            month: "short",
+                                            day: "numeric",
+                                            year: "numeric"
+                                        })}
+                                    </span>
+                                    <span className="text-gray-500">→</span>
+                                    <span className="text-indigo-600 dark:text-indigo-400">
+                                        {new Date(classCountData.cycleInfo.endDate).toLocaleDateString(language === "en" ? "en-US" : "th-TH", {
+                                            month: "short",
+                                            day: "numeric",
+                                            year: "numeric"
+                                        })}
+                                    </span>
+                                </div>
+                                {/* Show notes if available */}
+                                {(classCountData.cycleInfo.notes || classCountData.cycleInfo.notesTh) && (
+                                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 italic">
+                                        💡 {language === "en" ? classCountData.cycleInfo.notes : (classCountData.cycleInfo.notesTh || classCountData.cycleInfo.notes)}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Summary */}
                 <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
                     <h3 className="text-lg font-semibold mb-3">{t("Summary", "สรุป")}</h3>
@@ -296,6 +351,17 @@ export function TeacherClassCountModal({
                             💡 {t("Note: Teacher will be notified of this view", "หมายเหตุ: ครูจะได้รับการแจ้งเตือนการดูนี้")}
                         </div>
                         <div className="flex gap-3">
+                            {/* Edit Cycle Button - Only for moderators/admins */}
+                            {(moderatorRole === "moderator" || moderatorRole === "admin") && (
+                                <button
+                                    onClick={() => setShowCycleEditor(true)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                                    aria-label={t("Edit cycle period", "แก้ไขรอบการนับ")}
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                    {t("Edit Cycle", "แก้ไขรอบ")}
+                                </button>
+                            )}
                             <button
                                 onClick={handleExportCSV}
                                 className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
@@ -313,6 +379,44 @@ export function TeacherClassCountModal({
                         </div>
                     </div>
                 </div>
+
+                {/* Cycle Editor Modal - Rendered conditionally */}
+                {showCycleEditor && (
+                    <div
+                        className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="cycle-editor-title"
+                    >
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 id="cycle-editor-title" className="text-xl font-bold">
+                                    {t("Edit ClassCount Cycle", "แก้ไขรอบการนับชั้นเรียน")}
+                                </h3>
+                                <button
+                                    onClick={() => setShowCycleEditor(false)}
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                    aria-label={t("Close", "ปิด")}
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <TeacherCycleEditor
+                                teacherId={teacherId}
+                                teacherName={teacherUsername}
+                                moderatorId={moderatorId}
+                                onComplete={() => {
+                                    setShowCycleEditor(false);
+                                    // Optionally trigger data refresh by updating date range
+                                    toast.success(
+                                        "Cycle updated successfully. Refresh to see changes.",
+                                        "อัปเดตรอบสำเร็จ รีเฟรชเพื่อดูการเปลี่ยนแปลง"
+                                    );
+                                }}
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

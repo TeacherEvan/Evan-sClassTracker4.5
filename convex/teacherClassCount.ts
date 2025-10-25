@@ -130,6 +130,13 @@ export const getTeacherClassCountDetailed = query({
         // Filter classes to those with notes
         const classesFiltered = classes.filter(c => classIdsWithNotes.has(c._id));
 
+        // Check for active cycle for this teacher
+        const activeCycle = await ctx.db
+            .query("teacherClassCountCycles")
+            .withIndex("by_teacher", (q) => q.eq("teacherId", args.teacherId))
+            .filter((q) => q.eq(q.field("isActive"), true))
+            .first();
+
         // Batch fetch all students to avoid N+1 (only for classes that were counted)
         const studentIds = new Set<string>();
         classesFiltered.forEach(cls => {
@@ -219,6 +226,13 @@ export const getTeacherClassCountDetailed = query({
             dateRange: {
                 start: args.startDate,
                 end: args.endDate,
+            },
+            cycleInfo: {
+                startDate: args.startDate,
+                endDate: args.endDate,
+                isCustomCycle: !!activeCycle,
+                notes: activeCycle?.notes,
+                notesTh: activeCycle?.notesTh,
             },
             summary: {
                 totalClassCount: Math.round(totalClassCount * 10) / 10,
@@ -352,6 +366,37 @@ export const getMyClassCountDetails = query({
 });
 
 /**
+ * Check for existing active cycles before setting a new one
+ * Returns info about existing cycle for confirmation
+ */
+export const checkExistingCycle = query({
+    args: {
+        teacherId: v.id("users"),
+    },
+    handler: async (ctx, args) => {
+        const existingCycle = await ctx.db
+            .query("teacherClassCountCycles")
+            .withIndex("by_teacher_and_active", (q) =>
+                q.eq("teacherId", args.teacherId).eq("isActive", true)
+            )
+            .first();
+
+        if (!existingCycle) {
+            return null;
+        }
+
+        return {
+            _id: existingCycle._id,
+            startDate: existingCycle.cycleStartDate,
+            endDate: existingCycle.cycleEndDate,
+            notes: existingCycle.notes,
+            notesTh: existingCycle.notesTh,
+            createdAt: existingCycle.createdAt,
+        };
+    },
+});
+
+/**
  * Moderator sets custom cycle dates for a teacher
  * Deactivates previous cycles and creates new active cycle
  */
@@ -363,6 +408,7 @@ export const setTeacherCycle = mutation({
         notes: v.optional(v.string()),
         notesTh: v.optional(v.string()),
         moderatorId: v.id("users"),
+        confirmed: v.optional(v.boolean()), // For confirming override of existing cycle
     },
     handler: async (ctx, args) => {
         // Verify moderator authorization
@@ -387,7 +433,7 @@ export const setTeacherCycle = mutation({
             throw new Error("Cycle start date must be before end date");
         }
 
-        // Deactivate existing active cycles
+        // Check for existing active cycles
         const existingCycles = await ctx.db
             .query("teacherClassCountCycles")
             .withIndex("by_teacher_and_active", (q) =>
@@ -395,6 +441,22 @@ export const setTeacherCycle = mutation({
             )
             .collect();
 
+        // If there's an existing cycle and not confirmed, return warning
+        if (existingCycles.length > 0 && !args.confirmed) {
+            const existingCycle = existingCycles[0];
+            return {
+                requiresConfirmation: true,
+                existingCycle: {
+                    startDate: existingCycle.cycleStartDate,
+                    endDate: existingCycle.cycleEndDate,
+                    notes: existingCycle.notes,
+                    notesTh: existingCycle.notesTh,
+                },
+                message: "An active cycle already exists. Proceeding will replace it.",
+            };
+        }
+
+        // Deactivate existing active cycles
         for (const cycle of existingCycles) {
             await ctx.db.patch(cycle._id, { isActive: false });
         }
@@ -437,7 +499,7 @@ export const setTeacherCycle = mutation({
             createdAt: Date.now(),
         });
 
-        return cycleId;
+        return { success: true, cycleId };
     },
 });
 

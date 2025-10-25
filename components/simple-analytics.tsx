@@ -406,6 +406,7 @@ export function SimpleAnalytics({ schoolId, currentUserId, currentUserRole, curr
                     teacherId={selectedTeacher.id}
                     teacherUsername={selectedTeacher.username}
                     moderatorId={currentUserId}
+                    moderatorRole={currentUserRole as "moderator" | "admin"}
                     onClose={() => setSelectedTeacher(null)}
                 />
             )}
