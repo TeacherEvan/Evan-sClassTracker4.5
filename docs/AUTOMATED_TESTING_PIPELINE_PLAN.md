@@ -1492,6 +1492,7 @@ Add these secrets to GitHub repository settings:
 ### 6.1 Daily Automated Runs
 
 The pipeline runs automatically:
+
 - **On every PR** - Prevents buggy code from merging
 - **On push to main/develop** - Validates production code
 - **Daily at 2 AM UTC** - Catches issues from external changes
@@ -1508,6 +1509,7 @@ The pipeline runs automatically:
 ### 6.3 Alert Thresholds
 
 **Create GitHub Issues automatically when:**
+
 - Any test fails on main branch
 - Documentation mismatches >= 3 high severity
 - Test execution time > 30 minutes
@@ -1557,7 +1559,7 @@ The pipeline runs automatically:
 ### GitHub Actions Minutes
 
 - **Free tier:** 2,000 minutes/month
-- **Estimated usage:** 
+- **Estimated usage:**
   - Per run: ~15 minutes (all test suites)
   - Daily runs: 15 min × 30 days = 450 minutes
   - PR runs: 15 min × 20 PRs = 300 minutes
@@ -1582,21 +1584,25 @@ The pipeline runs automatically:
 ## Success Criteria
 
 ### Week 1-2: Infrastructure
+
 - ✅ Docker containers running successfully
 - ✅ GitHub Actions workflow executing
 - ✅ Test environment auto-seeding
 
 ### Week 3: Test Coverage
+
 - ✅ 80% of user workflows covered
 - ✅ All 3 user roles tested
 - ✅ Documentation consistency checks working
 
 ### Week 4: Integration
+
 - ✅ Automated reports generating
 - ✅ GitHub issues auto-created for failures
 - ✅ Team trained on using the system
 
 ### Ongoing
+
 - ✅ <5% flaky test rate
 - ✅ All bugs found are actionable
 - ✅ Documentation stays up-to-date
@@ -1605,9 +1611,10 @@ The pipeline runs automatically:
 
 ## Next Steps for Implementation
 
-### Immediate (Another Agent Should):
+### Immediate (Another Agent Should)
 
 1. **Create file structure:**
+
    ```
    mkdir -p tests/{teacher,moderator,admin,documentation,workflows,fixtures}
    mkdir -p scripts
@@ -1615,6 +1622,7 @@ The pipeline runs automatically:
    ```
 
 2. **Install Playwright:**
+
    ```bash
    npm install -D @playwright/test
    npx playwright install
@@ -1629,6 +1637,7 @@ The pipeline runs automatically:
 6. **Create seed/cleanup scripts**
 
 7. **Test locally first:**
+
    ```bash
    npm run test:seed
    npm run test:teacher
@@ -1645,6 +1654,7 @@ The pipeline runs automatically:
 ## Conclusion
 
 This automated testing pipeline will:
+
 - ✅ Run continuously in the background (GitHub Actions)
 - ✅ Test all user roles comprehensively
 - ✅ Detect documentation vs behavior contradictions

@@ -7,7 +7,8 @@ Write-Host ""
 # Step 1: Check if .env.test.local exists
 if (Test-Path .env.test.local) {
     Write-Host "[OK] .env.test.local already exists" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "[CREATING] .env.test.local from template..." -ForegroundColor Yellow
     Copy-Item .env.test.local.template .env.test.local
     Write-Host "[OK] Created .env.test.local - PLEASE EDIT IT WITH YOUR CREDENTIALS!" -ForegroundColor Green

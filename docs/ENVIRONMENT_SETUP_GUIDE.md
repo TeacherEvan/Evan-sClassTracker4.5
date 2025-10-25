@@ -3,6 +3,7 @@
 ## Overview
 
 This guide explains how to set up credentials for:
+
 1. **GitHub Actions** (CI/CD pipeline)
 2. **Docker Hub** (Container registry)
 3. **Convex Test Environment** (Separate from production)
@@ -23,7 +24,8 @@ Click **"New repository secret"** and add each of these:
 **Name:** `CONVEX_TEST_DEPLOY_KEY`
 
 **How to get it:**
-1. Go to https://dashboard.convex.dev/
+
+1. Go to <https://dashboard.convex.dev/>
 2. Create a new deployment called "evan-sclasstracker-test" (separate from production)
 3. Go to Settings → Deploy Keys
 4. Copy the deploy key
@@ -39,10 +41,11 @@ Click **"New repository secret"** and add each of these:
 **Value:** `evilevan91`
 
 **Name:** `DOCKER_PASSWORD`
-**Value:** `[Your Docker Hub password - you'll insert this]`
+**Value:** `[Your Docker Hub access token - paste it here]`
 
 **How to get Docker Hub token (recommended over password):**
-1. Go to https://hub.docker.com/settings/security
+
+1. Go to <https://hub.docker.com/settings/security>
 2. Click "New Access Token"
 3. Name it "GitHub Actions - Evan Class Tracker"
 4. Copy the token
@@ -69,6 +72,7 @@ Click **"New repository secret"** and add each of these:
 **Value:** `https://hooks.slack.com/services/YOUR/WEBHOOK/URL`
 
 **How to get it:**
+
 1. Go to your Slack workspace
 2. Add "Incoming Webhooks" app
 3. Create webhook for a channel (e.g., #test-alerts)
@@ -106,6 +110,7 @@ DOCKER_USERNAME=evilevan91
 ### B. Update `.gitignore` (ensure secrets aren't committed)
 
 Already done - verify these are in `.gitignore`:
+
 ```
 .env.local
 .env.test.local
@@ -118,7 +123,7 @@ Already done - verify these are in `.gitignore`:
 
 ### Create Separate Test Deployment
 
-1. **Go to Convex Dashboard:** https://dashboard.convex.dev/
+1. **Go to Convex Dashboard:** <https://dashboard.convex.dev/>
 
 2. **Create New Deployment:**
    - Click "New Deployment"
@@ -137,6 +142,7 @@ Already done - verify these are in `.gitignore`:
    - Add to GitHub Secrets as `CONVEX_TEST_DEPLOY_KEY`
 
 5. **Copy Schema & Functions:**
+
    ```bash
    # Deploy your schema to test environment
    CONVEX_DEPLOYMENT=prod:your-test-deployment npx convex deploy
@@ -148,7 +154,7 @@ Already done - verify these are in `.gitignore`:
 
 ### A. Create Repository on Docker Hub
 
-1. **Login:** https://hub.docker.com/
+1. **Login:** <https://hub.docker.com/>
    - Username: `evilevan91`
    - Password: [Your password]
 
@@ -164,7 +170,7 @@ Already done - verify these are in `.gitignore`:
 
 Instead of using your password in GitHub Actions:
 
-1. Go to: https://hub.docker.com/settings/security
+1. Go to: <https://hub.docker.com/settings/security>
 2. Click "New Access Token"
 3. Description: "GitHub Actions - Evan Class Tracker"
 4. Access permissions: Read, Write, Delete
@@ -189,7 +195,7 @@ No additional setup needed - the workflow file will use the secrets automaticall
 
 ## 6. Quick Setup Checklist
 
-### Required (Must Do):
+### Required (Must Do)
 
 - [ ] Create Convex test deployment
 - [ ] Add `CONVEX_TEST_DEPLOY_KEY` to GitHub Secrets
@@ -198,7 +204,7 @@ No additional setup needed - the workflow file will use the secrets automaticall
 - [ ] Create `.env.test.local` file locally (for local testing)
 - [ ] Verify `.gitignore` includes `.env*.local`
 
-### Optional (Nice to Have):
+### Optional (Nice to Have)
 
 - [ ] Add `TEST_ADMIN_PASSWORD` to GitHub Secrets (defaults to `AdminTest123!`)
 - [ ] Add `TEST_TEACHER_PASSWORD` to GitHub Secrets
@@ -232,6 +238,7 @@ docker build -f Dockerfile.test -t evan-class-tracker-test .
 ### B. Test GitHub Actions
 
 1. Create a small test workflow first:
+
    ```yaml
    # .github/workflows/test-setup.yml
    name: Test Setup
@@ -258,6 +265,7 @@ docker build -f Dockerfile.test -t evan-class-tracker-test .
 ## 8. Security Best Practices
 
 ✅ **DO:**
+
 - Use access tokens instead of passwords
 - Keep `.env*.local` files out of git
 - Rotate credentials every 90 days
@@ -265,6 +273,7 @@ docker build -f Dockerfile.test -t evan-class-tracker-test .
 - Review GitHub Actions logs for exposed secrets
 
 ❌ **DON'T:**
+
 - Commit `.env.local` or `.env.test.local` to git
 - Share deploy keys in public channels
 - Use production credentials for testing
@@ -281,7 +290,8 @@ docker build -f Dockerfile.test -t evan-class-tracker-test .
 
 ### "Convex deployment failed"
 
-**Solution:** 
+**Solution:**
+
 1. Check `CONVEX_TEST_DEPLOY_KEY` format is correct
 2. Verify deployment exists in dashboard
 3. Ensure team permissions are correct
@@ -289,6 +299,7 @@ docker build -f Dockerfile.test -t evan-class-tracker-test .
 ### "Docker login failed"
 
 **Solution:**
+
 1. Verify `DOCKER_USERNAME` is exactly `evilevan91`
 2. Regenerate Docker Hub access token
 3. Update `DOCKER_PASSWORD` secret
@@ -296,6 +307,7 @@ docker build -f Dockerfile.test -t evan-class-tracker-test .
 ### "Test users not found"
 
 **Solution:** Run seed script first:
+
 ```bash
 node scripts/seed-test-data.js
 ```
@@ -305,6 +317,7 @@ node scripts/seed-test-data.js
 ## 10. What You DON'T Need
 
 You **DO NOT** need to create:
+
 - ❌ GitHub personal access token (workflow uses built-in `GITHUB_TOKEN`)
 - ❌ Additional API keys (unless using third-party services)
 - ❌ AWS/Azure credentials (not using cloud storage)
@@ -325,6 +338,7 @@ You **DO NOT** need to create:
 ## Summary
 
 **Required APIs/Credentials:**
+
 1. ✅ Convex Test Deployment + Deploy Key
 2. ✅ Docker Hub Username + Access Token
 3. ✅ Test user passwords (can use defaults)
