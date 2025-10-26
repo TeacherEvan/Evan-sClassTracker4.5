@@ -15,10 +15,15 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 );
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  // Initialize from localStorage or default to Thai
+  // Initialize from localStorage with Thai as default
   const [language, setLanguageState] = useState<Language>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("preferredLanguage");
+      // If no preference saved, default to Thai
+      if (!saved) {
+        localStorage.setItem("preferredLanguage", "th");
+        return "th";
+      }
       return (saved as Language) || "th";
     }
     return "th";

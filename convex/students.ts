@@ -130,9 +130,32 @@ export const create = mutation({
     if (args.schoolId && !args.class) {
       throw new Error("Class is required for students linked to a school");
     }
+
+    // ✅ PREVENT DUPLICATES: Check if student already exists with same name + grade + class + school
+    if (args.schoolId) {
+      const duplicateCheck = await ctx.db
+        .query("students")
+        .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId!))
+        .collect();
+      
+      const duplicate = duplicateCheck.find(
+        (s) =>
+          s.firstName.toLowerCase() === args.firstName.toLowerCase() &&
+          (s.lastName || "").toLowerCase() === (args.lastName || "").toLowerCase() &&
+          s.grade === args.grade &&
+          s.class === args.class
+      );
+
+      if (duplicate) {
+        throw new Error(
+          `Student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" already exists in ${args.grade}${args.class}`
+        );
+      }
+    }
+
     // Generate unique student ID
     const schoolIdForHash = args.schoolId || "GUARDIAN";
-    let studentId = generateStudentId(args.firstName, args.lastName, schoolIdForHash);
+    let studentId = generateStudentId(args.firstName, args.lastName || "", schoolIdForHash);
 
     // Check for duplicates and regenerate if necessary
     let attempts = 0;
