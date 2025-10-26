@@ -5,6 +5,7 @@ Bilingual English/Thai class tracker for teachers and schools - Built with Next.
 ## ✨ Latest Updates (Oct 26, 2025)
 
 ### Fixes Applied Today
+
 - ✅ **Student Creation**: Empty lastName allowed for Thai single-name students
 - ✅ **Duplicate Prevention**: Blocks duplicate students (same name+grade+class+school)  
 - ✅ **Error Messages**: Shows actual error details instead of generic messages
@@ -12,6 +13,7 @@ Bilingual English/Thai class tracker for teachers and schools - Built with Next.
 - ✅ **CI/CD Fix**: Disabled Next.js telemetry to prevent firewall blocks
 
 ### Recent Major Features (Oct 25, 2025)
+
 - 🎯 **Teacher Cycle Editor**: Moderators manage ClassCount cycles with confirmation flow
 - 🚀 **Startup Window**: Welcome screen with quick actions and recent activity
 - ❓ **Help System**: Role-based comprehensive guides (20+ features documented)
