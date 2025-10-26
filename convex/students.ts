@@ -119,7 +119,10 @@ export const create = mutation({
 
     // ✅ SECURITY: Input validation - student names max 100 chars
     validateLength(args.firstName, "First name", 100, 1);
-    validateLength(args.lastName, "Last name", 100, 1);
+    // Allow empty lastName for Thai students who use single names/nicknames
+    if (args.lastName) {
+      validateLength(args.lastName, "Last name", 100, 0);
+    }
     if (args.nickname) validateLength(args.nickname, "Nickname", 100, 0);
     if (args.notes) validateLength(args.notes, "Notes", 2000, 0);
 

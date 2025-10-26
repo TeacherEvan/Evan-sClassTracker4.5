@@ -752,8 +752,10 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                                         setNewStudentNickname("");
                                                         setNewStudentGrade("");
                                                         setNewStudentClass("");
-                                                    } catch {
-                                                        setError(t("Failed to create student", "ไม่สามารถสร้างนักเรียนได้"));
+                                                    } catch (err) {
+                                                        const errorMessage = err instanceof Error ? err.message : t("Failed to create student", "ไม่สามารถสร้างนักเรียนได้");
+                                                        setError(errorMessage);
+                                                        console.error("Student creation error:", err);
                                                     }
                                                 }}
                                                 className="w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
