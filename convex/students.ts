@@ -137,7 +137,7 @@ export const create = mutation({
         .query("students")
         .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId!))
         .collect();
-      
+
       const duplicate = duplicateCheck.find(
         (s) =>
           s.firstName.toLowerCase() === args.firstName.toLowerCase() &&

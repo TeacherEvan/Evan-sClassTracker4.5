@@ -2,31 +2,25 @@
 
 Bilingual English/Thai class tracker for teachers and schools - Built with Next.js 15, React 19, Convex & Tailwind v4
 
-## ✨ Recent Updates (Oct 25, 2025)
+## ✨ Latest Updates (Oct 26, 2025)
 
-🔧 **Critical UX Fixes:**
+### Fixes Applied Today
+- ✅ **Student Creation**: Empty lastName allowed for Thai single-name students
+- ✅ **Duplicate Prevention**: Blocks duplicate students (same name+grade+class+school)  
+- ✅ **Error Messages**: Shows actual error details instead of generic messages
+- ✅ **Thai Default**: New users default to Thai language
+- ✅ **CI/CD Fix**: Disabled Next.js telemetry to prevent firewall blocks
 
-- **Language persistence** - Startup window no longer auto-reverts to Thai
-- **Optional bilingual input** - Forms accept single language (EN or TH) instead of requiring both
-- **Student creation fix** - Button enables correctly when all fields filled
-- **Bulk deletion** - Accepts short reasons (3+ chars) for Thai/English convenience
-- **Validation pattern change** - Migrated from `||` to `&&` logic for bilingual fields
+### Recent Major Features (Oct 25, 2025)
+- 🎯 **Teacher Cycle Editor**: Moderators manage ClassCount cycles with confirmation flow
+- 🚀 **Startup Window**: Welcome screen with quick actions and recent activity
+- ❓ **Help System**: Role-based comprehensive guides (20+ features documented)
+- 📝 **Bilingual Input**: Reusable component with 300ms debouncing (50% fewer re-renders)
+- ⚡ **Performance**: 40-50% faster loads, 10-100x faster queries via N+1 elimination
 
-See [IMPLEMENTATION_SUMMARY_UX_FIXES_OCT_25_2025.md](IMPLEMENTATION_SUMMARY_UX_FIXES_OCT_25_2025.md) for technical details.
+See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 
-🚀 **Performance Enhancements:**
-
-- **40-50% faster initial load** - Code splitting with lazy loading
-- **10-100x faster queries** - Eliminated N+1 database queries via batch fetching
-- **Native database pagination** - Efficient handling of 10,000+ records with cursors
-- **Rate limiting** - Protection against abuse (20 msgs/min, 30 bookings/min)
-- **Input validation** - Security improvements on all user inputs
-- **Toast notifications** - Modern, non-blocking bilingual feedback system
-- **Index-first queries** - Optimized database access patterns
-
-See [docs/PERFORMANCE_AUDIT_OCT_24_2025.md](docs/PERFORMANCE_AUDIT_OCT_24_2025.md) for performance analysis.
-
-## Features
+## 🎯 Core Features
 
 - 🔐 **User Authentication** - Secure login system with role-based access
 - 👥 **User Management** - Admin can create and manage teacher, moderator, and admin accounts
