@@ -78,28 +78,43 @@ function parseImplementationSummaries(): UpdateData | null {
         .reverse();
 
     if (summaryFiles.length === 0) {
-        console.log("No implementation summary files found");
+        console.log("⚠️  No IMPLEMENTATION_SUMMARY_*.md files found in project root");
+        console.log("   Create one first with naming: IMPLEMENTATION_SUMMARY_[FEATURE]_[DATE].md");
         return null;
     }
 
     const latestFile = summaryFiles[0];
-    console.log(`Reading: ${latestFile}`);
+    console.log(`📄 Reading: ${latestFile}`);
 
-    // Read file content for future enhancement (parsing features from summary)
-    // const content = fs.readFileSync(path.join(docsDir, latestFile), "utf-8");
-    // TODO: Parse content to extract features automatically
-
+    // Read file content
+    const content = fs.readFileSync(path.join(docsDir, latestFile), "utf-8");
+    
     // Extract version from filename or content
     const versionMatch = latestFile.match(/v?(\d+\.\d+\.\d+)/);
-    const version = versionMatch ? versionMatch[1] : "4.5.1";
+    const version = versionMatch ? versionMatch[1] : new Date().toISOString().split('T')[0].replace(/-/g, '.');
 
-    // Default update data (can be customized based on file content)
+    // Extract title from filename (remove IMPLEMENTATION_SUMMARY_ prefix and .md suffix)
+    const featureName = latestFile
+        .replace('IMPLEMENTATION_SUMMARY_', '')
+        .replace('.md', '')
+        .replace(/_/g, ' ')
+        .replace(/v?\d+\.\d+\.\d+/g, '')
+        .trim();
+
+    // Parse content for better titles/descriptions (basic parsing)
+    const lines = content.split('\n');
+    const title = featureName || lines.find(l => l.startsWith('# '))?.replace('# ', '').trim() || "Latest Improvements";
+
+    console.log(`📌 Feature: ${title}`);
+    console.log(`📌 Version: ${version}`);
+
+    // Default update data (customizable - AI agents should modify this based on actual features)
     return {
         version,
-        title: "Latest Improvements",
+        title: title.length > 50 ? title.substring(0, 50) + '...' : title,
         titleTh: "การปรับปรุงล่าสุด",
-        description: "We've made several improvements to make the system faster and easier to use.",
-        descriptionTh: "เราได้ปรับปรุงหลายอย่างเพื่อให้ระบบเร็วและใช้งานง่ายขึ้น",
+        description: `Improvements from ${latestFile}. See implementation summary for details.`,
+        descriptionTh: `การปรับปรุงจาก ${latestFile} ดูรายละเอียดในเอกสารสรุปการปรับปรุง`,
         features: [
             {
                 icon: "CheckCircle2",
@@ -138,8 +153,21 @@ function parseImplementationSummaries(): UpdateData | null {
  */
 async function createAppUpdate(updateData: UpdateData, adminUserId: Id<"users">) {
     try {
-        // Import the mutation
+        // Import the mutation and query
         const { api } = await import("../convex/_generated/api");
+
+        // Check if this version already exists
+        const existingUpdates = await client.query(api.appUpdates.list, { userId: adminUserId });
+        const duplicateUpdate = existingUpdates?.find(u => u.version === updateData.version);
+        
+        if (duplicateUpdate) {
+            console.log(`⚠️  Update version ${updateData.version} already exists (ID: ${duplicateUpdate._id})`);
+            console.log(`   Skipping creation to prevent duplicate.`);
+            console.log(`   To create anyway, either:`);
+            console.log(`   1. Delete the existing update from Admin UI`);
+            console.log(`   2. Change the version number in your IMPLEMENTATION_SUMMARY filename`);
+            return null;
+        }
 
         // Call create mutation
         const result = await client.mutation(api.appUpdates.create, {

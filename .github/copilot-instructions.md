@@ -1,5 +1,10 @@
 ﻿# AI Agent Instructions - Evan's Class Tracker 4.5
 
+> **Version:** 4.5.3  
+> **Last Updated:** October 26, 2025  
+> **Codebase:** Next.js 15 + React 19 + Convex + Tailwind v4  
+> **Instructions Version:** 2.1 (Enhanced E2E testing, visual diagrams, quick reference)
+
 Bilingual (English/Thai) class tracking system built with **Next.js 15**, **React 19**, **Convex** real-time backend, and **Tailwind v4**. Recent optimizations (Oct 2025) achieved **40-50% faster loads** and **10-100x faster queries** via N+1 elimination.
 
 ---
@@ -19,6 +24,26 @@ Bilingual (English/Thai) class tracking system built with **Next.js 15**, **Reac
 5. **All components need `"use client"`** - Next.js App Router requires this directive for client-side hooks (`useQuery`, `useMutation`, `useState`).
 
 **Start Convex FIRST**: `npx convex dev` (must be running before `npm run dev`)
+
+---
+
+## 📑 Table of Contents
+
+**Quick Access:**
+- [🚀 Quick Start for AI Agents](#-quick-start-for-ai-agents) - Read this first!
+- [Architecture Essentials](#architecture-essentials) - Provider hierarchy, Convex patterns, auth
+- [Non-Negotiable Patterns](#non-negotiable-patterns) - 14 critical patterns with examples
+- [Development Workflow](#development-workflow) - Build, test, deploy
+- [Testing Guide](#testing-guide) - Manual & E2E testing
+- [Common Pitfalls](#common-pitfalls) - What NOT to do
+- [Key Files Reference](#key-files-for-reference) - Where to find things
+- [⚡ Quick Reference Card](#-quick-reference-card) - Copy-paste patterns
+
+**Patterns by Category:**
+- **Bilingual:** [#1 Bilingual Development](#1-bilingual-first-development), [#2 Validation](#2-bilingual-validation-pattern-critical---updated-oct-2025)
+- **Performance:** [#3 Index Queries](#3-index-first-queries-performance-critical), [#4 N+1 Prevention](#4-avoid-n1-query-problems)
+- **Security:** [#11 Login Security](#11-login-security-pattern-account-lockout), [#12 Bulk Deletion](#12-bulk-deletion-pattern-security-critical), [#13 Audit Logging](#13-audit-logging-pattern)
+- **Workflows:** [#8 State Machine](#8-class-booking-state-machine), [#14 Cycle Editor](#14-teacher-cycle-editor-pattern-new-oct-2025)
 
 ---
 
@@ -613,7 +638,9 @@ npx tsc --noEmit     # Typecheck without emitting files
 - Already in `.gitignore` - never commit
 - Production: Set `NEXT_PUBLIC_CONVEX_URL` in Vercel dashboard
 
-### Testing New Features
+## Testing Guide
+
+### Manual Testing (Quick Test Workflow)
 
 **Quick test workflow** (see `docs/TESTING_GUIDE.md` for comprehensive guide):
 
@@ -633,7 +660,7 @@ npx tsc --noEmit     # Typecheck without emitting files
 - Student creation → auto-generated ID → appears in dropdown
 - Location proposal → moderator approval → available for booking
 
-### E2E Testing (Playwright)
+### Automated Testing (E2E with Playwright)
 
 **Automated browser tests** for critical user workflows:
 
@@ -703,6 +730,15 @@ const testData = generateTestData('class'); // Auto-generates unique test data
 
 **CI integration**: E2E tests run automatically after staging deployment via `e2e-tests.yml` workflow.
 
+### When to Use Each Testing Approach
+
+| Method | Best For | Speed | Setup |
+|--------|----------|-------|-------|
+| **Manual Testing** | Quick verification, UI exploration, real-time feature testing | Immediate | Just login |
+| **E2E Tests** | Regression testing, CI/CD validation, critical workflows | 2-5 min | Playwright installed |
+
+**Rule of thumb**: Manual test during development, E2E test before merge to main.
+
 ## Common Pitfalls
 
 ### ❌ DO NOT DO
@@ -725,6 +761,67 @@ const testData = generateTestData('class'); // Auto-generates unique test data
 - Implement edit audit trails
 - Add rate limiting to mutations
 - Convert `alert()`/`confirm()` calls to toast notifications
+
+### ⚠️ COMMON MISTAKES & HOW THEY BREAK
+
+#### Mistake 1: Reordering Providers
+```tsx
+// ❌ BREAKS: LanguageProvider before DataProvider
+<DataProvider>
+  <LanguageProvider>  // ERROR: No data context available!
+    {children}
+  </LanguageProvider>
+</DataProvider>
+```
+**Error**: `Cannot read property 'schools' of undefined`  
+**Fix**: Follow exact order from line 67 - never reorder!
+
+#### Mistake 2: Using `||` for Bilingual Validation
+```typescript
+// ❌ FORCES BOTH: Users must fill BOTH languages
+if (!nameEn.trim() || !nameTh.trim()) {
+  toast.error("Please fill both languages");
+  return;
+}
+
+// ✅ AT LEAST ONE: Either language works
+if (!nameEn.trim() && !nameTh.trim()) {
+  toast.error("Please provide name in at least one language");
+  return;
+}
+```
+**Impact**: Users frustrated by overly strict requirements  
+**Logic**: `||` = "if EITHER empty" → requires BOTH, `&&` = "if BOTH empty" → requires ONE
+
+#### Mistake 3: Querying Without Indexes
+```typescript
+// ❌ SLOW: Full table scan (1000+ records = 2-5 seconds)
+const all = await ctx.db.query("classes").collect();
+const filtered = all.filter(c => c.schoolId === schoolId);
+
+// ✅ FAST: Indexed query (same data = 20-50ms)
+const filtered = await ctx.db.query("classes")
+  .withIndex("by_school", q => q.eq("schoolId", schoolId))
+  .collect();
+```
+**Performance**: 10-100x slower without indexes  
+**See**: `convex/schema.ts` for available indexes
+
+#### Mistake 4: N+1 Query Pattern
+```typescript
+// ❌ BAD: 100 classes = 100 separate database calls
+for (const classItem of classes) {
+  const student = await ctx.db.get(classItem.studentId); // N+1!
+  enriched.push({ ...classItem, student });
+}
+
+// ✅ GOOD: 100 classes = 1 batch call
+const studentIds = [...new Set(classes.map(c => c.studentId))];
+const students = await Promise.all(studentIds.map(id => ctx.db.get(id)));
+const studentMap = new Map(students.map(s => [s._id, s]));
+const enriched = classes.map(c => ({ ...c, student: studentMap.get(c.studentId) }));
+```
+**Performance**: 100 classes with students: 300ms → 15ms (20x faster)
 
 ### ⚠️ ASK FIRST
 
@@ -884,6 +981,85 @@ if (window.targetSchool) {
 - `IMPLEMENTATION_SUMMARY_CYCLE_EDITOR.md` - Nested modal, confirmation flow, active cycle indicator
 - `convex/notificationWindows.ts` - One-time notification window system
 - `convex/appUpdates.ts` - Feature update logging and changelog
+
+---
+
+## ⚡ Quick Reference Card
+
+**Most Used Patterns (Copy-Paste Ready):**
+
+```typescript
+// 1. Bilingual validation (at least one language)
+if (!nameEn.trim() && !nameTh.trim()) { 
+  toast.error("Please provide name in at least one language", 
+              "กรุณากรอกชื่อในอย่างน้อยหนึ่งภาษา"); 
+  return; 
+}
+
+// 2. Index query (always use .withIndex)
+ctx.db.query("classes")
+  .withIndex("by_school_and_date", q => 
+    q.eq("schoolId", schoolId).gte("scheduledDate", startDate))
+  .collect()
+
+// 3. Batch fetch (avoid N+1)
+const ids = [...new Set(items.map(i => i.refId))];
+const refs = await Promise.all(ids.map(id => ctx.db.get(id)));
+const refMap = new Map(refs.map(r => [r._id, r]));
+// Then: refMap.get(item.refId)
+
+// 4. Toast notification (bilingual)
+toast.success("Saved!", "บันทึกสำเร็จ!");
+toast.error("Failed", "ไม่สำเร็จ");
+
+// 5. Rate limit mutation
+await checkRateLimit(ctx, { 
+  key: `action-${userId}`, 
+  limit: 30, 
+  windowMs: 60000 
+});
+
+// 6. Test user login (Playwright)
+await login(page, TEST_USERS.teacher);
+await waitForToast(page, undefined, 'success');
+
+// 7. Bilingual selector (tests)
+page.locator('button:has-text("Save"), button:has-text("บันทึก")')
+
+// 8. Soft delete pattern
+await ctx.db.patch(resourceId, { isActive: false });
+```
+
+**Most Common Commands:**
+
+```powershell
+# Development
+npx convex dev              # Start FIRST (required!)
+npm run dev                 # Then start Next.js (port 3001)
+npm run build               # Build with Turbopack
+
+# Testing
+npm run test:e2e:ui         # Debug E2E tests visually
+npm run test:e2e            # Run all E2E tests headless
+npm run test:e2e:report     # View last test report
+
+# Deployment
+npx convex deploy           # Deploy Convex functions
+npm run create-update       # Create app update notification
+git push origin develop     # Push to staging
+git push origin main        # Push to production
+```
+
+**Emergency Lookups:**
+
+| Need | Location |
+|------|----------|
+| Security issues | Line 564 (Known Limitations) |
+| Provider order | Line 67 (Load-bearing hierarchy) |
+| Available indexes | `convex/schema.ts` or Line 207 |
+| Test users | `tests/e2e/helpers.ts` Line 15 |
+| Bilingual validation | Line 172 (`&&` not `\|\|`) |
+| State machine | Line 300 (pending→acknowledged→approved) |
 
 ---
 
