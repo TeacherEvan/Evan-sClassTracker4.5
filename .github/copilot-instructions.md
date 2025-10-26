@@ -4,6 +4,24 @@ Bilingual (English/Thai) class tracking system built with **Next.js 15**, **Reac
 
 ---
 
+## 🚀 Quick Start for AI Agents
+
+**If you only read 5 things, read these:**
+
+1. **NEVER reorder providers** in `app/layout.tsx` - the hierarchy is load-bearing (ErrorBoundary → ConvexClientProvider → DeviceProvider → DataProvider → LanguageProvider). Reordering causes runtime failures.
+
+2. **Everything is bilingual (English/Thai)** - Schema has `title` AND `titleTh`. Forms need parallel inputs. Use `BilingualInput` component. Validation: `&&` (AND) not `||` (OR) for optional fields.
+
+3. **Always use `.withIndex()`** for Convex queries - check `convex/schema.ts` for indexes. NEVER query inside loops - use batch fetch + Map pattern. This is critical for performance.
+
+4. **Custom auth, not Convex built-in** - Uses localStorage sessions (24hr expiry), `btoa()` password hashing (⚠️ NOT production-secure), and explicit userId passing. See `lib/session-utils.ts`.
+
+5. **All components need `"use client"`** - Next.js App Router requires this directive for client-side hooks (`useQuery`, `useMutation`, `useState`).
+
+**Start Convex FIRST**: `npx convex dev` (must be running before `npm run dev`)
+
+---
+
 ## Quick Start Context
 
 ### Tech Stack
@@ -31,6 +49,29 @@ Provider order in `app/layout.tsx` is **CRITICAL** - reordering causes runtime f
     <DeviceProvider>         // 3. Device detection (depends on Convex)
       <DataProvider>         // 4. Shared data layer (schools, users)
         <LanguageProvider>   // 5. UI-only state (innermost)
+```
+
+**Visual dependency flow:**
+
+```mermaid
+graph TD
+    A[ErrorBoundary] --> B[ConvexClientProvider]
+    B --> C[DeviceProvider]
+    C --> D[DataProvider]
+    D --> E[LanguageProvider]
+    E --> F[Page Components]
+    
+    B -.->|provides| G[useQuery/useMutation]
+    C -.->|provides| H[deviceType state]
+    D -.->|provides| I[schools/users data]
+    E -.->|provides| J[t function for bilingual]
+    
+    style A fill:#ff6b6b
+    style B fill:#4ecdc4
+    style C fill:#45b7d1
+    style D fill:#96ceb4
+    style E fill:#ffeaa7
+    style F fill:#dfe6e9
 ```
 
 All components need `"use client"` directive. Never reorder or remove these providers.
@@ -225,6 +266,11 @@ function generateStudentId(firstName: string, lastName: string, schoolId: string
 ```
 
 **Example**: `BANG-EVTH-abc123-XY4Z`
+
+**Special cases** (Oct 2025 updates):
+- **Empty lastName**: Allowed for Thai students with single names/nicknames
+- **Duplicate prevention**: Backend blocks students with same firstName + lastName + grade + class + school
+- **Name validation**: Max 100 characters per field (prevents overflow)
 
 ### 8. Class Booking State Machine
 
@@ -540,15 +586,21 @@ npx tsc --noEmit     # Typecheck without emitting files
 ```yaml
 .github/workflows/
 ├── ci.yml                    # TypeScript + ESLint checks on PRs
+├── e2e-tests.yml             # Playwright E2E tests on staging
 ├── deploy-staging.yml        # Auto-deploy develop branch
 └── deploy-production.yml     # Auto-deploy main branch
 ```
 
 **Workflow triggers**:
 - CI checks run on all PRs and pushes
+- E2E tests run after staging deployment
 - Staging deploys automatically on push to `develop`
 - Production deploys automatically on push to `main`
 - Manual deployments available via Actions tab
+
+**Environment variables** (critical for CI):
+- `NEXT_PUBLIC_CONVEX_URL` - Convex backend URL (required)
+- `NEXT_TELEMETRY_DISABLED=1` - Prevents telemetry.nextjs.org firewall blocks (Oct 2025 fix)
 
 **Setup required**: See `docs/CI_CD_SETUP_GUIDE.md` for:
 - GitHub Secrets configuration (Convex, Vercel)
@@ -580,6 +632,76 @@ npx tsc --noEmit     # Typecheck without emitting files
 - Message sending → unread badge → read status update
 - Student creation → auto-generated ID → appears in dropdown
 - Location proposal → moderator approval → available for booking
+
+### E2E Testing (Playwright)
+
+**Automated browser tests** for critical user workflows:
+
+```powershell
+npm run test:e2e          # Run all E2E tests (headless)
+npm run test:e2e:ui       # Run tests with Playwright UI (recommended for debugging)
+npm run test:e2e:headed   # Run tests in headed browser (see what's happening)
+npm run test:e2e:debug    # Debug mode with breakpoints
+npm run test:e2e:report   # View test report from last run
+```
+
+**Test structure** (see `tests/e2e/`):
+- `helpers.ts` - Reusable test utilities (login, logout, waitForToast, navigateToTab)
+- `auth.spec.ts` - Login, logout, password change, language persistence
+- `class-booking.spec.ts` - Book classes, approval workflow, moderator notifications
+- `student-management.spec.ts` - Create students, search, edit
+- `notifications.spec.ts` - Toast notifications, real-time updates
+
+**Real test examples from codebase**:
+
+```typescript
+// Example 1: Authentication test (from auth.spec.ts)
+test('should show error for invalid credentials', async ({ page }) => {
+  await page.goto('/');
+  
+  await page.locator('input[name="username"]').first().fill('invalid_user');
+  await page.locator('input[name="password"]').first().fill('wrong_password');
+  await page.locator('button:has-text("Login")').first().click();
+  
+  await waitForToast(page, undefined, 'error'); // Wait for error toast
+});
+
+// Example 2: Class booking workflow (from class-booking.spec.ts)
+test('teacher can book a class', async ({ page }) => {
+  await login(page, TEST_USERS.teacher);
+  await navigateToTab(page, 'Classes');
+  
+  // Click "Book Class" button (bilingual support)
+  await page.locator('button:has-text("Book Class"), button:has-text("จองคลาส")').first().click();
+  
+  // Fill form (selectors handle both languages)
+  const schoolSelect = page.locator('select:has-option').first();
+  await schoolSelect.selectOption({ index: 1 });
+  
+  // Submit and verify
+  await page.locator('button:has-text("Book"), button[type="submit"]').first().click();
+  await waitForToast(page, undefined, 'success');
+  
+  // Verify status appears
+  await expect(page.locator('text=pending, text=รอดำเนินการ')).toBeVisible();
+});
+
+// Example 3: Using generateTestData helper (from helpers.ts)
+const testData = generateTestData('class'); // Auto-generates unique test data
+```
+
+**Key patterns in tests**:
+- **Bilingual selectors**: `text=English, text=ไทย` handles both languages
+- **Reusable helpers**: `login()`, `navigateToTab()`, `waitForToast()`, `generateTestData()`
+- **Flexible selectors**: Use multiple selectors for robustness
+- **Timeout handling**: `.isVisible({ timeout: 2000 }).catch(() => false)` for optional elements
+
+**Test users** (predefined in `helpers.ts`):
+- `TEST_USERS.admin` - Full system access
+- `TEST_USERS.moderator` - School moderator role
+- `TEST_USERS.teacher` - Teacher role
+
+**CI integration**: E2E tests run automatically after staging deployment via `e2e-tests.yml` workflow.
 
 ## Common Pitfalls
 
@@ -631,6 +753,19 @@ This script automatically:
 - ✅ Creates bilingual app update in database
 - ✅ Deactivates old updates
 - ✅ Notifies users of improvements
+
+**How it works** (`scripts/create-app-update.ts`):
+1. **Scans for `IMPLEMENTATION_SUMMARY_*.md` files** in project root
+2. **Sorts by date** and reads most recent summary
+3. **Extracts version** from filename (e.g., `IMPLEMENTATION_SUMMARY_v4.5.3.md`)
+4. **Parses features** from markdown (future enhancement - currently uses defaults)
+5. **Creates bilingual update** via `appUpdates.create` mutation
+6. **Deactivates old updates** to prevent notification spam
+
+**Implementation Summary naming convention**:
+- `IMPLEMENTATION_SUMMARY_[FEATURE]_[DATE].md` - Feature-specific
+- `IMPLEMENTATION_SUMMARY_v[VERSION].md` - Version-specific
+- Place in project root for auto-detection
 
 **See:** `.github/AI_AGENT_WORKFLOW.md` for detailed integration guide
 
