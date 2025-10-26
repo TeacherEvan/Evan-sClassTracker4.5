@@ -447,16 +447,112 @@ git checkout main
 
 ---
 
+---
+
+## Staging Environment
+
+### Overview
+
+Staging is a separate deployment that mirrors production, used for testing changes before they go live.
+
+**Architecture:**
+
+```text
+Development (localhost:3001)
+    ↓ Test locally
+    ↓ git push origin develop
+    ↓
+Staging (Vercel Preview + Convex Staging)
+    ↓ Test in production-like environment
+    ↓ Verify everything works
+    ↓ git merge develop → main
+    ↓
+Production (Vercel Production + Convex Production)
+    ↓ Real users
+```
+
+### Setting Up Staging
+
+**1. Create Convex Staging Deployment:**
+
+```powershell
+# Via Convex Dashboard (recommended):
+# 1. Go to https://dashboard.convex.dev/
+# 2. Click deployment dropdown (top-left)
+# 3. Click "+ New Deployment"
+# 4. Name: "evan-sclasstracker-staging"
+# 5. Copy the staging deploy key
+
+# Via CLI:
+npx convex dev --once --configure new
+```
+
+**2. Configure GitHub Environment:**
+
+1. Go to: `https://github.com/[owner]/[repo]/settings/environments`
+2. Click "New environment"
+3. Name: `staging`
+4. Add secrets:
+   - `CONVEX_DEPLOY_KEY_STAGING` (from step 1)
+   - `VERCEL_TOKEN` (from Vercel dashboard)
+
+**3. Test Staging Deployment:**
+
+```powershell
+# Push to develop branch
+git checkout develop
+git push origin develop
+
+# GitHub Actions will auto-deploy to staging
+```
+
+### Staging Test Plan
+
+Before promoting to production, verify:
+
+**Authentication:**
+
+- [ ] Login works for all roles
+- [ ] Logout functionality
+- [ ] Password reset works
+- [ ] Account lockout after failed attempts
+
+**Core Workflows:**
+
+- [ ] Class booking (teacher → moderator → approval)
+- [ ] Message sending and receiving
+- [ ] Student creation and management
+- [ ] Location proposals and approval
+
+**Real-Time Features:**
+
+- [ ] Notifications appear instantly
+- [ ] Class list updates live
+- [ ] Unread message badges update
+
+**Bilingual Support:**
+
+- [ ] Language switcher works
+- [ ] All UI elements in both languages
+- [ ] Toast notifications bilingual
+
+**See also:** `STAGING_TEST_PLAN.md` for comprehensive testing checklist
+
+---
+
 ## Deployment Success Criteria
 
 ### Pre-Deployment
+
 - [ ] All tests passing locally
-- [ ] No TypeScript errors
-- [ ] No console warnings
+- [ ] No TypeScript errors (`npx tsc --noEmit`)
+- [ ] No ESLint warnings (`npm run lint`)
 - [ ] Environment variables configured
 - [ ] Schema changes tested
+- [ ] CI/CD pipeline green
 
 ### Post-Deployment
+
 - [ ] Build successful (green checkmark)
 - [ ] All pages load without errors
 - [ ] Real-time updates working
@@ -464,16 +560,19 @@ git checkout main
 - [ ] Authentication working
 - [ ] No console errors in production
 - [ ] Performance meets benchmarks
+- [ ] E2E tests passing (if automated)
 
 ### Go-Live
+
 - [ ] Monitoring alerts configured
 - [ ] Backup strategy in place
 - [ ] Rollback plan documented
 - [ ] Team notified of deployment
 - [ ] User documentation updated
+- [ ] App update notification created (see `npm run create-update`)
 
 ---
 
-**Last Updated**: October 24, 2025  
+**Last Updated**: October 26, 2025  
 **Maintained by**: TeacherEvan  
-**Status**: Production-ready 
+**Status**: Production-ready with staging environment

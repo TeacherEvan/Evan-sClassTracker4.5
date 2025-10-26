@@ -137,6 +137,23 @@ export async function fillBilingualInput(
 /**
  * Generate unique test data
  */
+export function generateTestData(type: 'student'): {
+    firstName: string;
+    firstNameTh: string;
+    lastName: string;
+    lastNameTh: string;
+    id: string;
+};
+export function generateTestData(type: 'class'): {
+    title: string;
+    titleTh: string;
+    id: string;
+};
+export function generateTestData(type: 'test'): {
+    id: string;
+    timestamp: number;
+    random: string;
+};
 export function generateTestData(type: 'student' | 'class' | 'test' = 'test') {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(7);
