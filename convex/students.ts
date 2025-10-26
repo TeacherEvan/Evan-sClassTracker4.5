@@ -239,10 +239,15 @@ export const update = mutation({
     const {
       id,
       updatedBy,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       userAgent: _userAgent,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       screenResolution: _screenResolution,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       timezone: _timezone,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       locale: _locale,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       sessionId: _sessionId,
       ...updates
     } = args;
@@ -310,10 +315,15 @@ export const remove = mutation({
   },
   handler: async (ctx, args) => {
     const {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       userAgent: _userAgent,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       screenResolution: _screenResolution,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       timezone: _timezone,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       locale: _locale,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       sessionId: _sessionId,
       ...operationArgs
     } = args;
