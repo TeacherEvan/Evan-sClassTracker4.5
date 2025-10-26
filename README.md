@@ -227,6 +227,47 @@ Look for the green **"Help"** button in the top-right corner of the application 
 
 ## Development
 
+### Running Tests
+
+**End-to-End Testing** (Playwright)
+
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Interactive UI mode (recommended)
+npm run test:e2e:ui
+
+# Watch browser in real-time
+npm run test:e2e:headed
+
+# Debug mode
+npm run test:e2e:debug
+
+# View test report
+npm run test:e2e:report
+```
+
+**Test against staging:**
+
+```powershell
+$env:STAGING_URL = "https://your-staging-url.vercel.app"
+npm run test:e2e
+```
+
+**Documentation:**
+
+- E2E Testing Guide: [`docs/E2E_TESTING_GUIDE.md`](docs/E2E_TESTING_GUIDE.md)
+- Staging Setup: [`docs/STAGING_SETUP_GUIDE.md`](docs/STAGING_SETUP_GUIDE.md)
+- Test Plan: [`docs/STAGING_TEST_PLAN.md`](docs/STAGING_TEST_PLAN.md)
+
+**Test Coverage:**
+
+- ✅ Authentication (all user roles)
+- ✅ Class booking workflow
+- ✅ Student management
+- ✅ Notification system
+
 ### User Management
 
 Admins can create users through the Users tab:

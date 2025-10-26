@@ -5,6 +5,7 @@ Complete testing checklist for verifying all features work correctly before prod
 ## Test Environment Setup
 
 ### Prerequisites
+
 - ✅ Staging deployment successful
 - ✅ Staging Convex database initialized
 - ✅ Test users created
@@ -12,14 +13,16 @@ Complete testing checklist for verifying all features work correctly before prod
 - ✅ Test students created
 
 ### Staging URLs
+
 - **App**: Check GitHub Actions output after deployment
-- **Convex Dashboard**: https://dashboard.convex.dev (staging deployment)
+- **Convex Dashboard**: <https://dashboard.convex.dev> (staging deployment)
 
 ---
 
 ## Phase 1: Database Initialization
 
 ### Initial Setup
+
 - [ ] Access staging URL
 - [ ] Initialize database (if first time)
 - [ ] Verify default users created:
@@ -32,6 +35,7 @@ Complete testing checklist for verifying all features work correctly before prod
 ## Phase 2: User Management Testing
 
 ### Admin Functions
+
 - [ ] **Login as Admin**
   - Username: `admin`
   - Password: `TeacherAdmin`
@@ -58,6 +62,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Verify audit log records deletion
 
 ### User Authentication
+
 - [ ] **Login Flow**
   - [ ] Login with each user type
   - [ ] Test incorrect password
@@ -78,6 +83,7 @@ Complete testing checklist for verifying all features work correctly before prod
 ## Phase 3: School Management
 
 ### Admin/Moderator Functions
+
 - [ ] **Create Schools**
   - [ ] Create school with English + Thai names
   - [ ] Test validation (requires both languages)
@@ -96,6 +102,7 @@ Complete testing checklist for verifying all features work correctly before prod
 ## Phase 4: Student Management
 
 ### Create Students
+
 - [ ] **Standard Student Creation**
   - [ ] First name + Last name (English)
   - [ ] First name + Last name (Thai)
@@ -117,6 +124,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Example: `BANG-EVTH-abc123-XY4Z`
 
 ### Student Operations
+
 - [ ] **Edit Students**
   - [ ] Update student information
   - [ ] Change linked school
@@ -137,6 +145,7 @@ Complete testing checklist for verifying all features work correctly before prod
 ## Phase 5: Class Booking Workflow (CRITICAL)
 
 ### Teacher Books Class
+
 **Login as Teacher** (`Evan` or `teacher_test`)
 
 - [ ] **Single Date Booking**
@@ -162,6 +171,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Verify conflict warning
 
 ### Moderator Receives Notification
+
 **Login as Moderator** (`moderator1` or `mod_test`)
 
 - [ ] **Notification Received**
@@ -176,6 +186,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Verify status changes to "acknowledged"
 
 ### Moderator Approves/Rejects
+
 - [ ] **Approve Class**
   - [ ] Open class details
   - [ ] Click "Approve"
@@ -188,6 +199,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Verify status → "rejected"
 
 ### Teacher Receives Decision Notification
+
 **Switch back to Teacher**
 
 - [ ] **Check Notification**
@@ -200,6 +212,7 @@ Complete testing checklist for verifying all features work correctly before prod
 ## Phase 6: Post-Class Features ⭐
 
 ### Post-Class Notes/Comments
+
 **After class is marked complete:**
 
 - [ ] **Teacher Adds Notes**
@@ -224,6 +237,7 @@ Complete testing checklist for verifying all features work correctly before prod
 ## Phase 7: Messaging System
 
 ### Send Messages
+
 - [ ] **Teacher to Moderator**
   - [ ] Compose message (bilingual)
   - [ ] Add file attachment
@@ -236,6 +250,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Verify real-time delivery
 
 ### Message Operations
+
 - [ ] **Mark as Read/Unread**
   - [ ] Click message → marks as read
   - [ ] Unread badge decreases
@@ -250,6 +265,7 @@ Complete testing checklist for verifying all features work correctly before prod
 ## Phase 8: Notification System ⭐
 
 ### Notification Window (Gold Tablet)
+
 **Login as Admin**
 
 - [ ] **Create App Update Notification**
@@ -271,6 +287,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Verify doesn't show again
 
 ### System Notifications
+
 - [ ] **Admin Creates Notification**
   - [ ] Go to Notifications tab
   - [ ] Create notification:
@@ -292,6 +309,7 @@ Complete testing checklist for verifying all features work correctly before prod
 ## Phase 9: Advanced Features
 
 ### Teacher's Helper (ClassCount)
+
 **Login as Teacher**
 
 - [ ] **View ClassCount**
@@ -308,6 +326,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Verify new cycle active
 
 ### Location Management
+
 - [ ] **Teacher Proposes Location**
   - [ ] Submit location proposal (EN + TH)
   - [ ] Add address/details
@@ -323,6 +342,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Delete location (soft delete)
 
 ### Event Management
+
 - [ ] **Create Event**
   - [ ] Set event details (EN + TH)
   - [ ] Set date/time
@@ -338,6 +358,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Verify hidden from lists
 
 ### Analytics & Reports
+
 - [ ] **Teacher Activity Dashboard**
   - [ ] Login as moderator
   - [ ] View teacher analytics
@@ -351,6 +372,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Verify file downloads
 
 ### Audit Logs
+
 **Login as Admin**
 
 - [ ] **View Audit Logs**
@@ -365,6 +387,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Verify all fields included
 
 ### Help System
+
 - [ ] **Access Help**
   - [ ] Click green "Help" button
   - [ ] Browse categories
@@ -381,6 +404,7 @@ Complete testing checklist for verifying all features work correctly before prod
 ## Phase 10: UI/UX Testing
 
 ### Bilingual Support
+
 - [ ] **Language Switching**
   - [ ] Click language switcher (🇬🇧/🇹🇭)
   - [ ] Verify all text switches
@@ -392,12 +416,14 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Verify language preference saves
 
 ### Dark Mode
+
 - [ ] **System Theme**
   - [ ] Check automatic dark mode activation
   - [ ] Verify all components styled correctly
   - [ ] Test all pages in dark mode
 
 ### Toast Notifications
+
 - [ ] **Success Toasts**
   - [ ] Trigger success action
   - [ ] Verify green toast (bottom-right)
@@ -409,6 +435,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Shows actual error message
 
 ### Calendar Views
+
 - [ ] **Weekly Calendar**
   - [ ] Navigate weeks
   - [ ] View class schedule
@@ -420,6 +447,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Multi-select dates for booking
 
 ### Search & Filters
+
 - [ ] **Search Students**
   - [ ] Search by name (EN)
   - [ ] Search by name (TH)
@@ -433,6 +461,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Filter by teacher
 
 ### Pagination
+
 - [ ] **Large Datasets**
   - [ ] Create 50+ items
   - [ ] Verify pagination appears
@@ -440,6 +469,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Change page size
 
 ### Mobile Responsiveness
+
 - [ ] **Open in Mobile View**
   - [ ] Resize browser to mobile width
   - [ ] Test navigation
@@ -451,6 +481,7 @@ Complete testing checklist for verifying all features work correctly before prod
 ## Phase 11: Edge Cases & Error Handling
 
 ### Data Validation
+
 - [ ] **Empty Required Fields**
   - [ ] Try submitting forms with missing data
   - [ ] Verify validation messages (bilingual)
@@ -461,6 +492,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Test file upload limits
 
 ### Network Issues
+
 - [ ] **Offline Behavior**
   - [ ] Disable network
   - [ ] Try actions
@@ -471,6 +503,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Verify loading indicators
 
 ### Concurrent Users
+
 - [ ] **Real-time Updates**
   - [ ] Open two browser windows
   - [ ] Login as different users
@@ -478,6 +511,7 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Verify notification appears in other window (real-time)
 
 ### Database Errors
+
 - [ ] **Convex Errors**
   - [ ] Trigger rate limit (30 bookings/min)
   - [ ] Verify rate limit error message
@@ -487,6 +521,7 @@ Complete testing checklist for verifying all features work correctly before prod
 ## Phase 12: Security Testing
 
 ### Authentication
+
 - [ ] **Session Expiration**
   - [ ] Login
   - [ ] Wait 24 hours (or adjust in code for testing)
@@ -498,12 +533,14 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Try login again after lockout → still blocked
 
 ### Authorization
+
 - [ ] **Role-Based Access**
   - [ ] Teacher tries to access admin features → blocked
   - [ ] Moderator tries to delete users → blocked
   - [ ] Verify each role sees only their features
 
 ### Data Protection
+
 - [ ] **Password Security**
   - [ ] Check Convex dashboard
   - [ ] Verify passwords are hashed (base64, NOT plaintext)
@@ -519,6 +556,7 @@ Complete testing checklist for verifying all features work correctly before prod
 ## Phase 13: Performance Testing
 
 ### Load Time
+
 - [ ] **Initial Page Load**
   - [ ] Open DevTools → Network
   - [ ] Clear cache
@@ -526,12 +564,14 @@ Complete testing checklist for verifying all features work correctly before prod
   - [ ] Verify loads under 3 seconds
 
 ### Query Performance
+
 - [ ] **Large Datasets**
   - [ ] Load page with 100+ classes
   - [ ] Verify loads quickly
   - [ ] Check Convex dashboard for query times
 
 ### Real-time Updates
+
 - [ ] **Notification Latency**
   - [ ] Book class
   - [ ] Measure time until moderator receives notification
@@ -548,6 +588,7 @@ Complete testing checklist for verifying all features work correctly before prod
 <!-- Note any bugs found -->
 
 ### Performance Metrics
+
 - Page load time: ___ seconds
 - Notification latency: ___ ms
 - Query performance: ___ ms

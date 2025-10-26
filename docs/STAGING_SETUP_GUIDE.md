@@ -26,7 +26,7 @@ Production (Vercel Production + Convex Production)
 
 ### 1. Create GitHub Environment
 
-1. Go to: https://github.com/TeacherEvan/Evan-sClassTracker4.5/settings/environments
+1. Go to: <https://github.com/TeacherEvan/Evan-sClassTracker4.5/settings/environments>
 2. Click **"New environment"**
 3. Name: `staging`
 4. Click **"Configure environment"**
@@ -54,11 +54,13 @@ To create a separate Convex staging deployment:
 You have two options:
 
 #### Option A: Use Vercel Preview Deployments (Recommended - Already Working!)
+
 - Vercel automatically creates preview deployments for non-main branches
 - Your staging workflow will deploy to a preview URL
 - No extra setup needed! ✅
 
 #### Option B: Separate Vercel Project (Advanced)
+
 1. Create new project in Vercel dashboard
 2. Link to same GitHub repo
 3. Set to deploy only `develop` branch
@@ -135,7 +137,8 @@ git push origin develop
 
 ### Manual Deployment
 
-Go to: https://github.com/TeacherEvan/Evan-sClassTracker4.5/actions/workflows/deploy-staging.yml
+Go to: <https://github.com/TeacherEvan/Evan-sClassTracker4.5/actions/workflows/deploy-staging.yml>
+
 - Click **"Run workflow"**
 - Select `develop` branch
 - Click **"Run workflow"**
@@ -176,7 +179,7 @@ Before merging `develop` → `main`, test on staging:
 
 ### Deployment Fails with "CONVEX_DEPLOY_KEY_STAGING not found"
 
-**Fix:** Verify secret exists at: https://github.com/TeacherEvan/Evan-sClassTracker4.5/settings/secrets/actions
+**Fix:** Verify secret exists at: <https://github.com/TeacherEvan/Evan-sClassTracker4.5/settings/secrets/actions>
 
 ### Staging Uses Production Database
 
@@ -187,16 +190,20 @@ Before merging `develop` → `main`, test on staging:
 **Expected:** Staging should show a preview URL like `https://evans-classtracker45-git-develop-teacherevans-projects.vercel.app`
 
 If showing production URL, check:
+
 1. Workflow is using correct branch (`develop`)
 2. Vercel project settings
 
 ## Best Practices
 
 ### 1. **Always Test on Staging First**
+
 Never merge directly to `main` without staging verification.
 
 ### 2. **Keep Staging Updated**
+
 Regularly sync `develop` with `main`:
+
 ```bash
 git checkout develop
 git merge main
@@ -204,12 +211,15 @@ git push origin develop
 ```
 
 ### 3. **Use Staging for Demos**
+
 Show clients/stakeholders new features on staging URL.
 
 ### 4. **Database Separation**
+
 Use different Convex deployments for staging/production to avoid data conflicts.
 
 ### 5. **Monitor Staging Deploys**
+
 Watch GitHub Actions to catch deployment issues early.
 
 ## Next Steps
