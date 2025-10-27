@@ -5,7 +5,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import { useMutation, useQuery } from "convex/react";
-import { Calendar, ChevronDown, ChevronRight, Download, Edit2, Printer, X } from "lucide-react";
+import { Calendar, ChevronDown, ChevronRight, Download, Edit2, Printer, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { TeacherCycleEditor } from "./teacher-cycle-editor";
 
@@ -17,17 +17,76 @@ interface TeacherClassCountModalProps {
     onClose: () => void;
 }
 
+// Type definitions for class count data structure
+interface ClassDetail {
+    classId: Id<"classes">;
+    scheduledDate: number;
+    duration: number;
+    studentCount: number;
+    contributedCount: number;
+    location?: string;
+    locationTh?: string;
+}
+
+interface StudentBreakdown {
+    studentId: Id<"students">;
+    studentName: string;
+    studentNameTh: string;
+    classCount: number;
+    numberOfClasses: number;
+    classes: ClassDetail[];
+}
+
+interface ClassCountData {
+    teacher: {
+        id: Id<"users">;
+        username: string;
+        role: "teacher" | "moderator" | "admin" | "guardian";
+    };
+    dateRange: {
+        start: number;
+        end: number;
+    };
+    cycleInfo: {
+        startDate: number;
+        endDate: number;
+        isCustomCycle: boolean;
+        notes?: string;
+        notesTh?: string;
+    };
+    summary: {
+        totalClassCount: number;
+        totalApprovedClasses: number;
+        totalStudents: number;
+    };
+    studentBreakdown: StudentBreakdown[];
+}
+
+
 export function TeacherClassCountModal({
-    teacherId,
-    teacherUsername,
+    teacherId: initialTeacherId,
+    teacherUsername: initialTeacherUsername,
     moderatorId,
     moderatorRole,
     onClose,
 }: TeacherClassCountModalProps) {
     const { t, language } = useLanguage();
 
+    // Teacher selection state (for moderators to switch between teachers)
+    const [selectedTeacherId, setSelectedTeacherId] = useState<Id<"users">>(initialTeacherId);
+    const [selectedTeacherUsername, setSelectedTeacherUsername] = useState(initialTeacherUsername);
+
+    // Load all teachers (for moderator dropdown)
+    const allTeachers = useQuery(
+        api.users.list,
+        (moderatorRole === "moderator" || moderatorRole === "admin") ? { role: "teacher" } : "skip"
+    );
+
     // Cycle editor state
     const [showCycleEditor, setShowCycleEditor] = useState(false);
+
+    // Print language selection
+    const [showPrintLanguageDialog, setShowPrintLanguageDialog] = useState(false);
 
     // Date range state (default: last 30 days)
     const [startDate, setStartDate] = useState(() => {
@@ -60,7 +119,7 @@ export function TeacherClassCountModal({
     const classCountData = useQuery(
         api.teacherClassCount.getTeacherClassCountDetailed,
         {
-            teacherId,
+            teacherId: selectedTeacherId,
             startDate: new Date(startDate).getTime(),
             endDate: new Date(endDate).getTime() + (24 * 60 * 60 * 1000 - 1), // End of day
             moderatorId,
@@ -69,10 +128,10 @@ export function TeacherClassCountModal({
 
     const logView = useMutation(api.teacherClassCount.logClassCountView);
 
-    // Log view on mount
-    useState(() => {
+    // Log view on mount and when teacher changes
+    useEffect(() => {
         logView({
-            teacherId,
+            teacherId: selectedTeacherId,
             moderatorId,
             startDate: new Date(startDate).getTime(),
             endDate: new Date(endDate).getTime(),
@@ -80,7 +139,7 @@ export function TeacherClassCountModal({
         }).catch(err => {
             console.error("Failed to log view:", err);
         });
-    });
+    }, [selectedTeacherId, logView, moderatorId, startDate, endDate]);
 
     const toggleStudent = (studentId: string) => {
         setExpandedStudents(prev => {
@@ -100,7 +159,7 @@ export function TeacherClassCountModal({
         try {
             // Log export action
             await logView({
-                teacherId,
+                teacherId: selectedTeacherId,
                 moderatorId,
                 startDate: new Date(startDate).getTime(),
                 endDate: new Date(endDate).getTime(),
@@ -109,7 +168,7 @@ export function TeacherClassCountModal({
 
             // Generate CSV content
             const csvLines = [
-                `Teacher,${teacherUsername}`,
+                `Teacher,${selectedTeacherUsername}`,
                 `Period,${startDate} to ${endDate}`,
                 `Total ClassCount,${classCountData.summary.totalClassCount}`,
                 `Approved Classes,${classCountData.summary.totalApprovedClasses}`,
@@ -127,7 +186,7 @@ export function TeacherClassCountModal({
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
-            link.setAttribute("download", `ClassCount_${teacherUsername}_${startDate}_${endDate}.csv`);
+            link.setAttribute("download", `ClassCount_${selectedTeacherUsername}_${startDate}_${endDate}.csv`);
             link.style.visibility = "hidden";
             document.body.appendChild(link);
             link.click();
@@ -147,7 +206,212 @@ export function TeacherClassCountModal({
     };
 
     const handlePrint = () => {
-        window.print();
+        // Show language selection dialog before printing
+        setShowPrintLanguageDialog(true);
+    };
+
+    const handlePrintWithLanguage = (printLanguage: "en" | "th") => {
+        setShowPrintLanguageDialog(false);
+
+        if (!classCountData) {
+            toast.error("No data to print", "ไม่มีข้อมูลสำหรับพิมพ์");
+            return;
+        }
+
+        // Open print view in new window
+        const printWindow = window.open("", "_blank");
+        if (!printWindow) {
+            toast.error("Please allow popups to print", "กรุณาอนุญาตป๊อปอัพเพื่อพิมพ์");
+            return;
+        }
+
+        // Generate print content
+        const printContent = generatePrintHTML(classCountData, selectedTeacherUsername, startDate, endDate, printLanguage);
+
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+
+        // Wait for content to load, then print
+        printWindow.onload = () => {
+            printWindow.print();
+        };
+    };
+
+    const generatePrintHTML = (data: ClassCountData, teacherName: string, start: string, end: string, lang: "en" | "th") => {
+        if (!data) return "";
+
+        const isEnglish = lang === "en";
+
+        return `
+<!DOCTYPE html>
+<html lang="${lang}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${isEnglish ? 'Teacher Class Count Report' : 'รายงานการนับชั้นเรียนของครู'}</title>
+    <style>
+        @media print {
+            @page { margin: 1cm; }
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #1a1a1a;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #2563eb;
+            font-size: 28px;
+        }
+        .header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .summary-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #2563eb;
+        }
+        .summary-card .label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .summary-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-top: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th {
+            background: #2563eb;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+        .student-row {
+            font-size: 14px;
+        }
+        .class-details {
+            padding-left: 20px;
+            font-size: 13px;
+            color: #666;
+        }
+        .class-item {
+            padding: 5px 0;
+            border-left: 2px solid #e5e7eb;
+            padding-left: 15px;
+            margin: 5px 0;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>${isEnglish ? 'Teacher ClassCount Report' : 'รายงานการนับชั้นเรียนของครู'}</h1>
+        <p><strong>${isEnglish ? 'Teacher' : 'ครู'}:</strong> ${teacherName}</p>
+        <p><strong>${isEnglish ? 'Period' : 'ระยะเวลา'}:</strong> ${new Date(start).toLocaleDateString(lang === "en" ? "en-US" : "th-TH", { year: 'numeric', month: 'long', day: 'numeric' })} - ${new Date(end).toLocaleDateString(lang === "en" ? "en-US" : "th-TH", { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+    </div>
+
+    <div class="summary">
+        <div class="summary-card">
+            <div class="label">${isEnglish ? 'Total ClassCount' : 'จำนวนชั้นเรียนทั้งหมด'}</div>
+            <div class="value">${data.summary.totalClassCount}</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">${isEnglish ? 'Approved Classes' : 'คลาสที่อนุมัติ'}</div>
+            <div class="value">${data.summary.totalApprovedClasses}</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">${isEnglish ? 'Students Taught' : 'นักเรียนที่สอน'}</div>
+            <div class="value">${data.summary.totalStudents}</div>
+        </div>
+    </div>
+
+    <h2>${isEnglish ? 'Detailed Breakdown by Student' : 'รายละเอียดตามนักเรียน'}</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>${isEnglish ? 'Student Name' : 'ชื่อนักเรียน'}</th>
+                <th>${isEnglish ? 'ClassCount' : 'จำนวนชั้นเรียน'}</th>
+                <th>${isEnglish ? 'Classes' : 'คลาส'}</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${data.studentBreakdown.map((student: StudentBreakdown) => `
+                <tr class="student-row">
+                    <td><strong>${isEnglish ? student.studentName : student.studentNameTh}</strong></td>
+                    <td><strong>${student.classCount}</strong></td>
+                    <td>${student.numberOfClasses}</td>
+                </tr>
+                ${student.classes.map((cls: ClassDetail) => `
+                    <tr class="class-details">
+                        <td colspan="3">
+                            <div class="class-item">
+                                📅 ${new Date(cls.scheduledDate).toLocaleDateString(lang === "en" ? "en-US" : "th-TH", {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+        })}
+                                &nbsp;&nbsp;|&nbsp;&nbsp;
+                                📍 ${isEnglish ? (cls.location || 'N/A') : (cls.locationTh || 'ไม่ระบุ')}
+                                &nbsp;&nbsp;|&nbsp;&nbsp;
+                                ⏱️ ${cls.duration} ${isEnglish ? 'min' : 'นาที'}
+                                &nbsp;&nbsp;|&nbsp;&nbsp;
+                                ${isEnglish ? 'Count' : 'นับ'}: <strong>${cls.contributedCount}</strong>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('')}
+            `).join('')}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>${isEnglish ? 'Generated on' : 'สร้างเมื่อ'} ${new Date().toLocaleString(lang === "en" ? "en-US" : "th-TH", { dateStyle: 'full', timeStyle: 'short' })}</p>
+        <p>${isEnglish ? 'Class Tracker System' : 'ระบบติดตามชั้นเรียน'}</p>
+    </div>
+</body>
+</html>
+        `;
     };
 
     if (!classCountData) {
@@ -169,7 +433,7 @@ export function TeacherClassCountModal({
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-2xl font-bold">
-                        {t(`Teacher ClassCount - ${teacherUsername}`, `จำนวนชั้นเรียนครู - ${teacherUsername}`)}
+                        {t(`Teacher ClassCount`, `จำนวนชั้นเรียนครู`)}
                     </h2>
                     <button
                         onClick={onClose}
@@ -179,6 +443,36 @@ export function TeacherClassCountModal({
                         <X className="w-5 h-5" />
                     </button>
                 </div>
+
+                {/* Teacher Selector - Only for moderators/admins */}
+                {(moderatorRole === "moderator" || moderatorRole === "admin") && allTeachers && allTeachers.length > 0 && (
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20 print-hide">
+                        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                <span className="font-medium">{t("Select Teacher:", "เลือกครู:")}</span>
+                            </div>
+                            <select
+                                value={selectedTeacherId}
+                                onChange={(e) => {
+                                    const newTeacherId = e.target.value as Id<"users">;
+                                    setSelectedTeacherId(newTeacherId);
+                                    const teacher = allTeachers.find(t => t._id === newTeacherId);
+                                    if (teacher) {
+                                        setSelectedTeacherUsername(teacher.username);
+                                    }
+                                }}
+                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500"
+                            >
+                                {allTeachers.map((teacher) => (
+                                    <option key={teacher._id} value={teacher._id}>
+                                        {teacher.username}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                )}
 
                 {/* Date Range Selector */}
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700 print-hide">
@@ -402,8 +696,8 @@ export function TeacherClassCountModal({
                                 </button>
                             </div>
                             <TeacherCycleEditor
-                                teacherId={teacherId}
-                                teacherName={teacherUsername}
+                                teacherId={selectedTeacherId}
+                                teacherName={selectedTeacherUsername}
                                 moderatorId={moderatorId}
                                 onComplete={() => {
                                     setShowCycleEditor(false);
@@ -414,6 +708,50 @@ export function TeacherClassCountModal({
                                     );
                                 }}
                             />
+                        </div>
+                    </div>
+                )}
+
+                {/* Print Language Selection Dialog */}
+                {showPrintLanguageDialog && (
+                    <div
+                        className="fixed inset-0 bg-black/70 flex items-center justify-center z-[60] p-4"
+                        role="dialog"
+                        aria-modal="true"
+                    >
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-xl font-bold">
+                                    {t("Select Print Language", "เลือกภาษาสำหรับพิมพ์")}
+                                </h3>
+                                <button
+                                    onClick={() => setShowPrintLanguageDialog(false)}
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                    aria-label={t("Close", "ปิด")}
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <p className="text-gray-600 dark:text-gray-400 mb-6">
+                                {t(
+                                    "Choose the language for your printed report:",
+                                    "เลือกภาษาสำหรับรายงานที่พิมพ์:"
+                                )}
+                            </p>
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={() => handlePrintWithLanguage("en")}
+                                    className="w-full px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-lg font-medium flex items-center justify-center gap-2"
+                                >
+                                    🇬🇧 English
+                                </button>
+                                <button
+                                    onClick={() => handlePrintWithLanguage("th")}
+                                    className="w-full px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-lg font-medium flex items-center justify-center gap-2"
+                                >
+                                    🇹🇭 ไทย (Thai)
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}

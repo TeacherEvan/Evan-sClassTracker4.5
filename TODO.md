@@ -1,46 +1,93 @@
 # TODO List - Evan's Class Tracker 4.5
 
-**Last Updated:** October 17, 2025
+**Last Updated:** October 27, 2025
 
 ---
 
 ## 🚀 New Features
 
-### ~~1. YouTube Video Downloader~~ ✅ COMPLETED
-
-**Moved to "Recently Completed" section above.**
+_No new features planned at this time_
 
 ---
 
-## ✅ Recently Completed
+## ✅ Recently Completed (October 27, 2025)
 
-### YouTube Video Downloader (COMPLETED ✅)
+### Hierarchical Student Selector ✅
 
-**Description:** YouTube video downloader feature using third-party integration in the Teacher Helper tab.
+**Description:** Progressive filtering system for student selection (Grade → Class → Student).
 
 **Implemented Features:**
 
-- ✅ Fully functional YouTube downloader component
-- ✅ Integrated in Teacher Helper tab with dedicated tab navigation
-- ✅ Support for video quality options (360p, 480p, 720p, 1080p, 1440p, 4K)
-- ✅ Support for audio-only extraction (128kbps, 192kbps, 320kbps MP3)
+- ✅ 3-step progressive filtering reduces cognitive load
+- ✅ Reusable component for all student selection contexts
+- ✅ Smart defaults and pre-population for edit mode
+- ✅ Integrated in class booking, weekly calendar, and add student features
 - ✅ Complete bilingual interface (EN/TH)
-- ✅ Download history tracking (client-side, last 10 items)
-- ✅ URL validation for YouTube links (regular videos, shorts, and youtu.be links)
-- ✅ Copyright disclaimer and educational use notice
-- ✅ Integration with Y2Mate third-party service for actual downloads
-- ✅ Responsive mobile-friendly design
-- ✅ Clear usage instructions in both languages
 
 **Technical Implementation:**
 
-- Frontend component: `components/youtube-downloader.tsx` (436 lines)
-- Integration: `components/teacher-helper.tsx` (tab-based navigation)
-- No backend required (uses third-party Y2Mate service)
-- No database storage (downloads directly to user's device)
-- Client-side download history (localStorage-compatible, in-memory)
+- Component: `components/hierarchical-student-selector.tsx` (151 lines)
+- Integration: `class-booking.tsx`, `weekly-calendar.tsx`
+- Performance: Reduces visible options from 100+ to 15 max per step
 
-**Status:** ✅ **COMPLETE** - Fully functional and production-ready
+**Status:** ✅ **COMPLETE** - Production-ready
+
+---
+
+### Enhanced Class Count System ✅
+
+**Description:** Comprehensive enhancements to teacher class count reporting and management.
+
+**Implemented Features:**
+
+- ✅ Teacher selection dropdown for moderators/admins
+- ✅ Print language selection dialog (English/Thai)
+- ✅ Detailed print reports with full class breakdown
+- ✅ Professional HTML generation with summary cards
+- ✅ CSV export updated for selected teacher
+- ✅ Complete bilingual support throughout
+
+**Technical Implementation:**
+
+- Component: `components/teacher-class-count-modal.tsx` (major enhancements)
+- Features: Teacher switching, language-specific printing, detailed reporting
+- Print: Custom HTML generation with professional formatting
+
+**Status:** ✅ **COMPLETE** - Production-ready
+
+---
+
+### Post-Class Validation Fix ✅
+
+**Description:** Fixed overly strict bilingual validation that required both languages.
+
+**Implemented Features:**
+
+- ✅ Applied correct bilingual validation pattern (`&&` instead of `||`)
+- ✅ Now truly allows optional bilingual notes (at least one language required)
+- ✅ Consistent with other optional bilingual fields across the app
+
+**Technical Implementation:**
+
+- Component: `components/post-class-notes-modal.tsx` (validation fix)
+- Pattern: Uses `&&` for "at least one" vs `||` for "both required"
+
+**Status:** ✅ **COMPLETE** - Production-ready
+
+---
+
+### YouTube Downloader Removal ✅
+
+**Description:** Complete removal of YouTube downloader feature per user request.
+
+**Removed:**
+
+- ✅ Deleted `components/youtube-downloader.tsx` (436 lines)
+- ✅ Cleaned imports and dependencies from `teacher-helper.tsx`
+- ✅ Simplified Teacher Helper to single-tab resources view
+- ✅ Updated all documentation references
+
+**Status:** ✅ **COMPLETE** - Feature removed
 
 ---
 
@@ -183,47 +230,6 @@ _No known issues at this time_
 
 ## 📝 Notes
 
-### YouTube Downloader Implementation Notes
-
-**Legal Considerations:**
-
-- requiring teacher accounts only
-
-**Technical Considerations:**
-
-- yt-dlp requires Python installation on server
-- Alternative: Use web-based API services
-- Storage: Consider file size limits
-- Security: Validate URLs, prevent abuse
-
-**Recommended Libraries/Services:**
-
-- `yt-dlp` - Python command-line tool (most powerful)
-- `youtube-dl-exec` - Node.js wrapper for yt-dlp
-- `ytdl-core` - Pure JavaScript alternative (limited features)
-- RapidAPI YouTube Download services
-- Consider building as separate microservice
-
-**Example Implementation:**
-
-```typescript
-// Backend API endpoint
-export const downloadVideo = internalMutation({
-  args: {
-    url: v.string(),
-    quality: v.union(v.literal("720p"), v.literal("1080p"), v.literal("audio")),
-    userId: v.id("users"),
-  },
-  handler: async (ctx, args) => {
-    // 1. Validate user is teacher/admin
-    // 2. Validate YouTube URL
-    // 3. Call yt-dlp service
-    // 4. Store download record
-    // 5. Return download link or file
-  },
-});
-```
-
 ### Testing Dashboard Usage
 
 **How to Access:**
@@ -247,10 +253,9 @@ export const downloadVideo = internalMutation({
 
 | Priority | Items | Timeline |
 |----------|-------|----------|
-| **HIGH** | YouTube Downloader | Next sprint |
-| **MEDIUM** | Manual Testing 1-6 | This week |
-| **LOW** | Code Splitting | When needed |
-| **FUTURE** | Advanced Features | Q1 2026 |
+| **HIGH** | Manual Testing 1-6 | This week |
+| **MEDIUM** | Code Splitting | When needed |
+| **LOW** | Advanced Features | Q1 2026 |
 
 ---
 

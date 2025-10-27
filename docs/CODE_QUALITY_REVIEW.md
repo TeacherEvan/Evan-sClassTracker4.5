@@ -204,17 +204,19 @@ export const list = query({
   - UI integration could be more prominent
   - **Recommendation:** Add to weekly calendar view
 
-#### 10. YouTube Downloader
+#### 10. Hierarchical Student Selector (NEW)
 
-- **Status:** ✅ Implemented
-- **Quality:** Good (utility feature)
+- **Status:** ✅ Implemented (Oct 27, 2025)
+- **Quality:** Excellent (UX improvement)
 - **Notes:**
-  - Teacher resource tool
-  - Video/audio download support
-  - Quality selection
-- **Security Note:**
-  - Ensure backend proxy prevents abuse
-  - **Recommendation:** Add rate limiting
+  - Progressive filtering: Grade → Class → Student
+  - Reduces cognitive load (100+ items → 15 max)
+  - Reusable component
+  - Smart defaults for edit mode
+- **Benefits:**
+  - Faster student selection
+  - Better user experience
+  - **Recommendation:** Apply pattern to other multi-level selections
 
 ---
 
@@ -553,7 +555,7 @@ export const list = query({
 | School Management | ✅ | 🔄 Manual | ✅ | B+ |
 | Analytics | ✅ | 🔄 Manual | ✅ | B |
 | Cancellation Requests | ✅ | 🔄 Manual | ✅ | B+ |
-| YouTube Downloader | ✅ | 🔄 Manual | ✅ | B |
+| Hierarchical Selector | ✅ | 🔄 Manual | ✅ | A (NEW) |
 | Weekly Calendar | ✅ | 🔄 Manual | ✅ | A |
 | Guardian Dashboard | ✅ | 🔄 Manual | ✅ | A |
 

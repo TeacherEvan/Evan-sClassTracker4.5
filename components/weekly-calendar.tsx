@@ -13,6 +13,7 @@ import { Bell, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Edit2
 import { useMemo, useState } from "react";
 import { ClassDetailModal } from "./class-detail-modal";
 import { EditClassModal } from "./edit-class-modal";
+import { HierarchicalStudentSelector } from "./hierarchical-student-selector";
 
 type WeeklyCalendarProps = {
     currentUser: User;
@@ -765,22 +766,13 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                         </div>
                                     ) : (
                                         <>
-                                            <select
-                                                id="studentSelect"
+                                            <HierarchicalStudentSelector
+                                                students={formStudents}
                                                 value={studentId}
-                                                onChange={(e) => setStudentId(e.target.value as Id<"students"> | "")}
-                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                                onChange={setStudentId}
                                                 required
-                                            >
-                                                <option value="">{t("-- Select Student --", "-- เลือกนักเรียน --")}</option>
-                                                {formStudents?.map((student) => (
-                                                    <option key={student._id} value={student._id}>
-                                                        {student.firstName} {student.lastName}
-                                                        {student.grade ? ` (${student.grade}` : ""}
-                                                        {student.class ? `${student.class})` : student.grade ? ")" : ""}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                                schoolId={schoolId}
+                                            />
                                             <button
                                                 type="button"
                                                 onClick={() => setShowStudentForm(true)}

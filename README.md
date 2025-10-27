@@ -2,9 +2,20 @@
 
 Bilingual English/Thai class tracker for teachers and schools - Built with Next.js 15, React 19, Convex & Tailwind v4
 
-## ✨ Latest Updates (Oct 26, 2025)
+## ✨ Latest Updates (Oct 27, 2025)
 
-### Fixes Applied Today
+### New Features & Improvements
+
+- ✅ **Hierarchical Student Selector**: Progressive filtering (Grade → Class → Student) reduces cognitive load
+- ✅ **Enhanced Class Count System**: Teacher selection, print language choice, detailed reporting for moderators
+- ✅ **Post-Class Validation Fix**: Now truly allows optional bilingual notes (at least one language)
+- ✅ **Professional Print Reports**: Custom HTML generation with full class breakdown and student details
+
+### Removed Features
+
+- ❌ **YouTube Downloader**: Removed per user request (simplified Teacher Helper)
+
+### Previous Fixes (Oct 26, 2025)
 
 - ✅ **Student Creation**: Empty lastName allowed for Thai single-name students
 - ✅ **Duplicate Prevention**: Blocks duplicate students (same name+grade+class+school)  
@@ -29,19 +40,19 @@ See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 - 🔑 **Password Security** - Default password pattern with mandatory password change on first login
 - 📅 **Class Booking** - Teachers can book classes with automatic moderator notifications
 - ✅ **Approval Workflow** - Moderators acknowledge and approve/reject class bookings
-- 👨‍🎓 **Student Management** - Track students with unique auto-generated IDs
+- 👨‍🎓 **Student Management** - Track students with unique auto-generated IDs, hierarchical selection
 - 🔔 **User Notification System** - Real-time alerts and updates
 - 🌏 **Bilingual Support** - Full English/Thai language support
 - ⚡ **Real-time Updates** - Powered by Convex backend
 - 🎨 **Modern UI** - Built with Next.js 15 and Tailwind CSS
 - 🌙 **Dark Mode** - Automatic dark mode support
 - 🔍 **Advanced Search** - Bilingual search across students, classes, users, and schools
-- 📊 **Analytics & Reporting** - Teacher performance metrics, trends, and statistics
+- 📊 **Analytics & Reporting** - Teacher performance metrics, trends, statistics, and detailed print reports
 - 📄 **Data Export** - CSV/Excel export for classes, students, and analytics
 - 🚀 **Bulk Operations** - Import/create multiple students or users at once
 - 📑 **Pagination** - Efficient handling of large datasets with pagination support
 - 📥 **Data Import** - Bulk import schedules from external sources (e.g., Sangsom Project)
-- ❓ **Interactive Help System** - Comprehensive bilingual guide with 20+ features documented (NEW!)
+- ❓ **Interactive Help System** - Comprehensive bilingual guide with 20+ features documented
 
 ## User Roles
 

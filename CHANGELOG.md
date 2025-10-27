@@ -2,6 +2,29 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.4] - October 27, 2025
+
+### Added
+
+- **Hierarchical Student Selector**: Progressive filtering (Grade → Class → Student) reduces cognitive load
+- **Enhanced Class Count System**: Teacher selection dropdown for moderators, print language selection, detailed reports
+- **Print Reports**: Professional HTML generation with full class breakdown, student details, and bilingual support
+- **CSV Export Enhancement**: Export class counts for any selected teacher (moderators)
+
+### Fixed
+
+- **Post-Class Validation**: Fixed overly strict validation - now truly allows optional bilingual notes
+- **Teacher Selection**: Moderators can now view and export any teacher's class counts
+
+### Removed
+
+- **YouTube Downloader**: Complete removal of YouTube downloader feature per user request
+
+### Changed
+
+- **Student Selection UX**: All student dropdowns now use hierarchical 3-step selection
+- **Class Count Modal**: Major enhancements with teacher switching and professional reporting
+
 ## [Unreleased] - October 26, 2025
 
 ### Fixed

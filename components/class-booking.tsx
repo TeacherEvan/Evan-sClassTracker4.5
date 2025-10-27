@@ -11,6 +11,7 @@ import { Calendar, Check, ChevronDown, ChevronUp, Edit2, MapPin, Trash2, UserMin
 import { useState } from "react";
 import { ClassConflictModal } from "./class-conflict-modal";
 import { EditClassModal } from "./edit-class-modal";
+import { HierarchicalStudentSelector } from "./hierarchical-student-selector";
 import LocationProposalForm from "./location-proposal-form";
 import { MergeClassesModal } from "./merge-classes-modal";
 import { MultiDateCalendar } from "./multi-date-calendar";
@@ -818,38 +819,14 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     </button>
                   </div>
                 ) : (
-                  <select
-                    id="student"
+                  <HierarchicalStudentSelector
+                    students={students}
                     value={studentId}
-                    onChange={(e) => setStudentId(e.target.value as Id<"students"> | "")}
-                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-all"
-                    required
+                    onChange={setStudentId}
                     disabled={loading || !schoolId}
-                  >
-                    <option value="">
-                      {!schoolId
-                        ? t("Select school first", "เลือกโรงเรียนก่อน")
-                        : students === undefined
-                          ? t("Loading students...", "กำลังโหลดนักเรียน...")
-                          : students.length === 0
-                            ? t("No students found - create one above", "ไม่พบนักเรียน - สร้างใหม่ด้านบน")
-                            : t("Select a student", "เลือกนักเรียน")
-                      }
-                    </option>
-                    {students?.map((student) => (
-                      <option key={student._id} value={student._id}>
-                        {student.firstName} {student.lastName} ({student.grade}{student.class})
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {schoolId && students && students.length > 0 && (
-                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                    {t(
-                      `${students.length} student${students.length !== 1 ? 's' : ''} available at this school`,
-                      `มีนักเรียน ${students.length} คนในโรงเรียนนี้`
-                    )}
-                  </p>
+                    required
+                    schoolId={schoolId}
+                  />
                 )}
               </div>
             </div>
@@ -1721,18 +1698,15 @@ function ClassItemDisplay({
               {t("Add Another Student", "เพิ่มนักเรียนอีกคน")}
             </h4>
             <div className="space-y-3">
-              <select
+              <HierarchicalStudentSelector
+                students={availableStudents}
                 value={selectedStudentToAdd}
-                onChange={(e) => setSelectedStudentToAdd(e.target.value as Id<"students"> | "")}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-gray-800 text-sm"
-              >
-                <option value="">{t("Select a student", "เลือกนักเรียน")}</option>
-                {availableStudents.map((s) => (
-                  <option key={s._id} value={s._id}>
-                    {s.firstName} {s.lastName}
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedStudentToAdd}
+                disabled={addingStudent}
+                schoolId={classItem.schoolId}
+                placeholder="Select a student to add"
+                placeholderTh="เลือกนักเรียนที่จะเพิ่ม"
+              />
               <div className="flex gap-2">
                 <button
                   onClick={handleAddStudent}

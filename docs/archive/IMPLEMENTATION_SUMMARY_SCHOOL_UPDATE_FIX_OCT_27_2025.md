@@ -1,11 +1,13 @@
 # School Name Update Fix - October 27, 2025
 
 ## Issue Reported
+
 Admin users could edit school names in the UI, but changes were not persisting to the database. The form showed a success toast message, but the names remained unchanged after refresh.
 
 ## Root Cause Analysis
 
 ### Problem
+
 The `school-management.tsx` component only called the `updateModerator` mutation when editing schools:
 
 ```tsx
@@ -23,12 +25,15 @@ if (editingSchool) {
 ```
 
 **Issues:**
+
 1. Only updates `moderatorId` field, ignores `name` and `nameTh` changes
 2. Shows success toast even when name fields aren't updated
 3. No mutation existed to update school names
 
 ### Missing Backend Mutation
+
 The `convex/schools.ts` file had:
+
 - ✅ `create` - Create new school
 - ✅ `updateModerator` - Update moderator only
 - ✅ `remove` - Delete school
@@ -41,6 +46,7 @@ The `convex/schools.ts` file had:
 **File:** `convex/schools.ts` (lines 165-252)
 
 **Features:**
+
 ```typescript
 export const update = mutation({
   args: {
@@ -108,6 +114,7 @@ export const update = mutation({
 ```
 
 **Security features:**
+
 - ✅ Admin-only authorization
 - ✅ Rate limiting (prevents DoS)
 - ✅ Input validation (1-200 chars)
@@ -120,6 +127,7 @@ export const update = mutation({
 **File:** `components/school-management.tsx`
 
 **Before:**
+
 ```tsx
 const createSchool = useMutation(api.schools.create);
 const updateModerator = useMutation(api.schools.updateModerator); // Only this
@@ -134,6 +142,7 @@ if (editingSchool) {
 ```
 
 **After:**
+
 ```tsx
 const createSchool = useMutation(api.schools.create);
 const updateSchool = useMutation(api.schools.update); // ✅ New mutation
@@ -167,17 +176,21 @@ if (editingSchool) {
 ## Files Changed
 
 ### Backend
+
 - `convex/schools.ts` - Added `update` mutation (lines 165-252)
 
 ### Frontend
+
 - `components/school-management.tsx` - Updated to use `update` mutation instead of `updateModerator`
 
 ### Documentation
+
 - `.github/copilot-instructions.md` - Added Pattern #15 (School Management Pattern)
 
 ## Related Patterns
 
 This fix follows established patterns:
+
 - **Pattern #2**: Bilingual validation using `&&` (at least one language)
 - **Pattern #13**: Audit logging for administrative actions
 - **Pattern #6**: Rate limiting on mutations
@@ -193,6 +206,7 @@ This fix follows established patterns:
 ## Known Limitations
 
 None - this is a complete fix. The mutation handles all school update scenarios:
+
 - Name changes (English and/or Thai)
 - Moderator assignment
 - Moderator removal (pass `null`)
