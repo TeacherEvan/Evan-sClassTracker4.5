@@ -1,9 +1,9 @@
 ﻿# AI Agent Instructions - Evan's Class Tracker 4.5
 
 > **Version:** 4.5.3  
-> **Last Updated:** October 26, 2025  
+> **Last Updated:** October 27, 2025  
 > **Codebase:** Next.js 15 + React 19 + Convex + Tailwind v4  
-> **Instructions Version:** 2.1 (Enhanced E2E testing, visual diagrams, quick reference)
+> **Instructions Version:** 2.2 (School update fix, student import UI, bulk delete improvements)
 
 Bilingual (English/Thai) class tracking system built with **Next.js 15**, **React 19**, **Convex** real-time backend, and **Tailwind v4**. Recent optimizations (Oct 2025) achieved **40-50% faster loads** and **10-100x faster queries** via N+1 elimination.
 
@@ -43,7 +43,7 @@ Bilingual (English/Thai) class tracking system built with **Next.js 15**, **Reac
 - **Bilingual:** [#1 Bilingual Development](#1-bilingual-first-development), [#2 Validation](#2-bilingual-validation-pattern-critical---updated-oct-2025)
 - **Performance:** [#3 Index Queries](#3-index-first-queries-performance-critical), [#4 N+1 Prevention](#4-avoid-n1-query-problems)
 - **Security:** [#11 Login Security](#11-login-security-pattern-account-lockout), [#12 Bulk Deletion](#12-bulk-deletion-pattern-security-critical), [#13 Audit Logging](#13-audit-logging-pattern)
-- **Workflows:** [#8 State Machine](#8-class-booking-state-machine), [#14 Cycle Editor](#14-teacher-cycle-editor-pattern-new-oct-2025)
+- **Workflows:** [#8 State Machine](#8-class-booking-state-machine), [#14 Cycle Editor](#14-teacher-cycle-editor-pattern-new-oct-2025), [#15 School Management](#15-school-management-pattern-new-oct-2025)
 
 ---
 
@@ -549,6 +549,82 @@ export const setTeacherCycle = mutation({
 
 **Example**: See `components/teacher-cycle-editor.tsx` and `IMPLEMENTATION_SUMMARY_CYCLE_EDITOR.md`
 
+### 15. School Management Pattern (NEW Oct 2025)
+
+**Full CRUD for schools with proper update mutation** for admins to manage school names and moderators:
+
+```typescript
+// Backend mutation (convex/schools.ts)
+export const update = mutation({
+  args: {
+    schoolId: v.id("schools"),
+    name: v.string(),
+    nameTh: v.string(),
+    moderatorId: v.optional(v.union(v.id("users"), v.null())),
+    adminId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    // Verify admin role
+    const admin = await ctx.db.get(args.adminId);
+    if (!admin || admin.role !== "admin") {
+      throw new Error("Unauthorized: Only admins can update schools");
+    }
+
+    // Validate inputs (at least one language required)
+    if (!args.name.trim() && !args.nameTh.trim()) {
+      throw new Error("School name is required in at least one language");
+    }
+
+    // Update all fields
+    await ctx.db.patch(args.schoolId, {
+      name: args.name,
+      nameTh: args.nameTh,
+      moderatorId: args.moderatorId === null ? undefined : args.moderatorId,
+    });
+
+    // Audit log with old/new values
+    await logAudit(ctx, {
+      userId: args.adminId,
+      action: AuditActions.UPDATE_SCHOOL,
+      targetId: args.schoolId,
+      details: { oldName: school.name, newName: args.name },
+    });
+  }
+});
+```
+
+**Frontend pattern** (components/school-management.tsx):
+
+```tsx
+// Import the update mutation
+const updateSchool = useMutation(api.schools.update);
+
+// In handleSubmit - update ALL fields, not just moderator
+if (editingSchool) {
+  await updateSchool({
+    schoolId: editingSchool,
+    name,           // ✅ Updates name
+    nameTh,         // ✅ Updates Thai name
+    moderatorId: moderatorId || null,  // ✅ Updates/clears moderator
+    adminId: currentUser._id,
+  });
+}
+```
+
+**Common bug fixed**:
+- **Problem**: Original code only called `updateModerator` which ignores name changes
+- **Symptom**: Edit form shows success toast but names don't persist
+- **Solution**: Use `schools.update` mutation to update all fields atomically
+
+**Key features**:
+- **Full field updates**: Name, nameTh, and moderatorId all updated together
+- **Null moderator support**: Pass `null` to clear moderator assignment
+- **Validation**: Requires at least one language (follows bilingual pattern #2)
+- **Audit logging**: Records old and new values for compliance
+- **Rate limiting**: 20 updates/minute to prevent abuse
+
+**Example**: See `convex/schools.ts` lines 165-252 and `components/school-management.tsx`
+
 ## Security Considerations ⚠️
 
 ### Known Limitations (NOT Production-Ready)
@@ -967,18 +1043,24 @@ if (window.targetSchool) {
 - `convex/classes.ts` - State machine, workflow, edit audit trail, authorization helpers
 - `convex/students.ts` - Unique ID generation pattern
 - `convex/users.ts` - Authentication, password hashing
+- `convex/schools.ts` - School CRUD with update mutation (name, nameTh, moderator)
 - `convex/teacherClassCount.ts` - ClassCount tracking, cycle management, confirmation flow
+- `convex/importSangsomStudents.ts` - Bulk student import mutations with duplicate checking
 
 ### UI Components
 - `components/class-booking.tsx` - Multi-date booking, optional fields, conflict detection
 - `components/edit-class-modal.tsx` - Full edit modal with audit trail
 - `components/desktop-notification-toast.tsx` - Toast notification UI
+- `components/school-management.tsx` - School CRUD with full update support
+- `components/sangsom-student-import-button.tsx` - UI-based student import (replaces CLI script)
 - `components/teacher-cycle-editor.tsx` - Nested modal with confirmation flow pattern
 - `components/teacher-class-count-modal.tsx` - Cycle editor integration example
 
 ### Feature Documentation
 - `GOLD_TABLET_NOTIFICATION_WINDOW.md` - Notification window implementation guide
 - `IMPLEMENTATION_SUMMARY_CYCLE_EDITOR.md` - Nested modal, confirmation flow, active cycle indicator
+- `IMPLEMENTATION_SUMMARY_STUDENT_IMPORT_UI_OCT_27_2025.md` - UI-based student import workflow
+- `IMPLEMENTATION_SUMMARY_BULK_DELETE_FIX_OCT_27_2025.md` - Bulk deletion security improvements
 - `convex/notificationWindows.ts` - One-time notification window system
 - `convex/appUpdates.ts` - Feature update logging and changelog
 

@@ -17,7 +17,7 @@ export function SchoolManagement({ currentUser }: SchoolManagementProps) {
     const schools = useQuery(api.schools.list, {});
     const users = useQuery(api.users.list, {});
     const createSchool = useMutation(api.schools.create);
-    const updateModerator = useMutation(api.schools.updateModerator);
+    const updateSchool = useMutation(api.schools.update);
     const deleteSchool = useMutation(api.schools.remove);
 
     const [showForm, setShowForm] = useState(false);
@@ -49,14 +49,14 @@ export function SchoolManagement({ currentUser }: SchoolManagementProps) {
 
         try {
             if (editingSchool) {
-                // Update existing school's moderator
-                if (moderatorId) {
-                    await updateModerator({
-                        schoolId: editingSchool,
-                        moderatorId: moderatorId as Id<"users">,
-                        adminId: currentUser._id,
-                    });
-                }
+                // Update existing school (name, nameTh, and moderator)
+                await updateSchool({
+                    schoolId: editingSchool,
+                    name,
+                    nameTh,
+                    moderatorId: moderatorId || null,
+                    adminId: currentUser._id,
+                });
                 setSuccess(t("School updated!", "อัปเดตโรงเรียนแล้ว!"));
             } else {
                 // Create new school

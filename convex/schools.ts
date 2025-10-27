@@ -166,6 +166,93 @@ export const updateModerator = mutation({
   },
 });
 
+// Mutation to update school names
+export const update = mutation({
+  args: {
+    schoolId: v.id("schools"),
+    name: v.string(),
+    nameTh: v.string(),
+    moderatorId: v.optional(v.union(v.id("users"), v.null())),
+    adminId: v.id("users"), // Required: admin making the change
+    // Optional: Client-side performance tracking
+    userAgent: v.optional(v.string()),
+    screenResolution: v.optional(v.string()),
+    timezone: v.optional(v.string()),
+    locale: v.optional(v.string()),
+    sessionId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // ✅ SECURITY: Verify admin role
+    const admin = await ctx.db.get(args.adminId);
+    if (!admin || admin.role !== "admin") {
+      throw new Error("Unauthorized: Only admins can update schools");
+    }
+
+    // ✅ SECURITY: Rate limiting
+    await checkRateLimit(ctx, {
+      key: `school-update-${args.adminId}`,
+      limit: 20,
+      windowMs: 60000, // 20 updates per minute
+    });
+
+    // ✅ SECURITY: Input validation
+    validateLength(args.name, "School name (English)", 200, 1);
+    validateLength(args.nameTh, "School name (Thai)", 200, 1);
+
+    // Validate inputs
+    if (!args.name.trim() && !args.nameTh.trim()) {
+      throw new Error("School name is required in at least one language");
+    }
+
+    // Verify the school exists
+    const school = await ctx.db.get(args.schoolId);
+    if (!school) {
+      throw new Error("School not found");
+    }
+
+    // If moderator is specified, verify they exist and have appropriate role
+    if (args.moderatorId) {
+      const moderator = await ctx.db.get(args.moderatorId);
+      if (!moderator) {
+        throw new Error("Moderator not found");
+      }
+      if (moderator.role !== "moderator" && moderator.role !== "admin") {
+        throw new Error("Specified user is not a moderator or admin");
+      }
+    }
+
+    // Update the school
+    await ctx.db.patch(args.schoolId, {
+      name: args.name,
+      nameTh: args.nameTh,
+      moderatorId: args.moderatorId === null ? undefined : args.moderatorId,
+    });
+
+    // ✅ SECURITY: Audit logging with performance metadata
+    await logAudit(ctx, {
+      userId: args.adminId,
+      action: AuditActions.UPDATE_SCHOOL,
+      targetType: AuditTargetTypes.SCHOOLS,
+      targetId: args.schoolId,
+      targetName: args.name,
+      details: {
+        oldName: school.name,
+        oldNameTh: school.nameTh,
+        newName: args.name,
+        newNameTh: args.nameTh,
+        moderatorId: args.moderatorId
+      },
+      userAgent: args.userAgent,
+      screenResolution: args.screenResolution,
+      timezone: args.timezone,
+      locale: args.locale,
+      sessionId: args.sessionId,
+    });
+
+    return { success: true };
+  },
+});
+
 // Mutation to delete a school
 export const remove = mutation({
   args: {

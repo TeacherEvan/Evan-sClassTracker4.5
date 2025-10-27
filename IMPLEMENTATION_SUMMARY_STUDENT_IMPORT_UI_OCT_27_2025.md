@@ -1,15 +1,19 @@
 # Student Import UI Implementation - October 27, 2025
 
 ## Overview
+
 Converted student import from CLI-only script to proper UI-based workflow matching the existing Sangsom Project Data Seeder pattern.
 
 ## Problem
+
 - Initial implementation created only a CLI script (`scripts/import-sangsom-k19.ts`)
 - Required developers to run terminal commands instead of using the app's UI
 - Inconsistent with existing data seeding workflow shown in "Data Import & Seeding" section
 
 ## Solution
+
 Created `SangsomStudentImportButton` component that provides:
+
 - UI button in "Data Import & Seeding" section
 - School existence check before import
 - Real-time progress feedback via toast notifications
@@ -19,9 +23,11 @@ Created `SangsomStudentImportButton` component that provides:
 ## Files Created
 
 ### `components/sangsom-student-import-button.tsx`
+
 **New UI component for student import**
 
 **Key Features:**
+
 - **School Validation**: Checks Sangsom School exists before allowing import
 - **User Session**: Uses localStorage currentUser for createdBy field
 - **Result Display**: Shows imported students, failed imports, and specific errors
@@ -29,10 +35,12 @@ Created `SangsomStudentImportButton` component that provides:
 - **Visual Feedback**: Color-coded status (green=success, red=error, amber=warning)
 
 **Mutations Used:**
+
 - `api.importSangsomStudents.findSangsomSchool` - Validates school exists
 - `api.importSangsomStudents.importK19Students` - Bulk imports 27 students
 
 **Component Structure:**
+
 ```tsx
 <SangsomStudentImportButton>
   - Header (Users icon, title, description)
@@ -46,10 +54,13 @@ Created `SangsomStudentImportButton` component that provides:
 ## Files Modified
 
 ### `app/page.tsx`
+
 **Added student import button to Data Import & Seeding section**
 
 **Changes:**
+
 1. Added lazy import (line ~53):
+
    ```typescript
    const SangsomStudentImportButton = lazy(() => 
      import("@/components/sangsom-student-import-button")
@@ -58,6 +69,7 @@ Created `SangsomStudentImportButton` component that provides:
    ```
 
 2. Added component to UI (line ~897):
+
    ```tsx
    <div className="space-y-4">
      <SangsomSeedButton />
@@ -68,9 +80,11 @@ Created `SangsomStudentImportButton` component that provides:
    ```
 
 ### `scripts/import-sangsom-k19.ts`
+
 **Fixed TypeScript errors in CLI script**
 
 **Fixed:**
+
 - Removed duplicate closing brace causing syntax error
 - Removed explicit `: any` type annotations (TypeScript infers correctly)
 
@@ -79,12 +93,14 @@ Created `SangsomStudentImportButton` component that provides:
 ## User Workflow
 
 ### Before (CLI Only)
+
 1. Open terminal
 2. Run `npx tsx scripts/import-sangsom-k19.ts`
 3. View console output
 4. No UI integration
 
 ### After (UI Integrated)
+
 1. Login as admin
 2. Navigate to "Data Import & Seeding" tab
 3. Click "Check School" to validate Sangsom School exists
@@ -94,12 +110,14 @@ Created `SangsomStudentImportButton` component that provides:
 ## Import Process Details
 
 ### Step 1: Check School
+
 - Queries database for "Sangsom School"
 - Returns schoolId if found
 - Shows green success box or red error box
 - Import button disabled until school check passes
 
 ### Step 2: Import Students
+
 - Reads current user from localStorage
 - Calls `importK19Students` mutation with schoolId and userId
 - Mutation creates 27 students with:
@@ -110,6 +128,7 @@ Created `SangsomStudentImportButton` component that provides:
   - School: Sangsom School
 
 ### Step 3: View Results
+
 - Shows count of imported vs failed
 - Lists all successfully imported students with IDs
 - Shows detailed error messages for failures (e.g., duplicates)
@@ -118,15 +137,18 @@ Created `SangsomStudentImportButton` component that provides:
 ## Error Handling
 
 **Duplicate Prevention:**
+
 - Backend checks for existing students with same firstName + lastName + grade + class + school
 - Duplicates are skipped, not overwritten
 - Error message includes existing student ID for reference
 
 **User Not Logged In:**
+
 - Shows toast error: "No user logged in. Please login first."
 - Prevents import attempt without valid session
 
 **School Not Found:**
+
 - Import button disabled until school check succeeds
 - Clear error message directs user to seed Sangsom data first
 
@@ -150,6 +172,7 @@ Created `SangsomStudentImportButton` component that provides:
 5. **Discoverable**: Visible in UI, not hidden in scripts folder
 
 ## Related Files
+
 - `convex/importSangsomStudents.ts` - Backend mutations (unchanged)
 - `docs/sangsom-students-k1-9.md` - Student roster data source
 - `docs/SANGSOM_IMPORT_GUIDE.md` - Original CLI-based guide (now optional)
@@ -157,6 +180,7 @@ Created `SangsomStudentImportButton` component that provides:
 ## Next Steps
 
 To import more classes (K1/1 through K1/10):
+
 1. Get class roster images from PR #58
 2. Extract student names from each image
 3. Create MD files: `docs/sangsom-students-k1-{1-10}.md`
