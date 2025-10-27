@@ -54,6 +54,7 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: "--yes"
           # No --prod flag = preview/staging deployment
         env:
           NEXT_PUBLIC_CONVEX_URL: ${{ needs.deploy-convex-staging.outputs.convex_url }}

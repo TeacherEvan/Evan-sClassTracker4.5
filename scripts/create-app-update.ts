@@ -88,7 +88,7 @@ function parseImplementationSummaries(): UpdateData | null {
 
     // Read file content
     const content = fs.readFileSync(path.join(docsDir, latestFile), "utf-8");
-    
+
     // Extract version from filename or content
     const versionMatch = latestFile.match(/v?(\d+\.\d+\.\d+)/);
     const version = versionMatch ? versionMatch[1] : new Date().toISOString().split('T')[0].replace(/-/g, '.');
@@ -159,7 +159,7 @@ async function createAppUpdate(updateData: UpdateData, adminUserId: Id<"users">)
         // Check if this version already exists
         const existingUpdates = await client.query(api.appUpdates.list, { userId: adminUserId });
         const duplicateUpdate = existingUpdates?.find(u => u.version === updateData.version);
-        
+
         if (duplicateUpdate) {
             console.log(`⚠️  Update version ${updateData.version} already exists (ID: ${duplicateUpdate._id})`);
             console.log(`   Skipping creation to prevent duplicate.`);
