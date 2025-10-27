@@ -50,6 +50,7 @@ const AdminNotificationWindows = lazy(() => import("@/components/admin-notificat
 const AdminAppUpdates = lazy(() => import("@/components/admin-app-updates").then(m => ({ default: m.AdminAppUpdates })));
 const ClassCountModal = lazy(() => import("@/components/class-count-modal").then(m => ({ default: m.ClassCountModal })));
 const SangsomSeedButton = lazy(() => import("@/components/sangsom-seed-button").then(m => ({ default: m.SangsomSeedButton })));
+const SangsomStudentImportButton = lazy(() => import("@/components/sangsom-student-import-button").then(m => ({ default: m.SangsomStudentImportButton })));
 const SangsomMigrationButton = lazy(() => import("@/components/sangsom-migration-button").then(m => ({ default: m.SangsomMigrationButton })));
 const SangsomDeleteButton = lazy(() => import("@/components/sangsom-delete-button").then(m => ({ default: m.SangsomDeleteButton })));
 const EventManagement = lazy(() => import("@/components/event-management").then(m => ({ default: m.EventManagement })));
@@ -893,6 +894,7 @@ export default function Home() {
                 </div>
                 <div className="space-y-4">
                   <SangsomSeedButton />
+                  <SangsomStudentImportButton />
                   <SangsomMigrationButton userId={user._id} />
                   <SangsomDeleteButton userId={user._id} />
                 </div>

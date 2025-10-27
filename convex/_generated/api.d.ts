@@ -20,6 +20,7 @@ import type * as deleteSangsomData from "../deleteSangsomData.js";
 import type * as events from "../events.js";
 import type * as exports from "../exports.js";
 import type * as groups from "../groups.js";
+import type * as importSangsomStudents from "../importSangsomStudents.js";
 import type * as init from "../init.js";
 import type * as locationProposals from "../locationProposals.js";
 import type * as locations from "../locations.js";
@@ -69,6 +70,7 @@ declare const fullApi: ApiFromModules<{
   events: typeof events;
   exports: typeof exports;
   groups: typeof groups;
+  importSangsomStudents: typeof importSangsomStudents;
   init: typeof init;
   locationProposals: typeof locationProposals;
   locations: typeof locations;

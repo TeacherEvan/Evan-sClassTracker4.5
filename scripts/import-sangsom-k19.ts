@@ -22,6 +22,7 @@
 import { ConvexHttpClient } from "convex/browser";
 import * as dotenv from "dotenv";
 import { api } from "../convex/_generated/api";
+import type { Id } from "../convex/_generated/dataModel";
 
 dotenv.config({ path: ".env.local" });
 
@@ -72,11 +73,10 @@ async function main() {
 
     console.log(`👤 Using user ID: ${userId}\n`);
     console.log("🚀 Starting student import...\n");
-
     // Step 3: Import students
     const result = await client.mutation(api.importSangsomStudents.importK19Students, {
-        schoolId: schoolCheck.schoolId as any,
-        createdBy: userId as any,
+        schoolId: schoolCheck.schoolId as Id<"schools">,
+        createdBy: userId as Id<"users">,
     });
 
     // Display results
@@ -88,7 +88,7 @@ async function main() {
 
     if (result.results.length > 0) {
         console.log("📋 Imported Students:");
-        result.results.forEach((student: any, index: number) => {
+        result.results.forEach((student, index: number) => {
             console.log(`   ${index + 1}. ${student.nickname} (${student.thaiName}) - ID: ${student.studentId}`);
         });
         console.log("");
@@ -96,7 +96,7 @@ async function main() {
 
     if (result.errors.length > 0) {
         console.log("⚠️  Errors:");
-        result.errors.forEach((error: any) => {
+        result.errors.forEach((error) => {
             console.log(`   - ${error.nickname}: ${error.error}`);
             if (error.studentId) {
                 console.log(`     (Existing student ID: ${error.studentId})`);
