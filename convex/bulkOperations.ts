@@ -235,14 +235,27 @@ export const bulkDeleteStudents = mutation({
         void _locale;
         void _sessionId;
 
-        // ✅ SECURITY: Verify user has admin privileges
+        // ✅ SECURITY: Verify user exists and has appropriate privileges
         const user = await ctx.db.get(operationArgs.userId);
         if (!user) {
             throw new Error("User not found");
         }
 
-        if (user.role !== "admin") {
-            throw new Error("Unauthorized: Only admins can bulk delete students");
+        // ✅ SECURITY: Role-based authorization
+        // - Admins: Can delete any students (with force option)
+        // - Moderators/Teachers: Can delete students from their school only
+        // - Guardians: Cannot bulk delete
+        if (user.role === "guardian") {
+            throw new Error("Unauthorized: Guardians cannot bulk delete students");
+        }
+
+        if (user.role !== "admin" && user.role !== "moderator" && user.role !== "teacher") {
+            throw new Error("Unauthorized: Insufficient permissions for bulk deletion");
+        }
+
+        // ✅ SECURITY: Only admins can use force mode
+        if (operationArgs.force && user.role !== "admin") {
+            throw new Error("Unauthorized: Only admins can force delete students with classes");
         }
 
         // ✅ SECURITY: Validate batch size to prevent DoS
@@ -272,24 +285,47 @@ export const bulkDeleteStudents = mutation({
                     errors.push({
                         index: i,
                         studentId,
+                        studentName: "Unknown",
                         error: "Student not found",
                     });
                     continue;
                 }
 
-                // Check if student has associated classes (unless force=true for admin God mode)
-                if (!operationArgs.force) {
-                    const classCount = await ctx.db
-                        .query("classes")
-                        .withIndex("by_student", (q) => q.eq("studentId", studentId))
-                        .collect()
-                        .then(classes => classes.length);
-
-                    if (classCount > 0) {
+                // ✅ SECURITY: School-based access control for non-admins
+                if (user.role !== "admin") {
+                    if (student.schoolId !== user.schoolId) {
                         errors.push({
                             index: i,
                             studentId,
-                            error: `Cannot delete student with ${classCount} associated class${classCount > 1 ? 'es' : ''} (use force option to override)`,
+                            studentName: `${student.firstName} ${student.lastName}`,
+                            error: "Cannot delete students from other schools",
+                        });
+                        continue;
+                    }
+                }
+
+                // Check if student has associated classes (unless force=true for admin God mode)
+                if (!operationArgs.force) {
+                    const classes = await ctx.db
+                        .query("classes")
+                        .withIndex("by_student", (q) => q.eq("studentId", studentId))
+                        .collect();
+
+                    const classCount = classes.length;
+
+                    if (classCount > 0) {
+                        // Count active/pending classes
+                        const activeClasses = classes.filter(
+                            (c) => c.status === "pending" || c.status === "acknowledged" || c.status === "approved"
+                        );
+
+                        errors.push({
+                            index: i,
+                            studentId,
+                            studentName: `${student.firstName} ${student.lastName}`,
+                            error: `Has ${classCount} class${classCount > 1 ? 'es' : ''} (${activeClasses.length} active). Please cancel classes first or use force option (admin only).`,
+                            classCount,
+                            activeClassCount: activeClasses.length,
                         });
                         continue;
                     }
@@ -297,11 +333,17 @@ export const bulkDeleteStudents = mutation({
 
                 // Safe to delete
                 await ctx.db.delete(studentId);
-                results.push({ index: i, studentId, success: true });
+                results.push({
+                    index: i,
+                    studentId,
+                    studentName: `${student.firstName} ${student.lastName}`,
+                    success: true
+                });
             } catch (error) {
                 errors.push({
                     index: i,
                     studentId,
+                    studentName: "Unknown",
                     error: error instanceof Error ? error.message : "Unknown error",
                 });
             }
@@ -313,6 +355,7 @@ export const bulkDeleteStudents = mutation({
             failed: errors.length,
             results,
             errors,
+            message: `Deleted ${results.length} of ${operationArgs.studentIds.length} students. ${errors.length} failed.`,
         };
     },
 });

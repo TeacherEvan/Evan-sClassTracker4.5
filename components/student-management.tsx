@@ -298,22 +298,49 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             return; // User cancelled or provided no reason
         }
 
+        // Admin-only: Ask if they want to force delete (bypass class checks)
+        let forceDelete = false;
+        if (currentUser.role === "admin") {
+            forceDelete = confirm(
+                t(
+                    "Force delete students even if they have classes? (ADMIN ONLY - Use with caution)",
+                    "บังคับลบนักเรียนแม้ว่าจะมีคลาส? (ผู้จัดการเท่านั้น - ใช้ด้วยความระมัดระวัง)"
+                )
+            );
+        }
+
         try {
             const result = await bulkDeleteStudents({
                 studentIds: Array.from(selectedStudents),
                 userId: currentUser._id,
                 reason: reason.trim(),
+                force: forceDelete,
             });
 
             if (result.successful > 0) {
-                setSuccess(t(`Successfully deleted ${result.successful} student(s)`, `ลบนักเรียนสำเร็จ ${result.successful} คน`));
+                setSuccess(t(
+                    `Successfully deleted ${result.successful} student(s)`,
+                    `ลบนักเรียนสำเร็จ ${result.successful} คน`
+                ));
             }
 
             if (result.failed > 0) {
-                setError(t(
-                    `Failed to delete ${result.failed} student(s). Students with classes cannot be deleted.`,
-                    `ไม่สามารถลบนักเรียนได้ ${result.failed} คน นักเรียนที่มีคลาสไม่สามารถลบได้`
-                ));
+                // Build detailed error message
+                const errorDetails = result.errors
+                    .slice(0, 5) // Show first 5 errors
+                    .map((err) => `• ${err.studentName || 'Unknown'}: ${err.error}`)
+                    .join('\n');
+                
+                const moreErrors = result.errors.length > 5 
+                    ? `\n...and ${result.errors.length - 5} more`
+                    : '';
+
+                setError(
+                    t(
+                        `Failed to delete ${result.failed} student(s):\n${errorDetails}${moreErrors}`,
+                        `ไม่สามารถลบนักเรียนได้ ${result.failed} คน:\n${errorDetails}${moreErrors}`
+                    )
+                );
                 console.error("Bulk delete errors:", result.errors);
             }
 
@@ -321,6 +348,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             setShowBulkDeleteConfirm(false);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to bulk delete students");
+            setShowBulkDeleteConfirm(false);
         }
     };
 
