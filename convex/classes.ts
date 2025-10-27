@@ -1968,3 +1968,206 @@ export const bulkDeleteClasses = mutation({
     return results;
   },
 });
+
+/**
+ * Find recurring series of classes based on a seed class
+ * Returns all classes that match the weekly pattern
+ */
+export const findRecurringSeries = query({
+  args: {
+    classId: v.id("classes"),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    // Get the seed class
+    const seedClass = await ctx.db.get(args.classId);
+    if (!seedClass) {
+      throw new Error("Class not found");
+    }
+
+    // Get user and verify authorization
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Check if user has permission to view this class
+    const isTeacherOwner = seedClass.teacherId === args.userId;
+    const isModeratorOrAdmin = user.role === "moderator" || user.role === "admin";
+
+    if (!isTeacherOwner && !isModeratorOrAdmin) {
+      throw new Error("Unauthorized: You don't have permission to view this class");
+    }
+
+    // Get the day of week from seed class
+    const seedDate = new Date(seedClass.scheduledDate);
+    const dayOfWeek = seedDate.getDay();
+
+    // Find all classes with same teacher, student, location
+    const allClasses = await ctx.db
+      .query("classes")
+      .withIndex("by_teacher_and_date", (q) =>
+        q.eq("teacherId", seedClass.teacherId)
+      )
+      .filter((q) => q.eq(q.field("studentId"), seedClass.studentId))
+      .collect();
+
+    // Filter to only classes that:
+    // 1. Match location (or both have no location)
+    // 2. Fall on the same day of week
+    // 3. Are approximately 7 days apart (weekly pattern)
+    const series = allClasses.filter((cls) => {
+      // Location match
+      const locationMatch =
+        cls.locationId === seedClass.locationId ||
+        (!cls.locationId && !seedClass.locationId);
+      if (!locationMatch) return false;
+
+      // Day of week match
+      const clsDate = new Date(cls.scheduledDate);
+      if (clsDate.getDay() !== dayOfWeek) return false;
+
+      return true;
+    });
+
+    // Sort by date
+    series.sort((a, b) => a.scheduledDate - b.scheduledDate);
+
+    // Populate with student and location info
+    const populatedSeries = await Promise.all(
+      series.map(async (cls) => {
+        const student = await ctx.db.get(cls.studentId);
+        const location = cls.locationId
+          ? await ctx.db.get(cls.locationId)
+          : null;
+
+        return {
+          ...cls,
+          studentName: student
+            ? `${student.firstName} ${student.lastName}`
+            : "Unknown",
+          locationName: location?.name || cls.pendingLocationName || "Unknown",
+        };
+      })
+    );
+
+    return populatedSeries;
+  },
+});
+
+/**
+ * Delete a recurring series of classes
+ * Teachers can delete their own series, admins can delete any
+ */
+export const deleteRecurringSeries = mutation({
+  args: {
+    classIds: v.array(v.id("classes")),
+    userId: v.id("users"),
+    reason: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Rate limiting
+    await checkRateLimit(ctx, {
+      key: `deleteRecurringSeries-${args.userId}`,
+      limit: 5,
+      windowMs: 60000, // 5 deletions per minute
+    });
+
+    // Validate input
+    if (args.classIds.length === 0) {
+      throw new Error("No classes selected for deletion");
+    }
+    if (args.classIds.length > 100) {
+      throw new Error("Maximum 100 classes can be deleted at once");
+    }
+    if (!args.reason || args.reason.trim().length < 3) {
+      throw new Error("Please provide a reason for deletion (minimum 3 characters)");
+    }
+
+    // Get user
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const results = {
+      successful: [] as string[],
+      failed: [] as { classId: string; error: string }[],
+    };
+
+    // Delete each class
+    for (const classId of args.classIds) {
+      try {
+        const classData = await ctx.db.get(classId);
+        if (!classData) {
+          results.failed.push({
+            classId: classId.toString(),
+            error: "Class not found",
+          });
+          continue;
+        }
+
+        // Verify authorization
+        await verifyClassAccess(ctx, args.userId, classData, {
+          requireModeratorOrAdmin: true,
+          allowTeacherOwner: true,
+        });
+
+        // Check if class date has not passed (except for admins)
+        if (user.role !== "admin") {
+          const currentTime = Date.now();
+          if (classData.scheduledDate < currentTime) {
+            results.failed.push({
+              classId: classId.toString(),
+              error: "Cannot delete classes whose dates have already passed",
+            });
+            continue;
+          }
+        }
+
+        // Delete the class
+        await ctx.db.delete(classId);
+        results.successful.push(classId.toString());
+
+        // Log the deletion
+        const student = await ctx.db.get(classData.studentId);
+        await logAudit(ctx, {
+          userId: args.userId,
+          action: "DELETE_CLASS" as const,
+          targetType: "CLASSES" as const,
+          targetId: classId,
+          targetName: student
+            ? `${student.firstName} ${student.lastName} - ${new Date(classData.scheduledDate).toLocaleDateString()}`
+            : `Class on ${new Date(classData.scheduledDate).toLocaleDateString()}`,
+          reason: args.reason,
+          schoolId: classData.schoolId,
+        });
+      } catch (error) {
+        results.failed.push({
+          classId: classId.toString(),
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }
+
+    // Send notification to teacher (if deleted by moderator/admin)
+    if (results.successful.length > 0 && user.role !== "teacher") {
+      const firstClass = await ctx.db.get(args.classIds[0]);
+      if (firstClass) {
+        const student = await ctx.db.get(firstClass.studentId);
+        await ctx.db.insert("notifications", {
+          userId: firstClass.teacherId,
+          title: "Recurring Classes Deleted",
+          titleTh: "ลบคลาสที่ซ้ำแล้ว",
+          message: `${results.successful.length} recurring classes with ${student?.firstName} ${student?.lastName} were deleted by ${user.username}. Reason: ${args.reason}`,
+          messageTh: `คลาสที่ซ้ำ ${results.successful.length} คลาสกับ ${student?.firstName} ${student?.lastName} ถูกลบโดย ${user.username} เหตุผล: ${args.reason}`,
+          type: "warning",
+          read: false,
+          createdAt: Date.now(),
+        });
+      }
+    }
+
+    return results;
+  },
+});

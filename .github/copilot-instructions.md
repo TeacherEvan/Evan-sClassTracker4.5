@@ -1,9 +1,9 @@
 ﻿# AI Agent Instructions - Evan's Class Tracker 4.5
 
-> **Version:** 4.5.3  
+> **Version:** 4.5.4  
 > **Last Updated:** October 27, 2025  
 > **Codebase:** Next.js 15 + React 19 + Convex + Tailwind v4  
-> **Instructions Version:** 2.2 (School update fix, student import UI, bulk delete improvements)
+> **Instructions Version:** 2.4 (Added Error Reporting pattern, fixed security contradictions)
 
 Bilingual (English/Thai) class tracking system built with **Next.js 15**, **React 19**, **Convex** real-time backend, and **Tailwind v4**. Recent optimizations (Oct 2025) achieved **40-50% faster loads** and **10-100x faster queries** via N+1 elimination.
 
@@ -32,7 +32,7 @@ Bilingual (English/Thai) class tracking system built with **Next.js 15**, **Reac
 **Quick Access:**
 - [🚀 Quick Start for AI Agents](#-quick-start-for-ai-agents) - Read this first!
 - [Architecture Essentials](#architecture-essentials) - Provider hierarchy, Convex patterns, auth
-- [Non-Negotiable Patterns](#non-negotiable-patterns) - 14 critical patterns with examples
+- [Non-Negotiable Patterns](#non-negotiable-patterns) - 17 critical patterns with examples
 - [Development Workflow](#development-workflow) - Build, test, deploy
 - [Testing Guide](#testing-guide) - Manual & E2E testing
 - [Common Pitfalls](#common-pitfalls) - What NOT to do
@@ -44,6 +44,8 @@ Bilingual (English/Thai) class tracking system built with **Next.js 15**, **Reac
 - **Performance:** [#3 Index Queries](#3-index-first-queries-performance-critical), [#4 N+1 Prevention](#4-avoid-n1-query-problems)
 - **Security:** [#11 Login Security](#11-login-security-pattern-account-lockout), [#12 Bulk Deletion](#12-bulk-deletion-pattern-security-critical), [#13 Audit Logging](#13-audit-logging-pattern)
 - **Workflows:** [#8 State Machine](#8-class-booking-state-machine), [#14 Cycle Editor](#14-teacher-cycle-editor-pattern-new-oct-2025), [#15 School Management](#15-school-management-pattern-new-oct-2025)
+- **UI Components:** [#16 Hierarchical Student Selector](#16-hierarchical-student-selector-pattern-new-oct-27-2025)
+- **Error Handling:** [#17 Error Reporting](#17-error-reporting-pattern-new-oct-27-2025)
 
 ---
 
@@ -553,6 +555,45 @@ export const setTeacherCycle = mutation({
 
 **Full CRUD for schools with proper update mutation** for admins to manage school names and moderators:
 
+### 16. Hierarchical Student Selector Pattern (NEW Oct 27, 2025)
+
+**Progressive 3-step filtering component** for better UX when selecting from large student lists:
+
+```tsx
+import { HierarchicalStudentSelector } from "@/components/hierarchical-student-selector";
+
+<HierarchicalStudentSelector
+  students={students}
+  value={selectedStudentId}
+  onChange={setSelectedStudentId}
+  schoolId={schoolId}
+  placeholder="Select a student"
+  placeholderTh="เลือกนักเรียน"
+  required
+  disabled={loading}
+/>
+```
+
+**3-step filtering flow**:
+1. **Grade Selection** - User picks grade (ป.1-6, ม.1-6, etc.)
+2. **Class Selection** - Shows only classes for that grade
+3. **Student Selection** - Shows only students in that grade+class
+
+**Key benefits**:
+- **Cognitive load reduction**: 100+ students → ~5-10 per dropdown
+- **Context preservation**: Grade/class shown in student list
+- **Reusable component**: Works in class booking, weekly calendar, any student selection form
+- **Bilingual support**: All dropdowns respect language context
+- **Auto-reset**: Changing grade clears class/student; changing class clears student
+
+**Implementation details**:
+- Uses `useState` for grade/class/student state management
+- Filters students by `grade` and `classNumber` fields
+- Extracts unique grades/classes using `Set` and sorts them
+- Disabled state cascades through all dropdowns
+
+**Example**: See `components/class-booking.tsx` and `components/weekly-calendar.tsx` for usage patterns
+
 ```typescript
 // Backend mutation (convex/schools.ts)
 export const update = mutation({
@@ -625,6 +666,75 @@ if (editingSchool) {
 
 **Example**: See `convex/schools.ts` lines 165-252 and `components/school-management.tsx`
 
+### 17. Error Reporting Pattern (NEW Oct 27, 2025)
+
+**Enhanced error messages with "Send to Admin" functionality** for better error tracking and resolution:
+
+```typescript
+// Frontend - Enhanced error handling with context
+try {
+  await bookClass({ ... });
+} catch (error) {
+  toast.error(
+    error.message || "Failed to book class",
+    error.message || "ไม่สามารถจองคลาสได้",
+    "Booking Error",
+    "ข้อผิดพลาดการจอง",
+    {
+      errorCode: "ERR_CLASS_BOOKING_FAILED",
+      errorOrigin: "components/class-booking.tsx",
+      errorFunction: "handleSubmit",
+      stackTrace: error.stack,
+      userAction: "Booking a class for student",
+      componentState: JSON.stringify({ schoolId, studentId, selectedDate })
+    }
+  );
+}
+```
+
+**User Experience:**
+1. Error toast appears with detailed message
+2. **"Send to Admin" button** shown automatically (if errorContext provided)
+3. User clicks button → error report sent with full context
+4. Confirmation message: "Report sent to admin"
+
+**Backend Schema** (convex/schema.ts):
+```typescript
+errorReports: defineTable({
+  // User & Error Info
+  userId, username, userRole, schoolId,
+  errorType, errorMessage, errorCode,
+  errorOrigin, errorFunction, stackTrace,
+  
+  // Context
+  userAction, componentState,
+  
+  // Environment
+  deviceType, browser, os, screenResolution, userAgent,
+  
+  // Status & Resolution
+  status: "new" | "acknowledged" | "resolved" | "closed",
+  severity: "low" | "medium" | "high" | "critical",
+  adminNotes, resolvedBy, resolvedAt
+})
+```
+
+**Admin Dashboard** (components/admin-error-reports.tsx):
+- **Statistics cards**: Total, New, Critical, Resolved counts
+- **Filtering**: By status, severity
+- **Error table**: Time, User, Error, Origin, Severity, Status
+- **Detail modal**: Full error context, stack trace, environment info
+- **Status updates**: Acknowledge, Resolve, Close buttons
+
+**Key features**:
+- **Automatic severity classification**: Based on error type
+- **Environment auto-detection**: Browser, OS, device type, screen resolution
+- **Stack trace truncation**: Limited to 5000 chars (prevents DoS)
+- **Real-time updates**: Convex reactivity for admin dashboard
+- **Bilingual support**: All UI elements respect language context
+
+**Example**: See `convex/errorReports.ts`, `lib/toast.ts`, `components/desktop-notification-toast.tsx`, `components/admin-error-reports.tsx`, and `IMPLEMENTATION_SUMMARY_ERROR_REPORTING_OCT_27_2025.md`
+
 ## Security Considerations ⚠️
 
 ### Known Limitations (NOT Production-Ready)
@@ -637,22 +747,23 @@ This project has **known security issues** suitable for development/testing only
    - **TODO**: Migrate to bcrypt before production deployment
    - Impact: Database compromise = all passwords exposed
 
-2. **No Authentication Rate Limiting**
-   - Issue: Login endpoint unprotected against brute force
+2. **Basic Authentication Rate Limiting Only**
+   - **MITIGATED Oct 2025**: 24-hour account lockout after 5 failed login attempts (see Pattern #11)
+   - ⚠️ **Still vulnerable**: No progressive delays or shorter lockout periods
    - Default password pattern `Teacher{username}` is predictable
-   - **UPDATED Oct 2025**: 24-hour account lockout after 5 failed attempts (see "Login Security Pattern")
-   - **TODO**: Consider shorter lockout (e.g., 1-hour) with progressive delays
+   - **TODO**: Implement progressive lockout (1hr → 6hr → 24hr) and consider CAPTCHA
 
 3. **localStorage for Sessions (XSS Risk)**
    - Issue: Accessible to any JavaScript, no HttpOnly protection
    - **UPDATED Oct 2025**: 24-hour session expiration implemented (see `lib/session-utils.ts`)
    - **TODO**: Migrate to secure HttpOnly cookies for production
 
-4. **Missing Rate Limits**
+4. **Missing Rate Limits on Some Endpoints**
    - ✅ Class bookings: 30/min (protected)
    - ✅ Messages: 20/min (protected)
-   - ❌ Login attempts: unlimited (vulnerable)
+   - ✅ Login attempts: Account lockout after 5 failures (24hr)
    - ❌ Password changes: unlimited (DoS risk)
+   - ❌ Bulk operations: May need stricter limits
 
 **⚠️ Do NOT deploy to production without addressing items 1-3**
 
@@ -1046,15 +1157,18 @@ if (window.targetSchool) {
 - `convex/schools.ts` - School CRUD with update mutation (name, nameTh, moderator)
 - `convex/teacherClassCount.ts` - ClassCount tracking, cycle management, confirmation flow
 - `convex/importSangsomStudents.ts` - Bulk student import mutations with duplicate checking
+- `convex/errorReports.ts` - Error reporting system, admin statistics, status management (NEW Oct 27)
 
 ### UI Components
 - `components/class-booking.tsx` - Multi-date booking, optional fields, conflict detection
 - `components/edit-class-modal.tsx` - Full edit modal with audit trail
-- `components/desktop-notification-toast.tsx` - Toast notification UI
+- `components/desktop-notification-toast.tsx` - Toast notification UI with "Send to Admin" button (NEW Oct 27)
 - `components/school-management.tsx` - School CRUD with full update support
 - `components/sangsom-student-import-button.tsx` - UI-based student import (replaces CLI script)
 - `components/teacher-cycle-editor.tsx` - Nested modal with confirmation flow pattern
 - `components/teacher-class-count-modal.tsx` - Cycle editor integration example
+- `components/hierarchical-student-selector.tsx` - Progressive 3-step student filtering (NEW Oct 27)
+- `components/admin-error-reports.tsx` - Error reporting dashboard for admins (NEW Oct 27)
 
 ### Feature Documentation
 - `GOLD_TABLET_NOTIFICATION_WINDOW.md` - Notification window implementation guide

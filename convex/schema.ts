@@ -553,4 +553,61 @@ export default defineSchema({
     .index("by_session", ["sessionId"])
     .index("by_device_type", ["deviceType"])
     .index("by_ip_address", ["ipAddress"]),
+
+  errorReports: defineTable({
+    // User Information
+    userId: v.optional(v.id("users")), // User who encountered the error (optional for logged-out users)
+    username: v.optional(v.string()), // Cached for display
+    userRole: v.optional(v.string()), // Role at time of error
+    schoolId: v.optional(v.id("schools")), // User's school (if applicable)
+
+    // Error Details
+    errorType: v.string(), // "mutation_error", "ui_error", "network_error", "validation_error", etc.
+    errorMessage: v.string(), // Human-readable error message shown to user
+    errorCode: v.optional(v.string()), // Error code for categorization (e.g., "ERR_STUDENT_DUPLICATE")
+    errorOrigin: v.string(), // Component/file where error occurred (e.g., "components/class-booking.tsx")
+    errorFunction: v.optional(v.string()), // Function/mutation name (e.g., "handleSubmit", "api.classes.book")
+    stackTrace: v.optional(v.string()), // JavaScript stack trace (truncated to first 5000 chars)
+
+    // Context
+    userAction: v.optional(v.string()), // What the user was trying to do (e.g., "Booking a class")
+    componentState: v.optional(v.string()), // JSON string of relevant component state
+    timestamp: v.number(), // When error occurred
+
+    // Environment
+    deviceType: v.optional(v.string()), // mobile, tablet, desktop
+    browser: v.optional(v.string()), // Chrome, Safari, Firefox, Edge
+    browserVersion: v.optional(v.string()),
+    os: v.optional(v.string()), // Operating system
+    screenResolution: v.optional(v.string()),
+    userAgent: v.optional(v.string()), // Full user agent string
+
+    // Status & Resolution
+    status: v.union(
+      v.literal("new"),
+      v.literal("acknowledged"),
+      v.literal("resolved"),
+      v.literal("closed")
+    ),
+    adminNotes: v.optional(v.string()), // Admin notes about resolution
+    resolvedBy: v.optional(v.id("users")), // Admin who resolved the error
+    resolvedAt: v.optional(v.number()), // When error was resolved
+
+    // Classification
+    severity: v.optional(v.union(
+      v.literal("low"),
+      v.literal("medium"),
+      v.literal("high"),
+      v.literal("critical")
+    )),
+    category: v.optional(v.string()), // "authentication", "booking", "student_management", etc.
+  })
+    .index("by_user", ["userId"])
+    .index("by_timestamp", ["timestamp"])
+    .index("by_status", ["status"])
+    .index("by_error_type", ["errorType"])
+    .index("by_severity", ["severity"])
+    .index("by_school", ["schoolId"])
+    .index("by_user_and_timestamp", ["userId", "timestamp"])
+    .index("by_status_and_timestamp", ["status", "timestamp"]),
 });

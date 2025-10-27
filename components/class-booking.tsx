@@ -71,6 +71,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const [selectedDates, setSelectedDates] = useState<number[]>([]); // Multi-date selection (supports 1+ dates)
   const [selectedTime, setSelectedTime] = useState("09:00");
   const [showCalendar, setShowCalendar] = useState(false);
+  const [isRecurringWeekly, setIsRecurringWeekly] = useState(false); // NEW: Recurring weekly toggle
+  const [recurringWeeks, setRecurringWeeks] = useState(12); // NEW: Number of weeks to repeat (default 12 weeks ~ 3 months)
   const [pendingLocationName, setPendingLocationName] = useState("");
   const [pendingLocationNameTh, setPendingLocationNameTh] = useState("");
   const [requestingNewLocation, setRequestingNewLocation] = useState(false);
@@ -201,7 +203,24 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       // Date booking support (supports single or multiple dates)
       const datesToBook: number[] = [];
 
-      if (selectedDates.length > 0) {
+      if (isRecurringWeekly && (selectedDates.length > 0 || scheduledDate)) {
+        // Generate recurring weekly dates
+        const baseDate = selectedDates.length > 0
+          ? new Date(selectedDates[0])
+          : new Date(scheduledDate);
+
+        const [hours, minutes] = selectedDates.length > 0
+          ? selectedTime.split(":")
+          : [baseDate.getHours().toString(), baseDate.getMinutes().toString()];
+
+        // Generate dates for each week
+        for (let week = 0; week < recurringWeeks; week++) {
+          const recurringDate = new Date(baseDate);
+          recurringDate.setDate(baseDate.getDate() + (week * 7)); // Add 7 days per week
+          recurringDate.setHours(Number.parseInt(hours), Number.parseInt(minutes));
+          datesToBook.push(recurringDate.getTime());
+        }
+      } else if (selectedDates.length > 0) {
         // Use selected dates from multi-date calendar with selected time
         for (const dateTimestamp of selectedDates) {
           const date = new Date(dateTimestamp);
@@ -329,6 +348,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       setScheduledDate("");
       setSelectedDates([]);
       setSelectedTime("09:00");
+      setIsRecurringWeekly(false);
+      setRecurringWeeks(12);
       setPendingLocationName("");
       setPendingLocationNameTh("");
       setRequestingNewLocation(false);
@@ -935,7 +956,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
               <div>
                 <label htmlFor="date" className="block text-sm font-medium mb-2">
-                  {t("Scheduled Date", "วันที่กำหนด")}
+                  {t("Start Date", "วันที่เริ่มต้น")}
                 </label>
 
                 {/* Multi-date calendar button (supports single or multiple dates) */}
@@ -995,6 +1016,90 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       onChange={(e) => setSelectedTime(e.target.value)}
                       className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
                     />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Recurring Weekly Booking Option */}
+            {(selectedDates.length > 0 || scheduledDate) && (
+              <div className="border border-green-200 dark:border-green-800 rounded-xl p-4 bg-green-50 dark:bg-green-900/20">
+                <div className="flex items-center gap-3 mb-3">
+                  <input
+                    type="checkbox"
+                    id="recurringWeekly"
+                    checked={isRecurringWeekly}
+                    onChange={(e) => {
+                      setIsRecurringWeekly(e.target.checked);
+                      if (!e.target.checked) {
+                        // Reset when disabled
+                        setRecurringWeeks(12);
+                      }
+                    }}
+                    className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500"
+                    disabled={loading}
+                  />
+                  <label htmlFor="recurringWeekly" className="text-sm font-medium cursor-pointer">
+                    {t("Recurring Weekly", "ซ้ำทุกสัปดาห์")}
+                  </label>
+                </div>
+
+                {isRecurringWeekly && (
+                  <div className="space-y-3 mt-4">
+                    <div>
+                      <label htmlFor="recurringWeeks" className="block text-sm font-medium mb-2">
+                        {t("Number of Weeks", "จำนวนสัปดาห์")}
+                      </label>
+                      <input
+                        type="number"
+                        id="recurringWeeks"
+                        min="1"
+                        max="52"
+                        value={recurringWeeks}
+                        onChange={(e) => setRecurringWeeks(Math.max(1, Math.min(52, Number.parseInt(e.target.value) || 1)))}
+                        className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:border-gray-600"
+                        disabled={loading}
+                      />
+                      <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                        {t(
+                          `Will book ${recurringWeeks} classes, repeating every week on the same day`,
+                          `จะจองคลาส ${recurringWeeks} ครั้ง ซ้ำทุกสัปดาห์ในวันเดียวกัน`
+                        )}
+                      </p>
+                    </div>
+
+                    {/* Preview of recurring dates */}
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                      <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {t("Preview of Dates:", "ตัวอย่างวันที่:")}
+                      </p>
+                      <div className="space-y-1 max-h-40 overflow-y-auto">
+                        {(() => {
+                          const baseDate = selectedDates.length > 0
+                            ? new Date(selectedDates[0])
+                            : new Date(scheduledDate);
+                          const [hours, minutes] = selectedDates.length > 0
+                            ? selectedTime.split(":")
+                            : [baseDate.getHours().toString(), baseDate.getMinutes().toString()];
+
+                          return Array.from({ length: Math.min(recurringWeeks, 10) }, (_, i) => {
+                            const date = new Date(baseDate);
+                            date.setDate(baseDate.getDate() + (i * 7));
+                            date.setHours(Number.parseInt(hours), Number.parseInt(minutes));
+                            return (
+                              <div key={i} className="text-xs text-gray-600 dark:text-gray-400">
+                                {i + 1}. {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            );
+                          });
+                        })()}
+                        {recurringWeeks > 10 && (
+                          <div className="text-xs text-gray-500 italic">
+                            {t(`... and ${recurringWeeks - 10} more`, `... และอีก ${recurringWeeks - 10} วัน`)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

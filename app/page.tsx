@@ -538,7 +538,7 @@ export default function Home() {
               }`}
           >
             <Bell className="w-4 h-4 md:w-5 md:h-5" />
-            {t("Events & Reminders", "กิจกรรมและการแจ้งเตือน")}
+            {t("School Events", "กิจกรรมโรงเรียน")}
           </button>
 
           <button

@@ -98,6 +98,8 @@ export function ClassDetailModal({
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showPostponeModal, setShowPostponeModal] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showDeleteSeriesConfirm, setShowDeleteSeriesConfirm] = useState(false);
+    const [deleteSeriesReason, setDeleteSeriesReason] = useState("");
     const [cancelReason, setCancelReason] = useState("");
     const [cancelReasonTh, setCancelReasonTh] = useState("");
     const [postponeReason, setPostponeReason] = useState("");
@@ -111,6 +113,13 @@ export function ClassDetailModal({
     const rejectClass = useMutation(api.classes.reject);
     const createCancellationRequest = useMutation(api.cancellationRequests.create);
     const deleteClass = useMutation(api.classes.deleteClass);
+    const deleteRecurringSeries = useMutation(api.classes.deleteRecurringSeries);
+
+    // Query for recurring series
+    const recurringSeries = useQuery(
+        api.classes.findRecurringSeries,
+        classData ? { classId: classData._id, userId: currentUserId } : "skip"
+    );
 
     // Check for pending requests
     const pendingRequest = useQuery(
@@ -239,6 +248,53 @@ export function ClassDetailModal({
             toast.error(
                 err instanceof Error ? err.message : "Failed to delete class",
                 err instanceof Error ? err.message : "ไม่สามารถลบคลาสได้"
+            );
+        }
+    };
+
+    const handleDeleteRecurringSeries = async () => {
+        if (!deleteSeriesReason.trim() || deleteSeriesReason.trim().length < 3) {
+            toast.error(
+                "Please provide a reason (minimum 3 characters)",
+                "กรุณาให้เหตุผล (อย่างน้อย 3 ตัวอักษร)"
+            );
+            return;
+        }
+
+        if (!recurringSeries || recurringSeries.length === 0) {
+            toast.error("No recurring series found", "ไม่พบคลาสที่ซ้ำ");
+            return;
+        }
+
+        try {
+            const classIds = recurringSeries.map(cls => cls._id);
+            const result = await deleteRecurringSeries({
+                classIds,
+                userId: currentUserId,
+                reason: deleteSeriesReason,
+            });
+
+            if (result.successful.length > 0) {
+                toast.success(
+                    `Successfully deleted ${result.successful.length} recurring classes!`,
+                    `ลบคลาสที่ซ้ำสำเร็จ ${result.successful.length} คลาส!`
+                );
+            }
+
+            if (result.failed.length > 0) {
+                toast.error(
+                    `Failed to delete ${result.failed.length} classes`,
+                    `ไม่สามารถลบ ${result.failed.length} คลาสได้`
+                );
+            }
+
+            setShowDeleteSeriesConfirm(false);
+            setDeleteSeriesReason("");
+            onClose();
+        } catch (err) {
+            toast.error(
+                err instanceof Error ? err.message : "Failed to delete recurring series",
+                err instanceof Error ? err.message : "ไม่สามารถลบคลาสที่ซ้ำได้"
             );
         }
     };
@@ -697,6 +753,20 @@ export function ClassDetailModal({
                                         {t("Delete", "ลบ")}
                                     </button>
                                 )}
+                            {recurringSeries && recurringSeries.length > 1 && (currentUserRole === "admin" ||
+                                currentUserRole === "moderator" ||
+                                (currentUserRole === "teacher" && classData.teacherId === currentUserId)) && (
+                                    <button
+                                        onClick={() => setShowDeleteSeriesConfirm(true)}
+                                        className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm bg-red-700 text-white rounded-lg hover:bg-red-800 active:scale-95 transition-all font-medium border-2 border-red-400"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                        {t(
+                                            `Delete ${recurringSeries.length} Weekly Classes`,
+                                            `ลบคลาสรายสัปดาห์ ${recurringSeries.length} คลาส`
+                                        )}
+                                    </button>
+                                )}
                         </div>
                     </div>
                 </div>
@@ -930,6 +1000,115 @@ export function ClassDetailModal({
                                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-medium"
                             >
                                 {t("Delete", "ลบ")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Recurring Series Confirmation Modal */}
+            {showDeleteSeriesConfirm && recurringSeries && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+                            </div>
+                            <h3 className="text-xl font-bold">
+                                {t("Delete Recurring Series", "ลบคลาสที่ซ้ำ")}
+                            </h3>
+                        </div>
+
+                        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                            <p className="text-sm text-red-800 dark:text-red-400 font-medium">
+                                {t(
+                                    `⚠️ This will permanently delete ${recurringSeries.length} weekly classes. This action cannot be undone.`,
+                                    `⚠️ การดำเนินการนี้จะลบคลาสรายสัปดาห์ ${recurringSeries.length} คลาสอย่างถาวร ไม่สามารถยกเลิกได้`
+                                )}
+                            </p>
+                        </div>
+
+                        {studentData && (
+                            <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg mb-4">
+                                <p className="text-sm font-medium mb-1">
+                                    {t("Student:", "นักเรียน:")} {studentData.firstName} {studentData.lastName}
+                                </p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400">
+                                    {t("Pattern:", "รูปแบบ:")} {t(
+                                        `Every ${new Date(classData.scheduledDate).toLocaleDateString(language === "en" ? "en-US" : "th-TH", { weekday: "long" })}`,
+                                        `ทุกวัน${new Date(classData.scheduledDate).toLocaleDateString("th-TH", { weekday: "long" })}`
+                                    )}
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="mb-4">
+                            <p className="text-sm font-medium mb-2">
+                                {t("Classes to be deleted:", "คลาสที่จะถูกลบ:")}
+                            </p>
+                            <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-700/30">
+                                {recurringSeries.slice(0, 10).map((cls, idx) => (
+                                    <div key={cls._id} className="text-sm py-1.5 border-b border-gray-200 dark:border-gray-600 last:border-0">
+                                        <span className="font-mono text-xs text-gray-500 dark:text-gray-400 mr-2">
+                                            {idx + 1}.
+                                        </span>
+                                        {new Date(cls.scheduledDate).toLocaleDateString(
+                                            language === "en" ? "en-US" : "th-TH",
+                                            { weekday: "short", year: "numeric", month: "short", day: "numeric" }
+                                        )}
+                                        {" "}
+                                        {new Date(cls.scheduledDate).toLocaleTimeString(
+                                            language === "en" ? "en-US" : "th-TH",
+                                            { hour: "2-digit", minute: "2-digit" }
+                                        )}
+                                        <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                                            ({cls.status})
+                                        </span>
+                                    </div>
+                                ))}
+                                {recurringSeries.length > 10 && (
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                                        {t(
+                                            `... and ${recurringSeries.length - 10} more classes`,
+                                            `... และอีก ${recurringSeries.length - 10} คลาส`
+                                        )}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium mb-2">
+                                {t("Reason for deletion (required, minimum 3 characters)", "เหตุผลในการลบ (ต้องระบุ อย่างน้อย 3 ตัวอักษร)")}
+                            </label>
+                            <textarea
+                                value={deleteSeriesReason}
+                                onChange={(e) => setDeleteSeriesReason(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 min-h-[80px]"
+                                placeholder={t(
+                                    "Enter reason for deleting these classes...",
+                                    "ระบุเหตุผลในการลบคลาสเหล่านี้..."
+                                )}
+                                required
+                            />
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowDeleteSeriesConfirm(false);
+                                    setDeleteSeriesReason("");
+                                }}
+                                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={handleDeleteRecurringSeries}
+                                disabled={deleteSeriesReason.trim().length < 3}
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {t(`Delete ${recurringSeries.length} Classes`, `ลบ ${recurringSeries.length} คลาส`)}
                             </button>
                         </div>
                     </div>

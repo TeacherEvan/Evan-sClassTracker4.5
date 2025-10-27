@@ -60,8 +60,9 @@ export function MultiDateCalendar({
     const isDateDisabled = (day: number): boolean => {
         const date = new Date(year, month, day);
         const dateTimestamp = date.setHours(0, 0, 0, 0);
-        const minTimestamp = minDate.setHours(0, 0, 0, 0);
-        const maxTimestamp = maxDate ? maxDate.setHours(23, 59, 59, 999) : Infinity;
+        // Create new Date objects to avoid mutating props
+        const minTimestamp = new Date(minDate).setHours(0, 0, 0, 0);
+        const maxTimestamp = maxDate ? new Date(maxDate).setHours(23, 59, 59, 999) : Infinity;
 
         return dateTimestamp < minTimestamp || dateTimestamp > maxTimestamp;
     };

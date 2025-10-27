@@ -1,8 +1,12 @@
 "use client";
 
+import { api } from "@/convex/_generated/api";
 import { useDevice } from "@/lib/device-context";
 import { useLanguage } from "@/lib/language-context";
-import { AlertTriangle, Bell, CheckCircle, X, XCircle } from "lucide-react";
+import { loadUserSession } from "@/lib/session-utils";
+import type { ErrorContext } from "@/lib/toast";
+import { useMutation } from "convex/react";
+import { AlertTriangle, Bell, CheckCircle, Send, X, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export type ToastType = "info" | "success" | "warning" | "error";
@@ -14,6 +18,8 @@ export interface ToastNotification {
   message: string;
   messageTh: string;
   type: ToastType;
+  errorContext?: ErrorContext;
+  showReportButton?: boolean;
 }
 
 interface DesktopNotificationToastProps {
@@ -30,6 +36,85 @@ export function DesktopNotificationToast({
   const { t, language } = useLanguage();
   const { isDesktop } = useDevice();
   const [isVisible, setIsVisible] = useState(true);
+  const [isReporting, setIsReporting] = useState(false);
+  const [reportSent, setReportSent] = useState(false);
+
+  const submitErrorReport = useMutation(api.errorReports.submitErrorReport);
+
+  // Get browser/device info
+  const getBrowserInfo = () => {
+    const ua = navigator.userAgent;
+    let browser = "Unknown";
+    let browserVersion = "";
+    let os = "Unknown";
+
+    // Detect browser
+    if (ua.includes("Firefox/")) {
+      browser = "Firefox";
+      browserVersion = ua.match(/Firefox\/(\S+)/)?.[1] || "";
+    } else if (ua.includes("Edg/")) {
+      browser = "Edge";
+      browserVersion = ua.match(/Edg\/(\S+)/)?.[1] || "";
+    } else if (ua.includes("Chrome/")) {
+      browser = "Chrome";
+      browserVersion = ua.match(/Chrome\/(\S+)/)?.[1] || "";
+    } else if (ua.includes("Safari/")) {
+      browser = "Safari";
+      browserVersion = ua.match(/Version\/(\S+)/)?.[1] || "";
+    }
+
+    // Detect OS
+    if (ua.includes("Windows")) os = "Windows";
+    else if (ua.includes("Mac OS")) os = "macOS";
+    else if (ua.includes("Linux")) os = "Linux";
+    else if (ua.includes("Android")) os = "Android";
+    else if (ua.includes("iOS")) os = "iOS";
+
+    return { browser, browserVersion, os };
+  };
+
+  const handleSendToAdmin = async () => {
+    if (!notification.errorContext || reportSent) return;
+
+    setIsReporting(true);
+    try {
+      const user = loadUserSession();
+      const { browser, browserVersion, os } = getBrowserInfo();
+      const deviceType = /Mobile|Android|iPhone/i.test(navigator.userAgent)
+        ? "mobile"
+        : /Tablet|iPad/i.test(navigator.userAgent)
+          ? "tablet"
+          : "desktop";
+
+      await submitErrorReport({
+        userId: user?._id,
+        errorType: "ui_error",
+        errorMessage: language === "en" ? notification.message : notification.messageTh,
+        errorCode: notification.errorContext.errorCode,
+        errorOrigin: notification.errorContext.errorOrigin,
+        errorFunction: notification.errorContext.errorFunction,
+        stackTrace: notification.errorContext.stackTrace,
+        userAction: notification.errorContext.userAction,
+        componentState: notification.errorContext.componentState,
+        deviceType,
+        browser,
+        browserVersion,
+        os,
+        screenResolution: `${window.screen.width}x${window.screen.height}`,
+        userAgent: navigator.userAgent,
+      });
+
+      setReportSent(true);
+      // Show success feedback briefly
+      setTimeout(() => {
+        setIsVisible(false);
+        setTimeout(() => onDismiss(notification.id), 300);
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to send error report:", error);
+      setIsReporting(false);
+    }
+  };
 
   useEffect(() => {
     if (duration > 0) {
@@ -82,8 +167,8 @@ export function DesktopNotificationToast({
   return (
     <div
       className={`${getStyles()} ${isVisible
-          ? "opacity-100 translate-x-0"
-          : "opacity-0 translate-x-full"
+        ? "opacity-100 translate-x-0"
+        : "opacity-0 translate-x-full"
         } max-w-md p-4`}
     >
       <div className="flex items-start gap-3">
@@ -95,6 +180,28 @@ export function DesktopNotificationToast({
           <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
             {message}
           </p>
+
+          {/* Send to Admin Button (for errors with context) */}
+          {notification.showReportButton && !reportSent && (
+            <button
+              onClick={handleSendToAdmin}
+              disabled={isReporting}
+              className="mt-2 flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors disabled:opacity-50"
+            >
+              <Send className="w-3.5 h-3.5" />
+              {isReporting
+                ? t("Sending...", "กำลังส่ง...")
+                : t("Send to Admin", "ส่งให้ผู้ดูแล")}
+            </button>
+          )}
+
+          {/* Confirmation message after sending */}
+          {reportSent && (
+            <p className="mt-2 text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
+              <CheckCircle className="w-3.5 h-3.5" />
+              {t("Report sent to admin", "ส่งรายงานให้ผู้ดูแลแล้ว")}
+            </p>
+          )}
         </div>
         <button
           onClick={() => {
