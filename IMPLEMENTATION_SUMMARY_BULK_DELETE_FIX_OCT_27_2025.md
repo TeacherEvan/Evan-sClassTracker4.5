@@ -3,29 +3,35 @@
 ## Issues Fixed
 
 ### Issue 1: Bulk Deletion Restricted to Admins Only ✅
+
 **Problem:** Only users with `role === "admin"` could bulk delete students, blocking moderators and teachers.
 
 **Solution:** Implemented role-based access control:
+
 - ✅ **Admins**: Can delete any students from any school
 - ✅ **Moderators**: Can delete students from their own school only
 - ✅ **Teachers**: Can delete students from their own school only  
 - ❌ **Guardians**: Cannot bulk delete (security restriction)
 
 **Files Changed:**
+
 - `convex/bulkOperations.ts` - Updated authorization logic (lines 238-252)
 
 ---
 
 ### Issue 2: Classes Being Deleted with Students ❌→✅
+
 **Problem:** User reported classes were being deleted when students were deleted.
 
 **Solution:** **This was NOT happening** - the code already had safeguards. Enhanced them:
+
 - ✅ Students with active/pending classes **cannot be deleted** (unless admin force mode)
 - ✅ Better error messages show **which students have how many classes**
 - ✅ Admin-only "force delete" option to bypass class checks (with confirmation)
 - ✅ Classes are **NEVER auto-deleted** with students (correct security behavior)
 
 **Files Changed:**
+
 - `convex/bulkOperations.ts` - Enhanced error messages, added school-based access control
 - `components/student-management.tsx` - Added force delete option for admins, better error display
 
@@ -34,6 +40,7 @@
 ## Security Improvements
 
 ### 1. School-Based Access Control
+
 ```typescript
 // Non-admins can only delete students from their own school
 if (user.role !== "admin") {
@@ -47,6 +54,7 @@ if (user.role !== "admin") {
 ```
 
 ### 2. Force Delete (Admin Only)
+
 ```typescript
 // Only admins can bypass class checks
 if (operationArgs.force && user.role !== "admin") {
@@ -55,12 +63,15 @@ if (operationArgs.force && user.role !== "admin") {
 ```
 
 ### 3. Detailed Error Messages
+
 Before:
+
 ```
 Failed to delete 5 student(s). Students with classes cannot be deleted.
 ```
 
 After:
+
 ```
 Failed to delete 5 student(s):
 • TAWAN: Has 3 classes (2 active). Please cancel classes first or use force option (admin only).
@@ -89,6 +100,7 @@ Failed to delete 5 student(s):
 ### For Admins (Additional Powers)
 
 Same as above, PLUS:
+
 - Can delete students from **any school**
 - **Force delete option**: Can delete students even with classes
   - Extra confirmation required
@@ -101,6 +113,7 @@ Same as above, PLUS:
 ### Backend Changes (`convex/bulkOperations.ts`)
 
 **Authorization Logic:**
+
 ```typescript
 // Line 238-252: Enhanced role-based authorization
 if (user.role === "guardian") {
@@ -117,6 +130,7 @@ if (operationArgs.force && user.role !== "admin") {
 ```
 
 **Enhanced Error Reporting:**
+
 ```typescript
 // Lines 275-298: School access check + detailed class info
 errors.push({
@@ -132,6 +146,7 @@ errors.push({
 ### Frontend Changes (`components/student-management.tsx`)
 
 **Force Delete Option (Admin Only):**
+
 ```typescript
 // Lines 290-298: Admin force delete confirmation
 let forceDelete = false;
@@ -146,6 +161,7 @@ if (currentUser.role === "admin") {
 ```
 
 **Better Error Display:**
+
 ```typescript
 // Lines 313-324: Show first 5 errors with details
 const errorDetails = result.errors
@@ -163,6 +179,7 @@ const moreErrors = result.errors.length > 5
 ## Testing Checklist
 
 ### Test as Teacher
+
 - [x] Can select students from own school
 - [x] Can bulk delete students without classes
 - [x] Cannot delete students with classes (error shown)
@@ -170,10 +187,12 @@ const moreErrors = result.errors.length > 5
 - [x] Error messages show student names and reasons
 
 ### Test as Moderator
+
 - [x] Same permissions as teacher
 - [x] Can only delete from assigned school
 
 ### Test as Admin
+
 - [x] Can delete students from any school
 - [x] Can use force delete option
 - [x] Force delete bypasses class checks
@@ -181,6 +200,7 @@ const moreErrors = result.errors.length > 5
 - [x] Classes are NOT deleted with students
 
 ### Test Edge Cases
+
 - [x] Deleting 0 students (no error)
 - [x] Deleting mix of valid/invalid students (partial success)
 - [x] Deleting >100 students (error: batch size limit)
@@ -191,12 +211,14 @@ const moreErrors = result.errors.length > 5
 ## What Was NOT Changed
 
 ### Classes Are Safe ✅
+
 - Classes are **NEVER automatically deleted** when students are deleted
 - This is **correct behavior** for data integrity
 - Users must manually cancel/delete classes first
 - Admin force mode only bypasses the check, doesn't delete classes
 
 ### Single Student Deletion
+
 - `convex/students.ts` - No changes needed
 - Already has proper safeguards
 - Bulk delete now matches single delete behavior
@@ -210,6 +232,7 @@ const moreErrors = result.errors.length > 5
 **Breaking Changes:** None - only permissions expanded.
 
 **Deployment:**
+
 1. Deploy Convex functions: `npx convex deploy`
 2. Deploy Next.js app: `npm run build`
 3. Test with each user role
@@ -227,12 +250,14 @@ const moreErrors = result.errors.length > 5
 ## Success Metrics
 
 Before Fix:
+
 - ❌ Only admins could bulk delete
 - ❌ Generic error messages
 - ❌ No force option
 - ⚠️ User confusion about why deletions failed
 
 After Fix:
+
 - ✅ Teachers/moderators can bulk delete (school-restricted)
 - ✅ Detailed error messages with student names
 - ✅ Admin force option for edge cases

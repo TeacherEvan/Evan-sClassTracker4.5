@@ -330,8 +330,8 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     .slice(0, 5) // Show first 5 errors
                     .map((err) => `• ${err.studentName || 'Unknown'}: ${err.error}`)
                     .join('\n');
-                
-                const moreErrors = result.errors.length > 5 
+
+                const moreErrors = result.errors.length > 5
                     ? `\n...and ${result.errors.length - 5} more`
                     : '';
 
