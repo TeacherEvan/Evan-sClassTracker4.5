@@ -4,7 +4,7 @@ import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { useMutation } from "convex/react";
-import { CheckCircle2, Clock, X, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, Clock, X, XCircle } from "lucide-react";
 import { useState } from "react";
 
 interface ClassWithStudent extends Doc<"classes"> {
@@ -38,6 +38,10 @@ export function PostClassNotesModal({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
+    // Accordion state for optional sections
+    const [showNotes, setShowNotes] = useState(false);
+    const [showHomework, setShowHomework] = useState(false);
+
     const currentClass = classes[currentIndex];
 
     const resetForm = () => {
@@ -49,6 +53,8 @@ export function PostClassNotesModal({
         setHomework("");
         setHomeworkTh("");
         setError("");
+        setShowNotes(false);
+        setShowHomework(false);
     };
 
     const handleSubmit = async () => {
@@ -137,9 +143,9 @@ export function PostClassNotesModal({
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                {/* Header */}
-                <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[95vh]">
+                {/* Header - Sticky */}
+                <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 rounded-t-2xl">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-2xl font-bold flex items-center gap-2">
                             <Clock className="w-6 h-6 text-blue-600" />
@@ -167,8 +173,8 @@ export function PostClassNotesModal({
                     </div>
                 </div>
 
-                {/* Content */}
-                <div className="p-6 space-y-6">
+                {/* Content - Scrollable */}
+                <div className="p-6 space-y-6 overflow-y-auto flex-grow">
                     {/* Class info */}
                     <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                         <h3 className="font-semibold text-lg mb-2">
@@ -252,63 +258,95 @@ export function PostClassNotesModal({
                         </select>
                     </div>
 
-                    {/* Notes */}
-                    <div>
-                        <label className="block text-sm font-medium mb-2">
-                            {t("Notes (English)", "บันทึก (ภาษาอังกฤษ)")} <span className="text-gray-400 text-xs">({t("Optional", "ไม่บังคับ")})</span>
-                        </label>
-                        <textarea
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            rows={3}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-                            placeholder={t("What happened during the class?", "เกิดอะไรขึ้นในคลาส?")}
-                        />
+                    {/* Accordion: Notes (Optional) */}
+                    <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                        <button
+                            type="button"
+                            onClick={() => setShowNotes(!showNotes)}
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
+                        >
+                            <span className="font-medium flex items-center gap-2">
+                                {t("Notes (Optional)", "บันทึก (ไม่บังคับ)")}
+                                <span className="text-xs text-gray-500">{t("Click to expand", "คลิกเพื่อขยาย")}</span>
+                            </span>
+                            {showNotes ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                        </button>
+                        {showNotes && (
+                            <div className="p-4 space-y-4 bg-white dark:bg-gray-800">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">
+                                        {t("Notes (English)", "บันทึก (ภาษาอังกฤษ)")}
+                                    </label>
+                                    <textarea
+                                        value={notes}
+                                        onChange={(e) => setNotes(e.target.value)}
+                                        rows={3}
+                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                        placeholder={t("What happened during the class?", "เกิดอะไรขึ้นในคลาส?")}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">
+                                        {t("Notes (Thai)", "บันทึก (ภาษาไทย)")}
+                                    </label>
+                                    <textarea
+                                        value={notesTh}
+                                        onChange={(e) => setNotesTh(e.target.value)}
+                                        rows={3}
+                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                        placeholder={t("What happened during the class?", "เกิดอะไรขึ้นในคลาส?")}
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
 
-                    <div>
-                        <label className="block text-sm font-medium mb-2">
-                            {t("Notes (Thai)", "บันทึก (ภาษาไทย)")} <span className="text-gray-400 text-xs">({t("Optional", "ไม่บังคับ")})</span>
-                        </label>
-                        <textarea
-                            value={notesTh}
-                            onChange={(e) => setNotesTh(e.target.value)}
-                            rows={3}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-                            placeholder={t("What happened during the class?", "เกิดอะไรขึ้นในคลาส?")}
-                        />
-                    </div>
-
-                    {/* Homework (Optional) */}
-                    <div>
-                        <label className="block text-sm font-medium mb-2">
-                            {t("Homework (English)", "การบ้าน (ภาษาอังกฤษ)")} <span className="text-gray-400 text-xs">({t("Optional", "ไม่บังคับ")})</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={homework}
-                            onChange={(e) => setHomework(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-                            placeholder={t("Homework assigned", "การบ้านที่มอบหมาย")}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium mb-2">
-                            {t("Homework (Thai)", "การบ้าน (ภาษาไทย)")} <span className="text-gray-400 text-xs">({t("Optional", "ไม่บังคับ")})</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={homeworkTh}
-                            onChange={(e) => setHomeworkTh(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
-                            placeholder={t("Homework assigned", "การบ้านที่มอบหมาย")}
-                        />
+                    {/* Accordion: Homework (Optional) */}
+                    <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                        <button
+                            type="button"
+                            onClick={() => setShowHomework(!showHomework)}
+                            className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
+                        >
+                            <span className="font-medium flex items-center gap-2">
+                                {t("Homework (Optional)", "การบ้าน (ไม่บังคับ)")}
+                                <span className="text-xs text-gray-500">{t("Click to expand", "คลิกเพื่อขยาย")}</span>
+                            </span>
+                            {showHomework ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                        </button>
+                        {showHomework && (
+                            <div className="p-4 space-y-4 bg-white dark:bg-gray-800">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">
+                                        {t("Homework (English)", "การบ้าน (ภาษาอังกฤษ)")}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={homework}
+                                        onChange={(e) => setHomework(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                        placeholder={t("Homework assigned", "การบ้านที่มอบหมาย")}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2">
+                                        {t("Homework (Thai)", "การบ้าน (ภาษาไทย)")}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={homeworkTh}
+                                        onChange={(e) => setHomeworkTh(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700"
+                                        placeholder={t("Homework assigned", "การบ้านที่มอบหมาย")}
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Footer */}
-                <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6">
+                {/* Footer - Sticky */}
+                <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6 rounded-b-2xl">
                     <div className="flex flex-col sm:flex-row gap-3">
                         <button
                             type="button"

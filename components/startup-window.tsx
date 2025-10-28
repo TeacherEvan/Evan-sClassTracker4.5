@@ -78,32 +78,43 @@ export function StartupWindow({
                 return {
                     en: `Welcome ${user.username}`,
                     th: `ยินดีต้อนรับ ${user.username}`,
+                    subtitle_en: "You have full system access",
+                    subtitle_th: "คุณมีสิทธิ์เข้าถึงระบบทั้งหมด"
                 };
             case "moderator":
                 return {
                     en: "Welcome Boss",
                     th: "ยินดีต้อนรับ บอส",
+                    subtitle_en: "Manage your school effectively",
+                    subtitle_th: "จัดการโรงเรียนของคุณอย่างมีประสิทธิภาพ"
                 };
             case "teacher":
                 return {
                     en: "Welcome Teacher",
                     th: "ยินดีต้อนรับ ครู",
+                    subtitle_en: "Ready to teach today?",
+                    subtitle_th: "พร้อมสอนวันนี้หรือยัง?"
                 };
             case "guardian":
                 return {
                     en: "Welcome",
                     th: "ยินดีต้อนรับ",
+                    subtitle_en: "Track your student's progress",
+                    subtitle_th: "ติดตามความคืบหน้าของนักเรียน"
                 };
             default:
                 return {
                     en: "Welcome",
                     th: "ยินดีต้อนรับ",
+                    subtitle_en: "Get started with Class Tracker",
+                    subtitle_th: "เริ่มใช้งาน Class Tracker"
                 };
         }
     };
 
     const greeting = getGreeting();
     const displayGreeting = language === "en" ? greeting.en : greeting.th;
+    const displaySubtitle = language === "en" ? greeting.subtitle_en : greeting.subtitle_th;
 
     // Menu options type
     type MenuOption = {
@@ -115,6 +126,7 @@ export function StartupWindow({
         color: string;
         hoverColor: string;
         disabled?: boolean;
+        roles?: Array<"admin" | "moderator" | "teacher" | "guardian">; // Which roles can see this option
     };
 
     // Menu options
@@ -130,6 +142,7 @@ export function StartupWindow({
             ),
             color: "from-blue-500 to-blue-600",
             hoverColor: "hover:from-blue-600 hover:to-blue-700",
+            roles: ["teacher", "guardian"], // Most relevant for teachers/guardians
         },
         {
             id: "investigate",
@@ -142,6 +155,7 @@ export function StartupWindow({
             ),
             color: "from-purple-500 to-purple-600",
             hoverColor: "hover:from-purple-600 hover:to-purple-700",
+            roles: ["admin", "moderator"], // Most relevant for admin/moderators
         },
         {
             id: "reminder",
@@ -154,6 +168,7 @@ export function StartupWindow({
             ),
             color: "from-green-500 to-green-600",
             hoverColor: "hover:from-green-600 hover:to-green-700",
+            roles: ["moderator", "admin"], // Only moderators/admins can send notifications
         },
         {
             id: "calendar",
@@ -166,6 +181,7 @@ export function StartupWindow({
             ),
             color: "from-orange-500 to-orange-600",
             hoverColor: "hover:from-orange-600 hover:to-orange-700",
+            // Available to all roles
         },
         {
             id: "messages",
@@ -178,6 +194,7 @@ export function StartupWindow({
             ),
             color: "from-pink-500 to-pink-600",
             hoverColor: "hover:from-pink-600 hover:to-pink-700",
+            // Available to all roles
         },
         {
             id: "help",
@@ -190,6 +207,7 @@ export function StartupWindow({
             ),
             color: "from-teal-500 to-teal-600",
             hoverColor: "hover:from-teal-600 hover:to-teal-700",
+            // Available to all roles
         },
         {
             id: "dashboard",
@@ -202,8 +220,17 @@ export function StartupWindow({
             ),
             color: "from-gray-500 to-gray-600",
             hoverColor: "hover:from-gray-600 hover:to-gray-700",
+            // Available to all roles
         },
     ];
+
+    // Filter options based on user role
+    const filteredOptions = menuOptions.filter(option => {
+        // If no roles specified, show to everyone
+        if (!option.roles || option.roles.length === 0) return true;
+        // Otherwise, check if user's role is in the allowed roles
+        return option.roles.includes(user.role);
+    });
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fadeIn">
@@ -250,9 +277,14 @@ export function StartupWindow({
                     <div className="sticky top-0 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900 dark:to-orange-900 px-6 py-4 border-b-2 border-amber-300 dark:border-amber-700 flex justify-between items-center z-10">
                         <div className="flex items-center gap-3">
                             <Sparkles className="w-7 h-7 text-amber-600 dark:text-amber-400" />
-                            <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-100">
-                                {displayGreeting}
-                            </h2>
+                            <div>
+                                <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-100">
+                                    {displayGreeting}
+                                </h2>
+                                <p className="text-sm text-amber-700 dark:text-amber-300">
+                                    {displaySubtitle}
+                                </p>
+                            </div>
                         </div>
                         <div className="flex items-center gap-2">
                             {/* Language Switcher */}
@@ -300,7 +332,7 @@ export function StartupWindow({
 
                         {/* Menu Options Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {menuOptions.map((option, index) => {
+                            {filteredOptions.map((option, index) => {
                                 const Icon = option.icon;
                                 const isDisabled = option.disabled || false;
 

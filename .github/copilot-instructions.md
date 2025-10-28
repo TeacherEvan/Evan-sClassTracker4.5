@@ -1,7 +1,7 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.6 (Oct 28, 2025)
+**Version:** 4.5.7 (Oct 28, 2025)
 
 ---
 
@@ -133,7 +133,10 @@ This documentation is split into focused sections for efficient knowledge discov
 
 ## 🔄 Last Updated
 
-**October 28, 2025** - Added comprehensive integration architecture documentation
+**October 28, 2025** - Version 4.5.7
+- Added Modal Accordion Pattern (#17) and Modal Flex Layout Pattern (#18) to eliminate UI bloat
+- Fixed nested scrolling issues in modals (post-class notes, class count)
+- Comprehensive integration architecture documentation
 
 ---
 

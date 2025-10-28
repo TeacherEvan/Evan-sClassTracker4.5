@@ -518,3 +518,99 @@ await ctx.db.insert("classes", {
 ```tsx
 // Component state (components/class-booking.tsx)
 const [isRecurringWeekly, setIsRecurringWeekly] = useState(false);
+
+### 17. Modal Accordion Pattern (NEW Oct 2025)
+
+**Use accordions for optional form sections** to prevent UI bloat and scrolling issues.
+
+```tsx
+import { ChevronDown, ChevronUp } from "lucide-react";
+
+// State
+const [showSection, setShowSection] = useState(false);
+
+// UI Pattern
+<div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+  <button
+    type="button"
+    onClick={() => setShowSection(!showSection)}
+    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
+  >
+    <span className="font-medium flex items-center gap-2">
+      {t("Section Title (Optional)", "หวขอ (ไมบงคบ)")}
+      <span className="text-xs text-gray-500">{t("Click to expand", "คลกเพอขยาย")}</span>
+    </span>
+    {showSection ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+  </button>
+  {showSection && (
+    <div className="p-4 space-y-4 bg-white dark:bg-gray-800">
+      {/* Collapsed content */}
+    </div>
+  )}
+</div>
+```
+
+**When to use**:
+- Optional form fields (Notes, Homework, Additional Info)
+- Sections users don't need 80% of the time
+- Mobile forms with many fields
+- Any content that creates scrolling issues
+
+**Benefits**:
+- Reduces form height by 50-70%
+- Improves mobile UX dramatically
+- Decreases cognitive load
+- Maintains all functionality
+
+**Example**: `components/post-class-notes-modal.tsx` - Notes and Homework sections
+
+### 18. Modal Flex Layout Pattern (NEW Oct 2025)
+
+**Avoid nested scrolling and fixed heights** in modals using flex layout with sticky sections.
+
+```tsx
+//  WRONG - Nested scrolling
+<div className="fixed inset-0 overflow-y-auto"> {/* Backdrop scrolls */}
+  <div className="max-h-[90vh] overflow-y-auto"> {/* Modal scrolls */}
+    <div className="max-h-96 overflow-y-auto"> {/* Content scrolls! */}
+      {content}
+    </div>
+  </div>
+</div>
+
+//  CORRECT - Flex layout with single scroll
+<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full flex flex-col max-h-[95vh]">
+    {/* Sticky Header */}
+    <div className="p-6 border-b bg-white dark:bg-gray-800">
+      <h2>Modal Title</h2>
+    </div>
+    
+    {/* Scrollable Content - SINGLE scroll area */}
+    <div className="overflow-y-auto flex-grow p-6">
+      {content}
+    </div>
+    
+    {/* Sticky Footer */}
+    <div className="p-6 border-t bg-white dark:bg-gray-800">
+      <button>Submit</button>
+    </div>
+  </div>
+</div>
+```
+
+**Key principles**:
+-  ONE scroll area per modal (`overflow-y-auto` on content only)
+-  Use `flex flex-col` on modal container
+-  Use `flex-grow` on scrollable content
+-  Use `max-h-[95vh]` instead of `max-h-[90vh]` (more space)
+-  Sticky header/footer with explicit background colors
+-  NEVER `overflow-y-auto` on backdrop/overlay
+-  NEVER nest multiple `overflow-y-auto` containers
+-  NEVER use fixed pixel heights like `max-h-[500px]`
+
+**Examples**: 
+- `components/post-class-notes-modal.tsx`
+- `components/teacher-class-count-modal.tsx`
+
+**Related**: See `UI_SCROLL_FIX_VISUAL_GUIDE.md` for before/after visual comparisons
