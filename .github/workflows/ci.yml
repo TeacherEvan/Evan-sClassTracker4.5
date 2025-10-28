@@ -33,7 +33,7 @@ jobs:
         run: npm run build
         env:
           # Use a dummy Convex URL for build validation
-          NEXT_PUBLIC_CONVEX_URL: https://dummy.convex.cloud
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL || 'https://dummy.convex.cloud' }}
           # Disable Next.js telemetry in CI
           NEXT_TELEMETRY_DISABLED: 1
 

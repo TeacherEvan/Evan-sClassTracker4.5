@@ -9,11 +9,13 @@ import { toast } from "@/lib/toast";
 import type { User } from "@/lib/types";
 import { useSwipeGesture } from "@/lib/use-swipe-gesture";
 import { useMutation, useQuery } from "convex/react";
-import { Bell, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Edit2, Globe, MapPin, Plus, Trash2, Users, X } from "lucide-react";
+import { Bell, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Globe, MapPin, Plus, Users, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ClassDetailModal } from "./class-detail-modal";
+import { ClassQuickActions } from "./class-quick-actions";
 import { EditClassModal } from "./edit-class-modal";
 import { HierarchicalStudentSelector } from "./hierarchical-student-selector";
+import { PostClassNotesModal } from "./post-class-notes-modal";
 
 type WeeklyCalendarProps = {
     currentUser: User;
@@ -68,6 +70,10 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     };
     const [selectedClass, setSelectedClass] = useState<ClassWithDetails | null>(null);
     const [editingClass, setEditingClass] = useState<Doc<"classes"> | null>(null);
+
+    // Post-class notes modal state
+    const [showPostClassNotes, setShowPostClassNotes] = useState(false);
+    const [selectedClassForNotes, setSelectedClassForNotes] = useState<Doc<"classes"> | null>(null);
 
     // Form fields - moderators auto-select their school
     const [schoolId, setSchoolId] = useState<Id<"schools"> | "">(
@@ -284,6 +290,30 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
         setSelectedClass(classItem);
     };
 
+    const handleAddNotes = (classItem: Doc<"classes">) => {
+        setSelectedClassForNotes(classItem);
+        setShowPostClassNotes(true);
+    };
+
+    const handleDeleteClass = (classItem: Doc<"classes">) => {
+        if (confirm(t(
+            "Are you sure you want to delete this class?",
+            "คุณแน่ใจหรือไม่ว่าต้องการลบคลาสนี้?"
+        ))) {
+            deleteClass({
+                userId: currentUser._id,
+                classId: classItem._id
+            }).then(() => {
+                toast.success("Class deleted", "ลบคลาสสำเร็จ");
+            }).catch((err: unknown) => {
+                toast.error(
+                    err instanceof Error ? err.message : "Failed to delete",
+                    err instanceof Error ? err.message : "ลบไม่สำเร็จ"
+                );
+            });
+        }
+    };
+
     return (
         <div className="w-full max-w-7xl mx-auto px-3 py-4 md:p-4">
             {/* Header */}
@@ -441,9 +471,6 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                         const teacher = usersMap.get(classItem.teacherId);
                                         const school = schoolsMap.get(classItem.schoolId);
                                         const student = classItem.student;
-                                        const canDelete = currentUser.role === "admin" ||
-                                            currentUser.role === "moderator" ||
-                                            (currentUser.role === "teacher" && classItem.teacherId === currentUser._id);
 
                                         return (
                                             <div
@@ -472,45 +499,16 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                                         )}
                                                     </div>
                                                 </div>
-                                                {/* Quick action buttons - visible on hover on desktop */}
-                                                <div className="absolute top-1 right-1 hidden md:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setEditingClass(classItem as unknown as Doc<"classes">);
-                                                        }}
-                                                        className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600 active:scale-95 transition-all"
-                                                        title={t("Edit", "แก้ไข")}
-                                                    >
-                                                        <Edit2 className="w-3 h-3" />
-                                                    </button>
-                                                    {canDelete && (
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                if (confirm(t(
-                                                                    "Are you sure you want to delete this class?",
-                                                                    "คุณแน่ใจหรือไม่ว่าต้องการลบคลาสนี้?"
-                                                                ))) {
-                                                                    deleteClass({
-                                                                        userId: currentUser._id,
-                                                                        classId: classItem._id
-                                                                    }).then(() => {
-                                                                        toast.success("Class deleted", "ลบคลาสสำเร็จ");
-                                                                    }).catch((err: unknown) => {
-                                                                        toast.error(
-                                                                            err instanceof Error ? err.message : "Failed to delete",
-                                                                            err instanceof Error ? err.message : "ลบไม่สำเร็จ"
-                                                                        );
-                                                                    });
-                                                                }
-                                                            }}
-                                                            className="p-1 bg-red-500 text-white rounded hover:bg-red-600 active:scale-95 transition-all"
-                                                            title={t("Delete", "ลบ")}
-                                                        >
-                                                            <Trash2 className="w-3 h-3" />
-                                                        </button>
-                                                    )}
+                                                {/* Quick actions dropdown - always visible on mobile, hover on desktop */}
+                                                <div className="absolute top-1 right-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                    <ClassQuickActions
+                                                        classItem={classItem as unknown as Doc<"classes">}
+                                                        currentUser={currentUser as unknown as Doc<"users">}
+                                                        onViewDetails={(cls) => handleClassClick(cls as unknown as ClassWithDetails)}
+                                                        onEditClass={(cls) => setEditingClass(cls)}
+                                                        onDeleteClass={handleDeleteClass}
+                                                        onAddNotes={handleAddNotes}
+                                                    />
                                                 </div>
                                             </div>
                                         );
@@ -861,6 +859,23 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                     currentUserId={currentUser._id}
                     onClose={() => setEditingClass(null)}
                     onSuccess={() => setEditingClass(null)}
+                />
+            )}
+
+            {/* Post-Class Notes Modal */}
+            {showPostClassNotes && selectedClassForNotes && (
+                <PostClassNotesModal
+                    classes={[selectedClassForNotes as unknown as Parameters<typeof PostClassNotesModal>[0]['classes'][0]]}
+                    currentUserId={currentUser._id}
+                    onClose={() => {
+                        setShowPostClassNotes(false);
+                        setSelectedClassForNotes(null);
+                    }}
+                    onComplete={() => {
+                        setShowPostClassNotes(false);
+                        setSelectedClassForNotes(null);
+                        toast.success("Notes saved successfully", "บันทึกโน้ตสำเร็จ");
+                    }}
                 />
             )}
         </div>

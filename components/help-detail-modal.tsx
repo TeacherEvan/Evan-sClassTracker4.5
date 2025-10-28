@@ -2,13 +2,13 @@
 
 import type { HelpFeature } from "@/lib/help-content";
 import { useLanguage } from "@/lib/language-context";
+import * as LucideIcons from "lucide-react";
 import {
   ArrowLeft,
   CheckCircle,
   Lightbulb,
   X,
 } from "lucide-react";
-import * as LucideIcons from "lucide-react";
 
 interface HelpDetailModalProps {
   feature: HelpFeature;
@@ -33,8 +33,8 @@ export function HelpDetailModal({ feature, onClose, onBack }: HelpDetailModalPro
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom duration-500">
-        {/* Header with gradient */}
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-3xl w-full flex flex-col max-h-[95vh] animate-in slide-in-from-bottom duration-500">
+        {/* Header with gradient - Sticky */}
         <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 md:p-8 rounded-t-3xl">
           <div className="flex items-center justify-between mb-4">
             {onBack && (
@@ -65,8 +65,8 @@ export function HelpDetailModal({ feature, onClose, onBack }: HelpDetailModalPro
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6 md:p-8 space-y-6">
+        {/* Content - Scrollable (SINGLE scroll area) */}
+        <div className="overflow-y-auto flex-grow p-6 md:p-8 space-y-6">
           {/* Description */}
           <div className="prose dark:prose-invert max-w-none">
             <p className="text-base md:text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -101,7 +101,7 @@ export function HelpDetailModal({ feature, onClose, onBack }: HelpDetailModalPro
                           <p className="text-gray-900 dark:text-white font-medium">
                             {stepDesc}
                           </p>
-                          
+
                           {/* Tip (if available) */}
                           {stepTip && (
                             <div className="mt-3 flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
@@ -119,28 +119,28 @@ export function HelpDetailModal({ feature, onClose, onBack }: HelpDetailModalPro
               </div>
             </div>
           )}
+        </div>
 
-          {/* Call to action */}
-          <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl border border-blue-200 dark:border-blue-800">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white">
-                  {t("Ready to try it?", "พร้อมลองหรือยัง?")}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t(
-                    "Close this window and start using this feature!",
-                    "ปิดหน้าต่างนี้และเริ่มใช้ฟีเจอร์นี้!"
-                  )}
-                </p>
-              </div>
-              <button
-                onClick={onClose}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-              >
-                {t("Got it!", "เข้าใจแล้ว!")}
-              </button>
+        {/* Footer - Sticky Call to Action */}
+        <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-b-3xl">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white">
+                {t("Ready to try it?", "พร้อมลองหรือยัง?")}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {t(
+                  "Close this window and start using this feature!",
+                  "ปิดหน้าต่างนี้และเริ่มใช้ฟีเจอร์นี้!"
+                )}
+              </p>
             </div>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              {t("Got it!", "เข้าใจแล้ว!")}
+            </button>
           </div>
         </div>
       </div>

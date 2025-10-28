@@ -84,8 +84,9 @@ export function ClassConflictModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[95vh]">
+        {/* Sticky Header */}
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 rounded-t-2xl">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
               <AlertTriangle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
@@ -104,7 +105,8 @@ export function ClassConflictModal({
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
+        {/* Scrollable Content */}
+        <div className="overflow-y-auto flex-grow p-6 space-y-6">
           {/* New Class Info */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <h3 className="font-semibold mb-2 text-blue-900 dark:text-blue-100">
@@ -178,11 +180,10 @@ export function ClassConflictModal({
             <div className="space-y-3">
               {/* Option 1: Merge */}
               <label
-                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                  selectedAction === "merge"
+                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedAction === "merge"
                     ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
                     : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                }`}
+                  }`}
               >
                 <input
                   type="radio"
@@ -227,11 +228,10 @@ export function ClassConflictModal({
 
               {/* Option 2: Create Separate */}
               <label
-                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                  selectedAction === "separate"
+                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedAction === "separate"
                     ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                     : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                }`}
+                  }`}
               >
                 <input
                   type="radio"
@@ -263,9 +263,11 @@ export function ClassConflictModal({
               </label>
             </div>
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+        {/* Sticky Footer - Action Buttons */}
+        <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-2xl">
+          <div className="flex gap-3">
             {selectedAction === "merge" ? (
               <button
                 onClick={handleMerge}

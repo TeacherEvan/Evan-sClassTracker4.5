@@ -7,9 +7,10 @@ import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { UserRole } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
-import { AlertTriangle, Calendar, Check, ChevronDown, ChevronUp, Edit2, MapPin, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
+import { AlertTriangle, Calendar, Check, Edit2, MapPin, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
 import { useState } from "react";
 import { ClassConflictModal } from "./class-conflict-modal";
+import { CollapsibleSection } from "./collapsible-section";
 import { EditClassModal } from "./edit-class-modal";
 import { HierarchicalStudentSelector } from "./hierarchical-student-selector";
 import LocationProposalForm from "./location-proposal-form";
@@ -165,7 +166,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const [pendingBookingData, setPendingBookingData] = useState<PendingBookingData | null>(null);
 
   // Optional fields state
-  const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [duration, setDuration] = useState("");
   const [subject, setSubject] = useState("");
   const [subjectTh, setSubjectTh] = useState("");
@@ -410,7 +410,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       }
 
       // Reset optional fields
-      setShowOptionalFields(false);
       setDuration("");
       setSubject("");
       setSubjectTh("");
@@ -481,7 +480,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         if (userRole === "admin" || userRole === "moderator") {
           setSelectedTeacherId("");
         }
-        setShowOptionalFields(false);
         setDuration("");
         setSubject("");
         setSubjectTh("");
@@ -534,7 +532,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       if (userRole === "admin" || userRole === "moderator") {
         setSelectedTeacherId("");
       }
-      setShowOptionalFields(false);
       setDuration("");
       setSubject("");
       setSubjectTh("");
@@ -1405,180 +1402,167 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                 </div>
               )}
 
-              {/* Optional Fields Section */}
-              <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setShowOptionalFields(!showOptionalFields)}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between transition-colors"
-                >
-                  <span className="text-sm font-medium">
-                    {t("Additional Class Details (Optional)", "รายละเอียดเพิ่มเติม (ไม่บังคับ)")}
-                  </span>
-                  {showOptionalFields ? (
-                    <ChevronUp className="w-5 h-5 text-gray-400" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
-                  )}
-                </button>
+              {/* Optional Fields Section - Pattern #20 Collapsible */}
+              <CollapsibleSection
+                titleEn="Additional Class Details (Optional)"
+                titleTh="รายละเอียดเพิ่มเติม (ไม่บังคับ)"
+                defaultOpen={false}
+              >
+                <div className="space-y-4">
+                  {/* Duration */}
+                  <div>
+                    <label htmlFor="duration" className="block text-sm font-medium mb-2">
+                      {t("Duration (minutes)", "ระยะเวลา (นาที)")}
+                    </label>
+                    <input
+                      type="number"
+                      id="duration"
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                      placeholder="60"
+                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                    />
+                  </div>
 
-                {showOptionalFields && (
-                  <div className="p-4 space-y-4">
-                    {/* Duration */}
+                  {/* Subject */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="duration" className="block text-sm font-medium mb-2">
-                        {t("Duration (minutes)", "ระยะเวลา (นาที)")}
+                      <label htmlFor="subject" className="block text-sm font-medium mb-2">
+                        {t("Subject (English)", "วิชา (อังกฤษ)")}
                       </label>
                       <input
-                        type="number"
-                        id="duration"
-                        value={duration}
-                        onChange={(e) => setDuration(e.target.value)}
-                        placeholder="60"
+                        type="text"
+                        id="subject"
+                        value={subject}
+                        onChange={(e) => setSubject(e.target.value)}
+                        placeholder={t("e.g., Math", "เช่น คณิตศาสตร์")}
                         className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
                       />
                     </div>
-
-                    {/* Subject */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="subject" className="block text-sm font-medium mb-2">
-                          {t("Subject (English)", "วิชา (อังกฤษ)")}
-                        </label>
-                        <input
-                          type="text"
-                          id="subject"
-                          value={subject}
-                          onChange={(e) => setSubject(e.target.value)}
-                          placeholder={t("e.g., Math", "เช่น คณิตศาสตร์")}
-                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="subjectTh" className="block text-sm font-medium mb-2">
-                          {t("Subject (Thai)", "วิชา (ไทย)")}
-                        </label>
-                        <input
-                          type="text"
-                          id="subjectTh"
-                          value={subjectTh}
-                          onChange={(e) => setSubjectTh(e.target.value)}
-                          placeholder={t("e.g., คณิตศาสตร์", "เช่น คณิตศาสตร์")}
-                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Lesson Topic */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="lessonTopic" className="block text-sm font-medium mb-2">
-                          {t("Lesson Topic (English)", "หัวข้อบทเรียน (อังกฤษ)")}
-                        </label>
-                        <input
-                          type="text"
-                          id="lessonTopic"
-                          value={lessonTopic}
-                          onChange={(e) => setLessonTopic(e.target.value)}
-                          placeholder={t("e.g., Fractions", "เช่น เศษส่วน")}
-                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="lessonTopicTh" className="block text-sm font-medium mb-2">
-                          {t("Lesson Topic (Thai)", "หัวข้อบทเรียน (ไทย)")}
-                        </label>
-                        <input
-                          type="text"
-                          id="lessonTopicTh"
-                          value={lessonTopicTh}
-                          onChange={(e) => setLessonTopicTh(e.target.value)}
-                          placeholder={t("e.g., เศษส่วน", "เช่น เศษส่วน")}
-                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Materials */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="materials" className="block text-sm font-medium mb-2">
-                          {t("Materials Needed (English)", "อุปกรณ์ที่ต้องใช้ (อังกฤษ)")}
-                        </label>
-                        <textarea
-                          id="materials"
-                          value={materials}
-                          onChange={(e) => setMaterials(e.target.value)}
-                          rows={2}
-                          placeholder={t("e.g., Textbook, calculator", "เช่น หนังสือเรียน, เครื่องคิดเลข")}
-                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="materialsTh" className="block text-sm font-medium mb-2">
-                          {t("Materials Needed (Thai)", "อุปกรณ์ที่ต้องใช้ (ไทย)")}
-                        </label>
-                        <textarea
-                          id="materialsTh"
-                          value={materialsTh}
-                          onChange={(e) => setMaterialsTh(e.target.value)}
-                          rows={2}
-                          placeholder={t("e.g., หนังสือเรียน, เครื่องคิดเลข", "เช่น หนังสือเรียน, เครื่องคิดเลข")}
-                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Preparation Notes */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="preparationNotes" className="block text-sm font-medium mb-2">
-                          {t("Preparation Notes (English)", "หมายเหตุการเตรียมการ (อังกฤษ)")}
-                        </label>
-                        <textarea
-                          id="preparationNotes"
-                          value={preparationNotes}
-                          onChange={(e) => setPreparationNotes(e.target.value)}
-                          rows={2}
-                          placeholder={t("e.g., Review chapter 3", "เช่น ทบทวนบทที่ 3")}
-                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="preparationNotesTh" className="block text-sm font-medium mb-2">
-                          {t("Preparation Notes (Thai)", "หมายเหตุการเตรียมการ (ไทย)")}
-                        </label>
-                        <textarea
-                          id="preparationNotesTh"
-                          value={preparationNotesTh}
-                          onChange={(e) => setPreparationNotesTh(e.target.value)}
-                          rows={2}
-                          placeholder={t("e.g., ทบทวนบทที่ 3", "เช่น ทบทวนบทที่ 3")}
-                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Class Type */}
                     <div>
-                      <label htmlFor="classType" className="block text-sm font-medium mb-2">
-                        {t("Class Type", "ประเภทคลาส")}
+                      <label htmlFor="subjectTh" className="block text-sm font-medium mb-2">
+                        {t("Subject (Thai)", "วิชา (ไทย)")}
                       </label>
-                      <select
-                        id="classType"
-                        value={classType}
-                        onChange={(e) => setClassType(e.target.value as typeof classType)}
+                      <input
+                        type="text"
+                        id="subjectTh"
+                        value={subjectTh}
+                        onChange={(e) => setSubjectTh(e.target.value)}
+                        placeholder={t("e.g., คณิตศาสตร์", "เช่น คณิตศาสตร์")}
                         className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      >
-                        <option value="regular">{t("Regular", "ปกติ")}</option>
-                        <option value="makeup">{t("Makeup", "ชดเชย")}</option>
-                        <option value="trial">{t("Trial", "ทดลอง")}</option>
-                        <option value="assessment">{t("Assessment", "ประเมินผล")}</option>
-                      </select>
+                      />
                     </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Lesson Topic */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="lessonTopic" className="block text-sm font-medium mb-2">
+                        {t("Lesson Topic (English)", "หัวข้อบทเรียน (อังกฤษ)")}
+                      </label>
+                      <input
+                        type="text"
+                        id="lessonTopic"
+                        value={lessonTopic}
+                        onChange={(e) => setLessonTopic(e.target.value)}
+                        placeholder={t("e.g., Fractions", "เช่น เศษส่วน")}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="lessonTopicTh" className="block text-sm font-medium mb-2">
+                        {t("Lesson Topic (Thai)", "หัวข้อบทเรียน (ไทย)")}
+                      </label>
+                      <input
+                        type="text"
+                        id="lessonTopicTh"
+                        value={lessonTopicTh}
+                        onChange={(e) => setLessonTopicTh(e.target.value)}
+                        placeholder={t("e.g., เศษส่วน", "เช่น เศษส่วน")}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Materials */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="materials" className="block text-sm font-medium mb-2">
+                        {t("Materials Needed (English)", "อุปกรณ์ที่ต้องใช้ (อังกฤษ)")}
+                      </label>
+                      <textarea
+                        id="materials"
+                        value={materials}
+                        onChange={(e) => setMaterials(e.target.value)}
+                        rows={2}
+                        placeholder={t("e.g., Textbook, calculator", "เช่น หนังสือเรียน, เครื่องคิดเลข")}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="materialsTh" className="block text-sm font-medium mb-2">
+                        {t("Materials Needed (Thai)", "อุปกรณ์ที่ต้องใช้ (ไทย)")}
+                      </label>
+                      <textarea
+                        id="materialsTh"
+                        value={materialsTh}
+                        onChange={(e) => setMaterialsTh(e.target.value)}
+                        rows={2}
+                        placeholder={t("e.g., หนังสือเรียน, เครื่องคิดเลข", "เช่น หนังสือเรียน, เครื่องคิดเลข")}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Preparation Notes */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="preparationNotes" className="block text-sm font-medium mb-2">
+                        {t("Preparation Notes (English)", "หมายเหตุการเตรียมการ (อังกฤษ)")}
+                      </label>
+                      <textarea
+                        id="preparationNotes"
+                        value={preparationNotes}
+                        onChange={(e) => setPreparationNotes(e.target.value)}
+                        rows={2}
+                        placeholder={t("e.g., Review chapter 3", "เช่น ทบทวนบทที่ 3")}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="preparationNotesTh" className="block text-sm font-medium mb-2">
+                        {t("Preparation Notes (Thai)", "หมายเหตุการเตรียมการ (ไทย)")}
+                      </label>
+                      <textarea
+                        id="preparationNotesTh"
+                        value={preparationNotesTh}
+                        onChange={(e) => setPreparationNotesTh(e.target.value)}
+                        rows={2}
+                        placeholder={t("e.g., ทบทวนบทที่ 3", "เช่น ทบทวนบทที่ 3")}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Class Type */}
+                  <div>
+                    <label htmlFor="classType" className="block text-sm font-medium mb-2">
+                      {t("Class Type", "ประเภทคลาส")}
+                    </label>
+                    <select
+                      id="classType"
+                      value={classType}
+                      onChange={(e) => setClassType(e.target.value as typeof classType)}
+                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                    >
+                      <option value="regular">{t("Regular", "ปกติ")}</option>
+                      <option value="makeup">{t("Makeup", "ชดเชย")}</option>
+                      <option value="trial">{t("Trial", "ทดลอง")}</option>
+                      <option value="assessment">{t("Assessment", "ประเมินผล")}</option>
+                    </select>
+                  </div>
+                </div>
+              </CollapsibleSection>
 
               {error && (
                 <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl md:rounded-lg text-sm">

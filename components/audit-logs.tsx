@@ -18,6 +18,7 @@ import {
     User,
 } from "lucide-react";
 import { useState } from "react";
+import { PaginatedList } from "./paginated-list";
 
 // Type for audit log from the database
 type AuditLog = {
@@ -392,57 +393,74 @@ export function AuditLogs({ currentUserId }: AuditLogsProps) {
                                     </td>
                                 </tr>
                             ) : (
-                                logs.map((log) => (
-                                    <tr key={log._id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                                        <td className="px-4 py-3 text-sm whitespace-nowrap">
-                                            <div className="flex items-center gap-2">
-                                                <Calendar className="w-4 h-4 text-gray-400" />
-                                                <div>
-                                                    <div>{new Date(log.timestamp).toLocaleDateString()}</div>
-                                                    <div className="text-xs text-gray-500">
-                                                        {new Date(log.timestamp).toLocaleTimeString()}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            <div className="flex items-center gap-2">
-                                                <User className="w-4 h-4 text-gray-400" />
-                                                <div>
-                                                    <div className="font-medium">{log.username}</div>
-                                                    <div className="text-xs text-gray-500">{log.userRole}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            <span className={`font-medium ${getActionColor(log.action)}`}>
-                                                {formatAction(log.action)}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-sm">
-                                            <div>
-                                                <div className="font-medium">{log.targetType}</div>
-                                                {log.targetName && (
-                                                    <div className="text-xs text-gray-500 truncate max-w-xs">
-                                                        {log.targetName}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-center">
-                                            {log.affectedCount ? (
-                                                <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full text-xs font-medium">
-                                                    {log.affectedCount}
-                                                </span>
-                                            ) : (
-                                                <span className="text-gray-400">1</span>
+                                <tr>
+                                    <td colSpan={6} className="p-0">
+                                        {/* Pagination Pattern #19 - Replaces vertical scrolling with button navigation */}
+                                        <PaginatedList
+                                            items={logs}
+                                            itemsPerPage={20}
+                                            emptyMessageEn="No audit logs found"
+                                            emptyMessageTh="ไม่พบบันทึกการตรวจสอบ"
+                                            showPageInfo={true}
+                                            showJumpButtons={true}
+                                            renderItem={(log) => (
+                                                <table className="w-full">
+                                                    <tbody>
+                                                        <tr className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                                            <td className="px-4 py-3 text-sm whitespace-nowrap" style={{ width: "180px" }}>
+                                                                <div className="flex items-center gap-2">
+                                                                    <Calendar className="w-4 h-4 text-gray-400" />
+                                                                    <div>
+                                                                        <div>{new Date(log.timestamp).toLocaleDateString()}</div>
+                                                                        <div className="text-xs text-gray-500">
+                                                                            {new Date(log.timestamp).toLocaleTimeString()}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm" style={{ width: "200px" }}>
+                                                                <div className="flex items-center gap-2">
+                                                                    <User className="w-4 h-4 text-gray-400" />
+                                                                    <div>
+                                                                        <div className="font-medium">{log.username}</div>
+                                                                        <div className="text-xs text-gray-500">{log.userRole}</div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm" style={{ width: "180px" }}>
+                                                                <span className={`font-medium ${getActionColor(log.action)}`}>
+                                                                    {formatAction(log.action)}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm" style={{ width: "200px" }}>
+                                                                <div>
+                                                                    <div className="font-medium">{log.targetType}</div>
+                                                                    {log.targetName && (
+                                                                        <div className="text-xs text-gray-500 truncate max-w-xs">
+                                                                            {log.targetName}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm text-center" style={{ width: "120px" }}>
+                                                                {log.affectedCount ? (
+                                                                    <span className="px-2 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full text-xs font-medium">
+                                                                        {log.affectedCount}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-gray-400">1</span>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
+                                                                {log.reason || "-"}
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
                                             )}
-                                        </td>
-                                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
-                                            {log.reason || "-"}
-                                        </td>
-                                    </tr>
-                                ))
+                                        />
+                                    </td>
+                                </tr>
                             )}
                         </tbody>
                     </table>
