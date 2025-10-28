@@ -179,6 +179,40 @@ export function HierarchicalStudentSelector({
                 </div>
             )}
 
+            {/* Guardian Students Section - Show separately */}
+            {students && students.some(s => s.guardianName) && (
+                <div>
+                    <label className="block text-xs font-medium mb-1.5 text-purple-600 dark:text-purple-400">
+                        {t("Guardian Students (Auto-approved)", "นักเรียนของผู้ปกครอง (อนุมัติอัตโนมัติ)")}
+                    </label>
+                    <select
+                        value={value}
+                        onChange={(e) => onChange(e.target.value as Id<"students"> | "")}
+                        className={baseSelectClass + " border-purple-300 dark:border-purple-600 focus:ring-purple-500"}
+                        disabled={disabled}
+                        required={required}
+                    >
+                        <option value="">
+                            {t("Select guardian student", "เลือกนักเรียนของผู้ปกครอง")}
+                        </option>
+                        {students.filter(s => s.guardianName).map((student) => (
+                            <option key={student._id} value={student._id}>
+                                👤 {student.firstName} {student.lastName}
+                                {student.area ? ` [${student.area}]` : ""}
+                            </option>
+                        ))}
+                    </select>
+                    {students.filter(s => s.guardianName).length > 0 && (
+                        <p className="mt-1 text-xs text-purple-600 dark:text-purple-400">
+                            {t(
+                                `${students.filter(s => s.guardianName).length} guardian student${students.filter(s => s.guardianName).length !== 1 ? 's' : ''} available`,
+                                `มีนักเรียนของผู้ปกครอง ${students.filter(s => s.guardianName).length} คน`
+                            )}
+                        </p>
+                    )}
+                </div>
+            )}
+
             {/* Helper text when no selection made */}
             {!selectedGrade && students && students.length > 0 && (
                 <p className="text-xs text-gray-500 dark:text-gray-400">

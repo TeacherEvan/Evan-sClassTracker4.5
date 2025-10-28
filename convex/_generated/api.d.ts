@@ -22,6 +22,7 @@ import type * as events from "../events.js";
 import type * as exports from "../exports.js";
 import type * as groups from "../groups.js";
 import type * as importSangsomStudents from "../importSangsomStudents.js";
+import type * as importSangsomStudentsExtra from "../importSangsomStudentsExtra.js";
 import type * as init from "../init.js";
 import type * as locationProposals from "../locationProposals.js";
 import type * as locations from "../locations.js";
@@ -73,6 +74,7 @@ declare const fullApi: ApiFromModules<{
   exports: typeof exports;
   groups: typeof groups;
   importSangsomStudents: typeof importSangsomStudents;
+  importSangsomStudentsExtra: typeof importSangsomStudentsExtra;
   init: typeof init;
   locationProposals: typeof locationProposals;
   locations: typeof locations;

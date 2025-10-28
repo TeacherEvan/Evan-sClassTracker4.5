@@ -62,6 +62,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const requestCancellation = useMutation(api.cancellationRequests.create);
   const createStudent = useMutation(api.students.create);
   const addStudentToClass = useMutation(api.classes.addStudentToClass);
+  const createLocation = useMutation(api.locations.create);
+
   const [locationId, setLocationId] = useState<Id<"locations"> | "">("");
   // Teacher selection for admin/moderator
   const [selectedTeacherId, setSelectedTeacherId] = useState<Id<"users"> | "">(
@@ -141,13 +143,23 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
   // Student creation state
   const [creatingStudent, setCreatingStudent] = useState(false);
+  const [studentType, setStudentType] = useState<"school" | "guardian">("school");
   const [newStudentNickname, setNewStudentNickname] = useState("");
   const [newStudentGrade, setNewStudentGrade] = useState("");
   const [newStudentClass, setNewStudentClass] = useState("");
   const [newStudentSchoolId, setNewStudentSchoolId] = useState<Id<"schools"> | "">("");
+  const [guardianBirthDate, setGuardianBirthDate] = useState("");
+  const [guardianArea, setGuardianArea] = useState("");
+  const [newGuardianName, setNewGuardianName] = useState("");
+  const [newGuardianPhone, setNewGuardianPhone] = useState("");
 
   // Guardian title state
   const [guardianTitle, setGuardianTitle] = useState("");
+
+  // Location creation state (for moderators/admins)
+  const [creatingLocation, setCreatingLocation] = useState(false);
+  const [newLocationName, setNewLocationName] = useState("");
+  const [newLocationNameTh, setNewLocationNameTh] = useState("");
 
   // Confirmation dialog states (for parent-level modals)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -592,35 +604,70 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   };
 
   const handleCreateStudent = async () => {
-    if (!newStudentNickname.trim() || !newStudentGrade.trim() || !newStudentClass.trim() || !newStudentSchoolId) {
-      setError(t("Please fill in all student fields", "กรุณากรอกข้อมูลนักเรียนให้ครบถ้วน"));
+    // Validation based on student type
+    if (!newStudentNickname.trim()) {
+      setError(t("Please enter student nickname", "กรุณากรอกชื่อเล่นนักเรียน"));
       return;
+    }
+
+    if (studentType === "school") {
+      // School student requires grade, class, and school
+      if (!newStudentGrade.trim() || !newStudentClass.trim() || !newStudentSchoolId) {
+        setError(t("Please fill in all student fields", "กรุณากรอกข้อมูลนักเรียนให้ครบถ้วน"));
+        return;
+      }
+    } else {
+      // Guardian student requires birthDate and area
+      if (!guardianBirthDate.trim() || !guardianArea.trim()) {
+        setError(t("Birth date and area are required for guardian students", "ต้องกรอกวันเกิดและพื้นที่สำหรับนักเรียนของผู้ปกครอง"));
+        return;
+      }
     }
 
     setLoading(true);
     try {
+      // Convert date string to timestamp for guardian students
+      const birthTimestamp = studentType === "guardian" && guardianBirthDate
+        ? new Date(guardianBirthDate).getTime()
+        : undefined;
+
       const newStudentData = await createStudent({
-        firstName: newStudentNickname, // Use nickname as firstName
+        firstName: newStudentNickname,
         lastName: "", // Empty lastName
-        nickname: newStudentNickname, // Also save as nickname field
-        grade: newStudentGrade,
-        class: newStudentClass,
-        schoolId: newStudentSchoolId as Id<"schools">,
+        nickname: newStudentNickname,
+        grade: studentType === "school" ? newStudentGrade : "N/A", // Required field, use N/A for guardian
+        class: studentType === "school" ? newStudentClass : undefined,
+        schoolId: studentType === "school" ? (newStudentSchoolId as Id<"schools">) : undefined,
+        dateOfBirth: birthTimestamp,
+        area: studentType === "guardian" ? guardianArea : undefined,
+        guardianName: studentType === "guardian" && newGuardianName ? newGuardianName : undefined,
+        guardianPhone: studentType === "guardian" && newGuardianPhone ? newGuardianPhone : undefined,
         createdBy: userId,
       });
 
       // Auto-select the newly created student
       setStudentId(newStudentData.id);
-      setSchoolId(newStudentSchoolId as Id<"schools">);
+      if (studentType === "school" && newStudentSchoolId) {
+        setSchoolId(newStudentSchoolId as Id<"schools">);
+      }
 
       // Reset student creation form
       setCreatingStudent(false);
+      setStudentType("school");
       setNewStudentNickname("");
       setNewStudentGrade("");
       setNewStudentClass("");
       setNewStudentSchoolId("");
+      setGuardianBirthDate("");
+      setGuardianArea("");
+      setNewGuardianName("");
+      setNewGuardianPhone("");
 
-      toast.success("Student created successfully!", "สร้างข้อมูลนักเรียนสำเร็จ!");
+      if (studentType === "school") {
+        toast.success("Student created successfully!", "สร้างข้อมูลนักเรียนสำเร็จ!");
+      } else {
+        toast.success("Guardian student created successfully!", "สร้างข้อมูลนักเรียนของผู้ปกครองสำเร็จ!");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create student");
     } finally {
@@ -628,781 +675,956 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     }
   };
 
+  const handleCreateLocation = async () => {
+    if (!newLocationName.trim() && !newLocationNameTh.trim()) {
+      setError(t("Please enter location name in at least one language", "กรุณากรอกชื่อสถานที่อย่างน้อยหนึ่งภาษา"));
+      return;
+    }
+
+    if (!schoolId) {
+      setError(t("Please select a school first", "กรุณาเลือกโรงเรียนก่อน"));
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const newLocationId = await createLocation({
+        name: newLocationName,
+        nameTh: newLocationNameTh,
+        schoolId: schoolId as Id<"schools">,
+        createdBy: userId,
+      });
+
+      // Auto-select the newly created location
+      setLocationId(newLocationId);
+
+      // Reset location creation form
+      setCreatingLocation(false);
+      setNewLocationName("");
+      setNewLocationNameTh("");
+
+      toast.success("Location created successfully!", "สร้างสถานที่สำเร็จ!");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create location");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="w-full max-w-4xl mx-auto px-3 py-4 md:p-4">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 md:mb-6 gap-3">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-          {userRole === "moderator" || userRole === "admin"
-            ? t("Class Bookings", "การจองชั้นเรียน")
-            : t("Class Requests", "คำขอชั้นเรียน")}
-        </h2>
-        <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="flex-1 md:flex-none bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-95 transition-all font-medium flex items-center justify-center gap-2 touch-manipulation shadow-lg shadow-blue-500/20 text-base md:text-sm"
-          >
-            <Calendar className="w-5 h-5" />
+    <>
+      {/* Main Content Container */}
+      <div className="w-full max-w-4xl mx-auto px-3 py-4 md:p-4">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 md:mb-6 gap-3">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
             {userRole === "moderator" || userRole === "admin"
-              ? t("Book Class", "จองชั้นเรียน")
-              : t("Request Class", "ขอชั้นเรียน")}
-          </button>
-          {classes && classes.length > 1 && (
+              ? t("Class Bookings", "การจองชั้นเรียน")
+              : t("Class Requests", "คำขอชั้นเรียน")}
+          </h2>
+          <div className="flex flex-wrap gap-2 w-full md:w-auto">
             <button
-              onClick={() => setShowMergeModal(true)}
-              className="flex-1 md:flex-none bg-purple-500 text-white px-4 py-3 md:py-2 rounded-xl md:rounded-lg hover:bg-purple-600 active:scale-95 transition-all font-medium flex items-center justify-center gap-2 touch-manipulation shadow-lg shadow-purple-500/20 text-base md:text-sm"
+              onClick={() => setShowForm(!showForm)}
+              className="flex-1 md:flex-none bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-95 transition-all font-medium flex items-center justify-center gap-2 touch-manipulation shadow-lg shadow-blue-500/20 text-base md:text-sm"
             >
-              <Users className="w-5 h-5" />
-              {t("Merge Classes", "รวมคลาส")}
+              <Calendar className="w-5 h-5" />
+              {userRole === "moderator" || userRole === "admin"
+                ? t("Book Class", "จองชั้นเรียน")
+                : t("Req/Book Class", "ขอ/จองชั้นเรียน")}
             </button>
-          )}
+            {classes && classes.length > 1 && (
+              <button
+                onClick={() => setShowMergeModal(true)}
+                className="flex-1 md:flex-none bg-purple-500 text-white px-4 py-3 md:py-2 rounded-xl md:rounded-lg hover:bg-purple-600 active:scale-95 transition-all font-medium flex items-center justify-center gap-2 touch-manipulation shadow-lg shadow-purple-500/20 text-base md:text-sm"
+              >
+                <Users className="w-5 h-5" />
+                {t("Merge Classes", "รวมคลาส")}
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Booking Form */}
-      {showForm && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 mb-4 md:mb-6">
-          <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-6 pb-3 border-b-2 border-gray-200 dark:border-gray-700">
-            {userRole === "moderator" || userRole === "admin"
-              ? t("Book a New Class", "จองชั้นเรียนใหม่")
-              : t("Request a New Class", "ขอชั้นเรียนใหม่")}
-          </h3>
+        {/* Booking Form */}
+        {showForm && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 mb-4 md:mb-6">
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-6 pb-3 border-b-2 border-gray-200 dark:border-gray-700">
+              {userRole === "moderator" || userRole === "admin"
+                ? t("Book a New Class", "จองชั้นเรียนใหม่")
+                : t("Request a New Class", "ขอชั้นเรียนใหม่")}
+            </h3>
 
-          <form onSubmit={handleBookClass} className="space-y-4">
-            {/* Step 1: School Selection - FIRST PRIORITY */}
-            <div className="space-y-4">
-              <div className="relative">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">1</span>
-                  <label htmlFor="school" className="block text-sm font-medium">
-                    {t("School", "โรงเรียน")} *
-                  </label>
-                </div>
-                <select
-                  id="school"
-                  value={schoolId}
-                  onChange={(e) => {
-                    setSchoolId(e.target.value as Id<"schools"> | "");
-                    setLocationId(""); // Reset location when school changes
-                    setStudentId(""); // Reset student when school changes
-                    if (userRole === "admin" || userRole === "moderator") {
-                      setSelectedTeacherId(""); // Reset teacher selection
-                    }
-                  }}
-                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border-2 border-blue-500 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-600 dark:bg-gray-800 dark:border-blue-600 touch-manipulation transition-all shadow-sm"
-                  required
-                  disabled={loading || userRole === "moderator"} // Moderators can't change their school
-                >
-                  <option value="">{t("Select a school first", "เลือกโรงเรียนก่อน")}</option>
-                  {schools === undefined ? (
-                    <option disabled>{t("Loading schools...", "กำลังโหลดโรงเรียน...")}</option>
-                  ) : (
-                    schools?.map((school) => (
-                      <option key={school._id} value={school._id}>
-                        {school.name}
-                      </option>
-                    ))
-                  )}
-                </select>
-                {userRole === "moderator" && (
-                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                    {t("Your school is pre-selected", "โรงเรียนของคุณถูกเลือกไว้แล้ว")}
-                  </p>
-                )}
-              </div>
-
-              {/* Step 2: Teacher Selection (Admin/Moderator only) */}
-              {(userRole === "admin" || userRole === "moderator") && (
-                <div className={`relative transition-opacity ${schoolId ? 'opacity-100' : 'opacity-50'}`}>
+            <form onSubmit={handleBookClass} className="space-y-4">
+              {/* Step 1: School Selection - FIRST PRIORITY */}
+              <div className="space-y-4">
+                <div className="relative">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">2</span>
-                    <label htmlFor="teacher" className="block text-sm font-medium">
-                      {t("Teacher", "ครูผู้สอน")} *
+                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">1</span>
+                    <label htmlFor="school" className="block text-sm font-medium">
+                      {t("School", "โรงเรียน")} *
                     </label>
                   </div>
                   <select
-                    id="teacher"
-                    value={selectedTeacherId}
-                    onChange={(e) => setSelectedTeacherId(e.target.value as Id<"users"> | "")}
-                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-all"
-                    required
-                    disabled={loading || !schoolId}
-                  >
-                    <option value="">
-                      {schoolId
-                        ? t("Select a teacher", "เลือกครูผู้สอน")
-                        : t("Select school first", "เลือกโรงเรียนก่อน")
+                    id="school"
+                    value={schoolId}
+                    onChange={(e) => {
+                      setSchoolId(e.target.value as Id<"schools"> | "");
+                      setLocationId(""); // Reset location when school changes
+                      setStudentId(""); // Reset student when school changes
+                      if (userRole === "admin" || userRole === "moderator") {
+                        setSelectedTeacherId(""); // Reset teacher selection
                       }
-                    </option>
-                    {allTeachers === undefined ? (
-                      <option disabled>{t("Loading teachers...", "กำลังโหลดครู...")}</option>
+                    }}
+                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border-2 border-blue-500 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-600 dark:bg-gray-800 dark:border-blue-600 touch-manipulation transition-all shadow-sm"
+                    required
+                    disabled={loading || userRole === "moderator"} // Moderators can't change their school
+                  >
+                    <option value="">{t("Select a school first", "เลือกโรงเรียนก่อน")}</option>
+                    {schools === undefined ? (
+                      <option disabled>{t("Loading schools...", "กำลังโหลดโรงเรียน...")}</option>
                     ) : (
-                      allTeachers?.map((teacher) => (
-                        <option key={teacher._id} value={teacher._id}>
-                          {teacher.username}
+                      schools?.map((school) => (
+                        <option key={school._id} value={school._id}>
+                          {school.name}
                         </option>
                       ))
                     )}
                   </select>
-                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                    {t(
-                      "Select which teacher will teach this class",
-                      "เลือกครูที่จะสอนคลาสนี้"
-                    )}
-                  </p>
-                </div>
-              )}
-
-              {/* Step 3: Student Selection - Filtered by School */}
-              <div className={`relative transition-opacity ${schoolId ? 'opacity-100' : 'opacity-50'}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">
-                      {(userRole === "admin" || userRole === "moderator") ? "3" : "2"}
-                    </span>
-                    <label htmlFor="student" className="block text-sm font-medium">
-                      {t("Student Name", "ชื่อนักเรียน")} *
-                    </label>
-                  </div>
-                  {schoolId && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCreatingStudent(!creatingStudent);
-                        // Auto-set school ID when creating new student
-                        if (!creatingStudent && schoolId) {
-                          setNewStudentSchoolId(schoolId);
-                        }
-                      }}
-                      className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
-                      disabled={!schoolId}
-                    >
-                      {creatingStudent
-                        ? t("← Select Existing", "← เลือกนักเรียนที่มีอยู่")
-                        : t("+ Create New", "+ สร้างใหม่")
-                      }
-                    </button>
+                  {userRole === "moderator" && (
+                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                      {t("Your school is pre-selected", "โรงเรียนของคุณถูกเลือกไว้แล้ว")}
+                    </p>
                   )}
                 </div>
 
-                {creatingStudent && schoolId ? (
-                  <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <input
-                      type="text"
-                      placeholder={t("Nickname", "ชื่อเล่น")}
-                      value={newStudentNickname}
-                      onChange={(e) => setNewStudentNickname(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      disabled={loading}
-                    />
+                {/* Step 2: Teacher Selection (Admin/Moderator only) */}
+                {(userRole === "admin" || userRole === "moderator") && (
+                  <div className={`relative transition-opacity ${schoolId ? 'opacity-100' : 'opacity-50'}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">2</span>
+                      <label htmlFor="teacher" className="block text-sm font-medium">
+                        {t("Teacher", "ครูผู้สอน")} *
+                      </label>
+                    </div>
                     <select
-                      value={newStudentGrade}
-                      onChange={(e) => setNewStudentGrade(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      disabled={loading}
+                      id="teacher"
+                      value={selectedTeacherId}
+                      onChange={(e) => setSelectedTeacherId(e.target.value as Id<"users"> | "")}
+                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-all"
+                      required
+                      disabled={loading || !schoolId}
                     >
-                      <option value="">{t("Grade", "ระดับชั้น")}</option>
-                      <option value="K1">K1</option>
-                      <option value="K2">K2</option>
-                      <option value="K3">K3</option>
+                      <option value="">
+                        {schoolId
+                          ? t("Select a teacher", "เลือกครูผู้สอน")
+                          : t("Select school first", "เลือกโรงเรียนก่อน")
+                        }
+                      </option>
+                      {allTeachers === undefined ? (
+                        <option disabled>{t("Loading teachers...", "กำลังโหลดครู...")}</option>
+                      ) : (
+                        allTeachers?.map((teacher) => (
+                          <option key={teacher._id} value={teacher._id}>
+                            {teacher.username}
+                          </option>
+                        ))
+                      )}
                     </select>
-                    <select
-                      value={newStudentClass}
-                      onChange={(e) => setNewStudentClass(e.target.value)}
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      disabled={loading}
-                    >
-                      <option value="">{t("Select Class", "เลือกคลาส")}</option>
-                      <option value="/1">/1</option>
-                      <option value="/2">/2</option>
-                      <option value="/3">/3</option>
-                      <option value="/4">/4</option>
-                      <option value="/5">/5</option>
-                      <option value="/6">/6</option>
-                      <option value="/7">/7</option>
-                      <option value="/8">/8</option>
-                      <option value="/9">/9</option>
-                      <option value="/10">/10</option>
-                    </select>
-                    <input
-                      type="text"
-                      value={schoolId}
-                      disabled
-                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-100 dark:bg-gray-700 dark:border-gray-600 cursor-not-allowed"
-                      placeholder={schools?.find(s => s._id === schoolId)?.name || t("School", "โรงเรียน")}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleCreateStudent}
-                      disabled={loading}
-                      className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
-                    >
-                      {t("✓ Create & Select Student", "✓ สร้างและเลือกนักเรียน")}
-                    </button>
+                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                      {t(
+                        "Select which teacher will teach this class",
+                        "เลือกครูที่จะสอนคลาสนี้"
+                      )}
+                    </p>
                   </div>
-                ) : (
-                  <HierarchicalStudentSelector
-                    students={students}
-                    value={studentId}
-                    onChange={setStudentId}
-                    disabled={loading || !schoolId}
-                    required
-                    schoolId={schoolId}
-                  />
                 )}
-              </div>
-            </div>
 
-            {/* Step 4: Location & Date Selection */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className={`transition-opacity ${schoolId ? 'opacity-100' : 'opacity-50'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">
-                    {(userRole === "admin" || userRole === "moderator") ? "4" : "3"}
-                  </span>
-                  <label htmlFor="location" className="block text-sm font-medium">
-                    {t("Location", "สถานที่")} *
-                  </label>
+                {/* Step 3: Student Selection - Filtered by School */}
+                <div className={`relative transition-opacity ${schoolId ? 'opacity-100' : 'opacity-50'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">
+                        {(userRole === "admin" || userRole === "moderator") ? "3" : "2"}
+                      </span>
+                      <label htmlFor="student" className="block text-sm font-medium">
+                        {t("Student Name", "ชื่อนักเรียน")} *
+                      </label>
+                    </div>
+                    {schoolId && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCreatingStudent(!creatingStudent);
+                          // Auto-set school ID when creating new student
+                          if (!creatingStudent && schoolId) {
+                            setNewStudentSchoolId(schoolId);
+                          }
+                        }}
+                        className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+                        disabled={!schoolId}
+                      >
+                        {creatingStudent
+                          ? t("← Select Existing", "← เลือกนักเรียนที่มีอยู่")
+                          : t("+ Create New", "+ สร้างใหม่")
+                        }
+                      </button>
+                    )}
+                  </div>
+
+                  {creatingStudent && schoolId ? (
+                    <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                      {/* Student Type Selection */}
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setStudentType("school")}
+                          className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${studentType === "school"
+                            ? "bg-blue-600 text-white"
+                            : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            }`}
+                          disabled={loading}
+                        >
+                          {t("School Student", "นักเรียนในโรงเรียน")}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setStudentType("guardian")}
+                          className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${studentType === "guardian"
+                            ? "bg-purple-600 text-white"
+                            : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                            }`}
+                          disabled={loading}
+                        >
+                          {t("Guardian Student", "นักเรียนของผู้ปกครอง")}
+                        </button>
+                      </div>
+
+                      {/* Common Fields */}
+                      <input
+                        type="text"
+                        placeholder={t("Nickname *", "ชื่อเล่น *")}
+                        value={newStudentNickname}
+                        onChange={(e) => setNewStudentNickname(e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        disabled={loading}
+                      />
+
+                      {/* Conditional Fields Based on Student Type */}
+                      {studentType === "school" ? (
+                        <>
+                          <select
+                            value={newStudentGrade}
+                            onChange={(e) => setNewStudentGrade(e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                            disabled={loading}
+                          >
+                            <option value="">{t("Grade", "ระดับชั้น")}</option>
+                            <option value="K1">K1</option>
+                            <option value="K2">K2</option>
+                            <option value="K3">K3</option>
+                          </select>
+                          <select
+                            value={newStudentClass}
+                            onChange={(e) => setNewStudentClass(e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                            disabled={loading}
+                          >
+                            <option value="">{t("Select Class", "เลือกคลาส")}</option>
+                            <option value="/1">/1</option>
+                            <option value="/2">/2</option>
+                            <option value="/3">/3</option>
+                            <option value="/4">/4</option>
+                            <option value="/5">/5</option>
+                            <option value="/6">/6</option>
+                            <option value="/7">/7</option>
+                            <option value="/8">/8</option>
+                            <option value="/9">/9</option>
+                            <option value="/10">/10</option>
+                          </select>
+                          <input
+                            type="text"
+                            value={schoolId}
+                            disabled
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-100 dark:bg-gray-700 dark:border-gray-600 cursor-not-allowed"
+                            placeholder={schools?.find(s => s._id === schoolId)?.name || t("School", "โรงเรียน")}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <input
+                            type="date"
+                            placeholder={t("Birth Date *", "วันเกิด *")}
+                            value={guardianBirthDate}
+                            onChange={(e) => setGuardianBirthDate(e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600"
+                            disabled={loading}
+                          />
+                          <input
+                            type="text"
+                            placeholder={t("Area (e.g., BKK01, CNX02) *", "พื้นที่ (เช่น BKK01, CNX02) *")}
+                            value={guardianArea}
+                            onChange={(e) => setGuardianArea(e.target.value.toUpperCase())}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600"
+                            disabled={loading}
+                          />
+                          <input
+                            type="text"
+                            placeholder={t("Guardian Name", "ชื่อผู้ปกครอง")}
+                            value={newGuardianName}
+                            onChange={(e) => setNewGuardianName(e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600"
+                            disabled={loading}
+                          />
+                          <input
+                            type="tel"
+                            placeholder={t("Guardian Phone", "เบอร์ผู้ปกครอง")}
+                            value={newGuardianPhone}
+                            onChange={(e) => setNewGuardianPhone(e.target.value)}
+                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600"
+                            disabled={loading}
+                          />
+                        </>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={handleCreateStudent}
+                        disabled={loading}
+                        className={`w-full px-4 py-2 text-white rounded-lg disabled:opacity-50 text-sm font-medium ${studentType === "school"
+                          ? "bg-green-600 hover:bg-green-700"
+                          : "bg-purple-600 hover:bg-purple-700"
+                          }`}
+                      >
+                        {studentType === "school"
+                          ? t("✓ Create & Select Student", "✓ สร้างและเลือกนักเรียน")
+                          : t("✓ Create Guardian Student", "✓ สร้างนักเรียนของผู้ปกครอง")
+                        }
+                      </button>
+                    </div>
+                  ) : (
+                    <HierarchicalStudentSelector
+                      students={students}
+                      value={studentId}
+                      onChange={setStudentId}
+                      disabled={loading || !schoolId}
+                      required
+                      schoolId={schoolId}
+                    />
+                  )}
                 </div>
-                <select
-                  id="location"
-                  value={locationId}
-                  onChange={(e) => {
-                    setLocationId(e.target.value as Id<"locations"> | "");
-                    if (e.target.value) {
-                      setRequestingNewLocation(false);
-                      setPendingLocationName("");
-                      setPendingLocationNameTh("");
-                    }
-                  }}
-                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-all"
-                  disabled={loading || !schoolId || requestingNewLocation}
-                >
-                  <option value="">
-                    {!schoolId
-                      ? t("Select school first", "เลือกโรงเรียนก่อน")
-                      : locations === undefined
-                        ? t("Loading locations...", "กำลังโหลดสถานที่...")
-                        : locations.length === 0
-                          ? t("No locations available", "ไม่มีสถานที่")
-                          : t("Select a location", "เลือกสถานที่")
-                    }
-                  </option>
-                  {locations?.map((location) => (
-                    <option key={location._id} value={location._id}>
-                      {location.name} {location.type === "guardian" ? "👨‍👩‍👧" : ""}
-                    </option>
-                  ))}
-                </select>
+              </div>
 
-                {/* Request new location button */}
-                {userRole === "teacher" && schoolId && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRequestingNewLocation(!requestingNewLocation);
-                        if (!requestingNewLocation) {
-                          setLocationId("");
-                        } else {
-                          setPendingLocationName("");
-                          setPendingLocationNameTh("");
+              {/* Step 4: Location & Date Selection */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className={`transition-opacity ${schoolId ? 'opacity-100' : 'opacity-50'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">
+                      {(userRole === "admin" || userRole === "moderator") ? "4" : "3"}
+                    </span>
+                    <label htmlFor="location" className="block text-sm font-medium">
+                      {t("Location", "สถานที่")} *
+                    </label>
+                  </div>
+                  <select
+                    id="location"
+                    value={locationId}
+                    onChange={(e) => {
+                      setLocationId(e.target.value as Id<"locations"> | "");
+                      if (e.target.value) {
+                        setRequestingNewLocation(false);
+                        setPendingLocationName("");
+                        setPendingLocationNameTh("");
+                        setCreatingLocation(false);
+                        setNewLocationName("");
+                        setNewLocationNameTh("");
+                      }
+                    }}
+                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-all"
+                    disabled={loading || !schoolId || requestingNewLocation || creatingLocation}
+                  >
+                    <option value="">
+                      {!schoolId
+                        ? t("Select school first", "เลือกโรงเรียนก่อน")
+                        : locations === undefined
+                          ? t("Loading locations...", "กำลังโหลดสถานที่...")
+                          : locations.length === 0
+                            ? t("No locations available", "ไม่มีสถานที่")
+                            : t("Select a location", "เลือกสถานที่")
+                      }
+                    </option>
+                    {locations?.map((location) => (
+                      <option key={location._id} value={location._id}>
+                        {location.name} {location.type === "guardian" ? "👨‍👩‍👧" : ""}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Request new location button (for teachers) */}
+                  {userRole === "teacher" && schoolId && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRequestingNewLocation(!requestingNewLocation);
+                          if (!requestingNewLocation) {
+                            setLocationId("");
+                          } else {
+                            setPendingLocationName("");
+                            setPendingLocationNameTh("");
+                          }
+                        }}
+                        className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
+                      >
+                        <MapPin className="w-4 h-4" />
+                        {requestingNewLocation
+                          ? t("Use existing location", "ใช้สถานที่ที่มีอยู่")
+                          : t("Request new location", "ขอสถานที่ใหม่")
+                        }
+                      </button>
+                      <span className="text-gray-300">|</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowProposalForm(true)}
+                        className="text-sm text-green-500 hover:text-green-600 flex items-center gap-1"
+                      >
+                        <MapPin className="w-4 h-4" />
+                        {t("Propose New Location", "เสนอสถานที่ใหม่")}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Create new location button (for moderators/admins) */}
+                  {(userRole === "moderator" || userRole === "admin") && schoolId && (
+                    <div className="mt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCreatingLocation(!creatingLocation);
+                          if (!creatingLocation) {
+                            setLocationId("");
+                          } else {
+                            setNewLocationName("");
+                            setNewLocationNameTh("");
+                          }
+                        }}
+                        className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1 font-medium"
+                      >
+                        <MapPin className="w-4 h-4" />
+                        {creatingLocation
+                          ? t("← Select Existing Location", "← เลือกสถานที่ที่มีอยู่")
+                          : t("+ Create New Location", "+ สร้างสถานที่ใหม่")
+                        }
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Location creation form (for moderators/admins) */}
+                  {creatingLocation && schoolId && (userRole === "moderator" || userRole === "admin") && (
+                    <div className="mt-3 space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <input
+                        type="text"
+                        placeholder={t("Location Name (English) *", "ชื่อสถานที่ (อังกฤษ) *")}
+                        value={newLocationName}
+                        onChange={(e) => setNewLocationName(e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        disabled={loading}
+                      />
+                      <input
+                        type="text"
+                        placeholder={t("Location Name (Thai) *", "ชื่อสถานที่ (ไทย) *")}
+                        value={newLocationNameTh}
+                        onChange={(e) => setNewLocationNameTh(e.target.value)}
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        disabled={loading}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleCreateLocation}
+                        disabled={loading}
+                        className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
+                      >
+                        {t("✓ Create & Select Location", "✓ สร้างและเลือกสถานที่")}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Guardian Title (only if guardian location selected) */}
+                {isGuardianLocation && (
+                  <div>
+                    <label htmlFor="guardianTitle" className="block text-sm font-medium mb-2">
+                      {t("Guardian Title", "ความสัมพันธ์กับผู้ปกครอง")} *
+                    </label>
+                    <input
+                      type="text"
+                      id="guardianTitle"
+                      value={guardianTitle}
+                      onChange={(e) => setGuardianTitle(e.target.value)}
+                      placeholder={t("e.g. Mom, Dad, Grandma", "เช่น แม่, พ่อ, ยาย")}
+                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                      required={isGuardianLocation}
+                      disabled={loading}
+                    />
+                    <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                      {t(
+                        "Classes at guardian's home are auto-approved",
+                        "ชั้นเรียนที่บ้านผู้ปกครองจะได้รับการอนุมัติอัตโนมัติ"
+                      )}
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <label htmlFor="date" className="block text-sm font-medium mb-2">
+                    {t("Start Date", "วันที่เริ่มต้น")}
+                  </label>
+
+                  {/* Multi-date calendar button (supports single or multiple dates) */}
+                  <button
+                    type="button"
+                    onClick={() => setShowCalendar(!showCalendar)}
+                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 text-left flex items-center justify-between"
+                    disabled={loading}
+                  >
+                    <span className={selectedDates.length > 0 ? "text-gray-900 dark:text-white" : "text-gray-500"}>
+                      {selectedDates.length > 0
+                        ? t(`${selectedDates.length} date${selectedDates.length > 1 ? 's' : ''} selected`, `เลือกแล้ว ${selectedDates.length} วัน`)
+                        : t("Select date(s)", "เลือกวันที่")
+                      }
+                    </span>
+                    <Calendar className="w-5 h-5 text-gray-400" />
+                  </button>
+
+                  {/* Fallback to datetime-local input for manual entry */}
+                  <input
+                    type="datetime-local"
+                    id="date"
+                    value={scheduledDate}
+                    onChange={(e) => {
+                      setScheduledDate(e.target.value);
+                      setSelectedDates([]); // Clear calendar selection
+                    }}
+                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 touch-manipulation transition-shadow mt-2"
+                    disabled={loading}
+                    placeholder={t("Or enter date/time manually", "หรือกรอกวันที่/เวลาด้วยตนเอง")}
+                  />
+                </div>
+              </div>
+
+              {/* Calendar Picker - supports single or multiple date selection */}
+              {showCalendar && (
+                <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-900">
+                  <MultiDateCalendar
+                    selectedDates={selectedDates}
+                    onDatesChange={setSelectedDates}
+                    minDate={new Date()}
+                    maxSelections={14}
+                  />
+                  {/* Time picker for all selected dates */}
+                  {selectedDates.length > 0 && (
+                    <div className="mt-4">
+                      <label htmlFor="time" className="block text-sm font-medium mb-2">
+                        {t(
+                          selectedDates.length > 1 ? "Time for all classes" : "Select Time",
+                          selectedDates.length > 1 ? "เวลาสำหรับทุกคลาส" : "เลือกเวลา"
+                        )}
+                      </label>
+                      <input
+                        type="time"
+                        id="time"
+                        value={selectedTime}
+                        onChange={(e) => setSelectedTime(e.target.value)}
+                        className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Recurring Weekly Booking Option */}
+              {(selectedDates.length > 0 || scheduledDate) && (
+                <div className="border border-green-200 dark:border-green-800 rounded-xl p-4 bg-green-50 dark:bg-green-900/20">
+                  <div className="flex items-center gap-3 mb-3">
+                    <input
+                      type="checkbox"
+                      id="recurringWeekly"
+                      checked={isRecurringWeekly}
+                      onChange={(e) => {
+                        setIsRecurringWeekly(e.target.checked);
+                        if (!e.target.checked) {
+                          // Reset when disabled
+                          setRecurringWeeks(12);
                         }
                       }}
-                      className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1"
-                    >
-                      <MapPin className="w-4 h-4" />
-                      {requestingNewLocation
-                        ? t("Use existing location", "ใช้สถานที่ที่มีอยู่")
-                        : t("Request new location", "ขอสถานที่ใหม่")
-                      }
-                    </button>
-                    <span className="text-gray-300">|</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowProposalForm(true)}
-                      className="text-sm text-green-500 hover:text-green-600 flex items-center gap-1"
-                    >
-                      <MapPin className="w-4 h-4" />
-                      {t("Propose New Location", "เสนอสถานที่ใหม่")}
-                    </button>
+                      className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500"
+                      disabled={loading}
+                    />
+                    <label htmlFor="recurringWeekly" className="text-sm font-medium cursor-pointer">
+                      {t("Recurring Weekly", "ซ้ำทุกสัปดาห์")}
+                    </label>
                   </div>
-                )}
-              </div>
 
-              {/* Guardian Title (only if guardian location selected) */}
-              {isGuardianLocation && (
-                <div>
-                  <label htmlFor="guardianTitle" className="block text-sm font-medium mb-2">
-                    {t("Guardian Title", "ความสัมพันธ์กับผู้ปกครอง")} *
-                  </label>
-                  <input
-                    type="text"
-                    id="guardianTitle"
-                    value={guardianTitle}
-                    onChange={(e) => setGuardianTitle(e.target.value)}
-                    placeholder={t("e.g. Mom, Dad, Grandma", "เช่น แม่, พ่อ, ยาย")}
-                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                    required={isGuardianLocation}
-                    disabled={loading}
-                  />
-                  <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                  {isRecurringWeekly && (
+                    <div className="space-y-3 mt-4">
+                      <div>
+                        <label htmlFor="recurringWeeks" className="block text-sm font-medium mb-2">
+                          {t("Number of Weeks", "จำนวนสัปดาห์")}
+                        </label>
+                        <input
+                          type="number"
+                          id="recurringWeeks"
+                          min="1"
+                          max="52"
+                          value={recurringWeeks}
+                          onChange={(e) => setRecurringWeeks(Math.max(1, Math.min(52, Number.parseInt(e.target.value) || 1)))}
+                          className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:border-gray-600"
+                          disabled={loading}
+                        />
+                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                          {t(
+                            `Will book ${recurringWeeks} classes, repeating every week on the same day`,
+                            `จะจองคลาส ${recurringWeeks} ครั้ง ซ้ำทุกสัปดาห์ในวันเดียวกัน`
+                          )}
+                        </p>
+                      </div>
+
+                      {/* Preview of recurring dates */}
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                        <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          {t("Preview of Dates:", "ตัวอย่างวันที่:")}
+                        </p>
+                        <div className="space-y-1 max-h-40 overflow-y-auto">
+                          {(() => {
+                            const baseDate = selectedDates.length > 0
+                              ? new Date(selectedDates[0])
+                              : new Date(scheduledDate);
+                            const [hours, minutes] = selectedDates.length > 0
+                              ? selectedTime.split(":")
+                              : [baseDate.getHours().toString(), baseDate.getMinutes().toString()];
+
+                            return Array.from({ length: Math.min(recurringWeeks, 10) }, (_, i) => {
+                              const date = new Date(baseDate);
+                              date.setDate(baseDate.getDate() + (i * 7));
+                              date.setHours(Number.parseInt(hours), Number.parseInt(minutes));
+                              return (
+                                <div key={i} className="text-xs text-gray-600 dark:text-gray-400">
+                                  {i + 1}. {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                              );
+                            });
+                          })()}
+                          {recurringWeeks > 10 && (
+                            <div className="text-xs text-gray-500 italic">
+                              {t(`... and ${recurringWeeks - 10} more`, `... และอีก ${recurringWeeks - 10} วัน`)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* New location request fields */}
+              {requestingNewLocation && (
+                <div className="border border-blue-200 dark:border-blue-800 rounded-xl p-4 bg-blue-50 dark:bg-blue-900/20">
+                  <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-blue-500" />
+                    {t("Request New Location", "ขอสถานที่ใหม่")}
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="pendingLocationName" className="block text-sm font-medium mb-2">
+                        {t("Location Name (English)", "ชื่อสถานที่ (อังกฤษ)")}
+                      </label>
+                      <input
+                        type="text"
+                        id="pendingLocationName"
+                        value={pendingLocationName}
+                        onChange={(e) => setPendingLocationName(e.target.value)}
+                        className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        placeholder={t("e.g., Room 301", "เช่น ห้อง 301")}
+                        required={requestingNewLocation}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="pendingLocationNameTh" className="block text-sm font-medium mb-2">
+                        {t("Location Name (Thai)", "ชื่อสถานที่ (ไทย)")}
+                      </label>
+                      <input
+                        type="text"
+                        id="pendingLocationNameTh"
+                        value={pendingLocationNameTh}
+                        onChange={(e) => setPendingLocationNameTh(e.target.value)}
+                        className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        placeholder={t("e.g., ห้อง 301", "เช่น ห้อง 301")}
+                        required={requestingNewLocation}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
                     {t(
-                      "Classes at guardian's home are auto-approved",
-                      "ชั้นเรียนที่บ้านผู้ปกครองจะได้รับการอนุมัติอัตโนมัติ"
+                      "This location will need moderator approval before being used.",
+                      "สถานที่นี้จะต้องได้รับการอนุมัติจากผู้ดูแลก่อนจึงจะสามารถใช้งานได้"
                     )}
                   </p>
                 </div>
               )}
 
-              <div>
-                <label htmlFor="date" className="block text-sm font-medium mb-2">
-                  {t("Start Date", "วันที่เริ่มต้น")}
-                </label>
-
-                {/* Multi-date calendar button (supports single or multiple dates) */}
+              {/* Optional Fields Section */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
                 <button
                   type="button"
-                  onClick={() => setShowCalendar(!showCalendar)}
-                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 text-left flex items-center justify-between"
-                  disabled={loading}
+                  onClick={() => setShowOptionalFields(!showOptionalFields)}
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between transition-colors"
                 >
-                  <span className={selectedDates.length > 0 ? "text-gray-900 dark:text-white" : "text-gray-500"}>
-                    {selectedDates.length > 0
-                      ? t(`${selectedDates.length} date${selectedDates.length > 1 ? 's' : ''} selected`, `เลือกแล้ว ${selectedDates.length} วัน`)
-                      : t("Select date(s)", "เลือกวันที่")
-                    }
+                  <span className="text-sm font-medium">
+                    {t("Additional Class Details (Optional)", "รายละเอียดเพิ่มเติม (ไม่บังคับ)")}
                   </span>
-                  <Calendar className="w-5 h-5 text-gray-400" />
+                  {showOptionalFields ? (
+                    <ChevronUp className="w-5 h-5 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                  )}
                 </button>
 
-                {/* Fallback to datetime-local input for manual entry */}
-                <input
-                  type="datetime-local"
-                  id="date"
-                  value={scheduledDate}
-                  onChange={(e) => {
-                    setScheduledDate(e.target.value);
-                    setSelectedDates([]); // Clear calendar selection
-                  }}
-                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 touch-manipulation transition-shadow mt-2"
-                  disabled={loading}
-                  placeholder={t("Or enter date/time manually", "หรือกรอกวันที่/เวลาด้วยตนเอง")}
-                />
-              </div>
-            </div>
-
-            {/* Calendar Picker - supports single or multiple date selection */}
-            {showCalendar && (
-              <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-900">
-                <MultiDateCalendar
-                  selectedDates={selectedDates}
-                  onDatesChange={setSelectedDates}
-                  minDate={new Date()}
-                  maxSelections={14}
-                />
-                {/* Time picker for all selected dates */}
-                {selectedDates.length > 0 && (
-                  <div className="mt-4">
-                    <label htmlFor="time" className="block text-sm font-medium mb-2">
-                      {t(
-                        selectedDates.length > 1 ? "Time for all classes" : "Select Time",
-                        selectedDates.length > 1 ? "เวลาสำหรับทุกคลาส" : "เลือกเวลา"
-                      )}
-                    </label>
-                    <input
-                      type="time"
-                      id="time"
-                      value={selectedTime}
-                      onChange={(e) => setSelectedTime(e.target.value)}
-                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Recurring Weekly Booking Option */}
-            {(selectedDates.length > 0 || scheduledDate) && (
-              <div className="border border-green-200 dark:border-green-800 rounded-xl p-4 bg-green-50 dark:bg-green-900/20">
-                <div className="flex items-center gap-3 mb-3">
-                  <input
-                    type="checkbox"
-                    id="recurringWeekly"
-                    checked={isRecurringWeekly}
-                    onChange={(e) => {
-                      setIsRecurringWeekly(e.target.checked);
-                      if (!e.target.checked) {
-                        // Reset when disabled
-                        setRecurringWeeks(12);
-                      }
-                    }}
-                    className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500"
-                    disabled={loading}
-                  />
-                  <label htmlFor="recurringWeekly" className="text-sm font-medium cursor-pointer">
-                    {t("Recurring Weekly", "ซ้ำทุกสัปดาห์")}
-                  </label>
-                </div>
-
-                {isRecurringWeekly && (
-                  <div className="space-y-3 mt-4">
+                {showOptionalFields && (
+                  <div className="p-4 space-y-4">
+                    {/* Duration */}
                     <div>
-                      <label htmlFor="recurringWeeks" className="block text-sm font-medium mb-2">
-                        {t("Number of Weeks", "จำนวนสัปดาห์")}
+                      <label htmlFor="duration" className="block text-sm font-medium mb-2">
+                        {t("Duration (minutes)", "ระยะเวลา (นาที)")}
                       </label>
                       <input
                         type="number"
-                        id="recurringWeeks"
-                        min="1"
-                        max="52"
-                        value={recurringWeeks}
-                        onChange={(e) => setRecurringWeeks(Math.max(1, Math.min(52, Number.parseInt(e.target.value) || 1)))}
-                        className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:border-gray-600"
-                        disabled={loading}
+                        id="duration"
+                        value={duration}
+                        onChange={(e) => setDuration(e.target.value)}
+                        placeholder="60"
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
                       />
-                      <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                        {t(
-                          `Will book ${recurringWeeks} classes, repeating every week on the same day`,
-                          `จะจองคลาส ${recurringWeeks} ครั้ง ซ้ำทุกสัปดาห์ในวันเดียวกัน`
-                        )}
-                      </p>
                     </div>
 
-                    {/* Preview of recurring dates */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                      <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        {t("Preview of Dates:", "ตัวอย่างวันที่:")}
-                      </p>
-                      <div className="space-y-1 max-h-40 overflow-y-auto">
-                        {(() => {
-                          const baseDate = selectedDates.length > 0
-                            ? new Date(selectedDates[0])
-                            : new Date(scheduledDate);
-                          const [hours, minutes] = selectedDates.length > 0
-                            ? selectedTime.split(":")
-                            : [baseDate.getHours().toString(), baseDate.getMinutes().toString()];
-
-                          return Array.from({ length: Math.min(recurringWeeks, 10) }, (_, i) => {
-                            const date = new Date(baseDate);
-                            date.setDate(baseDate.getDate() + (i * 7));
-                            date.setHours(Number.parseInt(hours), Number.parseInt(minutes));
-                            return (
-                              <div key={i} className="text-xs text-gray-600 dark:text-gray-400">
-                                {i + 1}. {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </div>
-                            );
-                          });
-                        })()}
-                        {recurringWeeks > 10 && (
-                          <div className="text-xs text-gray-500 italic">
-                            {t(`... and ${recurringWeeks - 10} more`, `... และอีก ${recurringWeeks - 10} วัน`)}
-                          </div>
-                        )}
+                    {/* Subject */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="subject" className="block text-sm font-medium mb-2">
+                          {t("Subject (English)", "วิชา (อังกฤษ)")}
+                        </label>
+                        <input
+                          type="text"
+                          id="subject"
+                          value={subject}
+                          onChange={(e) => setSubject(e.target.value)}
+                          placeholder={t("e.g., Math", "เช่น คณิตศาสตร์")}
+                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="subjectTh" className="block text-sm font-medium mb-2">
+                          {t("Subject (Thai)", "วิชา (ไทย)")}
+                        </label>
+                        <input
+                          type="text"
+                          id="subjectTh"
+                          value={subjectTh}
+                          onChange={(e) => setSubjectTh(e.target.value)}
+                          placeholder={t("e.g., คณิตศาสตร์", "เช่น คณิตศาสตร์")}
+                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        />
                       </div>
                     </div>
+
+                    {/* Lesson Topic */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="lessonTopic" className="block text-sm font-medium mb-2">
+                          {t("Lesson Topic (English)", "หัวข้อบทเรียน (อังกฤษ)")}
+                        </label>
+                        <input
+                          type="text"
+                          id="lessonTopic"
+                          value={lessonTopic}
+                          onChange={(e) => setLessonTopic(e.target.value)}
+                          placeholder={t("e.g., Fractions", "เช่น เศษส่วน")}
+                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="lessonTopicTh" className="block text-sm font-medium mb-2">
+                          {t("Lesson Topic (Thai)", "หัวข้อบทเรียน (ไทย)")}
+                        </label>
+                        <input
+                          type="text"
+                          id="lessonTopicTh"
+                          value={lessonTopicTh}
+                          onChange={(e) => setLessonTopicTh(e.target.value)}
+                          placeholder={t("e.g., เศษส่วน", "เช่น เศษส่วน")}
+                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Materials */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="materials" className="block text-sm font-medium mb-2">
+                          {t("Materials Needed (English)", "อุปกรณ์ที่ต้องใช้ (อังกฤษ)")}
+                        </label>
+                        <textarea
+                          id="materials"
+                          value={materials}
+                          onChange={(e) => setMaterials(e.target.value)}
+                          rows={2}
+                          placeholder={t("e.g., Textbook, calculator", "เช่น หนังสือเรียน, เครื่องคิดเลข")}
+                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="materialsTh" className="block text-sm font-medium mb-2">
+                          {t("Materials Needed (Thai)", "อุปกรณ์ที่ต้องใช้ (ไทย)")}
+                        </label>
+                        <textarea
+                          id="materialsTh"
+                          value={materialsTh}
+                          onChange={(e) => setMaterialsTh(e.target.value)}
+                          rows={2}
+                          placeholder={t("e.g., หนังสือเรียน, เครื่องคิดเลข", "เช่น หนังสือเรียน, เครื่องคิดเลข")}
+                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Preparation Notes */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="preparationNotes" className="block text-sm font-medium mb-2">
+                          {t("Preparation Notes (English)", "หมายเหตุการเตรียมการ (อังกฤษ)")}
+                        </label>
+                        <textarea
+                          id="preparationNotes"
+                          value={preparationNotes}
+                          onChange={(e) => setPreparationNotes(e.target.value)}
+                          rows={2}
+                          placeholder={t("e.g., Review chapter 3", "เช่น ทบทวนบทที่ 3")}
+                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="preparationNotesTh" className="block text-sm font-medium mb-2">
+                          {t("Preparation Notes (Thai)", "หมายเหตุการเตรียมการ (ไทย)")}
+                        </label>
+                        <textarea
+                          id="preparationNotesTh"
+                          value={preparationNotesTh}
+                          onChange={(e) => setPreparationNotesTh(e.target.value)}
+                          rows={2}
+                          placeholder={t("e.g., ทบทวนบทที่ 3", "เช่น ทบทวนบทที่ 3")}
+                          className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Class Type */}
+                    <div>
+                      <label htmlFor="classType" className="block text-sm font-medium mb-2">
+                        {t("Class Type", "ประเภทคลาส")}
+                      </label>
+                      <select
+                        id="classType"
+                        value={classType}
+                        onChange={(e) => setClassType(e.target.value as typeof classType)}
+                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                      >
+                        <option value="regular">{t("Regular", "ปกติ")}</option>
+                        <option value="makeup">{t("Makeup", "ชดเชย")}</option>
+                        <option value="trial">{t("Trial", "ทดลอง")}</option>
+                        <option value="assessment">{t("Assessment", "ประเมินผล")}</option>
+                      </select>
+                    </div>
                   </div>
                 )}
               </div>
-            )}
 
-            {/* New location request fields */}
-            {requestingNewLocation && (
-              <div className="border border-blue-200 dark:border-blue-800 rounded-xl p-4 bg-blue-50 dark:bg-blue-900/20">
-                <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-blue-500" />
-                  {t("Request New Location", "ขอสถานที่ใหม่")}
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="pendingLocationName" className="block text-sm font-medium mb-2">
-                      {t("Location Name (English)", "ชื่อสถานที่ (อังกฤษ)")}
-                    </label>
-                    <input
-                      type="text"
-                      id="pendingLocationName"
-                      value={pendingLocationName}
-                      onChange={(e) => setPendingLocationName(e.target.value)}
-                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      placeholder={t("e.g., Room 301", "เช่น ห้อง 301")}
-                      required={requestingNewLocation}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="pendingLocationNameTh" className="block text-sm font-medium mb-2">
-                      {t("Location Name (Thai)", "ชื่อสถานที่ (ไทย)")}
-                    </label>
-                    <input
-                      type="text"
-                      id="pendingLocationNameTh"
-                      value={pendingLocationNameTh}
-                      onChange={(e) => setPendingLocationNameTh(e.target.value)}
-                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      placeholder={t("e.g., ห้อง 301", "เช่น ห้อง 301")}
-                      required={requestingNewLocation}
-                    />
-                  </div>
-                </div>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                  {t(
-                    "This location will need moderator approval before being used.",
-                    "สถานที่นี้จะต้องได้รับการอนุมัติจากผู้ดูแลก่อนจึงจะสามารถใช้งานได้"
-                  )}
-                </p>
-              </div>
-            )}
-
-            {/* Optional Fields Section */}
-            <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setShowOptionalFields(!showOptionalFields)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between transition-colors"
-              >
-                <span className="text-sm font-medium">
-                  {t("Additional Class Details (Optional)", "รายละเอียดเพิ่มเติม (ไม่บังคับ)")}
-                </span>
-                {showOptionalFields ? (
-                  <ChevronUp className="w-5 h-5 text-gray-400" />
-                ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-400" />
-                )}
-              </button>
-
-              {showOptionalFields && (
-                <div className="p-4 space-y-4">
-                  {/* Duration */}
-                  <div>
-                    <label htmlFor="duration" className="block text-sm font-medium mb-2">
-                      {t("Duration (minutes)", "ระยะเวลา (นาที)")}
-                    </label>
-                    <input
-                      type="number"
-                      id="duration"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                      placeholder="60"
-                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                    />
-                  </div>
-
-                  {/* Subject */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="subject" className="block text-sm font-medium mb-2">
-                        {t("Subject (English)", "วิชา (อังกฤษ)")}
-                      </label>
-                      <input
-                        type="text"
-                        id="subject"
-                        value={subject}
-                        onChange={(e) => setSubject(e.target.value)}
-                        placeholder={t("e.g., Math", "เช่น คณิตศาสตร์")}
-                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="subjectTh" className="block text-sm font-medium mb-2">
-                        {t("Subject (Thai)", "วิชา (ไทย)")}
-                      </label>
-                      <input
-                        type="text"
-                        id="subjectTh"
-                        value={subjectTh}
-                        onChange={(e) => setSubjectTh(e.target.value)}
-                        placeholder={t("e.g., คณิตศาสตร์", "เช่น คณิตศาสตร์")}
-                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Lesson Topic */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="lessonTopic" className="block text-sm font-medium mb-2">
-                        {t("Lesson Topic (English)", "หัวข้อบทเรียน (อังกฤษ)")}
-                      </label>
-                      <input
-                        type="text"
-                        id="lessonTopic"
-                        value={lessonTopic}
-                        onChange={(e) => setLessonTopic(e.target.value)}
-                        placeholder={t("e.g., Fractions", "เช่น เศษส่วน")}
-                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="lessonTopicTh" className="block text-sm font-medium mb-2">
-                        {t("Lesson Topic (Thai)", "หัวข้อบทเรียน (ไทย)")}
-                      </label>
-                      <input
-                        type="text"
-                        id="lessonTopicTh"
-                        value={lessonTopicTh}
-                        onChange={(e) => setLessonTopicTh(e.target.value)}
-                        placeholder={t("e.g., เศษส่วน", "เช่น เศษส่วน")}
-                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Materials */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="materials" className="block text-sm font-medium mb-2">
-                        {t("Materials Needed (English)", "อุปกรณ์ที่ต้องใช้ (อังกฤษ)")}
-                      </label>
-                      <textarea
-                        id="materials"
-                        value={materials}
-                        onChange={(e) => setMaterials(e.target.value)}
-                        rows={2}
-                        placeholder={t("e.g., Textbook, calculator", "เช่น หนังสือเรียน, เครื่องคิดเลข")}
-                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="materialsTh" className="block text-sm font-medium mb-2">
-                        {t("Materials Needed (Thai)", "อุปกรณ์ที่ต้องใช้ (ไทย)")}
-                      </label>
-                      <textarea
-                        id="materialsTh"
-                        value={materialsTh}
-                        onChange={(e) => setMaterialsTh(e.target.value)}
-                        rows={2}
-                        placeholder={t("e.g., หนังสือเรียน, เครื่องคิดเลข", "เช่น หนังสือเรียน, เครื่องคิดเลข")}
-                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Preparation Notes */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="preparationNotes" className="block text-sm font-medium mb-2">
-                        {t("Preparation Notes (English)", "หมายเหตุการเตรียมการ (อังกฤษ)")}
-                      </label>
-                      <textarea
-                        id="preparationNotes"
-                        value={preparationNotes}
-                        onChange={(e) => setPreparationNotes(e.target.value)}
-                        rows={2}
-                        placeholder={t("e.g., Review chapter 3", "เช่น ทบทวนบทที่ 3")}
-                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="preparationNotesTh" className="block text-sm font-medium mb-2">
-                        {t("Preparation Notes (Thai)", "หมายเหตุการเตรียมการ (ไทย)")}
-                      </label>
-                      <textarea
-                        id="preparationNotesTh"
-                        value={preparationNotesTh}
-                        onChange={(e) => setPreparationNotesTh(e.target.value)}
-                        rows={2}
-                        placeholder={t("e.g., ทบทวนบทที่ 3", "เช่น ทบทวนบทที่ 3")}
-                        className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Class Type */}
-                  <div>
-                    <label htmlFor="classType" className="block text-sm font-medium mb-2">
-                      {t("Class Type", "ประเภทคลาส")}
-                    </label>
-                    <select
-                      id="classType"
-                      value={classType}
-                      onChange={(e) => setClassType(e.target.value as typeof classType)}
-                      className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                    >
-                      <option value="regular">{t("Regular", "ปกติ")}</option>
-                      <option value="makeup">{t("Makeup", "ชดเชย")}</option>
-                      <option value="trial">{t("Trial", "ทดลอง")}</option>
-                      <option value="assessment">{t("Assessment", "ประเมินผล")}</option>
-                    </select>
-                  </div>
+              {error && (
+                <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl md:rounded-lg text-sm">
+                  {error}
                 </div>
               )}
-            </div>
 
-            {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl md:rounded-lg text-sm">
-                {error}
+              <div className="flex flex-col md:flex-row gap-3">
+                <button
+                  type="submit"
+                  disabled={loading || !isFormValid}
+                  className="flex-1 bg-blue-500 text-white py-3.5 md:py-2.5 px-4 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-98 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation shadow-lg shadow-blue-500/20 text-base md:text-sm"
+                >
+                  {loading ? (
+                    userRole === "moderator" || userRole === "admin"
+                      ? t("Booking...", "กำลังจอง...")
+                      : t("Submitting Request...", "กำลังส่งคำขอ...")
+                  ) : (
+                    <>
+                      {userRole === "moderator" || userRole === "admin" ? (
+                        selectedDates.length > 1
+                          ? t(`Book ${selectedDates.length} Classes`, `จอง ${selectedDates.length} คลาส`)
+                          : t("Book Class", "จองคลาส")
+                      ) : (
+                        selectedDates.length > 1
+                          ? t(`Submit ${selectedDates.length} Class Requests`, `ส่งคำขอ ${selectedDates.length} คลาส`)
+                          : t("Submit Class Request", "ส่งคำขอคลาส")
+                      )}
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-4 py-3.5 md:py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-98 transition-all touch-manipulation text-base md:text-sm font-medium"
+                >
+                  {t("Cancel", "ยกเลิก")}
+                </button>
               </div>
-            )}
-
-            <div className="flex flex-col md:flex-row gap-3">
-              <button
-                type="submit"
-                disabled={loading || !isFormValid}
-                className="flex-1 bg-blue-500 text-white py-3.5 md:py-2.5 px-4 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-98 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation shadow-lg shadow-blue-500/20 text-base md:text-sm"
-              >
-                {loading ? (
-                  userRole === "moderator" || userRole === "admin"
-                    ? t("Booking...", "กำลังจอง...")
-                    : t("Submitting Request...", "กำลังส่งคำขอ...")
-                ) : (
-                  <>
-                    {userRole === "moderator" || userRole === "admin" ? (
-                      selectedDates.length > 1
-                        ? t(`Book ${selectedDates.length} Classes`, `จอง ${selectedDates.length} คลาส`)
-                        : t("Book Class", "จองคลาส")
-                    ) : (
-                      selectedDates.length > 1
-                        ? t(`Submit ${selectedDates.length} Class Requests`, `ส่งคำขอ ${selectedDates.length} คลาส`)
-                        : t("Submit Class Request", "ส่งคำขอคลาส")
-                    )}
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="px-4 py-3.5 md:py-2.5 border border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-98 transition-all touch-manipulation text-base md:text-sm font-medium"
-              >
-                {t("Cancel", "ยกเลิก")}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Classes List */}
-      <div className="space-y-4">
-        {classes?.map((classItem) => {
-          // We'll need to fetch related data for display
-          return (
-            <ClassItemDisplay
-              key={classItem._id}
-              classItem={classItem}
-              userRole={userRole}
-              userId={userId}
-              onAcknowledge={handleAcknowledge}
-              onApprove={handleApprove}
-              onReject={handleReject}
-              onDelete={handleDelete}
-              onRequestCancellation={handleRequestCancellation}
-              onEdit={(item) => {
-                // Convert classItem to Doc<"classes"> by extracting core fields
-                const classDoc = item as unknown as Doc<"classes">;
-                setEditingClass(classDoc);
-              }}
-            />
-          );
-        })}
-
-        {classes && classes.length === 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-8 md:p-6 text-center text-gray-500 dark:text-gray-400">
-            <Calendar className="w-16 h-16 md:w-12 md:h-12 mx-auto mb-3 opacity-50" />
-            <p className="text-base md:text-base">
-              {userRole === "moderator" || userRole === "admin"
-                ? t("No classes found", "ไม่พบชั้นเรียน")
-                : t("No class requests found", "ไม่พบคำขอชั้นเรียน")}
-            </p>
+            </form>
           </div>
         )}
+
+        {/* Classes List */}
+        <div className="space-y-4">
+          {classes?.map((classItem) => {
+            // We'll need to fetch related data for display
+            return (
+              <ClassItemDisplay
+                key={classItem._id}
+                classItem={classItem}
+                userRole={userRole}
+                userId={userId}
+                onAcknowledge={handleAcknowledge}
+                onApprove={handleApprove}
+                onReject={handleReject}
+                onDelete={handleDelete}
+                onRequestCancellation={handleRequestCancellation}
+                onEdit={(item) => {
+                  // Convert classItem to Doc<"classes"> by extracting core fields
+                  const classDoc = item as unknown as Doc<"classes">;
+                  setEditingClass(classDoc);
+                }}
+              />
+            );
+          })}
+
+          {classes && classes.length === 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-8 md:p-6 text-center text-gray-500 dark:text-gray-400">
+              <Calendar className="w-16 h-16 md:w-12 md:h-12 mx-auto mb-3 opacity-50" />
+              <p className="text-base md:text-base">
+                {userRole === "moderator" || userRole === "admin"
+                  ? t("No classes found", "ไม่พบชั้นเรียน")
+                  : t("No class requests found", "ไม่พบคำขอชั้นเรียน")}
+              </p>
+            </div>
+          )}
+        </div>
+        {/* End of main content container */}
       </div>
+
+      {/* MODALS - Rendered outside main container to prevent scroll issues */}
 
       {/* Edit Class Modal */}
       {editingClass && (
@@ -1536,7 +1758,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -2045,4 +2267,5 @@ function ClassItemDisplay({
     </div>
   );
 }
+
 

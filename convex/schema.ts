@@ -126,7 +126,8 @@ export default defineSchema({
     createdAt: v.number(),
     // NEW OPTIONAL FIELDS
     nickname: v.optional(v.string()), // Preferred name
-    dateOfBirth: v.optional(v.number()), // For age calculation
+    dateOfBirth: v.optional(v.number()), // For age calculation - REQUIRED for guardian students
+    area: v.optional(v.string()), // Teaching location area (e.g., "Bangkok District 1") - REQUIRED for guardian students
     parentName: v.optional(v.string()), // Primary parent
     parentPhone: v.optional(v.string()), // Contact number
     parentEmail: v.optional(v.string()), // Email contact
@@ -141,7 +142,8 @@ export default defineSchema({
     .index("by_school", ["schoolId"])
     .index("by_guardian", ["guardianName"])
     .index("by_guardian_id", ["guardianId"])
-    .index("by_created_by", ["createdBy"]),
+    .index("by_created_by", ["createdBy"])
+    .index("by_area", ["area"]), // NEW INDEX for area-based queries
 
   notifications: defineTable({
     title: v.string(),

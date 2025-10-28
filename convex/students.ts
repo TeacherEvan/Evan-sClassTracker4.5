@@ -2,7 +2,26 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { validateLength } from "./rateLimit";
 
-// Helper function to generate unique student ID
+// Helper function to generate unique ID for GUARDIAN students
+function generateGuardianStudentId(
+  firstName: string,
+  lastName: string,
+  birthDate: number,
+  area: string
+): string {
+  // Area code: first 5 chars of area, uppercase, alphanumeric only
+  const areaCode = area.substring(0, 5).toUpperCase().replace(/[^A-Z0-9]/g, '');
+  // Name hash: first 2 chars of first name + first 2 chars of last name
+  const nameHash = `${firstName.substring(0, 2)}${lastName.substring(0, 2)}`.toUpperCase();
+  // Birth hash: YYYYMMDD format
+  const birthHash = new Date(birthDate).toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
+  // Random component for collision prevention
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+
+  return `${areaCode}-${nameHash}-${birthHash}-${random}`;
+}
+
+// Helper function to generate unique ID for SCHOOL students
 function generateStudentId(firstName: string, lastName: string, schoolId: string): string {
   const timestamp = Date.now().toString(36);
   const nameHash = `${firstName.substring(0, 2)}${lastName.substring(0, 2)}`.toUpperCase();
@@ -81,7 +100,8 @@ export const create = mutation({
     createdBy: v.id("users"), // Teacher who created the student
     // Optional fields
     nickname: v.optional(v.string()),
-    dateOfBirth: v.optional(v.number()), // Timestamp
+    dateOfBirth: v.optional(v.number()), // Timestamp - REQUIRED for guardian students
+    area: v.optional(v.string()), // Teaching location area - REQUIRED for guardian students
     parentName: v.optional(v.string()),
     parentPhone: v.optional(v.string()),
     parentEmail: v.optional(v.string()),
@@ -125,10 +145,22 @@ export const create = mutation({
     }
     if (args.nickname) validateLength(args.nickname, "Nickname", 100, 0);
     if (args.notes) validateLength(args.notes, "Notes", 2000, 0);
+    if (args.area) validateLength(args.area, "Area", 100, 0);
 
     // Validate: class is required for school-linked students
     if (args.schoolId && !args.class) {
       throw new Error("Class is required for students linked to a school");
+    }
+
+    // NEW: Validate guardian student requirements
+    const isGuardianStudent = !!(args.guardianId || args.guardianName);
+    if (isGuardianStudent) {
+      if (!args.dateOfBirth) {
+        throw new Error("Guardian students must have a birth date for unique identification");
+      }
+      if (!args.area) {
+        throw new Error("Guardian students must have a teaching area for unique identification");
+      }
     }
 
     // ✅ PREVENT DUPLICATES: Check if student already exists with same name + grade + class + school
@@ -153,9 +185,43 @@ export const create = mutation({
       }
     }
 
-    // Generate unique student ID
-    const schoolIdForHash = args.schoolId || "GUARDIAN";
-    let studentId = generateStudentId(args.firstName, args.lastName || "", schoolIdForHash);
+    // NEW: ✅ PREVENT DUPLICATES for guardian students (name + birthDate + area)
+    if (isGuardianStudent && args.area) {
+      const areaStudents = await ctx.db
+        .query("students")
+        .withIndex("by_area", (q) => q.eq("area", args.area!))
+        .collect();
+
+      const guardianDuplicate = areaStudents.find(
+        (s) =>
+          s.firstName.toLowerCase() === args.firstName.toLowerCase() &&
+          (s.lastName || "").toLowerCase() === (args.lastName || "").toLowerCase() &&
+          s.dateOfBirth === args.dateOfBirth
+      );
+
+      if (guardianDuplicate) {
+        throw new Error(
+          `Guardian student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" with this birth date already exists in ${args.area} (ID: ${guardianDuplicate.studentId})`
+        );
+      }
+    }
+
+    // Generate unique student ID based on student type
+    let studentId: string;
+
+    if (isGuardianStudent && args.dateOfBirth && args.area) {
+      // Guardian student: use birthDate + area based ID
+      studentId = generateGuardianStudentId(
+        args.firstName,
+        args.lastName || "",
+        args.dateOfBirth,
+        args.area
+      );
+    } else {
+      // School student: use timestamp based ID
+      const schoolIdForHash = args.schoolId || "NOSCHOOL";
+      studentId = generateStudentId(args.firstName, args.lastName || "", schoolIdForHash);
+    }
 
     // Check for duplicates and regenerate if necessary
     let attempts = 0;
@@ -171,8 +237,13 @@ export const create = mutation({
         break;
       }
 
-      // Regenerate with new random component
-      studentId = generateStudentId(args.firstName, args.lastName, schoolIdForHash);
+      // Regenerate with new random component based on student type
+      if (isGuardianStudent && args.dateOfBirth && args.area) {
+        studentId = generateGuardianStudentId(args.firstName, args.lastName || "", args.dateOfBirth, args.area);
+      } else {
+        const schoolIdForHash = args.schoolId || "NOSCHOOL";
+        studentId = generateStudentId(args.firstName, args.lastName || "", schoolIdForHash);
+      }
       attempts++;
     }
 
@@ -198,6 +269,7 @@ export const create = mutation({
       // Optional fields
       nickname: args.nickname,
       dateOfBirth: args.dateOfBirth,
+      area: args.area, // NEW: Teaching location area
       parentName: args.parentName,
       parentPhone: args.parentPhone,
       parentEmail: args.parentEmail,

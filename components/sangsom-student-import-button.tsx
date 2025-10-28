@@ -8,14 +8,21 @@ import { useMutation } from "convex/react";
 import { CheckCircle, Users } from "lucide-react";
 import { useState } from "react";
 
+type ClassType = "K1/9" | "K2/6" | "K2/8" | "K1/6" | "K1/5" | "K1/1";
+
 /**
- * Admin component to import Sangsom K1/9 student roster
- * Imports 27 students from the documented class roster into the Sangsom School
+ * Admin component to import Sangsom student rosters
+ * Supports K1/9, K2/6, K2/8, K1/6, K1/5, K1/1
  */
 export function SangsomStudentImportButton() {
     const { t } = useLanguage();
     const findSangsomSchool = useMutation(api.importSangsomStudents.findSangsomSchool);
     const importK19Students = useMutation(api.importSangsomStudents.importK19Students);
+    const importK26Students = useMutation(api.importSangsomStudents.importK26Students);
+    const importK28Students = useMutation(api.importSangsomStudentsExtra.importK28Students);
+    const importK16Students = useMutation(api.importSangsomStudentsExtra.importK16Students);
+    const importK15Students = useMutation(api.importSangsomStudentsExtra.importK15Students);
+    const importK11Students = useMutation(api.importSangsomStudentsExtra.importK11Students);
 
     const [loading, setLoading] = useState(false);
     const [schoolCheck, setSchoolCheck] = useState<{
@@ -40,12 +47,12 @@ export function SangsomStudentImportButton() {
 
             if (data.found) {
                 toast.success(
-                    `Found Sangsom School: ${data.schoolName}`,
+                    `Found Sangsom Kindergarten: ${data.schoolName}`,
                     `พบโรงเรียนสังสม: ${data.schoolName}`
                 );
             } else {
                 toast.error(
-                    data.message || "Sangsom School not found. Please seed Sangsom data first.",
+                    data.message || "Sangsom Kindergarten not found. Please seed Sangsom data first.",
                     "ไม่พบโรงเรียนสังสม กรุณาเพิ่มข้อมูลสังสมก่อน"
                 );
             }
@@ -59,7 +66,7 @@ export function SangsomStudentImportButton() {
         }
     };
 
-    const handleImport = async () => {
+    const handleImport = async (classType: ClassType) => {
         if (!schoolCheck?.found || !schoolCheck?.schoolId) {
             toast.error(
                 "Please check school existence first",
@@ -79,15 +86,51 @@ export function SangsomStudentImportButton() {
             }
             const user = JSON.parse(userStr);
 
-            const res = await importK19Students({
-                schoolId: schoolCheck.schoolId,
-                createdBy: user._id as Id<"users">,
-            });
+            let res;
+            switch (classType) {
+                case "K1/9":
+                    res = await importK19Students({
+                        schoolId: schoolCheck.schoolId,
+                        createdBy: user._id as Id<"users">,
+                    });
+                    break;
+                case "K2/6":
+                    res = await importK26Students({
+                        schoolId: schoolCheck.schoolId,
+                        createdBy: user._id as Id<"users">,
+                    });
+                    break;
+                case "K2/8":
+                    res = await importK28Students({
+                        schoolId: schoolCheck.schoolId,
+                        createdBy: user._id as Id<"users">,
+                    });
+                    break;
+                case "K1/6":
+                    res = await importK16Students({
+                        schoolId: schoolCheck.schoolId,
+                        createdBy: user._id as Id<"users">,
+                    });
+                    break;
+                case "K1/5":
+                    res = await importK15Students({
+                        schoolId: schoolCheck.schoolId,
+                        createdBy: user._id as Id<"users">,
+                    });
+                    break;
+                case "K1/1":
+                    res = await importK11Students({
+                        schoolId: schoolCheck.schoolId,
+                        createdBy: user._id as Id<"users">,
+                    });
+                    break;
+            }
+
             setResult(res);
 
             toast.success(
-                `Successfully imported ${res.imported} students! Failed: ${res.failed}`,
-                `นำเข้า ${res.imported} นักเรียนสำเร็จ! ไม่สำเร็จ: ${res.failed}`
+                `Successfully imported ${res.imported} students (${classType})! Failed: ${res.failed}`,
+                `นำเข้า ${res.imported} นักเรียน (${classType}) สำเร็จ! ไม่สำเร็จ: ${res.failed}`
             );
         } catch (err) {
             toast.error(
@@ -105,12 +148,12 @@ export function SangsomStudentImportButton() {
                 <Users className="w-8 h-8 text-purple-500" />
                 <div>
                     <h2 className="text-2xl font-bold">
-                        {t("Sangsom K1/9 Student Import", "นำเข้านักเรียน สังสม อ.1/9")}
+                        {t("Sangsom Student Import", "นำเข้านักเรียน สังสม")}
                     </h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                         {t(
-                            "Import 27 students from K1/9 class roster",
-                            "นำเข้า 27 นักเรียนจากรายชื่อชั้น อ.1/9"
+                            "Import students from K1/9 or K2/6 class rosters",
+                            "นำเข้านักเรียนจากรายชื่อชั้น อ.1/9 หรือ อ.2/6"
                         )}
                     </p>
                 </div>
@@ -120,8 +163,8 @@ export function SangsomStudentImportButton() {
             <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-6">
                 <p className="text-sm text-amber-800 dark:text-amber-200">
                     ⚠️ {t(
-                        "This will import students from the documented K1/9 roster. Duplicates will be skipped.",
-                        "การดำเนินการนี้จะนำเข้านักเรียนจากรายชื่อชั้น อ.1/9 รายการที่ซ้ำจะถูกข้าม"
+                        "This will import students from the documented rosters. Duplicates will be skipped.",
+                        "การดำเนินการนี้จะนำเข้านักเรียนจากรายชื่อที่บันทึกไว้ รายการที่ซ้ำจะถูกข้าม"
                     )}
                 </p>
             </div>
@@ -135,20 +178,59 @@ export function SangsomStudentImportButton() {
                 >
                     {loading ? t("Checking...", "กำลังตรวจสอบ...") : t("Check School", "ตรวจสอบโรงเรียน")}
                 </button>
+            </div>
+
+            {/* Import Buttons */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
                 <button
-                    onClick={handleImport}
+                    onClick={() => handleImport("K1/9")}
                     disabled={loading || !schoolCheck?.found}
-                    className="flex-1 bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed transition-colors font-medium"
+                    className="bg-purple-600 text-white py-3 px-4 rounded-lg hover:bg-purple-700 disabled:bg-purple-400 disabled:cursor-not-allowed transition-colors font-medium"
                 >
-                    {loading ? t("Importing...", "กำลังนำเข้า...") : t("Import Students", "นำเข้านักเรียน")}
+                    {t("K1/9 (27)", "อ.1/9 (27)")}
+                </button>
+                <button
+                    onClick={() => handleImport("K2/6")}
+                    disabled={loading || !schoolCheck?.found}
+                    className="bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium"
+                >
+                    {t("K2/6 (27)", "อ.2/6 (27)")}
+                </button>
+                <button
+                    onClick={() => handleImport("K2/8")}
+                    disabled={loading || !schoolCheck?.found}
+                    className="bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-colors font-medium"
+                >
+                    {t("K2/8 (26)", "อ.2/8 (26)")}
+                </button>
+                <button
+                    onClick={() => handleImport("K1/6")}
+                    disabled={loading || !schoolCheck?.found}
+                    className="bg-teal-600 text-white py-3 px-4 rounded-lg hover:bg-teal-700 disabled:bg-teal-400 disabled:cursor-not-allowed transition-colors font-medium"
+                >
+                    {t("K1/6 (14)", "อ.1/6 (14)")}
+                </button>
+                <button
+                    onClick={() => handleImport("K1/5")}
+                    disabled={loading || !schoolCheck?.found}
+                    className="bg-cyan-600 text-white py-3 px-4 rounded-lg hover:bg-cyan-700 disabled:bg-cyan-400 disabled:cursor-not-allowed transition-colors font-medium"
+                >
+                    {t("K1/5 (8)", "อ.1/5 (8)")}
+                </button>
+                <button
+                    onClick={() => handleImport("K1/1")}
+                    disabled={loading || !schoolCheck?.found}
+                    className="bg-emerald-600 text-white py-3 px-4 rounded-lg hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed transition-colors font-medium"
+                >
+                    {t("K1/1 (14)", "อ.1/1 (14)")}
                 </button>
             </div>
 
             {/* School Check Result */}
             {schoolCheck && (
                 <div className={`rounded-lg p-4 mb-4 ${schoolCheck.found
-                        ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
-                        : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+                    ? "bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800"
+                    : "bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
                     }`}>
                     <div className="flex items-center gap-2">
                         {schoolCheck.found ? (
