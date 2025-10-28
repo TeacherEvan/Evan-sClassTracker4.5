@@ -208,7 +208,7 @@ export function SangsomStudentImportButton() {
                     disabled={loading || !schoolCheck?.found}
                     className="bg-teal-600 text-white py-3 px-4 rounded-lg hover:bg-teal-700 disabled:bg-teal-400 disabled:cursor-not-allowed transition-colors font-medium"
                 >
-                    {t("K1/6 (14)", "อ.1/6 (14)")}
+                    {t("K1/6 (28)", "อ.1/6 (28)")}
                 </button>
                 <button
                     onClick={() => handleImport("K1/5")}
@@ -222,7 +222,7 @@ export function SangsomStudentImportButton() {
                     disabled={loading || !schoolCheck?.found}
                     className="bg-emerald-600 text-white py-3 px-4 rounded-lg hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed transition-colors font-medium"
                 >
-                    {t("K1/1 (14)", "อ.1/1 (14)")}
+                    {t("K1/1 (22)", "อ.1/1 (22)")}
                 </button>
             </div>
 

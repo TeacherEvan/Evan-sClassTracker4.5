@@ -2,6 +2,8 @@
 
 Bilingual (English/Thai) class tracking system built with **Next.js 15**, **React 19**, **Convex** real-time backend, and **Tailwind v4**. Recent optimizations (Oct 2025) achieved **40-50% faster loads** and **10-100x faster queries** via N+1 elimination.
 
+**Latest Version:** 4.5.6 (Oct 28, 2025)
+
 ---
 
 ## 🚀 Quick Start for AI Agents
@@ -17,6 +19,8 @@ Bilingual (English/Thai) class tracking system built with **Next.js 15**, **Reac
 4. **Custom auth, not Convex built-in** - Uses localStorage sessions (24hr expiry), `btoa()` password hashing (⚠️ NOT production-secure), and explicit userId passing. See `lib/session-utils.ts`.
 
 5. **All components need `"use client"`** - Next.js App Router requires this directive for client-side hooks (`useQuery`, `useMutation`, `useState`).
+
+6. **Guardian students auto-approve** - Classes with `isGuardianLinked: true` bypass moderator approval workflow (NEW Oct 2025).
 
 **Start Convex FIRST**: `npx convex dev` (must be running before `npm run dev`)
 
@@ -524,6 +528,205 @@ export const setTeacherCycle = mutation({
 
 **Example**: See `components/teacher-cycle-editor.tsx` and `IMPLEMENTATION_SUMMARY_CYCLE_EDITOR.md`
 
+### 15. Guardian Student Booking Pattern (NEW Oct 2025)
+
+**Guardian-linked students bypass moderator approval** - auto-approved bookings for private tutoring.
+
+```typescript
+// Guardian student ID format: {AREA}-{NAME}-{BIRTHDATE}-{RANDOM}
+// Example: BKK01-JATH-19920115-X7Y2
+
+// ID generation routing (convex/students.ts)
+if (args.dateOfBirth && args.area) {
+  // Guardian student - requires birthDate and area
+  studentId = generateGuardianStudentId(firstName, lastName, dateOfBirth, area);
+} else {
+  // School student - timestamp-based
+  studentId = generateStudentId(firstName, lastName, schoolId);
+}
+```
+
+**Key differences** from school students:
+
+- **Auto-approval**: Classes with `isGuardianLinked: true` bypass moderator workflow
+- **Required fields**: `dateOfBirth` and `area` (teaching location)
+- **Optional schoolId**: Guardian students can exist without school association
+- **Unique validation**: Prevents duplicates by name + birthDate + area combination
+- **Visual distinction**: Purple badges in UI, separate selector section
+
+**Duplicate prevention pattern**:
+
+```typescript
+// Check for existing guardian student (convex/students.ts)
+const existingGuardianStudent = await ctx.db
+  .query("students")
+  .withIndex("by_area", q => q.eq("area", args.area))
+  .filter(q => 
+    q.and(
+      q.eq(q.field("firstName"), args.firstName),
+      q.eq(q.field("lastName"), args.lastName),
+      q.eq(q.field("dateOfBirth"), args.dateOfBirth)
+    )
+  )
+  .first();
+```
+
+**Class booking with guardian**:
+
+```typescript
+// Guardian-linked booking auto-approves
+await ctx.db.insert("classes", {
+  teacherId,
+  studentId,
+  isGuardianLinked: true,
+  guardianTitle: "Parent", // Relationship description
+  status: "approved", // Skip pending/acknowledged states
+  // ... other fields
+});
+```
+
+**Example**: See `IMPLEMENTATION_SUMMARY_GUARDIAN_BOOKING_OCT_28_2025.md` for full implementation
+
+### 16. Recurring Weekly Bookings Pattern (NEW Oct 2025)
+
+**Teachers can book the same class weekly** for up to 52 weeks (full school year).
+
+```tsx
+// Component state (components/class-booking.tsx)
+const [isRecurringWeekly, setIsRecurringWeekly] = useState(false);
+const [recurringWeeks, setRecurringWeeks] = useState(12); // Default 3 months
+
+// Date generation logic
+if (isRecurringWeekly && selectedDates.length > 0) {
+  const baseDate = new Date(selectedDates[0]);
+  
+  for (let week = 0; week < recurringWeeks; week++) {
+    const recurringDate = new Date(baseDate);
+    recurringDate.setDate(baseDate.getDate() + (week * 7)); // Add 7 days per week
+    datesToBook.push(recurringDate.getTime());
+  }
+}
+```
+
+**UI features**:
+
+- Checkbox to enable recurring mode
+- Number input for weeks (1-52, default 12)
+- Live preview of all dates that will be booked
+- Automatic conflict detection across all generated dates
+
+**Use case**: Teachers with regular weekly schedules (e.g., every Tuesday at 2pm) can book entire term in one operation instead of 52 individual bookings.
+
+**Example**: See `IMPLEMENTATION_SUMMARY_RECURRING_BOOKINGS_OCT_27_2025.md`
+
+### 17. Error Reporting Pattern (NEW Oct 2025)
+
+**Users can report errors directly to admins** with detailed context and environment info.
+
+```typescript
+// Frontend error submission (components/error-boundary.tsx)
+import { useAction } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+const submitError = useAction(api.errorReports.submitErrorReport);
+
+await submitError({
+  errorType: "mutation_error",
+  errorMessage: error.message,
+  errorOrigin: "class-booking.tsx",
+  userAction: "Attempted to book class",
+  stackTrace: error.stack,
+  // Auto-collected environment data
+  deviceType: "desktop",
+  browser: "Chrome",
+  userAgent: navigator.userAgent,
+});
+```
+
+**Admin dashboard** (`components/admin-error-reports.tsx`):
+
+- Filter by status (new/acknowledged/resolved/closed)
+- Filter by severity (low/medium/high/critical)
+- Filter by error type and date range
+- Update status and add admin notes
+- View full stack trace and user context
+
+**Auto-classification**:
+
+- `critical`: Prevents core functionality (login, booking, data loss)
+- `high`: Major feature broken (export, messaging, notifications)
+- `medium`: Minor feature issues (UI glitches, performance)
+- `low`: Cosmetic issues, minor inconveniences
+
+**Schema highlights** (convex/schema.ts):
+
+```typescript
+errorReports: defineTable({
+  errorType: v.string(), // mutation_error, ui_error, network_error
+  errorMessage: v.string(),
+  stackTrace: v.optional(v.string()),
+  userAction: v.optional(v.string()), // What user was trying to do
+  status: v.union(...), // new, acknowledged, resolved, closed
+  severity: v.union(...), // low, medium, high, critical
+  // + user info, device info, timestamps
+})
+```
+
+**Example**: See `IMPLEMENTATION_SUMMARY_ERROR_REPORTING_OCT_27_2025.md`
+
+### 18. Hierarchical Student Selector Pattern (NEW Oct 2025)
+
+**Progressive filtering** (Grade → Class → Student) reduces cognitive load for large student lists.
+
+```tsx
+// Reusable component (components/hierarchical-student-selector.tsx)
+<HierarchicalStudentSelector
+  students={students}
+  value={selectedStudentId}
+  onChange={setSelectedStudentId}
+  schoolId={schoolId}
+  required
+/>
+```
+
+**How it works**:
+
+1. **Step 1**: User selects grade (e.g., "K1", "K2", "P1")
+2. **Step 2**: Shows only classes for that grade (e.g., "/1", "/2", "/3")
+3. **Step 3**: Shows only students in that grade+class combination (max ~15 students)
+
+**Benefits**:
+
+- Reduces 100+ student dropdown to max 15 visible options
+- Clear visual progression through filters
+- Auto-populates in edit mode (pre-selects grade/class for existing student)
+- Bilingual labels throughout
+- Separate section for guardian students (purple badge)
+
+**Integration points**:
+
+- Class booking form
+- Student management (edit mode)
+- Weekly calendar booking
+- Multi-student class selection
+
+**Auto-focus behavior**:
+
+```tsx
+// Pre-populate grade/class when editing existing student
+useEffect(() => {
+  if (value && students) {
+    const student = students.find(s => s._id === value);
+    if (student) {
+      setSelectedGrade(student.grade);
+      setSelectedClass(student.class || "");
+    }
+  }
+}, [value, students]);
+```
+
+**Example**: See `components/hierarchical-student-selector.tsx` and TODO.md "Hierarchical Student Selector" section
+
 ## Security Considerations ⚠️
 
 ### Known Limitations (NOT Production-Ready)
@@ -873,17 +1076,24 @@ if (window.targetSchool) {
 - `convex/teacherClassCount.ts` - ClassCount tracking, cycle management, confirmation flow
 
 ### UI Components
-- `components/class-booking.tsx` - Multi-date booking, optional fields, conflict detection
+- `components/class-booking.tsx` - Multi-date booking, optional fields, conflict detection, recurring weekly bookings
 - `components/edit-class-modal.tsx` - Full edit modal with audit trail
 - `components/desktop-notification-toast.tsx` - Toast notification UI
 - `components/teacher-cycle-editor.tsx` - Nested modal with confirmation flow pattern
 - `components/teacher-class-count-modal.tsx` - Cycle editor integration example
+- `components/hierarchical-student-selector.tsx` - Progressive filtering (Grade → Class → Student)
+- `components/bilingual-input.tsx` - Reusable debounced bilingual input component
+- `components/admin-error-reports.tsx` - Error reporting dashboard with filtering and management
 
 ### Feature Documentation
 - `GOLD_TABLET_NOTIFICATION_WINDOW.md` - Notification window implementation guide
 - `IMPLEMENTATION_SUMMARY_CYCLE_EDITOR.md` - Nested modal, confirmation flow, active cycle indicator
+- `IMPLEMENTATION_SUMMARY_GUARDIAN_BOOKING_OCT_28_2025.md` - Guardian student system, auto-approval workflow
+- `IMPLEMENTATION_SUMMARY_RECURRING_BOOKINGS_OCT_27_2025.md` - Weekly recurring booking pattern
+- `IMPLEMENTATION_SUMMARY_ERROR_REPORTING_OCT_27_2025.md` - Error reporting system architecture
 - `convex/notificationWindows.ts` - One-time notification window system
 - `convex/appUpdates.ts` - Feature update logging and changelog
+- `.github/AI_AGENT_WORKFLOW.md` - Post-implementation procedures for AI agents
 
 ---
 
