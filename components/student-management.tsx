@@ -40,6 +40,8 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const bulkDeleteStudents = useMutation(api.bulkOperations.bulkDeleteStudents);
 
     const [selectedSchoolId, setSelectedSchoolId] = useState<Id<"schools"> | "guardian" | "all">("all");
+    const [selectedGrade, setSelectedGrade] = useState<string>("all");
+    const [selectedClass, setSelectedClass] = useState<string>("all");
     const [showForm, setShowForm] = useState(false);
     const [editingStudent, setEditingStudent] = useState<Id<"students"> | null>(null);
 
@@ -90,8 +92,32 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         if (selectedSchoolId === "guardian") {
             return !student.schoolId && student.guardianName;
         }
+
+        // Apply grade filter
+        if (selectedGrade !== "all" && student.grade !== selectedGrade) {
+            return false;
+        }
+
+        // Apply class filter
+        if (selectedClass !== "all" && student.class !== selectedClass) {
+            return false;
+        }
+
         return true;
     });
+
+    // Get unique grades and classes from filtered students
+    const uniqueGrades = useMemo(() => {
+        if (!students) return [];
+        const grades = new Set(students.map(s => s.grade).filter(Boolean));
+        return Array.from(grades).sort();
+    }, [students]);
+
+    const uniqueClasses = useMemo(() => {
+        if (!students) return [];
+        const classes = new Set(students.map(s => s.class).filter(Boolean));
+        return Array.from(classes).sort();
+    }, [students]);
 
     // Create school lookup map for better performance
     const schoolsMap = useMemo(() => {
@@ -437,13 +463,17 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
             {/* Filter and Bulk Actions */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
                     <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         {t("Filter by:", "กรองโดย:")}
                     </label>
                     <select
                         value={selectedSchoolId}
-                        onChange={(e) => setSelectedSchoolId(e.target.value as Id<"schools"> | "guardian" | "all")}
+                        onChange={(e) => {
+                            setSelectedSchoolId(e.target.value as Id<"schools"> | "guardian" | "all");
+                            setSelectedGrade("all");
+                            setSelectedClass("all");
+                        }}
                         className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="all">{t("All Students", "นักเรียนทั้งหมด")}</option>
@@ -451,6 +481,34 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                         {schools?.map((school) => (
                             <option key={school._id} value={school._id}>
                                 {school.name}
+                            </option>
+                        ))}
+                    </select>
+
+                    {/* Grade Filter */}
+                    <select
+                        value={selectedGrade}
+                        onChange={(e) => setSelectedGrade(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="all">{t("All Grades", "ทุกชั้นปี")}</option>
+                        {uniqueGrades.map((grade) => (
+                            <option key={grade} value={grade}>
+                                {grade}
+                            </option>
+                        ))}
+                    </select>
+
+                    {/* Class Filter */}
+                    <select
+                        value={selectedClass}
+                        onChange={(e) => setSelectedClass(e.target.value)}
+                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="all">{t("All Classes", "ทุกห้อง")}</option>
+                        {uniqueClasses.map((cls) => (
+                            <option key={cls} value={cls}>
+                                {cls}
                             </option>
                         ))}
                     </select>
