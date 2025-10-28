@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { checkRateLimit } from "./rateLimit";
 
 // Query to list cancellation requests
 export const list = query({
@@ -80,6 +81,13 @@ export const create = mutation({
         newScheduledDate: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
+        // ✅ RATE LIMIT: Prevent accidental rapid cancellation requests (10 per minute)
+        await checkRateLimit(ctx, {
+            key: `create-cancellation:${args.teacherId}`,
+            limit: 10,
+            windowMs: 60000,
+        });
+
         // Check if class exists
         const classData = await ctx.db.get(args.classId);
         if (!classData) {

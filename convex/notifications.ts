@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { checkRateLimit } from "./rateLimit";
 
 // Query to get all notifications
 export const list = query({
@@ -57,8 +58,19 @@ export const create = mutation({
       v.literal("error")
     ),
     userId: v.optional(v.union(v.string(), v.id("users"))),
+    createdBy: v.optional(v.id("users")), // Track who created
   },
   handler: async (ctx, args) => {
+    // ✅ RATE LIMIT: Prevent notification spam (15 per minute - soft limit)
+    // Only apply if createdBy is provided (user-initiated notifications)
+    if (args.createdBy) {
+      await checkRateLimit(ctx, {
+        key: `create-notification:${args.createdBy}`,
+        limit: 15,
+        windowMs: 60000,
+      });
+    }
+
     // Validate input
     if (!args.title.trim() && !args.titleTh.trim()) {
       throw new Error("Title is required in at least one language");

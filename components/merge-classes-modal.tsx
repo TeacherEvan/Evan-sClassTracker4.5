@@ -42,11 +42,16 @@ export function MergeClassesModal({
     const [error, setError] = useState("");
 
     // Filter classes to only show those that can be merged
-    // Group by teacher, school, location, and scheduled date
+    // Group by teacher, school, location, and scheduled date WITH TIME TOLERANCE
+    // CRITICAL FIX: Use 5-minute time window (same as conflict detection) instead of exact timestamp
+    const TIME_TOLERANCE = 5 * 60 * 1000; // 5 minutes in milliseconds
     const groupedClasses = new Map<string, typeof classes>();
 
     for (const cls of classes) {
-        const key = `${cls.teacherId}_${cls.schoolId}_${cls.locationId}_${cls.scheduledDate}`;
+        // Round scheduledDate to nearest 5-minute interval for grouping
+        // This allows classes at 3:00:00 PM and 3:00:30 PM to be grouped together
+        const roundedTime = Math.floor(cls.scheduledDate / TIME_TOLERANCE) * TIME_TOLERANCE;
+        const key = `${cls.teacherId}_${cls.schoolId}_${cls.locationId}_${roundedTime}`;
         if (!groupedClasses.has(key)) {
             groupedClasses.set(key, []);
         }

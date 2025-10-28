@@ -7,7 +7,7 @@ import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { UserRole } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
-import { Calendar, Check, ChevronDown, ChevronUp, Edit2, MapPin, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
+import { AlertTriangle, Calendar, Check, ChevronDown, ChevronUp, Edit2, MapPin, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
 import { useState } from "react";
 import { ClassConflictModal } from "./class-conflict-modal";
 import { EditClassModal } from "./edit-class-modal";
@@ -15,6 +15,42 @@ import { HierarchicalStudentSelector } from "./hierarchical-student-selector";
 import LocationProposalForm from "./location-proposal-form";
 import { MergeClassesModal } from "./merge-classes-modal";
 import { MultiDateCalendar } from "./multi-date-calendar";
+
+// Helper: Detect time conflicts between classes (same as backend logic)
+function detectConflicts(
+  classes: Array<{
+    _id: Id<"classes">;
+    teacherId: Id<"users">;
+    schoolId: Id<"schools">;
+    locationId?: Id<"locations">;
+    scheduledDate: number;
+    status: string;
+  }>,
+  targetClass: {
+    _id: Id<"classes">;
+    teacherId: Id<"users">;
+    schoolId: Id<"schools">;
+    locationId?: Id<"locations">;
+    scheduledDate: number;
+    status: string;
+  }
+): Array<Id<"classes">> {
+  const TIME_TOLERANCE = 5 * 60 * 1000; // 5 minutes
+  const startRange = targetClass.scheduledDate - TIME_TOLERANCE;
+  const endRange = targetClass.scheduledDate + TIME_TOLERANCE;
+
+  return classes
+    .filter((cls) => {
+      if (cls._id === targetClass._id) return false; // Skip self
+      if (cls.teacherId !== targetClass.teacherId) return false; // Different teacher
+      if (cls.schoolId !== targetClass.schoolId) return false; // Different school
+      if (cls.locationId !== targetClass.locationId) return false; // Different location
+      if (!["approved", "pending", "acknowledged"].includes(cls.status)) return false; // Ignore rejected
+      if (cls.scheduledDate < startRange || cls.scheduledDate > endRange) return false; // Outside time window
+      return true;
+    })
+    .map((cls) => cls._id);
+}
 
 interface ClassBookingProps {
   userId: Id<"users">;
@@ -1589,13 +1625,18 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         {/* Classes List */}
         <div className="space-y-4">
           {classes?.map((classItem) => {
-            // We'll need to fetch related data for display
+            // Detect conflicts for this class
+            const conflictIds = detectConflicts(classes, classItem);
+            const hasConflicts = conflictIds.length > 0;
+
             return (
               <ClassItemDisplay
                 key={classItem._id}
                 classItem={classItem}
                 userRole={userRole}
                 userId={userId}
+                hasConflicts={hasConflicts}
+                conflictCount={conflictIds.length}
                 onAcknowledge={handleAcknowledge}
                 onApprove={handleApprove}
                 onReject={handleReject}
@@ -1767,6 +1808,8 @@ function ClassItemDisplay({
   classItem,
   userRole,
   userId,
+  hasConflicts,
+  conflictCount,
   onAcknowledge,
   onApprove,
   onReject,
@@ -1802,6 +1845,8 @@ function ClassItemDisplay({
   };
   userRole: UserRole;
   userId: Id<"users">;
+  hasConflicts: boolean;
+  conflictCount: number;
   onAcknowledge: (id: Id<"classes">) => void;
   onApprove: (id: Id<"classes">) => void;
   onReject: (id: Id<"classes">) => void;
@@ -1954,7 +1999,26 @@ function ClassItemDisplay({
   ) || [];
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 active:scale-[0.99] transition-transform">
+    <div className={`bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 active:scale-[0.99] transition-transform ${hasConflicts ? 'ring-2 ring-yellow-500 ring-offset-2 dark:ring-offset-gray-900' : ''}`}>
+      {/* Conflict Warning Banner */}
+      {hasConflicts && (
+        <div className="mb-4 -mt-2 -mx-2 md:-mt-3 md:-mx-3 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-l-4 border-yellow-500 rounded-t-xl md:rounded-t-lg">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">
+                {t("Time Conflict Detected", "พบความขัดแย้งของเวลา")}
+              </p>
+              <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
+                {t(
+                  `This class conflicts with ${conflictCount} other ${conflictCount === 1 ? 'class' : 'classes'} at the same time. Use "Merge Classes" to combine them.`,
+                  `คลาสนี้ขัดแย้งกับอีก ${conflictCount} คลาสในเวลาเดียวกัน ใช้ "รวมคลาส" เพื่อรวมพวกเขา`
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row items-start md:items-start justify-between mb-4 gap-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">

@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
+import { checkRateLimit } from "./rateLimit";
 
 /**
  * Error Reporting System
@@ -34,6 +35,18 @@ export const submitErrorReport = mutation({
         userAgent: v.optional(v.string()),
     },
     handler: async (ctx, args) => {
+        // ✅ RATE LIMIT: Prevent error report spam (5 per minute - very soft limit)
+        // Use userId if provided, otherwise use a global key for anonymous reports
+        const rateLimitKey = args.userId
+            ? `submit-error:${args.userId}`
+            : `submit-error:anonymous`;
+
+        await checkRateLimit(ctx, {
+            key: rateLimitKey,
+            limit: 5,
+            windowMs: 60000,
+        });
+
         // Get user details if userId provided
         let username: string | undefined;
         let userRole: string | undefined;

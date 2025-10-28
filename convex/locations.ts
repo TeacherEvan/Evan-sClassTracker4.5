@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { validateLength } from "./rateLimit";
+import { checkRateLimit, validateLength } from "./rateLimit";
 
 // Query to list all locations
 export const list = query({
@@ -50,6 +50,13 @@ export const create = mutation({
         requestedBy: v.optional(v.id("users")), // Teacher who requested
     },
     handler: async (ctx, args) => {
+        // ✅ RATE LIMIT: Prevent accidental rapid location creation (15 per minute - soft limit)
+        await checkRateLimit(ctx, {
+            key: `create-location:${args.createdBy}`,
+            limit: 15,
+            windowMs: 60000,
+        });
+
         // ✅ SECURITY: Input validation - location names max 200 chars
         validateLength(args.name, "Location name", 200, 0);
         validateLength(args.nameTh, "Thai location name", 200, 0);
@@ -80,8 +87,16 @@ export const update = mutation({
         id: v.id("locations"),
         name: v.string(),
         nameTh: v.string(),
+        updatedBy: v.id("users"), // Track who updated
     },
     handler: async (ctx, args) => {
+        // ✅ RATE LIMIT: Prevent accidental rapid updates (20 per minute)
+        await checkRateLimit(ctx, {
+            key: `update-location:${args.updatedBy}`,
+            limit: 20,
+            windowMs: 60000,
+        });
+
         // Validate inputs
         if (!args.name.trim() && !args.nameTh.trim()) {
             throw new Error("Location name is required in at least one language");
@@ -100,8 +115,16 @@ export const update = mutation({
 export const toggleActive = mutation({
     args: {
         id: v.id("locations"),
+        toggledBy: v.id("users"), // Track who toggled
     },
     handler: async (ctx, args) => {
+        // ✅ RATE LIMIT: Prevent accidental rapid toggling (25 per minute)
+        await checkRateLimit(ctx, {
+            key: `toggle-location:${args.toggledBy}`,
+            limit: 25,
+            windowMs: 60000,
+        });
+
         const location = await ctx.db.get(args.id);
 
         if (!location) {

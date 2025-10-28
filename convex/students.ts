@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { validateLength } from "./rateLimit";
+import { checkRateLimit, validateLength } from "./rateLimit";
 
 // Helper function to generate unique ID for GUARDIAN students
 function generateGuardianStudentId(
@@ -113,6 +113,13 @@ export const create = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // ✅ RATE LIMIT: Prevent accidental rapid student creation (20 per minute - soft limit)
+    await checkRateLimit(ctx, {
+      key: `create-student:${args.createdBy}`,
+      limit: 20,
+      windowMs: 60000, // 1 minute
+    });
+
     // ✅ SECURITY: Verify user permissions
     const creator = await ctx.db.get(args.createdBy);
     if (!creator) {
@@ -350,6 +357,13 @@ export const update = mutation({
       ...updates
     } = args;
 
+    // ✅ RATE LIMIT: Prevent accidental rapid updates (30 per minute - soft limit)
+    await checkRateLimit(ctx, {
+      key: `update-student:${updatedBy}`,
+      limit: 30,
+      windowMs: 60000,
+    });
+
     // Get existing student to validate schoolId requirement
     const student = await ctx.db.get(id);
     if (!student) {
@@ -425,6 +439,13 @@ export const remove = mutation({
       sessionId: _sessionId,
       ...operationArgs
     } = args;
+
+    // ✅ RATE LIMIT: Prevent accidental rapid deletions (10 per minute - more restrictive)
+    await checkRateLimit(ctx, {
+      key: `delete-student:${operationArgs.deletedBy}`,
+      limit: 10,
+      windowMs: 60000,
+    });
 
     // Get student details before deletion
     const student = await ctx.db.get(operationArgs.id);
