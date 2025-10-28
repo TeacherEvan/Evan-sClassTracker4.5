@@ -1,0 +1,327 @@
+# Key Files Reference
+
+[← Back to Index](../copilot-instructions.md)
+
+---
+
+## Architecture & Schema
+
+**`convex/schema.ts`**
+
+- Database schema (source of truth)
+- Table definitions, indexes, validation
+- Bilingual field requirements
+
+**`app/layout.tsx`**
+
+- Provider hierarchy (critical order)
+- ErrorBoundary → Convex → Device → Data → Language
+- DO NOT reorder providers
+
+**`docs/ARCHITECTURE.md`**
+
+- System diagrams
+- Data flows
+- Component relationships
+
+**`docs/OPTIMIZATION_ANALYSIS_2025.md`**
+
+- N+1 query fixes
+- Performance improvements
+- Batch fetch patterns
+
+---
+
+## Core Patterns & Helpers
+
+**`lib/language-context.tsx`**
+
+- Bilingual helper (`t()` function)
+- Language state management
+- Context provider
+
+**`lib/toast.ts`**
+
+- Toast notification manager
+- Event subscription pattern
+- Replaces alert/confirm
+
+**`lib/session-utils.ts`**
+
+- Session management
+- 24-hour auto-expiration
+- localStorage with validation
+
+**`convex/rateLimit.ts`**
+
+- Rate limiting and input validation
+- Anti-abuse protection
+- Mutation safeguards
+
+**`convex/pagination.ts`**
+
+- Native database pagination
+- Cursor-based navigation
+
+**`convex/auditHelpers.ts`**
+
+- Audit logging helpers
+- Standard action constants
+- Quick logging function
+
+---
+
+## Backend Logic
+
+**`convex/classes.ts`**
+
+- State machine (pending → acknowledged → approved/rejected)
+- Approval workflow
+- Edit audit trail
+- Authorization helpers (`verifyClassAccess`)
+- Bulk deletion with safeguards
+
+**`convex/students.ts`**
+
+- Unique ID generation pattern
+- School-based vs Guardian-based IDs
+- Duplicate prevention
+- Name validation (max 100 chars)
+
+**`convex/users.ts`**
+
+- Authentication
+- Password hashing (btoa() - NOT production-secure)
+- Account lockout (5 failed attempts → 24hr lock)
+- Session creation
+
+**`convex/teacherClassCount.ts`**
+
+- ClassCount tracking
+- Cycle management
+- Confirmation flow for cycle changes
+
+**`convex/notifications.ts`**
+
+- System-generated notifications
+- Auto-created by mutations
+- Real-time unread badge updates
+
+**`convex/messages.ts`**
+
+- User-initiated messages
+- File attachments (Convex Storage)
+- Read receipts
+- Direct and group messages
+
+---
+
+## UI Components
+
+**`components/class-booking.tsx`**
+
+- Multi-date booking
+- Optional fields
+- Conflict detection
+- Recurring weekly bookings
+
+**`components/edit-class-modal.tsx`**
+
+- Full edit modal
+- Audit trail integration
+- Bilingual form inputs
+
+**`components/desktop-notification-toast.tsx`**
+
+- Toast notification UI
+- Bottom-right corner
+- Auto-dismiss with duration
+
+**`components/teacher-cycle-editor.tsx`**
+
+- Nested modal pattern
+- Confirmation flow
+- Active cycle indicator
+- Escape key handling
+
+**`components/teacher-class-count-modal.tsx`**
+
+- Cycle editor integration
+- Role-based access (moderator/admin only)
+- Active cycle visual indicator
+
+**`components/hierarchical-student-selector.tsx`**
+
+- Progressive filtering (Grade → Class → Student)
+- Reduces cognitive load
+- Auto-populate in edit mode
+- Separate guardian section
+
+**`components/bilingual-input.tsx`**
+
+- Reusable debounced bilingual input
+- 300ms debounce (50% fewer re-renders)
+- Consistent dark mode styling
+- Type-safe props
+
+**`components/admin-error-reports.tsx`**
+
+- Error reporting dashboard
+- Filtering by status/severity
+- Full stack trace viewer
+- Admin notes and resolution
+
+**`components/audit-logs.tsx`**
+
+- Audit log viewer
+- Filters and statistics
+- CSV export
+- Full audit trail
+
+**`components/sangsom-delete-button.tsx`**
+
+- Bulk deletion UI
+- Confirmation flow
+- Reason requirement
+- Admin-only access
+
+---
+
+## Feature Documentation
+
+**`GOLD_TABLET_NOTIFICATION_WINDOW.md`**
+
+- Notification window implementation
+- One-time display system
+- School-specific vs broadcast targeting
+
+**`IMPLEMENTATION_SUMMARY_CYCLE_EDITOR.md`**
+
+- Nested modal pattern
+- Confirmation flow
+- Active cycle indicator
+
+**`IMPLEMENTATION_SUMMARY_GUARDIAN_BOOKING_OCT_28_2025.md`**
+
+- Guardian student system
+- Auto-approval workflow
+- Private tutoring features
+
+**`IMPLEMENTATION_SUMMARY_RECURRING_BOOKINGS_OCT_27_2025.md`**
+
+- Weekly recurring booking pattern
+- Date generation logic
+- Conflict detection
+
+**`IMPLEMENTATION_SUMMARY_ERROR_REPORTING_OCT_27_2025.md`**
+
+- Error reporting system architecture
+- Auto-classification
+- Admin dashboard
+
+**`convex/notificationWindows.ts`**
+
+- One-time notification window system
+- Targeting options (role, school, everyone)
+
+**`convex/appUpdates.ts`**
+
+- Feature update logging
+- Changelog management
+- Version tracking
+
+**`.github/AI_AGENT_WORKFLOW.md`**
+
+- Post-implementation procedures
+- Automated update workflow
+- Implementation summary conventions
+
+---
+
+## Testing & CI/CD
+
+**`tests/e2e/helpers.ts`**
+
+- Reusable test utilities
+- login(), logout(), waitForToast(), navigateToTab()
+- generateTestData() for unique test data
+
+**`tests/e2e/auth.spec.ts`**
+
+- Authentication tests
+- Login, logout, password change
+- Language persistence
+
+**`tests/e2e/class-booking.spec.ts`**
+
+- Class booking workflow
+- Approval workflow
+- Moderator notifications
+
+**`playwright.config.ts`**
+
+- Playwright configuration
+- Browser setup
+- Test reporter settings
+
+**`.github/workflows/`**
+
+- `ci.yml` - TypeScript + ESLint checks
+- `e2e-tests.yml` - Playwright E2E tests
+- `deploy-staging.yml` - Auto-deploy develop
+- `deploy-production.yml` - Auto-deploy main
+
+---
+
+## Documentation
+
+**`.github/copilot-instructions.md`**
+
+- Main navigation index
+- Agent-friendly decision tree
+- Documentation stats
+
+**`.github/copilot-docs/`**
+
+- Modular topic-based documentation
+- 01-quick-start.md through 10-files.md
+
+**`docs/TESTING_GUIDE.md`**
+
+- Comprehensive testing guide
+- Test scenarios and workflows
+
+**`docs/CI_CD_SETUP_GUIDE.md`**
+
+- CI/CD configuration
+- GitHub Secrets setup
+- Deployment testing
+
+**`docs/AUDIT_LOGGING_IMPLEMENTATION.md`**
+
+- Audit logging patterns
+- Actions to audit
+- Implementation examples
+
+**`SECURITY_REVIEW_BULK_DELETION.md`**
+
+- Bulk operation safeguards
+- Security analysis
+
+**`TODO.md`**
+
+- Current task list
+- Future enhancements
+- Known issues
+
+---
+
+## Next Steps
+
+- **Back to index** → [Main Index](../copilot-instructions.md)
+- **Quick start** → [Quick Start Guide](./01-quick-start.md)
+- **Architecture** → [Architecture Essentials](./02-architecture.md)
+
+---
+
+[← Back to Index](../copilot-instructions.md)
