@@ -60,6 +60,7 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
                     id: editingId,
                     name,
                     nameTh,
+                    updatedBy: userId,
                 });
             } else {
                 await createLocation({
@@ -95,7 +96,7 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
 
     const handleToggleActive = async (id: Id<"locations">) => {
         try {
-            await toggleActive({ id });
+            await toggleActive({ id, toggledBy: userId });
         } catch (err) {
             toast.error(
                 err instanceof Error ? err.message : "Failed to toggle location",

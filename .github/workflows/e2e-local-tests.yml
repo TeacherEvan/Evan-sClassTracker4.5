@@ -1,0 +1,122 @@
+name: E2E Tests (Local Dev Server)
+
+# Runs E2E tests on GitHub runners with a local dev server
+# Much faster than running locally on slow machines
+on:
+    pull_request:
+        branches: [main, develop]
+    push:
+        branches: [main, develop]
+    workflow_dispatch:
+
+jobs:
+    e2e-local:
+        name: E2E Tests with Local Server
+        runs-on: ubuntu-latest
+        timeout-minutes: 20
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Install Playwright browsers
+              run: npx playwright install --with-deps chromium
+
+            # Deploy Convex backend to a test deployment
+            - name: Deploy Convex backend
+              env:
+                  CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+              run: |
+                  # Deploy to a preview environment
+                  npx convex deploy --cmd "npm run build" --preview-name "ci-${{ github.run_id }}"
+
+                  # Save the Convex URL for the Next.js server
+                  echo "NEXT_PUBLIC_CONVEX_URL=$(npx convex env get CONVEX_URL)" >> $GITHUB_ENV
+
+            # Start Next.js dev server in background
+            - name: Start Next.js dev server
+              run: |
+                  npm run dev &
+                  echo $! > .next-pid
+
+                  # Wait for server to be ready (max 60 seconds)
+                  timeout 60 bash -c 'until curl -f http://localhost:3000 > /dev/null 2>&1; do sleep 2; done' || exit 1
+                  echo "✅ Next.js dev server is ready"
+              env:
+                  NEXT_PUBLIC_CONVEX_URL: ${{ env.NEXT_PUBLIC_CONVEX_URL }}
+                  NEXT_TELEMETRY_DISABLED: 1
+
+            # Run Playwright tests
+            - name: Run E2E tests
+              run: npx playwright test --reporter=html
+              env:
+                  BASE_URL: http://localhost:3000
+
+            # Cleanup
+            - name: Stop Next.js server
+              if: always()
+              run: |
+                  if [ -f .next-pid ]; then
+                    kill $(cat .next-pid) || true
+                  fi
+
+            - name: Cleanup Convex preview
+              if: always()
+              env:
+                  CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+              run: |
+                  npx convex env delete "ci-${{ github.run_id }}" --yes || true
+
+            # Upload artifacts
+            - name: Upload Playwright report
+              uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                  name: playwright-report-${{ github.run_id }}
+                  path: playwright-report/
+                  retention-days: 7
+
+            - name: Upload test screenshots
+              uses: actions/upload-artifact@v4
+              if: failure()
+              with:
+                  name: test-failures-${{ github.run_id }}
+                  path: test-results/
+                  retention-days: 7
+
+            # Comment on PR with results
+            - name: Comment test results on PR
+              if: github.event_name == 'pull_request' && always()
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const fs = require('fs');
+
+                      // Simple test summary (Playwright outputs to console)
+                      const icon = '${{ job.status }}' === 'success' ? '✅' : '❌';
+                      const status = '${{ job.status }}' === 'success' ? 'All tests passed!' : 'Tests failed';
+
+                      const body = `## ${icon} E2E Test Results
+
+                      **Status**: ${status}
+
+                      **Run**: [View full test report](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+                      ${status === 'Tests failed' ? '⚠️ Check the artifacts for screenshots and detailed reports.' : ''}
+                      `;
+
+                      github.rest.issues.createComment({
+                        issue_number: context.issue.number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        body: body
+                      });
