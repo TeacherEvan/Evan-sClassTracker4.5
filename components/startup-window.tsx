@@ -313,9 +313,9 @@ export function StartupWindow({
                     </div>
 
                     {/* Main Content */}
-                    <div className="p-6 space-y-6">
+                    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
                         {/* Welcome Message */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 border-amber-200 dark:border-amber-800">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 md:p-6 shadow-lg border-2 border-amber-200 dark:border-amber-800">
                             <p className="text-xl font-semibold text-amber-900 dark:text-amber-100 mb-2">
                                 {t(
                                     "What would you like to do?",
@@ -344,7 +344,7 @@ export function StartupWindow({
                                             handleOptionClick(option.tab)
                                         }
                                         disabled={isDisabled}
-                                        className={`relative group text-left p-6 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl border-2 border-white/50 dark:border-gray-800/50 ${isDisabled
+                                        className={`relative group text-left p-4 md:p-6 rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl border-2 border-white/50 dark:border-gray-800/50 ${isDisabled
                                             ? "opacity-50 cursor-not-allowed"
                                             : "cursor-pointer"
                                             }`}

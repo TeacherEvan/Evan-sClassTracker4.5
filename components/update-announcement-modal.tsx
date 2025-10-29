@@ -51,7 +51,7 @@ export function UpdateAnnouncementModal({ update, onClose }: UpdateAnnouncementM
         <div className="fixed inset-0 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
             <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom duration-500">
                 {/* Header with gradient */}
-                <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-8 rounded-t-3xl">
+                <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-4 md:p-8 rounded-t-3xl">
                     <button
                         onClick={onClose}
                         className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors backdrop-blur-sm"
@@ -79,19 +79,19 @@ export function UpdateAnnouncementModal({ update, onClose }: UpdateAnnouncementM
                 </div>
 
                 {/* Features */}
-                <div className="p-8">
+                <div className="p-4 md:p-8">
                     <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                         <Sparkles className="w-6 h-6 text-blue-600" />
                         {t("What's New", "มีอะไรใหม่")}
                     </h2>
 
-                    <div className="grid gap-6 md:grid-cols-2">
+                    <div className="grid gap-3 md:gap-4 md:grid-cols-2">
                         {features.map((feature, index) => {
                             const Icon = getIcon(feature.icon);
                             return (
                                 <div
                                     key={index}
-                                    className="group p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-2xl hover:shadow-lg transition-all duration-300 border border-gray-200 dark:border-gray-600"
+                                    className="group p-4 md:p-6 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-2xl hover:shadow-lg transition-all duration-300 border border-gray-200 dark:border-gray-600"
                                 >
                                     <div className="flex items-start gap-4">
                                         <div className="p-3 bg-blue-600 text-white rounded-xl group-hover:scale-110 transition-transform duration-300">

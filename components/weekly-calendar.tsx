@@ -560,7 +560,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
             {showAddDialog && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
-                        <div className="p-6">
+                        <div className="p-4 md:p-6">
                             <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-gray-200 dark:border-gray-700">
                                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
                                     {currentUser.role === "moderator" || currentUser.role === "admin"

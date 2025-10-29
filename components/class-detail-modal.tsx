@@ -803,7 +803,7 @@ export function ClassDetailModal({
             {/* Cancel Request Modal */}
             {showCancelModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-4 md:p-6">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
                                 <X className="w-6 h-6 text-red-600 dark:text-red-400" />
@@ -869,7 +869,7 @@ export function ClassDetailModal({
             {/* Postpone Request Modal */}
             {showPostponeModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-4 md:p-6">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="p-2 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg">
                                 <Clock className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
@@ -962,7 +962,7 @@ export function ClassDetailModal({
             {/* Delete Confirmation Modal */}
             {showDeleteConfirm && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-4 md:p-6">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
                                 <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
@@ -1011,7 +1011,7 @@ export function ClassDetailModal({
             {/* Delete Recurring Series Confirmation Modal */}
             {showDeleteSeriesConfirm && recurringSeries && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-2xl w-full p-6 max-h-[85vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-2xl w-full p-4 md:p-6 max-h-[85vh] overflow-y-auto">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
                                 <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />

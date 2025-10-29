@@ -167,7 +167,7 @@ export function AdminContactRequests({
           requests.map((request) => (
             <div
               key={request._id}
-              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:shadow-lg transition-shadow"
+              className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 md:p-6 hover:shadow-lg transition-shadow"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
@@ -247,7 +247,7 @@ export function AdminContactRequests({
       {selectedRequest && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                   {t("Manage Request", "จัดการคำขอ")}
@@ -261,7 +261,7 @@ export function AdminContactRequests({
               </div>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 md:p-6 space-y-4">
               {(selectedRequest.attachmentStorageId as Id<"_storage"> | undefined) && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">

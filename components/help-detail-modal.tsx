@@ -66,7 +66,7 @@ export function HelpDetailModal({ feature, onClose, onBack }: HelpDetailModalPro
         </div>
 
         {/* Content - Scrollable (SINGLE scroll area) */}
-        <div className="overflow-y-auto flex-grow p-6 md:p-8 space-y-6">
+        <div className="overflow-y-auto flex-grow p-4 md:p-8 space-y-4 md:space-y-6">
           {/* Description */}
           <div className="prose dark:prose-invert max-w-none">
             <p className="text-base md:text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -122,7 +122,7 @@ export function HelpDetailModal({ feature, onClose, onBack }: HelpDetailModalPro
         </div>
 
         {/* Footer - Sticky Call to Action */}
-        <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-b-3xl">
+        <div className="p-4 md:p-6 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-b-3xl">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white">

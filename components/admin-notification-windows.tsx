@@ -198,7 +198,7 @@ export function AdminNotificationWindows({
           windows.map((window) => (
             <div
               key={window._id}
-              className={`bg-white dark:bg-gray-800 border-2 rounded-xl p-6 transition-all ${window.isActive
+              className={`bg-white dark:bg-gray-800 border-2 rounded-xl p-4 md:p-6 transition-all ${window.isActive
                 ? "border-indigo-500 shadow-lg"
                 : "border-gray-200 dark:border-gray-700"
                 }`}
@@ -283,7 +283,7 @@ export function AdminNotificationWindows({
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto">
-            <div className="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 rounded-t-2xl">
+            <div className="sticky top-0 bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 md:p-6 rounded-t-2xl">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold">
                   {editingWindow
@@ -302,7 +302,7 @@ export function AdminNotificationWindows({
               </div>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 md:p-6 space-y-4">
               {/* Title */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -413,7 +413,7 @@ export function AdminNotificationWindows({
               </label>
             </div>
 
-            <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 p-6 border-t border-gray-200 dark:border-gray-700 rounded-b-2xl flex gap-3">
+            <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 p-4 md:p-6 border-t border-gray-200 dark:border-gray-700 rounded-b-2xl flex gap-3">
               <button
                 onClick={() => {
                   setShowCreateModal(false);

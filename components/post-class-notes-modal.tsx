@@ -174,7 +174,7 @@ export function PostClassNotesModal({
                 </div>
 
                 {/* Content - Scrollable */}
-                <div className="p-6 space-y-6 overflow-y-auto flex-grow">
+                <div className="p-6 space-y-3 md:space-y-4 overflow-y-auto flex-grow">
                     {/* Class info */}
                     <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                         <h3 className="font-semibold text-lg mb-2">
@@ -346,7 +346,7 @@ export function PostClassNotesModal({
                 </div>
 
                 {/* Footer - Sticky */}
-                <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-6 rounded-b-2xl">
+                <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 md:p-6 rounded-b-2xl">
                     <div className="flex flex-col sm:flex-row gap-3">
                         <button
                             type="button"

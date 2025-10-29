@@ -431,7 +431,7 @@ export function TeacherClassCountModal({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="teacher-classcount-modal bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-4xl w-full flex flex-col max-h-[85vh]">
                 {/* Header - Sticky */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                     <h2 className="text-2xl font-bold">
                         {t(`Teacher ClassCount`, `จำนวนชั้นเรียนครู`)}
                     </h2>
@@ -448,7 +448,7 @@ export function TeacherClassCountModal({
                 <div className="overflow-y-auto flex-grow">
                     {/* Teacher Selector - Only for moderators/admins */}
                     {(moderatorRole === "moderator" || moderatorRole === "admin") && allTeachers && allTeachers.length > 0 && (
-                        <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20 print-hide">
+                        <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20 print-hide">
                             <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                                 <div className="flex items-center gap-2">
                                     <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -477,7 +477,7 @@ export function TeacherClassCountModal({
                     )}
 
                     {/* Date Range Selector */}
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-700 print-hide">
+                    <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700 print-hide">
                         <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                             <div className="flex items-center gap-2">
                                 <Calendar className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -535,7 +535,7 @@ export function TeacherClassCountModal({
                     )}
 
                     {/* Summary */}
-                    <div className="p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
+                    <div className="p-4 md:p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
                         <h3 className="text-lg font-semibold mb-3">{t("Summary", "สรุป")}</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
@@ -566,7 +566,7 @@ export function TeacherClassCountModal({
                     </div>
 
                     {/* Student Breakdown */}
-                    <div className="p-6">
+                    <div className="p-4 md:p-6">
                         <h3 className="text-lg font-semibold mb-4">{t("Student Breakdown", "รายละเอียดนักเรียน")}</h3>
                         <div className="space-y-2">
                             {classCountData.studentBreakdown.map((student, index) => {
@@ -643,7 +643,7 @@ export function TeacherClassCountModal({
                 {/* End Scrollable Content */}
 
                 {/* Export Actions - Sticky Footer */}
-                <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 print-hide">
+                <div className="p-4 md:p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 print-hide">
                     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
                             💡 {t("Note: Teacher will be notified of this view", "หมายเหตุ: ครูจะได้รับการแจ้งเตือนการดูนี้")}
@@ -686,7 +686,7 @@ export function TeacherClassCountModal({
                         aria-modal="true"
                         aria-labelledby="cycle-editor-title"
                     >
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full p-6">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full p-4 md:p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 id="cycle-editor-title" className="text-xl font-bold">
                                     {t("Edit ClassCount Cycle", "แก้ไขรอบการนับชั้นเรียน")}
@@ -723,7 +723,7 @@ export function TeacherClassCountModal({
                         role="dialog"
                         aria-modal="true"
                     >
-                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full p-6">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-md w-full p-4 md:p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-xl font-bold">
                                     {t("Select Print Language", "เลือกภาษาสำหรับพิมพ์")}

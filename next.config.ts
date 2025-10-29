@@ -8,6 +8,11 @@ const withBundleAnalyzer = bundleAnalyzer({
 
 const nextConfig: NextConfig = {
   /* config options here */
+  turbopack: {
+    // Fix: Specify correct workspace root to silence lockfile warning
+    // This tells Turbopack to use this directory as the root instead of inferring from multiple lockfiles
+    root: __dirname,
+  },
 };
 
 export default withBundleAnalyzer(nextConfig);

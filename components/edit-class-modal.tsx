@@ -139,7 +139,7 @@ export function EditClassModal({
 
                 {/* Form - Scrollable content */}
                 <form onSubmit={handleSubmit} className="flex flex-col flex-grow overflow-hidden">
-                    <div className="overflow-y-auto flex-grow p-6 space-y-6">
+                    <div className="overflow-y-auto flex-grow p-4 md:p-6 space-y-4 md:space-y-6">
                         {error && (
                             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-2">
                                 <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />

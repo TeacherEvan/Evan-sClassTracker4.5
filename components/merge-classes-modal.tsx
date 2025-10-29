@@ -121,7 +121,7 @@ export function MergeClassesModal({
                         </div>
                     </div>
                     {/* Content - Scrollable */}
-                    <div className="overflow-y-auto flex-grow p-6">
+                    <div className="overflow-y-auto flex-grow p-4 md:p-6">
                         <div className="text-center py-8">
                             <p className="text-gray-600 dark:text-gray-400">
                                 {t(
@@ -156,7 +156,7 @@ export function MergeClassesModal({
 
                 <form onSubmit={handleMerge} className="flex flex-col flex-grow overflow-hidden">
                     {/* Content - Scrollable (SINGLE scroll area) */}
-                    <div className="overflow-y-auto flex-grow p-6 space-y-6">
+                    <div className="overflow-y-auto flex-grow p-4 md:p-6 space-y-4 md:space-y-6">
                         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                             <p className="text-sm text-blue-900 dark:text-blue-100">
                                 {t(

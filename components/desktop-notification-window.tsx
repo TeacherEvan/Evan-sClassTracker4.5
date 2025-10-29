@@ -121,9 +121,9 @@ export function DesktopNotificationWindow({
                     </div>
 
                     {/* Main Content */}
-                    <div className="p-6 space-y-6">
+                    <div className="p-4 md:p-6 space-y-4 md:space-y-6">
                         {/* Personalized Greeting */}
-                        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 border-amber-200 dark:border-amber-800">
+                        <div className="bg-white dark:bg-gray-800 rounded-xl p-4 md:p-6 shadow-lg border-2 border-amber-200 dark:border-amber-800">
                             <p className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400 mb-2">
                                 {personalizedGreeting}
                             </p>
@@ -136,7 +136,7 @@ export function DesktopNotificationWindow({
 
                         {/* Upcoming Classes Section */}
                         {upcomingClasses && upcomingClasses.length > 0 && (
-                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 rounded-xl p-6 shadow-lg border-2 border-blue-200 dark:border-blue-800">
+                            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 rounded-xl p-4 md:p-6 shadow-lg border-2 border-blue-200 dark:border-blue-800">
                                 <h3 className="text-xl font-bold text-blue-900 dark:text-blue-100 flex items-center gap-2 mb-4">
                                     <Calendar className="w-6 h-6" />
                                     {t("Your Upcoming Classes", "ชั้นเรียนที่กำลังจะมาถึง")}
@@ -187,7 +187,7 @@ export function DesktopNotificationWindow({
 
                         {/* Latest Updates Section */}
                         {activeWindow.showUpdateSummary && latestUpdates && latestUpdates.length > 0 && (
-                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 rounded-xl p-6 shadow-lg border-2 border-purple-200 dark:border-purple-800">
+                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 rounded-xl p-4 md:p-6 shadow-lg border-2 border-purple-200 dark:border-purple-800">
                                 <h3 className="text-xl font-bold text-purple-900 dark:text-purple-100 flex items-center gap-2 mb-4">
                                     <Sparkles className="w-6 h-6" />
                                     {t("What's New", "มีอะไรใหม่บ้าง")}

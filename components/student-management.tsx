@@ -559,7 +559,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             {showForm && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
-                        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                        <div className="p-4 md:p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                                 {editingStudent
                                     ? t("Edit Student", "แก้ไขข้อมูลนักเรียน")
@@ -573,7 +573,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                             </button>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                        <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4 md:space-y-6">
                             {/* Student Information */}
                             <div className="space-y-4">
                                 <h4 className="font-semibold text-gray-900 dark:text-white">
@@ -1064,7 +1064,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             {/* Bulk Delete Confirmation Modal */}
             {showBulkDeleteConfirm && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-4 md:p-6">
                         <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-4">
                             {t("⚠️ Confirm Bulk Deletion", "⚠️ ยืนยันการลบจำนวนมาก")}
                         </h3>
@@ -1107,7 +1107,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             {/* Delete Confirmation Dialog */}
             {showDeleteConfirm && pendingDeleteStudent && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 max-w-md w-full">
                         <h3 className="text-xl font-bold mb-4 text-red-600 dark:text-red-400">
                             {t("Confirm Delete", "ยืนยันการลบ")}
                         </h3>
@@ -1141,7 +1141,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             {/* Duplicate Confirmation Dialog */}
             {showDuplicateConfirm && pendingDuplicateStudent && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 max-w-md w-full">
                         <h3 className="text-xl font-bold mb-4 text-blue-600 dark:text-blue-400">
                             {t("Confirm Duplicate", "ยืนยันการคัดลอก")}
                         </h3>

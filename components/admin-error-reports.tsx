@@ -345,7 +345,7 @@ export function AdminErrorReports({ userId }: AdminErrorReportsProps) {
             {showDetailModal && errorDetail && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[85vh] overflow-y-auto">
-                        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex justify-between items-start">
+                        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 md:p-6 flex justify-between items-start">
                             <div>
                                 <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                     <Bug className="w-6 h-6" />
@@ -363,7 +363,7 @@ export function AdminErrorReports({ userId }: AdminErrorReportsProps) {
                             </button>
                         </div>
 
-                        <div className="p-6 space-y-6">
+                        <div className="p-4 md:p-6 space-y-4 md:space-y-6">
                             {/* Error Info */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>

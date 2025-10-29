@@ -33,7 +33,7 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
     if (!classCountDetails) {
         return (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full p-4 md:p-6">
                     <div className="animate-pulse space-y-4">
                         <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
                         <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full" />
@@ -51,7 +51,7 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-xl max-w-3xl w-full flex flex-col max-h-[85vh] shadow-2xl">
                 {/* Sticky Header */}
-                <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 dark:from-yellow-500 dark:to-yellow-600 p-6 rounded-t-xl">
+                <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 dark:from-yellow-500 dark:to-yellow-600 p-4 md:p-6 rounded-t-xl">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="p-3 bg-white/20 rounded-full">
@@ -79,7 +79,7 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                 <div className="overflow-y-auto flex-grow">
 
                     {/* Disclaimer */}
-                    <div className="p-6 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+                    <div className="p-4 md:p-6 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
                         <div className="flex gap-3">
                             <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
                             <div className="space-y-2">
@@ -106,7 +106,7 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                     </div>
 
                     {/* Summary Stats */}
-                    <div className="p-6 grid grid-cols-2 gap-4 border-b border-gray-200 dark:border-gray-700">
+                    <div className="p-4 md:p-6 grid grid-cols-2 gap-4 border-b border-gray-200 dark:border-gray-700">
                         <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-lg">
                             <div className="flex items-center gap-2 mb-2">
                                 <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -132,7 +132,7 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                     </div>
 
                     {/* Classes List */}
-                    <div className="p-6">
+                    <div className="p-4 md:p-6">
                         <h3 className="text-lg font-semibold mb-4">
                             {t("Classes Counted & Acknowledged", "ชั้นเรียนที่นับและยอมรับแล้ว")}
                         </h3>
@@ -212,7 +212,7 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                 </div>
 
                 {/* Sticky Footer */}
-                <div className="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-b-xl border-t border-gray-200 dark:border-gray-600">
+                <div className="p-4 md:p-6 bg-gray-50 dark:bg-gray-700/50 rounded-b-xl border-t border-gray-200 dark:border-gray-600">
                     <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
                         {t(
                             "For full class history, visit the Teachers Log tab",

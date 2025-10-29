@@ -138,7 +138,7 @@ export default function LocationProposalForm({
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4">
             <div>
               <label htmlFor="school" className="block text-sm font-medium mb-2">
                 {t("School", "โรงเรียน")} *
@@ -242,7 +242,7 @@ export default function LocationProposalForm({
 
           {/* My Proposals List */}
           {myProposals && myProposals.length > 0 && (
-            <div className="border-t dark:border-gray-700 p-6">
+            <div className="border-t dark:border-gray-700 p-4 md:p-6">
               <h3 className="text-lg font-semibold mb-4">
                 {t("My Proposed Locations", "สถานที่ที่ฉันเสนอ")}
               </h3>

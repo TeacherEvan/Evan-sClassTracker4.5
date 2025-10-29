@@ -105,7 +105,7 @@ export function HelpWindow({ userRole, onClose }: HelpWindowProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6 md:p-8">
+        <div className="p-4 md:p-8">
           <div className="mb-6">
             <p className="text-gray-600 dark:text-gray-400 text-base">
               {t(
