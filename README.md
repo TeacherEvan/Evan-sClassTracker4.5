@@ -2,10 +2,15 @@
 
 Bilingual English/Thai class tracker for teachers and schools - Built with Next.js 15, React 19, Convex & Tailwind v4
 
-## ✨ Latest Updates (Oct 27, 2025)
+## ✨ Latest Updates (Oct 29, 2025)
 
 ### New Features & Improvements
 
+- ✅ **Filter Navigation Tabs**: Prominent filter controls at top of Class Bookings page
+  - Teacher, School, Student filters always visible (no scrolling needed)
+  - Color-coded icons for quick recognition
+  - Live results count and Clear All Filters button
+  - 70-75% reduction in scroll distance for navigation
 - ✅ **Hierarchical Student Selector**: Progressive filtering (Grade → Class → Student) reduces cognitive load
 - ✅ **Enhanced Class Count System**: Teacher selection, print language choice, detailed reporting for moderators
 - ✅ **Post-Class Validation Fix**: Now truly allows optional bilingual notes (at least one language)
@@ -15,7 +20,7 @@ Bilingual English/Thai class tracker for teachers and schools - Built with Next.
 
 - ❌ **YouTube Downloader**: Removed per user request (simplified Teacher Helper)
 
-### Previous Fixes (Oct 26, 2025)
+### Previous Fixes (Oct 26-27, 2025)
 
 - ✅ **Student Creation**: Empty lastName allowed for Thai single-name students
 - ✅ **Duplicate Prevention**: Blocks duplicate students (same name+grade+class+school)  

@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.9] - October 29, 2025
+
+### Added
+
+- **Filter Navigation Tabs**: Prominent filter controls now appear at top of Class Bookings page
+  - Teacher, School, and Student filters always visible (no need to close booking form)
+  - Color-coded icons for quick recognition (blue/green/purple)
+  - Live results count showing "X of Y classes"
+  - 70-75% reduction in scroll distance for navigation
+  - Clear All Filters button with gradient styling
+
+### Changed
+
+- **Class Bookings UX**: Filters repositioned before booking form for better navigation flow
+- **Filter Design**: Enhanced with gradient backgrounds, individual filter cards, and larger touch targets
+
 ## [4.5.4] - October 27, 2025
 
 ### Added

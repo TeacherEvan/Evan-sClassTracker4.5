@@ -1,7 +1,7 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.8 (Oct 29, 2025)
+**Version:** 4.5.9 (Oct 29, 2025)
 
 ---
 
@@ -139,7 +139,8 @@ This documentation is split into focused sections for efficient knowledge discov
 
 ## 🔄 Last Updated
 
-**October 29, 2025** - Version 4.5.8
+**October 29, 2025** - Version 4.5.9
+- **Filter Navigation Tabs**: Class Bookings page now has prominent filters at top (70-75% less scrolling)
 - Added Pagination Pattern (#19), Collapsible Section Pattern (#20), and Visual Bloat Fix Pattern (#21)
 - 85-96% DOM reduction, 64% memory reduction, 33% faster mobile loads
 - Critical UX fix: 156-212px vertical space reclaimed per modal (taskbar never hides buttons)
