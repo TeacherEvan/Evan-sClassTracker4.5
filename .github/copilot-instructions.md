@@ -1,7 +1,7 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.7 (Oct 28, 2025)
+**Version:** 4.5.8 (Oct 29, 2025)
 
 ---
 
@@ -25,7 +25,7 @@ This documentation is split into focused sections for efficient knowledge discov
 
 ### 📚 Core Documentation
 
-**[Non-Negotiable Patterns](./copilot-docs/03-patterns.md)** (20 patterns)
+**[Non-Negotiable Patterns](./copilot-docs/03-patterns.md)** (21 patterns)
 - Bilingual-first development
 - Index-first queries (performance critical)
 - N+1 query prevention
@@ -47,6 +47,7 @@ This documentation is split into focused sections for efficient knowledge discov
 - Modal flex layout pattern (NEW Oct 2025)
 - Pagination pattern (NEW Oct 2025)
 - Collapsible section pattern (NEW Oct 2025)
+- Visual bloat fix pattern (NEW Oct 2025)
 
 **[Integration Points & Architecture](./copilot-docs/04-integration.md)**
 - System architecture overview (3-tier)
@@ -127,19 +128,22 @@ This documentation is split into focused sections for efficient knowledge discov
 
 ## 📊 Documentation Stats
 
-- **Total Documentation**: ~2000 lines split into 10 focused files
-- **Code Patterns**: 20 non-negotiable patterns documented
+- **Total Documentation**: ~2500 lines split into 10 focused files
+- **Code Patterns**: 21 non-negotiable patterns documented
 - **Architecture Diagrams**: 11 ASCII diagrams across integration docs
 - **Test Best Practices**: 7 E2E testing patterns + 4 performance optimizations
 - **Security Warnings**: 4 known limitations clearly marked
+- **Recent Updates**: Visual bloat fix (Oct 29, 2025) - 156-212px vertical space reclaimed
 
 ---
 
 ## 🔄 Last Updated
 
 **October 29, 2025** - Version 4.5.8
-- Added Pagination Pattern (#19) and Collapsible Section Pattern (#20)
+- Added Pagination Pattern (#19), Collapsible Section Pattern (#20), and Visual Bloat Fix Pattern (#21)
 - 85-96% DOM reduction, 64% memory reduction, 33% faster mobile loads
+- Critical UX fix: 156-212px vertical space reclaimed per modal (taskbar never hides buttons)
+- Modal height standardized to `max-h-[85vh]` with responsive padding `p-4 md:p-6`
 - Comprehensive code review completed (see CODE_REVIEW_OCT_29_2025.md)
 - All patterns documented with examples and performance metrics
 

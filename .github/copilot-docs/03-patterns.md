@@ -742,3 +742,101 @@ import { CollapsibleSection } from "@/components/collapsible-section";
 - `components/class-booking.tsx` - Optional class fields
 
 **Component**: `components/collapsible-section.tsx` (109 lines, fully reusable)
+
+### 21. Visual Bloat Fix Pattern (NEW Oct 2025)
+
+**Critical UX fix: Prevent Windows taskbar from hiding modal buttons**
+
+**Problem**: Modals using `max-h-[95vh]` exceeded available viewport on 1080p displays after accounting for browser chrome (40px) + Windows taskbar (48px), resulting in buttons being cut off below the taskbar.
+
+**Solution**: Multi-phase emergency initiative that standardized modal heights and responsive padding across all 20+ modal components.
+
+```tsx
+// ❌ WRONG - Causes taskbar cutoff on 1080p
+<div className="max-w-2xl w-full max-h-[95vh] overflow-y-auto p-6">
+  {/* Modal content */}
+</div>
+
+// ✅ CORRECT - Visual Bloat Fix Pattern
+<div className="max-w-2xl w-full flex flex-col max-h-[85vh]">
+  {/* Sticky Header */}
+  <div className="p-4 md:p-6 border-b bg-white dark:bg-gray-800">
+    <h2>Modal Title</h2>
+  </div>
+  
+  {/* Scrollable Content */}
+  <div className="overflow-y-auto flex-grow p-4 md:p-6 space-y-4 md:space-y-6">
+    {content}
+  </div>
+  
+  {/* Sticky Footer */}
+  <div className="p-4 md:p-6 border-t bg-white dark:bg-gray-800">
+    <button>Submit</button>
+  </div>
+</div>
+```
+
+**Key Changes** (4-phase implementation):
+
+1. **Phase 1 - Height Fix**: `max-h-[95vh]` → `max-h-[85vh]` (108px reclaimed)
+2. **Phase 2 - Responsive Padding**: `p-6` → `p-4 md:p-6` (16-32px saved on mobile)
+3. **Phase 3 - Flex Layout**: Verify sticky header/footer with single scroll area
+4. **Phase 4 - Spacing Optimization**: `space-y-6` → `space-y-4 md:space-y-6`, `gap-6` → `gap-3 md:gap-4`
+
+**Space Reclaimed Per Modal**:
+
+- **Mobile**: 156-212px vertical space
+- **Desktop**: 108px vertical space
+- **Taskbar Safety Margin**: +74px to +236px across resolutions (1080p to 4K)
+
+**Critical Rules**:
+
+- ✅ Use `max-h-[85vh]` for ALL modals (never 90vh or 95vh)
+- ✅ Use responsive padding: `p-4 md:p-6` (not fixed `p-6`)
+- ✅ Use responsive spacing: `space-y-4 md:space-y-6`, `gap-3 md:gap-4`
+- ✅ Use `flex flex-col` layout with sticky header/footer
+- ✅ Single scroll area on content only (`overflow-y-auto flex-grow`)
+- ❌ NEVER use `max-h-[95vh]` or `max-h-[90vh]`
+- ❌ NEVER use fixed padding on modals (`p-6` without responsive variant)
+- ❌ NEVER nest multiple `overflow-y-auto` containers
+
+**Performance Impact**:
+
+| Resolution | Available Space | Modal Height | Safety Margin | Status |
+|------------|-----------------|--------------|---------------|--------|
+| 1080p      | 992px           | 918px        | +74px         | ✅ SAFE |
+| 1440p      | 1352px          | 1224px       | +128px        | ✅ SAFE |
+| 4K (2160p) | 2072px          | 1836px       | +236px        | ✅ SAFE |
+| Mobile     | 844px           | 717px        | +127px        | ✅ SAFE |
+
+**Files Modified** (20+ components):
+
+- edit-class-modal.tsx
+- merge-classes-modal.tsx
+- post-class-notes-modal.tsx
+- help-detail-modal.tsx
+- class-conflict-modal.tsx
+- teacher-class-count-modal.tsx
+- class-detail-modal.tsx
+- password-change-dialog.tsx
+- location-proposal-form.tsx
+- weekly-calendar.tsx
+- student-management.tsx
+- help-window.tsx
+- startup-window.tsx
+- update-announcement-modal.tsx
+- desktop-notification-window.tsx
+- admin-notification-windows.tsx
+- admin-error-reports.tsx
+- admin-contact-requests.tsx
+- admin-contact-button.tsx
+- class-count-modal.tsx
+
+**Documentation**:
+
+- `FINAL_IMPLEMENTATION_SUMMARY_BLOAT_FIX_OCT_29_2025.md` - Complete 4-phase summary
+- `IMPLEMENTATION_SUMMARY_BLOAT_FIX_OCT_29_2025.md` - Phase 1 details
+- `IMPLEMENTATION_SUMMARY_BLOAT_FIX_PHASE_2_OCT_29_2025.md` - Phase 2 details
+- `IMPLEMENTATION_SUMMARY_BLOAT_FIX_PHASE_4_OCT_29_2025.md` - Phase 4 details
+
+**User Impact**: Resolved critical UX complaint - "taskbar cuts off buttons and features and I can't complete tasks" ✅ **FIXED**

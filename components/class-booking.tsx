@@ -204,6 +204,11 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const [pendingRejectId, setPendingRejectId] = useState<Id<"classes"> | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
 
+  // Filter states for navigation
+  const [filterTeacherId, setFilterTeacherId] = useState<Id<"users"> | "all">("all");
+  const [filterSchoolId, setFilterSchoolId] = useState<Id<"schools"> | "all">("all");
+  const [filterStudentId, setFilterStudentId] = useState<Id<"students"> | "all">("all");
+
   // Query locations for selected school
   const locations = useQuery(
     api.locations.list,
@@ -1606,9 +1611,126 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
           </div>
         )}
 
+        {/* Filter Tabs - Teacher, School, Student */}
+        {!showForm && classes && classes.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 mb-4">
+            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+              {t("Filter Classes", "กรองคลาส")}
+            </h3>
+
+            <div className="space-y-4">
+              {/* Teacher Filter */}
+              {(userRole === "admin" || userRole === "moderator") && (
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                    {t("Filter by Teacher", "กรองตามครู")}
+                  </label>
+                  <select
+                    value={filterTeacherId}
+                    onChange={(e) => setFilterTeacherId(e.target.value as Id<"users"> | "all")}
+                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  >
+                    <option value="all">{t("All Teachers", "ครูทั้งหมด")}</option>
+                    {allTeachers?.map((teacher) => (
+                      <option key={teacher._id} value={teacher._id}>
+                        {teacher.username}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* School Filter */}
+              {userRole === "admin" && (
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                    {t("Filter by School", "กรองตามโรงเรียน")}
+                  </label>
+                  <select
+                    value={filterSchoolId}
+                    onChange={(e) => setFilterSchoolId(e.target.value as Id<"schools"> | "all")}
+                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  >
+                    <option value="all">{t("All Schools", "โรงเรียนทั้งหมด")}</option>
+                    {schools?.map((school) => (
+                      <option key={school._id} value={school._id}>
+                        {school.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Student Filter */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                  {t("Filter by Student", "กรองตามนักเรียน")}
+                </label>
+                <select
+                  value={filterStudentId}
+                  onChange={(e) => setFilterStudentId(e.target.value as Id<"students"> | "all")}
+                  className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                >
+                  <option value="all">{t("All Students", "นักเรียนทั้งหมด")}</option>
+                  {/* Get unique students from classes */}
+                  {Array.from(new Set(classes.map(c => c.studentId)))
+                    .map(studentId => {
+                      const classWithStudent = classes.find(c => c.studentId === studentId);
+                      return classWithStudent?.student ? (
+                        <option key={studentId} value={studentId}>
+                          {classWithStudent.student.firstName} {classWithStudent.student.lastName}
+                          {classWithStudent.student.nickname ? ` (${classWithStudent.student.nickname})` : ""}
+                        </option>
+                      ) : null;
+                    })
+                    .filter(Boolean)
+                  }
+                </select>
+              </div>
+
+              {/* Clear Filters Button */}
+              {(filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all") && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterTeacherId("all");
+                    setFilterSchoolId("all");
+                    setFilterStudentId("all");
+                  }}
+                  className="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-sm font-medium"
+                >
+                  {t("Clear All Filters", "ล้างตัวกรองทั้งหมด")}
+                </button>
+              )}
+
+              {/* Results Count */}
+              <div className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                {(() => {
+                  const filteredCount = classes.filter((classItem) => {
+                    if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
+                    if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
+                    if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
+                    return true;
+                  }).length;
+                  return t(
+                    `Showing ${filteredCount} of ${classes.length} classes`,
+                    `แสดง ${filteredCount} จาก ${classes.length} คลาส`
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Classes List */}
         <div className="space-y-4">
-          {classes?.map((classItem) => {
+          {classes?.filter((classItem) => {
+            // Apply filters
+            if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
+            if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
+            if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
+            return true;
+          }).map((classItem) => {
             // Detect conflicts for this class
             const conflictIds = detectConflicts(classes, classItem);
             const hasConflicts = conflictIds.length > 0;
@@ -1635,16 +1757,26 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
             );
           })}
 
-          {classes && classes.length === 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-8 md:p-6 text-center text-gray-500 dark:text-gray-400">
-              <Calendar className="w-16 h-16 md:w-12 md:h-12 mx-auto mb-3 opacity-50" />
-              <p className="text-base md:text-base">
-                {userRole === "moderator" || userRole === "admin"
-                  ? t("No classes found", "ไม่พบชั้นเรียน")
-                  : t("No class requests found", "ไม่พบคำขอชั้นเรียน")}
-              </p>
-            </div>
-          )}
+          {/* No classes found - check if it's due to filters or truly empty */}
+          {classes && classes.filter((classItem) => {
+            if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
+            if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
+            if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
+            return true;
+          }).length === 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-8 md:p-6 text-center text-gray-500 dark:text-gray-400">
+                <Calendar className="w-16 h-16 md:w-12 md:h-12 mx-auto mb-3 opacity-50" />
+                <p className="text-base md:text-base">
+                  {(filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all") ? (
+                    t("No classes match the selected filters", "ไม่พบคลาสที่ตรงกับตัวกรองที่เลือก")
+                  ) : (
+                    userRole === "moderator" || userRole === "admin"
+                      ? t("No classes found", "ไม่พบชั้นเรียน")
+                      : t("No class requests found", "ไม่พบคำขอชั้นเรียน")
+                  )}
+                </p>
+              </div>
+            )}
         </div>
         {/* End of main content container */}
       </div>
