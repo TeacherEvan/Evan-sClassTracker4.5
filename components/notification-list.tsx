@@ -9,6 +9,7 @@ import type { Notification, User } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
 import { Bell, CheckCheck, Trash2, X } from "lucide-react";
 import { memo } from "react";
+import { PaginatedList } from "./paginated-list";
 
 // Memoized notification item component for better performance
 const NotificationItem = memo(({
@@ -154,8 +155,10 @@ export function NotificationList({ userId, currentUser }: { userId?: string; cur
           <p className="text-base md:text-base">{t("No notifications yet", "ยังไม่มีการแจ้งเตือน")}</p>
         </div>
       ) : (
-        <div className="space-y-3 md:space-y-3">
-          {notifications.map((notification) => (
+        <PaginatedList
+          items={notifications}
+          itemsPerPage={20}
+          renderItem={(notification) => (
             <NotificationItem
               key={notification._id}
               notification={notification}
@@ -165,8 +168,9 @@ export function NotificationList({ userId, currentUser }: { userId?: string; cur
               onDelete={isAdmin ? handleDelete : undefined}
               isAdmin={isAdmin}
             />
-          ))}
-        </div>
+          )}
+          className="space-y-3 md:space-y-3"
+        />
       )}
     </div>
   );

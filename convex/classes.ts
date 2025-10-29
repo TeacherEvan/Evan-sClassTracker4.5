@@ -1737,6 +1737,11 @@ export const mergeClasses = mutation({
       args.sourceClassIds.map((id) => ctx.db.get(id))
     );
 
+    // CRITICAL FIX: Use 5-minute time tolerance to match frontend grouping logic
+    // Frontend groups classes within 5-minute window (merge-classes-modal.tsx line 47)
+    // This allows classes at 3:00:00 PM and 3:00:30 PM to be merged together
+    const TIME_TOLERANCE = 5 * 60 * 1000; // 5 minutes in milliseconds
+
     // Verify all source classes exist and belong to the same teacher and school
     for (const sourceClass of sourceClasses) {
       if (!sourceClass) {
@@ -1751,9 +1756,10 @@ export const mergeClasses = mutation({
         throw new Error("Can only merge classes from the same school");
       }
 
-      // Check if scheduled for the same date/time
-      if (sourceClass.scheduledDate !== targetClass.scheduledDate) {
-        throw new Error("Can only merge classes scheduled for the same date and time");
+      // Check if scheduled for the same date/time (with 5-minute tolerance)
+      const timeDiff = Math.abs(sourceClass.scheduledDate - targetClass.scheduledDate);
+      if (timeDiff > TIME_TOLERANCE) {
+        throw new Error("Can only merge classes scheduled within 5 minutes of each other");
       }
 
       // Check if at the same location
@@ -1970,8 +1976,8 @@ export const bulkDeleteClasses = mutation({
 });
 
 /**
- * Find recurring series of classes based on a seed class
- * Returns all classes that match the weekly pattern
+ * Find Recurring Series Query
+ * Auto-detects if a class is part of a weekly recurring pattern
  */
 export const findRecurringSeries = query({
   args: {
@@ -1979,31 +1985,27 @@ export const findRecurringSeries = query({
     userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    // Get the seed class
+    // Get seed class
     const seedClass = await ctx.db.get(args.classId);
     if (!seedClass) {
       throw new Error("Class not found");
     }
 
-    // Get user and verify authorization
+    // Verify authorization
     const user = await ctx.db.get(args.userId);
     if (!user) {
       throw new Error("User not found");
     }
 
-    // Check if user has permission to view this class
     const isTeacherOwner = seedClass.teacherId === args.userId;
     const isModeratorOrAdmin = user.role === "moderator" || user.role === "admin";
 
     if (!isTeacherOwner && !isModeratorOrAdmin) {
-      throw new Error("Unauthorized: You don't have permission to view this class");
+      throw new Error("Unauthorized: You can only view recurring series for your own classes");
     }
 
-    // Get the day of week from seed class
-    const seedDate = new Date(seedClass.scheduledDate);
-    const dayOfWeek = seedDate.getDay();
-
-    // Find all classes with same teacher, student, location
+    // Find all classes matching pattern
+    const seedDayOfWeek = new Date(seedClass.scheduledDate).getDay();
     const allClasses = await ctx.db
       .query("classes")
       .withIndex("by_teacher_and_date", (q) =>
@@ -2012,52 +2014,24 @@ export const findRecurringSeries = query({
       .filter((q) => q.eq(q.field("studentId"), seedClass.studentId))
       .collect();
 
-    // Filter to only classes that:
-    // 1. Match location (or both have no location)
-    // 2. Fall on the same day of week
-    // 3. Are approximately 7 days apart (weekly pattern)
+    // Filter to weekly pattern (same location, day of week, ~7 days apart)
     const series = allClasses.filter((cls) => {
-      // Location match
-      const locationMatch =
-        cls.locationId === seedClass.locationId ||
-        (!cls.locationId && !seedClass.locationId);
-      if (!locationMatch) return false;
-
-      // Day of week match
-      const clsDate = new Date(cls.scheduledDate);
-      if (clsDate.getDay() !== dayOfWeek) return false;
-
-      return true;
+      const locationMatch = cls.locationId === seedClass.locationId;
+      const dayMatch = new Date(cls.scheduledDate).getDay() === seedDayOfWeek;
+      const daysDiff = Math.abs(
+        (cls.scheduledDate - seedClass.scheduledDate) / 86400000
+      );
+      const weeklyPattern = daysDiff % 7 <= 1;
+      return locationMatch && dayMatch && weeklyPattern;
     });
 
-    // Sort by date
-    series.sort((a, b) => a.scheduledDate - b.scheduledDate);
-
-    // Populate with student and location info
-    const populatedSeries = await Promise.all(
-      series.map(async (cls) => {
-        const student = await ctx.db.get(cls.studentId);
-        const location = cls.locationId
-          ? await ctx.db.get(cls.locationId)
-          : null;
-
-        return {
-          ...cls,
-          studentName: student
-            ? `${student.firstName} ${student.lastName}`
-            : "Unknown",
-          locationName: location?.name || cls.pendingLocationName || "Unknown",
-        };
-      })
-    );
-
-    return populatedSeries;
+    return series.sort((a, b) => a.scheduledDate - b.scheduledDate);
   },
 });
 
 /**
- * Delete a recurring series of classes
- * Teachers can delete their own series, admins can delete any
+ * Delete Recurring Series Mutation
+ * Bulk deletes classes in a recurring series with authorization and audit logging
  */
 export const deleteRecurringSeries = mutation({
   args: {
@@ -2066,36 +2040,26 @@ export const deleteRecurringSeries = mutation({
     reason: v.string(),
   },
   handler: async (ctx, args) => {
-    // Rate limiting
-    await checkRateLimit(ctx, {
-      key: `deleteRecurringSeries-${args.userId}`,
-      limit: 5,
-      windowMs: 60000, // 5 deletions per minute
-    });
-
-    // Validate input
-    if (args.classIds.length === 0) {
-      throw new Error("No classes selected for deletion");
-    }
-    if (args.classIds.length > 100) {
-      throw new Error("Maximum 100 classes can be deleted at once");
-    }
-    if (!args.reason || args.reason.trim().length < 3) {
-      throw new Error("Please provide a reason for deletion (minimum 3 characters)");
-    }
-
-    // Get user
+    // Verify user exists
     const user = await ctx.db.get(args.userId);
     if (!user) {
       throw new Error("User not found");
     }
 
+    // Validate batch size
+    if (args.classIds.length > 50) {
+      throw new Error("Maximum 50 classes can be deleted in a recurring series at once");
+    }
+
+    // Validate reason
+    validateLength(args.reason, "Reason", 500, 5);
+
     const results = {
       successful: [] as string[],
-      failed: [] as { classId: string; error: string }[],
+      failed: [] as Array<{ classId: string; error: string }>,
     };
 
-    // Delete each class
+    // Process each class deletion
     for (const classId of args.classIds) {
       try {
         const classData = await ctx.db.get(classId);
@@ -2107,22 +2071,18 @@ export const deleteRecurringSeries = mutation({
           continue;
         }
 
-        // Verify authorization
-        await verifyClassAccess(ctx, args.userId, classData, {
-          requireModeratorOrAdmin: true,
-          allowTeacherOwner: true,
-        });
-
-        // Check if class date has not passed (except for admins)
-        if (user.role !== "admin") {
-          const currentTime = Date.now();
-          if (classData.scheduledDate < currentTime) {
-            results.failed.push({
-              classId: classId.toString(),
-              error: "Cannot delete classes whose dates have already passed",
-            });
-            continue;
-          }
+        // Verify authorization for this specific class
+        try {
+          await verifyClassAccess(ctx, args.userId, classData, {
+            requireModeratorOrAdmin: false,
+            allowTeacherOwner: true,
+          });
+        } catch (error) {
+          results.failed.push({
+            classId: classId.toString(),
+            error: error instanceof Error ? error.message : "Unauthorized",
+          });
+          continue;
         }
 
         // Delete the class
@@ -2130,15 +2090,12 @@ export const deleteRecurringSeries = mutation({
         results.successful.push(classId.toString());
 
         // Log the deletion
-        const student = await ctx.db.get(classData.studentId);
         await logAudit(ctx, {
           userId: args.userId,
           action: "DELETE_CLASS" as const,
           targetType: "CLASSES" as const,
           targetId: classId,
-          targetName: student
-            ? `${student.firstName} ${student.lastName} - ${new Date(classData.scheduledDate).toLocaleDateString()}`
-            : `Class on ${new Date(classData.scheduledDate).toLocaleDateString()}`,
+          targetName: `Recurring class on ${new Date(classData.scheduledDate).toLocaleDateString()}`,
           reason: args.reason,
           schoolId: classData.schoolId,
         });
@@ -2146,24 +2103,6 @@ export const deleteRecurringSeries = mutation({
         results.failed.push({
           classId: classId.toString(),
           error: error instanceof Error ? error.message : "Unknown error",
-        });
-      }
-    }
-
-    // Send notification to teacher (if deleted by moderator/admin)
-    if (results.successful.length > 0 && user.role !== "teacher") {
-      const firstClass = await ctx.db.get(args.classIds[0]);
-      if (firstClass) {
-        const student = await ctx.db.get(firstClass.studentId);
-        await ctx.db.insert("notifications", {
-          userId: firstClass.teacherId,
-          title: "Recurring Classes Deleted",
-          titleTh: "ลบคลาสที่ซ้ำแล้ว",
-          message: `${results.successful.length} recurring classes with ${student?.firstName} ${student?.lastName} were deleted by ${user.username}. Reason: ${args.reason}`,
-          messageTh: `คลาสที่ซ้ำ ${results.successful.length} คลาสกับ ${student?.firstName} ${student?.lastName} ถูกลบโดย ${user.username} เหตุผล: ${args.reason}`,
-          type: "warning",
-          read: false,
-          createdAt: Date.now(),
         });
       }
     }

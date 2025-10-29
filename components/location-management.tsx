@@ -7,6 +7,7 @@ import { toast } from "@/lib/toast";
 import { useMutation, useQuery } from "convex/react";
 import { CheckCircle, Clock, MapPin, Pencil, Plus, ToggleLeft, ToggleRight, Trash2, XCircle } from "lucide-react";
 import { useState } from "react";
+import { PaginatedList } from "./paginated-list";
 
 interface LocationManagementProps {
     userId: Id<"users">;
@@ -312,67 +313,72 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
             {/* Locations List */}
             {selectedSchoolId && (
                 <div className="space-y-3">
-                    {locations?.map((location) => (
-                        <div
-                            key={location._id}
-                            className={`bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex items-center justify-between ${!location.isActive ? "opacity-60" : ""
-                                }`}
-                        >
-                            <div className="flex-1">
-                                <h3 className="font-semibold text-lg">{location.name}</h3>
-                                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                                    {location.nameTh}
-                                </p>
-                                {!location.isActive && (
-                                    <span className="text-xs text-red-600 dark:text-red-400">
-                                        {t("(Inactive)", "(ไม่ใช้งาน)")}
-                                    </span>
-                                )}
-                            </div>
-
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={() => handleToggleActive(location._id)}
-                                    className={`p-2 rounded-lg transition-colors ${location.isActive
-                                        ? "bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400"
-                                        }`}
-                                    title={t(
-                                        location.isActive ? "Deactivate" : "Activate",
-                                        location.isActive ? "ปิดใช้งาน" : "เปิดใช้งาน"
-                                    )}
-                                >
-                                    {location.isActive ? (
-                                        <ToggleRight className="w-5 h-5" />
-                                    ) : (
-                                        <ToggleLeft className="w-5 h-5" />
-                                    )}
-                                </button>
-
-                                <button
-                                    onClick={() => handleEdit(location)}
-                                    className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors dark:bg-blue-900/20 dark:text-blue-400"
-                                    title={t("Edit", "แก้ไข")}
-                                >
-                                    <Pencil className="w-5 h-5" />
-                                </button>
-
-                                <button
-                                    onClick={() => handleDelete(location._id)}
-                                    className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors dark:bg-red-900/20 dark:text-red-400"
-                                    title={t("Delete", "ลบ")}
-                                >
-                                    <Trash2 className="w-5 h-5" />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-
-                    {locations && locations.length === 0 && (
+                    {locations && locations.length === 0 ? (
                         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400">
                             {t("No locations found. Add your first location above.", "ไม่พบสถานที่ เพิ่มสถานที่แรกของคุณด้านบน")}
                         </div>
-                    )}
+                    ) : locations ? (
+                        <PaginatedList
+                            items={locations}
+                            itemsPerPage={15}
+                            renderItem={(location) => (
+                                <div
+                                    key={location._id}
+                                    className={`bg-white dark:bg-gray-800 rounded-lg shadow p-4 flex items-center justify-between ${!location.isActive ? "opacity-60" : ""
+                                        }`}
+                                >
+                                    <div className="flex-1">
+                                        <h3 className="font-semibold text-lg">{location.name}</h3>
+                                        <p className="text-gray-600 dark:text-gray-400 text-sm">
+                                            {location.nameTh}
+                                        </p>
+                                        {!location.isActive && (
+                                            <span className="text-xs text-red-600 dark:text-red-400">
+                                                {t("(Inactive)", "(ไม่ใช้งาน)")}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleToggleActive(location._id)}
+                                            className={`p-2 rounded-lg transition-colors ${location.isActive
+                                                ? "bg-green-100 text-green-600 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400"
+                                                : "bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400"
+                                                }`}
+                                            title={t(
+                                                location.isActive ? "Deactivate" : "Activate",
+                                                location.isActive ? "ปิดใช้งาน" : "เปิดใช้งาน"
+                                            )}
+                                        >
+                                            {location.isActive ? (
+                                                <ToggleRight className="w-5 h-5" />
+                                            ) : (
+                                                <ToggleLeft className="w-5 h-5" />
+                                            )}
+                                        </button>
+
+                                        <button
+                                            onClick={() => handleEdit(location)}
+                                            className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors dark:bg-blue-900/20 dark:text-blue-400"
+                                            title={t("Edit", "แก้ไข")}
+                                        >
+                                            <Pencil className="w-5 h-5" />
+                                        </button>
+
+                                        <button
+                                            onClick={() => handleDelete(location._id)}
+                                            className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors dark:bg-red-900/20 dark:text-red-400"
+                                            title={t("Delete", "ลบ")}
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                            className="space-y-3"
+                        />
+                    ) : null}
                 </div>
             )}
 

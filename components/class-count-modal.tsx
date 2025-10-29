@@ -48,10 +48,10 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
     const displayedClasses = showAllClasses ? classes : classes.slice(0, 5);
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-                {/* Header */}
-                <div className="sticky top-0 bg-gradient-to-r from-yellow-400 to-yellow-500 dark:from-yellow-500 dark:to-yellow-600 p-6 rounded-t-xl">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl max-w-3xl w-full flex flex-col max-h-[95vh] shadow-2xl">
+                {/* Sticky Header */}
+                <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 dark:from-yellow-500 dark:to-yellow-600 p-6 rounded-t-xl">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="p-3 bg-white/20 rounded-full">
@@ -75,139 +75,143 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                     </div>
                 </div>
 
-                {/* Disclaimer */}
-                <div className="p-6 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
-                    <div className="flex gap-3">
-                        <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                        <div className="space-y-2">
-                            <p className="text-sm text-blue-900 dark:text-blue-100 font-medium">
-                                {t(
-                                    "This is your current class count for the month. Value will reset at the end of each cycle determined by your moderator.",
-                                    "นี่คือจำนวนชั้นเรียนปัจจุบันของคุณสำหรับเดือนนี้ ค่าจะรีเซ็ตในตอนท้ายของแต่ละรอบที่กำหนดโดยผู้ดูแลของคุณ"
+                {/* Scrollable Content */}
+                <div className="overflow-y-auto flex-grow">
+
+                    {/* Disclaimer */}
+                    <div className="p-6 bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+                        <div className="flex gap-3">
+                            <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                            <div className="space-y-2">
+                                <p className="text-sm text-blue-900 dark:text-blue-100 font-medium">
+                                    {t(
+                                        "This is your current class count for the month. Value will reset at the end of each cycle determined by your moderator.",
+                                        "นี่คือจำนวนชั้นเรียนปัจจุบันของคุณสำหรับเดือนนี้ ค่าจะรีเซ็ตในตอนท้ายของแต่ละรอบที่กำหนดโดยผู้ดูแลของคุณ"
+                                    )}
+                                </p>
+                                <div className="flex items-center gap-2 text-xs text-blue-700 dark:text-blue-300">
+                                    <Calendar className="w-4 h-4" />
+                                    <span>
+                                        {t("Current Cycle:", "รอบปัจจุบัน:")} {new Date(cycleInfo.startDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")} -{" "}
+                                        {new Date(cycleInfo.endDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
+                                    </span>
+                                </div>
+                                {cycleInfo.notes && (
+                                    <p className="text-xs text-blue-600 dark:text-blue-400 italic">
+                                        {language === "th" ? cycleInfo.notesTh || cycleInfo.notes : cycleInfo.notes}
+                                    </p>
                                 )}
-                            </p>
-                            <div className="flex items-center gap-2 text-xs text-blue-700 dark:text-blue-300">
-                                <Calendar className="w-4 h-4" />
-                                <span>
-                                    {t("Current Cycle:", "รอบปัจจุบัน:")} {new Date(cycleInfo.startDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")} -{" "}
-                                    {new Date(cycleInfo.endDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Summary Stats */}
+                    <div className="p-6 grid grid-cols-2 gap-4 border-b border-gray-200 dark:border-gray-700">
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-lg">
+                            <div className="flex items-center gap-2 mb-2">
+                                <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                <span className="text-sm font-medium text-green-900 dark:text-green-100">
+                                    {t("Total ClassCount", "จำนวนชั้นเรียนรวม")}
                                 </span>
                             </div>
-                            {cycleInfo.notes && (
-                                <p className="text-xs text-blue-600 dark:text-blue-400 italic">
-                                    {language === "th" ? cycleInfo.notesTh || cycleInfo.notes : cycleInfo.notes}
-                                </p>
-                            )}
+                            <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                                {summary.totalClassCount}
+                            </p>
+                        </div>
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-lg">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                                <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                                    {t("Classes Counted", "ชั้นเรียนที่นับ")}
+                                </span>
+                            </div>
+                            <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                                {summary.totalClasses}
+                            </p>
                         </div>
                     </div>
-                </div>
 
-                {/* Summary Stats */}
-                <div className="p-6 grid grid-cols-2 gap-4 border-b border-gray-200 dark:border-gray-700">
-                    <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
-                            <span className="text-sm font-medium text-green-900 dark:text-green-100">
-                                {t("Total ClassCount", "จำนวนชั้นเรียนรวม")}
-                            </span>
-                        </div>
-                        <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                            {summary.totalClassCount}
-                        </p>
-                    </div>
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                            <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                            <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                                {t("Classes Counted", "ชั้นเรียนที่นับ")}
-                            </span>
-                        </div>
-                        <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                            {summary.totalClasses}
-                        </p>
-                    </div>
-                </div>
+                    {/* Classes List */}
+                    <div className="p-6">
+                        <h3 className="text-lg font-semibold mb-4">
+                            {t("Classes Counted & Acknowledged", "ชั้นเรียนที่นับและยอมรับแล้ว")}
+                        </h3>
 
-                {/* Classes List */}
-                <div className="p-6">
-                    <h3 className="text-lg font-semibold mb-4">
-                        {t("Classes Counted & Acknowledged", "ชั้นเรียนที่นับและยอมรับแล้ว")}
-                    </h3>
-
-                    {classes.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                            <GraduationCap className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                            <p>{t("No classes counted in this cycle yet", "ยังไม่มีชั้นเรียนที่นับในรอบนี้")}</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-3">
-                            {displayedClasses.map((cls) => (
-                                <div
-                                    key={cls.classId}
-                                    className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600"
-                                >
-                                    <div className="flex items-start justify-between mb-2">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                                <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                    {cls.primaryStudentName}
-                                                </span>
-                                            </div>
-                                            <div className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
-                                                <div className="flex items-center gap-1">
-                                                    <Calendar className="w-3.5 h-3.5" />
-                                                    <span>
-                                                        {new Date(cls.scheduledDate).toLocaleDateString(
-                                                            language === "th" ? "th-TH" : "en-US"
-                                                        )}
+                        {classes.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                                <GraduationCap className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                <p>{t("No classes counted in this cycle yet", "ยังไม่มีชั้นเรียนที่นับในรอบนี้")}</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-3">
+                                {displayedClasses.map((cls) => (
+                                    <div
+                                        key={cls.classId}
+                                        className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600"
+                                    >
+                                        <div className="flex items-start justify-between mb-2">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                                    <span className="font-medium text-gray-900 dark:text-gray-100">
+                                                        {cls.primaryStudentName}
                                                     </span>
                                                 </div>
-                                                <div className="flex items-center gap-1">
-                                                    <Clock className="w-3.5 h-3.5" />
-                                                    <span>{cls.duration} min</span>
+                                                <div className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
+                                                    <div className="flex items-center gap-1">
+                                                        <Calendar className="w-3.5 h-3.5" />
+                                                        <span>
+                                                            {new Date(cls.scheduledDate).toLocaleDateString(
+                                                                language === "th" ? "th-TH" : "en-US"
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <Clock className="w-3.5 h-3.5" />
+                                                        <span>{cls.duration} min</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <School className="w-3.5 h-3.5" />
+                                                        <span>{language === "th" ? cls.schoolNameTh : cls.schoolName}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <MapPin className="w-3.5 h-3.5" />
+                                                        <span>{language === "th" ? cls.locationNameTh : cls.locationName}</span>
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-1">
-                                                    <School className="w-3.5 h-3.5" />
-                                                    <span>{language === "th" ? cls.schoolNameTh : cls.schoolName}</span>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-full text-sm font-bold">
+                                                    {cls.classCount}
                                                 </div>
-                                                <div className="flex items-center gap-1">
-                                                    <MapPin className="w-3.5 h-3.5" />
-                                                    <span>{language === "th" ? cls.locationNameTh : cls.locationName}</span>
+                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                    {cls.studentCount} {cls.studentCount === 1 ? "student" : "students"}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="text-right">
-                                            <div className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-full text-sm font-bold">
-                                                {cls.classCount}
-                                            </div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                {cls.studentCount} {cls.studentCount === 1 ? "student" : "students"}
-                                            </div>
+                                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                            <CheckCircle className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                                            <span className="text-xs text-gray-600 dark:text-gray-400">
+                                                {t("Acknowledged by", "ยอมรับโดย")} {cls.acknowledgedBy}
+                                            </span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                                        <CheckCircle className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-                                        <span className="text-xs text-gray-600 dark:text-gray-400">
-                                            {t("Acknowledged by", "ยอมรับโดย")} {cls.acknowledgedBy}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
 
-                            {classes.length > 5 && !showAllClasses && (
-                                <button
-                                    onClick={() => setShowAllClasses(true)}
-                                    className="w-full py-3 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg font-medium transition-colors"
-                                >
-                                    {t(`Show All ${classes.length} Classes`, `แสดงทั้งหมด ${classes.length} ชั้นเรียน`)}
-                                </button>
-                            )}
-                        </div>
-                    )}
+                                {classes.length > 5 && !showAllClasses && (
+                                    <button
+                                        onClick={() => setShowAllClasses(true)}
+                                        className="w-full py-3 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg font-medium transition-colors"
+                                    >
+                                        {t(`Show All ${classes.length} Classes`, `แสดงทั้งหมด ${classes.length} ชั้นเรียน`)}
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                {/* Footer */}
+                {/* Sticky Footer */}
                 <div className="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-b-xl border-t border-gray-200 dark:border-gray-600">
                     <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
                         {t(
