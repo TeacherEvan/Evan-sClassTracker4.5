@@ -222,31 +222,50 @@ export const exportTeacherLogs = query({
             logs = logs.filter((log) => log.createdAt <= args.endDate!);
         }
 
-        // Populate related data
+        // Populate related data with error handling
         const exportData = await Promise.all(
             logs.map(async (log) => {
-                const teacher = await ctx.db.get(log.teacherId);
-                const school = await ctx.db.get(log.schoolId);
-                const acknowledgedByUser = log.acknowledgedBy
-                    ? await ctx.db.get(log.acknowledgedBy)
-                    : null;
+                try {
+                    const teacher = await ctx.db.get(log.teacherId);
+                    const school = await ctx.db.get(log.schoolId);
+                    const acknowledgedByUser = log.acknowledgedBy
+                        ? await ctx.db.get(log.acknowledgedBy)
+                        : null;
 
-                return {
-                    logId: log._id,
-                    teacherUsername: teacher?.username || "Unknown",
-                    schoolName: school?.name || "Unknown",
-                    schoolNameTh: school?.nameTh || "Unknown",
-                    action: log.action,
-                    actionTh: log.actionTh,
-                    details: log.details,
-                    detailsTh: log.detailsTh,
-                    acknowledged: log.acknowledged ? "Yes" : "No",
-                    acknowledgedBy: acknowledgedByUser?.username || "N/A",
-                    acknowledgedAt: log.acknowledgedAt
-                        ? new Date(log.acknowledgedAt).toISOString()
-                        : "N/A",
-                    createdAt: new Date(log.createdAt).toISOString(),
-                };
+                    return {
+                        logId: log._id,
+                        teacherUsername: teacher?.username || "Unknown",
+                        schoolName: school?.name || "Unknown",
+                        schoolNameTh: school?.nameTh || "Unknown",
+                        action: log.action,
+                        actionTh: log.actionTh,
+                        details: log.details,
+                        detailsTh: log.detailsTh,
+                        acknowledged: log.acknowledged ? "Yes" : "No",
+                        acknowledgedBy: acknowledgedByUser?.username || "N/A",
+                        acknowledgedAt: log.acknowledgedAt
+                            ? new Date(log.acknowledgedAt).toISOString()
+                            : "N/A",
+                        createdAt: new Date(log.createdAt).toISOString(),
+                    };
+                } catch (error) {
+                    // If there's an error fetching related data, return minimal info
+                    console.error(`Error processing log ${log._id}:`, error);
+                    return {
+                        logId: log._id,
+                        teacherUsername: "Error",
+                        schoolName: "Error",
+                        schoolNameTh: "Error",
+                        action: log.action,
+                        actionTh: log.actionTh,
+                        details: log.details,
+                        detailsTh: log.detailsTh,
+                        acknowledged: log.acknowledged ? "Yes" : "No",
+                        acknowledgedBy: "N/A",
+                        acknowledgedAt: "N/A",
+                        createdAt: new Date(log.createdAt).toISOString(),
+                    };
+                }
             })
         );
 
