@@ -49,7 +49,7 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl max-w-3xl w-full flex flex-col max-h-[95vh] shadow-2xl">
+            <div className="bg-white dark:bg-gray-800 rounded-xl max-w-3xl w-full flex flex-col max-h-[85vh] shadow-2xl">
                 {/* Sticky Header */}
                 <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 dark:from-yellow-500 dark:to-yellow-600 p-6 rounded-t-xl">
                     <div className="flex items-center justify-between">

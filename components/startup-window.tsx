@@ -236,7 +236,7 @@ export function StartupWindow({
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fadeIn">
             {/* Gold Tablet Container */}
             <div
-                className={`relative max-w-4xl w-full max-h-[90vh] overflow-hidden rounded-3xl shadow-2xl transform transition-all duration-500 ${isClosing
+                className={`relative max-w-4xl w-full max-h-[85vh] overflow-hidden rounded-3xl shadow-2xl transform transition-all duration-500 ${isClosing
                     ? "scale-95 opacity-0"
                     : "scale-100 opacity-100"
                     }`}

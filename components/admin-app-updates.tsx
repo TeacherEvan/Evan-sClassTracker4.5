@@ -244,8 +244,8 @@ export function AdminAppUpdates({ currentUserId }: AdminAppUpdatesProps) {
                         <div
                             key={update._id}
                             className={`p-6 rounded-xl border-2 transition-all ${update.isActive
-                                    ? "bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 border-purple-300 dark:border-purple-700"
-                                    : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
+                                ? "bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 border-purple-300 dark:border-purple-700"
+                                : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700"
                                 }`}
                         >
                             <div className="flex items-start justify-between mb-4">
@@ -273,8 +273,8 @@ export function AdminAppUpdates({ currentUserId }: AdminAppUpdatesProps) {
                                 <button
                                     onClick={() => handleToggleActive(update._id)}
                                     className={`p-2 rounded-lg transition-colors ${update.isActive
-                                            ? "bg-red-100 hover:bg-red-200 text-red-700"
-                                            : "bg-green-100 hover:bg-green-200 text-green-700"
+                                        ? "bg-red-100 hover:bg-red-200 text-red-700"
+                                        : "bg-green-100 hover:bg-green-200 text-green-700"
                                         }`}
                                     title={
                                         update.isActive
@@ -316,7 +316,7 @@ export function AdminAppUpdates({ currentUserId }: AdminAppUpdatesProps) {
             {/* Create Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-y-auto">
                         <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 p-6 rounded-t-2xl">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-2xl font-bold text-white flex items-center gap-2">

@@ -84,8 +84,8 @@ export function ClassConflictModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[95vh]">
-        {/* Sticky Header */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full flex flex-col max-h-[85vh]">
+        {/* Header - Sticky */}
         <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 rounded-t-2xl">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
@@ -181,8 +181,8 @@ export function ClassConflictModal({
               {/* Option 1: Merge */}
               <label
                 className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedAction === "merge"
-                    ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
-                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                  ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                  : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                   }`}
               >
                 <input
@@ -229,8 +229,8 @@ export function ClassConflictModal({
               {/* Option 2: Create Separate */}
               <label
                 className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedAction === "separate"
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                  : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                   }`}
               >
                 <input

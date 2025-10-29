@@ -33,7 +33,7 @@ export function HelpDetailModal({ feature, onClose, onBack }: HelpDetailModalPro
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-3xl w-full flex flex-col max-h-[95vh] animate-in slide-in-from-bottom duration-500">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-3xl w-full flex flex-col max-h-[85vh] animate-in slide-in-from-bottom duration-500">
         {/* Header with gradient - Sticky */}
         <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 md:p-8 rounded-t-3xl">
           <div className="flex items-center justify-between mb-4">

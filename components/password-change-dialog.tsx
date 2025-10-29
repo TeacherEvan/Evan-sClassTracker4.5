@@ -64,7 +64,7 @@ export function PasswordChangeDialog({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md flex flex-col max-h-[95vh]">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md flex flex-col max-h-[85vh]">
         {/* Sticky Header */}
         <div className="p-6 md:p-8 bg-white dark:bg-gray-800 rounded-t-lg">
           <h2 className="text-2xl font-bold mb-4">
