@@ -1700,15 +1700,31 @@ export const mergeClasses = mutation({
       windowMs: 60000, // 50 per minute
     });
 
+    console.log("mergeClasses called with:", {
+      userId: args.userId,
+      targetClassId: args.targetClassId,
+      sourceClassIds: args.sourceClassIds,
+    });
+
     // Get the target class
     const targetClass = await ctx.db.get(args.targetClassId);
     if (!targetClass) {
+      console.error("Target class not found:", args.targetClassId);
       throw new Error("Target class not found");
     }
+
+    console.log("Target class:", {
+      id: targetClass._id,
+      scheduledDate: new Date(targetClass.scheduledDate).toISOString(),
+      locationId: targetClass.locationId,
+      teacherId: targetClass.teacherId,
+      schoolId: targetClass.schoolId,
+    });
 
     // Get the user performing the action
     const user = await ctx.db.get(args.userId);
     if (!user) {
+      console.error("User not found:", args.userId);
       throw new Error("User not found");
     }
 
@@ -1737,6 +1753,14 @@ export const mergeClasses = mutation({
       args.sourceClassIds.map((id) => ctx.db.get(id))
     );
 
+    console.log("Source classes:", sourceClasses.map(c => c ? {
+      id: c._id,
+      scheduledDate: new Date(c.scheduledDate).toISOString(),
+      locationId: c.locationId,
+      teacherId: c.teacherId,
+      schoolId: c.schoolId,
+    } : null));
+
     // CRITICAL FIX: Use 5-minute time tolerance to match frontend grouping logic
     // Frontend groups classes within 5-minute window (merge-classes-modal.tsx line 47)
     // This allows classes at 3:00:00 PM and 3:00:30 PM to be merged together
@@ -1759,7 +1783,14 @@ export const mergeClasses = mutation({
       // Check if scheduled for the same date/time (with 5-minute tolerance)
       const timeDiff = Math.abs(sourceClass.scheduledDate - targetClass.scheduledDate);
       if (timeDiff > TIME_TOLERANCE) {
-        throw new Error("Can only merge classes scheduled within 5 minutes of each other");
+        const sourceDate = new Date(sourceClass.scheduledDate).toLocaleString();
+        const targetDate = new Date(targetClass.scheduledDate).toLocaleString();
+        const minutesDiff = Math.round(timeDiff / 60000);
+        throw new Error(
+          `Can only merge classes scheduled within 5 minutes of each other. ` +
+          `Source class: ${sourceDate}, Target class: ${targetDate}, ` +
+          `Time difference: ${minutesDiff} minutes`
+        );
       }
 
       // Check if at the same location

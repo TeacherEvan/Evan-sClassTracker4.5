@@ -63,12 +63,32 @@ export function MergeClassesModal({
         .filter(([, group]) => group.length > 1)
         .map(([key, group]) => ({ key, classes: group }));
 
+    // CRITICAL FIX: Find which group contains the target class to prevent cross-group merging
+    const targetGroupKey = targetClassId
+        ? mergeableGroups.find(g => g.classes.some(c => c._id === targetClassId))?.key
+        : null;
+
     const handleToggleSource = (classId: Id<"classes">) => {
         if (selectedSourceIds.includes(classId)) {
             setSelectedSourceIds(selectedSourceIds.filter(id => id !== classId));
         } else {
             setSelectedSourceIds([...selectedSourceIds, classId]);
         }
+    };
+
+    // CRITICAL FIX: When target changes, clear selected sources if they're from a different group
+    const handleTargetChange = (newTargetId: Id<"classes">) => {
+        const oldTargetGroup = targetClassId
+            ? mergeableGroups.find(g => g.classes.some(c => c._id === targetClassId))?.key
+            : null;
+        const newTargetGroup = mergeableGroups.find(g => g.classes.some(c => c._id === newTargetId))?.key;
+
+        // If switching to a different group, clear source selections
+        if (oldTargetGroup !== newTargetGroup) {
+            setSelectedSourceIds([]);
+        }
+
+        setTargetClassId(newTargetId);
     };
 
     const handleMerge = async (e: React.FormEvent) => {
@@ -85,6 +105,14 @@ export function MergeClassesModal({
             return;
         }
 
+        // Debug logging
+        console.log("Merge attempt:", {
+            userId,
+            targetClassId,
+            sourceClassIds: selectedSourceIds,
+            targetGroupKey,
+        });
+
         setLoading(true);
         try {
             await mergeClasses({
@@ -96,7 +124,10 @@ export function MergeClassesModal({
             onSuccess();
             onClose();
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to merge classes");
+            console.error("Merge classes error:", err);
+            const errorMessage = err instanceof Error ? err.message : "Failed to merge classes";
+            setError(errorMessage);
+            toast.error(errorMessage, "ไม่สามารถรวมคลาสได้");
         } finally {
             setLoading(false);
         }
@@ -219,7 +250,7 @@ export function MergeClassesModal({
                                                             name="targetClass"
                                                             value={cls._id}
                                                             checked={targetClassId === cls._id}
-                                                            onChange={(e) => setTargetClassId(e.target.value as Id<"classes">)}
+                                                            onChange={(e) => handleTargetChange(e.target.value as Id<"classes">)}
                                                             className="mt-1"
                                                         />
                                                         <div className="flex-1">
@@ -246,47 +277,57 @@ export function MergeClassesModal({
                                             <label className="block text-sm font-medium mb-2">
                                                 {t("2. Select Classes to Merge (Delete these):", "2. เลือกคลาสที่จะรวม (ลบคลาสเหล่านี้):")}
                                             </label>
-                                            <div className="space-y-2">
-                                                {group.classes
-                                                    .filter(cls => cls._id !== targetClassId)
-                                                    .map((cls) => {
-                                                        const studentCount = 1 + (cls.additionalStudents?.length || 0);
-                                                        const allStudents = [
-                                                            cls.student,
-                                                            ...(cls.additionalStudents || [])
-                                                        ].filter(Boolean);
+                                            {/* CRITICAL FIX: Only show source selection for the group containing the target */}
+                                            {group.key === targetGroupKey ? (
+                                                <div className="space-y-2">
+                                                    {group.classes
+                                                        .filter(cls => cls._id !== targetClassId)
+                                                        .map((cls) => {
+                                                            const studentCount = 1 + (cls.additionalStudents?.length || 0);
+                                                            const allStudents = [
+                                                                cls.student,
+                                                                ...(cls.additionalStudents || [])
+                                                            ].filter(Boolean);
 
-                                                        return (
-                                                            <label
-                                                                key={cls._id}
-                                                                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedSourceIds.includes(cls._id)
-                                                                    ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                                                                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                                                                    }`}
-                                                            >
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={selectedSourceIds.includes(cls._id)}
-                                                                    onChange={() => handleToggleSource(cls._id)}
-                                                                    className="mt-1"
-                                                                />
-                                                                <div className="flex-1">
-                                                                    <div className="font-medium">
-                                                                        {allStudents.map((s, i) => (
-                                                                            <span key={s?._id}>
-                                                                                {s?.firstName} {s?.lastName}
-                                                                                {i < allStudents.length - 1 ? ", " : ""}
-                                                                            </span>
-                                                                        ))}
+                                                            return (
+                                                                <label
+                                                                    key={cls._id}
+                                                                    className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedSourceIds.includes(cls._id)
+                                                                        ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                                                                        : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                                                                        }`}
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={selectedSourceIds.includes(cls._id)}
+                                                                        onChange={() => handleToggleSource(cls._id)}
+                                                                        className="mt-1"
+                                                                    />
+                                                                    <div className="flex-1">
+                                                                        <div className="font-medium">
+                                                                            {allStudents.map((s, i) => (
+                                                                                <span key={s?._id}>
+                                                                                    {s?.firstName} {s?.lastName}
+                                                                                    {i < allStudents.length - 1 ? ", " : ""}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                                                                            {studentCount} {t("student(s)", "นักเรียน")}
+                                                                        </div>
                                                                     </div>
-                                                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                                                        {studentCount} {t("student(s)", "นักเรียน")}
-                                                                    </div>
-                                                                </div>
-                                                            </label>
-                                                        );
-                                                    })}
-                                            </div>
+                                                                </label>
+                                                            );
+                                                        })}
+                                                </div>
+                                            ) : (
+                                                <div className="p-4 bg-gray-100 dark:bg-gray-700/50 rounded-lg text-center text-sm text-gray-600 dark:text-gray-400">
+                                                    {t(
+                                                        "Target class is in a different group. Please select a target from this group to merge.",
+                                                        "คลาสหลักอยู่ในกลุ่มอื่น กรุณาเลือกคลาสหลักจากกลุ่มนี้เพื่อรวม"
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
