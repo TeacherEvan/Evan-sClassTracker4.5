@@ -19,7 +19,7 @@ import { RollingVitruvianMen } from "@/components/rolling-vitruvian-men";
 import { StartupWindow } from "@/components/startup-window";
 import { api } from "@/convex/_generated/api";
 import { isDesktopDevice } from "@/lib/device-detection";
-import { initServiceWorker } from "@/lib/init-sw";
+// import { initServiceWorker } from "@/lib/init-sw"; // DISABLED: Service worker not implemented
 import { useLanguage } from "@/lib/language-context";
 import { clearUserSession, loadUserSession, saveUserSession } from "@/lib/session-utils";
 import { toast as toastManager } from "@/lib/toast";
@@ -134,9 +134,10 @@ export default function Home() {
   }, []);
 
   // Register service worker for push notifications
-  useEffect(() => {
-    initServiceWorker();
-  }, []);
+  // DISABLED: Service worker file (/public/sw.js) not present, causing registration errors
+  // useEffect(() => {
+  //   initServiceWorker();
+  // }, []);
 
   // Check if database needs initialization
   const needsInit = users !== undefined && users.length === 0;

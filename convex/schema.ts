@@ -334,7 +334,8 @@ export default defineSchema({
     .index("by_teacher", ["teacherId"])
     .index("by_student", ["studentId"])
     .index("by_school", ["schoolId"])
-    .index("by_created_at", ["createdAt"]),
+    .index("by_created_at", ["createdAt"])
+    .index("by_class_and_student", ["classId", "studentId"]), // Composite index for duplicate detection
 
   appUpdates: defineTable({
     version: v.string(), // "2.0.0"

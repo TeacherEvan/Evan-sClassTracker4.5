@@ -209,6 +209,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const [filterSchoolId, setFilterSchoolId] = useState<Id<"schools"> | "all">("all");
   const [filterStudentId, setFilterStudentId] = useState<Id<"students"> | "all">("all");
 
+  // Hierarchical display state - track which students are expanded
+  const [expandedStudents, setExpandedStudents] = useState<Set<Id<"students">>>(new Set());
+
   // Query locations for selected school
   const locations = useQuery(
     api.locations.list,
@@ -1751,50 +1754,167 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         )}
 
         {/* Classes List */}
-        <div className="space-y-4">
-          {classes?.filter((classItem) => {
-            // Apply filters
-            if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
-            if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
-            if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
-            return true;
-          }).map((classItem) => {
-            // Detect conflicts for this class
-            const conflictIds = detectConflicts(classes, classItem);
-            const hasConflicts = conflictIds.length > 0;
+        <div className="space-y-2">
+          {(() => {
+            // Filter classes based on active filters
+            const filteredClasses = classes?.filter((classItem) => {
+              if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
+              if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
+              if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
+              return true;
+            }) || [];
 
-            return (
-              <ClassItemDisplay
-                key={classItem._id}
-                classItem={classItem}
-                userRole={userRole}
-                userId={userId}
-                hasConflicts={hasConflicts}
-                conflictCount={conflictIds.length}
-                onAcknowledge={handleAcknowledge}
-                onApprove={handleApprove}
-                onReject={handleReject}
-                onDelete={handleDelete}
-                onRequestCancellation={handleRequestCancellation}
-                onEdit={(item) => {
-                  // Convert classItem to Doc<"classes"> by extracting core fields
-                  const classDoc = item as unknown as Doc<"classes">;
-                  setEditingClass(classDoc);
-                }}
-              />
-            );
-          })}
+            // When ANY filter is active, group by student for hierarchical navigation
+            const hasActiveFilters = filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all";
 
-          {/* No classes found - check if it's due to filters or truly empty */}
+            if (hasActiveFilters && filteredClasses.length > 0) {
+              // Group classes by student
+              const studentGroups = new Map<Id<"students">, typeof filteredClasses>();
+              filteredClasses.forEach((classItem) => {
+                if (!studentGroups.has(classItem.studentId)) {
+                  studentGroups.set(classItem.studentId, []);
+                }
+                studentGroups.get(classItem.studentId)!.push(classItem);
+              });
+
+              return Array.from(studentGroups.entries()).map(([studentId, studentClasses]) => {
+                const firstClass = studentClasses[0];
+                const student = firstClass.student;
+                if (!student) return null;
+
+                const isExpanded = expandedStudents.has(studentId);
+                const classCount = studentClasses.length;
+                const nextClass = studentClasses
+                  .filter(c => c.scheduledDate >= Date.now())
+                  .sort((a, b) => a.scheduledDate - b.scheduledDate)[0];
+
+                return (
+                  <div key={studentId} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                    {/* Student Header - Clickable to expand/collapse */}
+                    <button
+                      onClick={() => {
+                        const newExpanded = new Set(expandedStudents);
+                        if (isExpanded) {
+                          newExpanded.delete(studentId);
+                        } else {
+                          newExpanded.add(studentId);
+                        }
+                        setExpandedStudents(newExpanded);
+                      }}
+                      className="w-full p-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="flex-shrink-0">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${isExpanded ? 'bg-blue-600' : 'bg-gray-500'
+                            }`}>
+                            {student.firstName.charAt(0)}{student.lastName.charAt(0)}
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0 text-left">
+                          <h3 className="font-semibold text-base truncate">
+                            {student.firstName} {student.lastName}
+                            {student.nickname && (
+                              <span className="text-gray-500 dark:text-gray-400 font-normal text-sm ml-2">
+                                ({student.nickname})
+                              </span>
+                            )}
+                          </h3>
+                          <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                            <span className="inline-flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {classCount} {t(classCount === 1 ? "class" : "classes", "คลาส")}
+                            </span>
+                            {nextClass && (
+                              <span className="truncate">
+                                {t("Next:", "ถัดไป:")} {new Date(nextClass.scheduledDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          <svg
+                            className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Expanded Classes List */}
+                    {isExpanded && (
+                      <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 p-2 space-y-2">
+                        {studentClasses.map((classItem) => {
+                          const conflictIds = detectConflicts(classes || [], classItem);
+                          const hasConflicts = conflictIds.length > 0;
+
+                          return (
+                            <ClassItemDisplay
+                              key={classItem._id}
+                              classItem={classItem}
+                              userRole={userRole}
+                              userId={userId}
+                              hasConflicts={hasConflicts}
+                              conflictCount={conflictIds.length}
+                              onAcknowledge={handleAcknowledge}
+                              onApprove={handleApprove}
+                              onReject={handleReject}
+                              onDelete={handleDelete}
+                              onRequestCancellation={handleRequestCancellation}
+                              onEdit={(item) => {
+                                const classDoc = item as unknown as Doc<"classes">;
+                                setEditingClass(classDoc);
+                              }}
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              });
+            }
+
+            // No filters active - show flat list
+            return filteredClasses.map((classItem) => {
+              const conflictIds = detectConflicts(classes || [], classItem);
+              const hasConflicts = conflictIds.length > 0;
+
+              return (
+                <ClassItemDisplay
+                  key={classItem._id}
+                  classItem={classItem}
+                  userRole={userRole}
+                  userId={userId}
+                  hasConflicts={hasConflicts}
+                  conflictCount={conflictIds.length}
+                  onAcknowledge={handleAcknowledge}
+                  onApprove={handleApprove}
+                  onReject={handleReject}
+                  onDelete={handleDelete}
+                  onRequestCancellation={handleRequestCancellation}
+                  onEdit={(item) => {
+                    const classDoc = item as unknown as Doc<"classes">;
+                    setEditingClass(classDoc);
+                  }}
+                />
+              );
+            });
+          })()}
+
+          {/* No classes found */}
           {classes && classes.filter((classItem) => {
             if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
             if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
             if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
             return true;
           }).length === 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-8 md:p-6 text-center text-gray-500 dark:text-gray-400">
-                <Calendar className="w-16 h-16 md:w-12 md:h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-base md:text-base">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center text-gray-500 dark:text-gray-400">
+                <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">
                   {(filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all") ? (
                     t("No classes match the selected filters", "ไม่พบคลาสที่ตรงกับตัวกรองที่เลือก")
                   ) : (
@@ -2143,86 +2263,79 @@ function ClassItemDisplay({
   ) || [];
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 active:scale-[0.99] transition-transform ${hasConflicts ? 'ring-2 ring-yellow-500 ring-offset-2 dark:ring-offset-gray-900' : ''}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 hover:shadow-lg transition-shadow ${hasConflicts ? 'ring-2 ring-yellow-500' : ''}`}>
       {/* Conflict Warning Banner */}
       {hasConflicts && (
-        <div className="mb-4 -mt-2 -mx-2 md:-mt-3 md:-mx-3 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border-l-4 border-yellow-500 rounded-t-xl md:rounded-t-lg">
+        <div className="mb-2 -mt-1 -mx-1 p-2 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 rounded-t-lg">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">
-                {t("Time Conflict Detected", "พบความขัดแย้งของเวลา")}
-              </p>
-              <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
-                {t(
-                  `This class conflicts with ${conflictCount} other ${conflictCount === 1 ? 'class' : 'classes'} at the same time. Use "Merge Classes" to combine them.`,
-                  `คลาสนี้ขัดแย้งกับอีก ${conflictCount} คลาสในเวลาเดียวกัน ใช้ "รวมคลาส" เพื่อรวมพวกเขา`
-                )}
-              </p>
-            </div>
+            <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-yellow-700 dark:text-yellow-400">
+              {t(
+                `Conflicts with ${conflictCount} other ${conflictCount === 1 ? 'class' : 'classes'}`,
+                `ขัดแย้งกับอีก ${conflictCount} คลาส`
+              )}
+            </p>
           </div>
         </div>
       )}
-      <div className="flex flex-col md:flex-row items-start md:items-start justify-between mb-4 gap-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-lg md:text-xl font-semibold">
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="text-base font-semibold truncate">
               {student.firstName} {student.lastName}
             </h3>
             {totalStudents > 1 && (
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded text-xs font-medium">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded text-xs font-medium">
                 <Users className="w-3 h-3" />
-                {totalStudents} {t("students", "คน")}
+                {totalStudents}
               </span>
             )}
+            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(classItem.status)}`}>
+              {getStatusText(classItem.status)}
+            </span>
           </div>
 
-          {/* Show additional students if any */}
-          {classItem.additionalStudents && classItem.additionalStudents.length > 0 && (
-            <div className="mt-2 space-y-1">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {t("Additional Students:", "นักเรียนเพิ่มเติม:")}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {classItem.additionalStudents.map((addStudent) => (
-                  addStudent && (
-                    <div
-                      key={addStudent._id}
-                      className="inline-flex items-center gap-1.5 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm"
-                    >
-                      <span>{addStudent.firstName} {addStudent.lastName}</span>
-                      <button
-                        onClick={() => handleRemoveStudent(addStudent._id)}
-                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                        title={t("Remove student", "ลบนักเรียน")}
-                      >
-                        <UserMinus className="w-3 h-3" />
-                      </button>
-                    </div>
-                  )
-                ))}
-              </div>
-            </div>
-          )}
-
-          <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm md:text-base">
-            {t("Location:", "สถานที่:")} {locationDisplay}
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-            {t("Scheduled:", "กำหนดการ:")} {new Date(classItem.scheduledDate).toLocaleString()}
-          </p>
+          <div className="flex items-center gap-3 mt-1 text-xs text-gray-600 dark:text-gray-400">
+            <span className="flex items-center gap-1">
+              <MapPin className="w-3 h-3" />
+              {locationDisplay}
+            </span>
+            <span>{new Date(classItem.scheduledDate).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
         </div>
-        <span className={`px-3 py-1.5 rounded-xl md:rounded-full text-xs md:text-sm font-medium ${getStatusBadge(classItem.status)} whitespace-nowrap`}>
-          {getStatusText(classItem.status)}
-        </span>
       </div>
 
+      {/* Show additional students if any */}
+      {classItem.additionalStudents && classItem.additionalStudents.length > 0 && (
+        <div className="mt-1 mb-2">
+          <div className="flex flex-wrap gap-1">
+            {classItem.additionalStudents.map((addStudent) => (
+              addStudent && (
+                <div
+                  key={addStudent._id}
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs"
+                >
+                  <span>{addStudent.firstName} {addStudent.lastName}</span>
+                  <button
+                    onClick={() => handleRemoveStudent(addStudent._id)}
+                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                    title={t("Remove student", "ลบนักเรียน")}
+                  >
+                    <UserMinus className="w-3 h-3" />
+                  </button>
+                </div>
+              )
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Add Student Section - Available to all users */}
-      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
         {!showAddStudent ? (
           <button
             onClick={() => setShowAddStudent(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition-all text-sm"
+            className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 active:scale-95 transition-all text-sm"
           >
             <UserPlus className="w-4 h-4" />
             {t("Add Student to Class", "เพิ่มนักเรียนในคลาส")}
@@ -2266,43 +2379,43 @@ function ClassItemDisplay({
       </div>
 
       {(userRole === "moderator" || userRole === "admin") && classItem.status === "pending" && (
-        <div className="flex flex-col md:flex-row gap-2 mt-4">
+        <div className="flex flex-col md:flex-row gap-2 mt-2">
           <button
             onClick={() => onAcknowledge(classItem._id)}
-            className="flex items-center justify-center gap-2 px-4 py-3 md:py-2 bg-blue-500 text-white rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-95 transition-all touch-manipulation shadow-lg shadow-blue-500/20 text-sm md:text-base font-medium"
+            className="flex items-center justify-center gap-2 px-3 py-2 md:py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 active:scale-95 transition-all text-sm font-medium"
           >
-            <Check className="w-5 h-5 md:w-4 md:h-4" />
+            <Check className="w-4 h-4" />
             {t("Acknowledge", "รับทราบ")}
           </button>
           <button
             onClick={() => onApprove(classItem._id)}
-            className="flex items-center justify-center gap-2 px-4 py-3 md:py-2 bg-green-500 text-white rounded-xl md:rounded-lg hover:bg-green-600 active:scale-95 transition-all touch-manipulation shadow-lg shadow-green-500/20 text-sm md:text-base font-medium"
-          >
-            <Check className="w-5 h-5 md:w-4 md:h-4" />
-            {t("Approve", "อนุมัติ")}
-          </button>
-          <button
-            onClick={() => onReject(classItem._id)}
-            className="flex items-center justify-center gap-2 px-4 py-3 md:py-2 bg-red-500 text-white rounded-xl md:rounded-lg hover:bg-red-600 active:scale-95 transition-all touch-manipulation shadow-lg shadow-red-500/20 text-sm md:text-base font-medium"
-          >
-            <X className="w-5 h-5 md:w-4 md:h-4" />
-            {t("Reject", "ปฏิเสธ")}
-          </button>
-        </div>
-      )}
-
-      {(userRole === "moderator" || userRole === "admin") && classItem.status === "acknowledged" && (
-        <div className="flex flex-col md:flex-row gap-2 mt-4">
-          <button
-            onClick={() => onApprove(classItem._id)}
-            className="flex items-center justify-center gap-2 px-4 py-3 md:py-2 bg-green-500 text-white rounded-xl md:rounded-lg hover:bg-green-600 active:scale-95 transition-all touch-manipulation shadow-lg shadow-green-500/20 text-sm md:text-base font-medium"
+            className="flex items-center justify-center gap-2 px-3 py-2 md:py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95 transition-all text-sm font-medium"
           >
             <Check className="w-4 h-4" />
             {t("Approve", "อนุมัติ")}
           </button>
           <button
             onClick={() => onReject(classItem._id)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            className="flex items-center justify-center gap-2 px-3 py-2 md:py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all text-sm font-medium"
+          >
+            <X className="w-4 h-4" />
+            {t("Reject", "ปฏิเสธ")}
+          </button>
+        </div>
+      )}
+
+      {(userRole === "moderator" || userRole === "admin") && classItem.status === "acknowledged" && (
+        <div className="flex flex-col md:flex-row gap-2 mt-2">
+          <button
+            onClick={() => onApprove(classItem._id)}
+            className="flex items-center justify-center gap-2 px-3 py-2 md:py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95 transition-all text-sm font-medium"
+          >
+            <Check className="w-4 h-4" />
+            {t("Approve", "อนุมัติ")}
+          </button>
+          <button
+            onClick={() => onReject(classItem._id)}
+            className="flex items-center gap-2 px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
           >
             <X className="w-4 h-4" />
             {t("Reject", "ปฏิเสธ")}
@@ -2312,11 +2425,11 @@ function ClassItemDisplay({
 
       {/* Edit and Delete Buttons - Available to Admin/Moderator/Teacher */}
       {(userRole === "admin" || userRole === "moderator" || userRole === "teacher") && (
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => onEdit(classItem)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:scale-95 transition-all"
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:scale-95 transition-all text-sm"
             >
               <Edit2 className="w-4 h-4" />
               {t("Edit Class", "แก้ไขคลาส")}
@@ -2324,7 +2437,7 @@ function ClassItemDisplay({
             {(userRole === "admin" || userRole === "moderator") && classItem.scheduledDate >= Date.now() && (
               <button
                 onClick={() => onDelete(classItem._id)}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all"
+                className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all text-sm"
               >
                 <Trash2 className="w-4 h-4" />
                 {t("Delete Class", "ลบคラส")}
@@ -2332,19 +2445,53 @@ function ClassItemDisplay({
             )}
           </div>
 
-          {/* Show "Edited" badge if class has been edited */}
+          {/* Show "Edited" badge if class has been edited - with detailed change information */}
           {classItem.isEdited && classItem.editHistory && classItem.editHistory.length > 0 && (
-            <div className="mt-3 flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
-              <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded font-medium">
-                <Edit2 className="w-3 h-3" />
-                {t("Edited", "แก้ไขแล้ว")}
-              </span>
-              <span>
-                {t(
-                  `Last edited by ${classItem.editHistory[classItem.editHistory.length - 1].editedByName} on ${new Date(classItem.editHistory[classItem.editHistory.length - 1].editedAt).toLocaleDateString()}`,
-                  `แก้ไขล่าสุดโดย ${classItem.editHistory[classItem.editHistory.length - 1].editedByName} เมื่อ ${new Date(classItem.editHistory[classItem.editHistory.length - 1].editedAt).toLocaleDateString('th-TH')}`
-                )}
-              </span>
+            <div className="mt-3 space-y-2">
+              <div className="flex items-start gap-2 text-xs">
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded font-medium">
+                  <Edit2 className="w-3 h-3" />
+                  {t("Edited", "แก้ไขแล้ว")}
+                </span>
+                <span className="text-gray-600 dark:text-gray-400">
+                  {t(
+                    `Last edited by ${classItem.editHistory[classItem.editHistory.length - 1].editedByName} on ${new Date(classItem.editHistory[classItem.editHistory.length - 1].editedAt).toLocaleDateString()}`,
+                    `แก้ไขล่าสุดโดย ${classItem.editHistory[classItem.editHistory.length - 1].editedByName} เมื่อ ${new Date(classItem.editHistory[classItem.editHistory.length - 1].editedAt).toLocaleDateString('th-TH')}`
+                  )}
+                </span>
+              </div>
+              {/* Show what changed in the last edit */}
+              {classItem.editHistory[classItem.editHistory.length - 1].changes.length > 0 && (
+                <div className="pl-7 space-y-1">
+                  {classItem.editHistory[classItem.editHistory.length - 1].changes.map((change, idx) => (
+                    <div key={idx} className="text-xs text-gray-600 dark:text-gray-400">
+                      <span className="font-medium">
+                        {t(
+                          change.field.charAt(0).toUpperCase() + change.field.slice(1).replace(/([A-Z])/g, ' $1'),
+                          change.field.charAt(0).toUpperCase() + change.field.slice(1).replace(/([A-Z])/g, ' $1')
+                        )}:
+                      </span>{" "}
+                      <span className="line-through text-red-600 dark:text-red-400">{String(change.oldValue)}</span>
+                      {" → "}
+                      <span className="text-green-600 dark:text-green-400">{String(change.newValue)}</span>
+                    </div>
+                  ))}
+                  {classItem.editHistory && classItem.editHistory.length > 1 && (
+                    <button
+                      onClick={() => {
+                        // Show full edit history modal (future enhancement)
+                        alert(t(
+                          `This class has been edited ${classItem.editHistory!.length} times. Full edit history coming soon!`,
+                          `คลาสนี้ถูกแก้ไข ${classItem.editHistory!.length} ครั้ง ประวัติการแก้ไขทั้งหมดจะมาเร็วๆ นี้!`
+                        ));
+                      }}
+                      className="text-blue-600 dark:text-blue-400 hover:underline text-xs mt-1"
+                    >
+                      {t(`View all ${classItem.editHistory!.length} edits`, `ดูการแก้ไขทั้งหมด ${classItem.editHistory!.length} รายการ`)}
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

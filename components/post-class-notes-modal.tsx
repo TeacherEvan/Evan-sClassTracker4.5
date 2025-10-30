@@ -7,8 +7,12 @@ import { useMutation } from "convex/react";
 import { CheckCircle2, ChevronDown, ChevronUp, Clock, X, XCircle } from "lucide-react";
 import { useState } from "react";
 
-interface ClassWithStudent extends Doc<"classes"> {
+interface ClassWithStudent extends Partial<Doc<"classes">> {
+    _id: Id<"classes">;
+    scheduledDate: number;
+    additionalStudentIds?: Id<"students">[];
     student?: Doc<"students"> | null;
+    currentStudentId?: Id<"students">; // For merged classes - which student is this entry for
 }
 
 interface PostClassNotesModalProps {
@@ -58,6 +62,9 @@ export function PostClassNotesModal({
     };
 
     const handleSubmit = async () => {
+        // Prevent double-submission
+        if (loading) return;
+
         // Notes are now optional - no validation needed
         setLoading(true);
         setError("");
@@ -66,6 +73,7 @@ export function PostClassNotesModal({
             await createNotes({
                 classId: currentClass._id,
                 teacherId: currentUserId,
+                studentId: currentClass.currentStudentId, // Pass specific student ID for merged classes
                 notes: notes || undefined,
                 notesTh: notesTh || undefined,
                 attendance,
@@ -91,12 +99,16 @@ export function PostClassNotesModal({
     };
 
     const handleSkip = async () => {
+        // Prevent double-submission
+        if (loading) return;
+
         setLoading(true);
         try {
             // Mark as skipped
             await createNotes({
                 classId: currentClass._id,
                 teacherId: currentUserId,
+                studentId: currentClass.currentStudentId, // Pass specific student ID for merged classes
                 notes: "Skipped",
                 notesTh: "ข้าม",
                 attendance: "present",
@@ -118,13 +130,17 @@ export function PostClassNotesModal({
     };
 
     const handleSkipAll = async () => {
+        // Prevent double-submission
+        if (loading) return;
+
         setLoading(true);
         try {
-            // Skip all remaining classes
+            // Skip all remaining classes (with proper student IDs for merged classes)
             for (let i = currentIndex; i < classes.length; i++) {
                 await createNotes({
                     classId: classes[i]._id,
                     teacherId: currentUserId,
+                    studentId: classes[i].currentStudentId, // Pass specific student ID for merged classes
                     notes: "Skipped",
                     notesTh: "ข้าม",
                     attendance: "present",
@@ -178,11 +194,20 @@ export function PostClassNotesModal({
                     {/* Class info */}
                     <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                         <h3 className="font-semibold text-lg mb-2">
-                            {t("Class with", "คลาสกับ")} {currentClass.student?.firstName} {currentClass.student?.lastName}
+                            {t("Feedback for", "ข้อเสนอแนะสำหรับ")} {currentClass.student?.firstName} {currentClass.student?.lastName}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                             {new Date(currentClass.scheduledDate).toLocaleString()}
                         </p>
+                        {/* Show if this is a merged class */}
+                        {currentClass.additionalStudentIds && currentClass.additionalStudentIds.length > 0 && (
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                                {t(
+                                    `Group class (${currentClass.additionalStudentIds.length + 1} students) - Individual feedback`,
+                                    `คลาสกลุ่ม (${currentClass.additionalStudentIds.length + 1} คน) - ข้อเสนอแนะรายบุคคล`
+                                )}
+                            </p>
+                        )}
                     </div>
 
                     {error && (
