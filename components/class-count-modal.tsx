@@ -6,6 +6,7 @@ import { useLanguage } from "@/lib/language-context";
 import { useQuery } from "convex/react";
 import {
     AlertCircle,
+    Calculator,
     Calendar,
     CheckCircle,
     Filter,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ClassDetailCard } from "./class-detail-card";
+import { ClassPaymentCalculator } from "./class-payment-calculator";
 
 interface ClassCountModalProps {
     teacherId: Id<"users">;
@@ -38,6 +40,9 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
     const [selectedProvider, setSelectedProvider] = useState<string>("all");
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState<"date" | "classCount" | "entity">("date");
+
+    // Payment Calculator state
+    const [showPaymentCalculator, setShowPaymentCalculator] = useState(false);
 
     const classCountDetails = useQuery(api.teacherClassCount.getMyClassCountDetails, {
         teacherId,
@@ -352,6 +357,14 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
+                            {/* Payment Calculator Button */}
+                            <button
+                                onClick={() => setShowPaymentCalculator(true)}
+                                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                                title={t("Payment Calculator", "เครื่องคำนวณค่าสอน")}
+                            >
+                                <Calculator className="w-5 h-5 text-white" />
+                            </button>
                             {/* Print Button */}
                             <button
                                 onClick={handlePrint}
@@ -618,6 +631,15 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                     </p>
                 </div>
             </div>
+
+            {/* Payment Calculator Modal (Ephemeral - No Database Storage) */}
+            {showPaymentCalculator && (
+                <ClassPaymentCalculator
+                    teacherId={teacherId}
+                    userRole="teacher"
+                    onClose={() => setShowPaymentCalculator(false)}
+                />
+            )}
         </div>
     );
 }
