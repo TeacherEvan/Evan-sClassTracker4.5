@@ -21,7 +21,7 @@ interface MergeClassesModalProps {
         additionalStudents?: (Doc<"students"> | null)[];
         location: Doc<"locations"> | null;
         teacherId: Id<"users">;
-        schoolId: Id<"schools">;
+        schoolId?: Id<"schools">; // Optional for provider classes
     }>;
     onClose: () => void;
     onSuccess: () => void;

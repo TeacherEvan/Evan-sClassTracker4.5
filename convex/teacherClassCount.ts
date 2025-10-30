@@ -296,26 +296,30 @@ export const getMyClassCountDetails = query({
         const classIdsWithNotes = new Set(allNotesForTeacher.map(n => n.classId));
         const classesFiltered = classes.filter(c => classIdsWithNotes.has(c._id));
 
-        // Batch fetch students, schools, and locations
+        // Batch fetch students, schools, providers, and locations
         const studentIds = new Set<Id<"students">>();
         const schoolIds = new Set<Id<"schools">>();
+        const providerIds = new Set<Id<"providers">>(); // NEW: Provider IDs
         const locationIds = new Set<Id<"locations">>();
 
         classesFiltered.forEach(cls => {
             studentIds.add(cls.studentId);
-            schoolIds.add(cls.schoolId);
+            if (cls.schoolId) schoolIds.add(cls.schoolId); // Only add if exists
+            if (cls.providerId) providerIds.add(cls.providerId); // NEW: Collect provider IDs
             if (cls.locationId) locationIds.add(cls.locationId);
             cls.additionalStudentIds?.forEach(id => studentIds.add(id));
         });
 
-        const [students, schools, locations] = await Promise.all([
+        const [students, schools, providers, locations] = await Promise.all([
             Promise.all(Array.from(studentIds).map(id => ctx.db.get(id))),
             Promise.all(Array.from(schoolIds).map(id => ctx.db.get(id))),
+            Promise.all(Array.from(providerIds).map(id => ctx.db.get(id))), // NEW: Fetch providers
             Promise.all(Array.from(locationIds).map(id => ctx.db.get(id))),
         ]);
 
         const studentMap = new Map(students.filter(s => s !== null).map(s => [s!._id, s]));
         const schoolMap = new Map(schools.filter(s => s !== null).map(s => [s!._id, s]));
+        const providerMap = new Map(providers.filter(p => p !== null).map(p => [p!._id, p])); // NEW: Provider map
         const locationMap = new Map(locations.filter(l => l !== null).map(l => [l!._id, l]));
 
         // Calculate total and build class details (only for classes that were counted)
@@ -327,7 +331,8 @@ export const getMyClassCountDetails = query({
             totalClassCount += classCount;
 
             const primaryStudent = studentMap.get(cls.studentId);
-            const school = schoolMap.get(cls.schoolId);
+            const school = cls.schoolId ? schoolMap.get(cls.schoolId) : null; // NEW: Conditional school lookup
+            const provider = cls.providerId ? providerMap.get(cls.providerId) : null; // NEW: Provider lookup
             const location = cls.locationId ? locationMap.get(cls.locationId) : null;
 
             return {
@@ -339,8 +344,11 @@ export const getMyClassCountDetails = query({
                 primaryStudentName: primaryStudent
                     ? `${primaryStudent.firstName} ${primaryStudent.lastName}`
                     : "Unknown",
-                schoolName: school?.name || "Unknown",
-                schoolNameTh: school?.nameTh || "ไม่ทราบ",
+                schoolName: school?.name || (provider?.name) || "Unknown", // NEW: Fallback to provider
+                schoolNameTh: school?.nameTh || (provider?.nameTh) || "ไม่ทราบ", // NEW: Fallback to provider
+                providerName: provider?.name, // NEW: Provider name
+                providerNameTh: provider?.nameTh, // NEW: Provider name (Thai)
+                providerId: cls.providerId, // NEW: Provider ID for filtering
                 locationName: location?.name || cls.pendingLocationName || "Not specified",
                 locationNameTh: location?.nameTh || cls.pendingLocationNameTh || "ไม่ระบุ",
                 acknowledgedBy: cls.status === "approved" ? "Moderator" : "System",
@@ -649,26 +657,30 @@ export const getClassCountForPrint = query({
         // Filter to counted classes only
         const countedClasses = classes.filter(c => classIdsWithNotes.has(c._id));
 
-        // Batch fetch related data
+        // Batch fetch related data (including providers)
         const studentIds = new Set<string>();
         const schoolIds = new Set<string>();
+        const providerIds = new Set<string>(); // NEW: Provider IDs
         const locationIds = new Set<string>();
 
         countedClasses.forEach(cls => {
             studentIds.add(cls.studentId);
             cls.additionalStudentIds?.forEach(id => studentIds.add(id));
-            schoolIds.add(cls.schoolId);
+            if (cls.schoolId) schoolIds.add(cls.schoolId); // Only add if exists
+            if (cls.providerId) providerIds.add(cls.providerId); // NEW: Collect provider IDs
             if (cls.locationId) locationIds.add(cls.locationId);
         });
 
-        const [students, schools, locations] = await Promise.all([
+        const [students, schools, providers, locations] = await Promise.all([
             Promise.all(Array.from(studentIds).map(id => ctx.db.get(id as Id<"students">))),
             Promise.all(Array.from(schoolIds).map(id => ctx.db.get(id as Id<"schools">))),
+            Promise.all(Array.from(providerIds).map(id => ctx.db.get(id as Id<"providers">))), // NEW: Fetch providers
             Promise.all(Array.from(locationIds).map(id => ctx.db.get(id as Id<"locations">))),
         ]);
 
         const studentMap = new Map(students.filter(s => s).map(s => [s!._id, s!]));
         const schoolMap = new Map(schools.filter(s => s).map(s => [s!._id, s!]));
+        const providerMap = new Map(providers.filter(p => p).map(p => [p!._id, p!])); // NEW: Provider map
         const locationMap = new Map(locations.filter(l => l).map(l => [l!._id, l!]));
 
         // Calculate class count details
@@ -683,7 +695,8 @@ export const getClassCountForPrint = query({
             const additionalStudents = (cls.additionalStudentIds || [])
                 .map(id => studentMap.get(id))
                 .filter((s): s is NonNullable<typeof s> => s !== undefined);
-            const school = schoolMap.get(cls.schoolId);
+            const school = cls.schoolId ? schoolMap.get(cls.schoolId) : null; // NEW: Conditional lookup
+            const provider = cls.providerId ? providerMap.get(cls.providerId) : null; // NEW: Provider lookup
             const location = cls.locationId ? locationMap.get(cls.locationId) : null;
 
             return {
@@ -697,8 +710,10 @@ export const getClassCountForPrint = query({
                 additionalStudentNames: additionalStudents.map(s =>
                     `${s.firstName} ${s.lastName}`.trim()
                 ),
-                schoolName: school?.name || "Unknown",
-                schoolNameTh: school?.nameTh || "ไม่ทราบ",
+                schoolName: school?.name || provider?.name || "Unknown", // NEW: Fallback to provider
+                schoolNameTh: school?.nameTh || provider?.nameTh || "ไม่ทราบ", // NEW: Fallback to provider
+                providerName: provider?.name, // NEW: Provider name
+                providerNameTh: provider?.nameTh, // NEW: Provider name (Thai)
                 locationName: location?.name || "N/A",
                 locationNameTh: location?.nameTh || "ไม่ระบุ",
             };

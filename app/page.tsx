@@ -2,7 +2,7 @@
 
 // ✅ PERFORMANCE: Lazy load heavy components for code splitting (40-50% faster initial load)
 import { useMutation, useQuery } from "convex/react";
-import { BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, FlaskConical, GraduationCap, HelpCircle, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
+import { AlertTriangle, BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, FlaskConical, GraduationCap, HelpCircle, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 // Core components (always loaded)
@@ -48,6 +48,7 @@ const UpdateAnnouncementModal = lazy(() => import("@/components/update-announcem
 const AdminContactRequests = lazy(() => import("@/components/admin-contact-requests").then(m => ({ default: m.AdminContactRequests })));
 const AdminNotificationWindows = lazy(() => import("@/components/admin-notification-windows").then(m => ({ default: m.AdminNotificationWindows })));
 const AdminAppUpdates = lazy(() => import("@/components/admin-app-updates").then(m => ({ default: m.AdminAppUpdates })));
+const AdminDeletedStudentsDashboard = lazy(() => import("@/components/admin-deleted-students-dashboard").then(m => ({ default: m.AdminDeletedStudentsDashboard })));
 const ClassCountModal = lazy(() => import("@/components/class-count-modal").then(m => ({ default: m.ClassCountModal })));
 const SangsomSeedButton = lazy(() => import("@/components/sangsom-seed-button").then(m => ({ default: m.SangsomSeedButton })));
 const SangsomStudentImportButton = lazy(() => import("@/components/sangsom-student-import-button").then(m => ({ default: m.SangsomStudentImportButton })));
@@ -61,7 +62,7 @@ export default function Home() {
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "testing" | "contact_requests" | "notification_windows" | "app_updates" | "data_import" | "events">("calendar");
+  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "testing" | "contact_requests" | "notification_windows" | "app_updates" | "data_import" | "events" | "deleted_students">("calendar");
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
   const [showPostClassNotes, setShowPostClassNotes] = useState(false);
@@ -700,6 +701,17 @@ export default function Home() {
               </button>
 
               <button
+                onClick={() => setActiveTab("deleted_students")}
+                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "deleted_students"
+                  ? "bg-red-600 text-white shadow-md"
+                  : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50"
+                  }`}
+              >
+                <AlertTriangle className="w-4 h-4 md:w-5 md:h-5" />
+                {t("🚨 Deleted Students", "🚨 นักเรียนที่ถูกลบ")}
+              </button>
+
+              <button
                 onClick={() => setActiveTab("notification_windows")}
                 className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "notification_windows"
                   ? "bg-blue-500 text-white shadow-md"
@@ -863,6 +875,15 @@ export default function Home() {
         {activeTab === "contact_requests" && user.role === "admin" && (
           <Suspense fallback={<LoadingFallback />}>
             <AdminContactRequests currentUserId={user._id} />
+          </Suspense>
+        )}
+
+        {activeTab === "deleted_students" && (user.role === "admin" || user.role === "moderator") && (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdminDeletedStudentsDashboard
+              userId={user._id}
+              onClose={() => setActiveTab("calendar")}
+            />
           </Suspense>
         )}
 

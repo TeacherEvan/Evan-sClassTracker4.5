@@ -2,6 +2,36 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.11] - October 30, 2025
+
+### Added - Provider System (Phase 1/4)
+
+- **Multi-Provider Architecture**: Teachers can now manage classes across schools, private tutoring, language schools, and educational camps
+- **Providers Table**: New database table with 4 categories (personal, private, language_school, educational_camp)
+- **XOR Validation**: Entities must have EITHER schoolId OR providerId (mutual exclusivity enforced)
+- **Auto-Approval Workflow**: Provider-linked classes automatically bypass moderator approval
+- **Role-Based Access**: Teachers create own providers, moderators blocked from providers, admins have full access
+- **Batch Fetching**: Provider aggregation uses Map pattern for O(1) lookup performance
+- **Pattern #22**: New coding pattern documented for Provider System in copilot-docs
+
+### Changed
+
+- **Schema Updates**: Made schoolId optional in 4 tables (classes, students, cancellationRequests, postClassNotes)
+- **Teacher Class Count**: Now aggregates both school and provider classes
+- **Conditional Logging**: teacherLogs only created for school-linked classes (providers skip logging)
+
+### Fixed
+
+- **TypeScript Compilation**: Resolved all type errors with type-safe locals pattern
+- **Frontend Types**: Updated ClassWithDetails in weekly-calendar.tsx and class-detail-modal.tsx
+- **Build Success**: Next.js build passing, Convex deployment successful
+
+### Technical
+
+- **16 Files Modified**: 5 schema/backend, 8 mutations, 5 frontend components
+- **Type-Safe Pattern**: Store schoolId in const after conditional check for TypeScript satisfaction
+- **Documentation**: Comprehensive implementation summary, architecture updates, pattern guide
+
 ## [4.5.9] - October 29, 2025
 
 ### Added

@@ -39,7 +39,8 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
         _id: Id<"classes">;
         studentId: Id<"students">;
         teacherId: Id<"users">;
-        schoolId: Id<"schools">;
+        schoolId?: Id<"schools">; // Optional - null for provider-linked classes
+        providerId?: Id<"providers">; // Optional - alternative to schoolId
         locationId?: Id<"locations">;
         scheduledDate: number;
         status: "pending" | "acknowledged" | "approved" | "rejected";

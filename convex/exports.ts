@@ -30,7 +30,7 @@ export const exportClasses = query({
         const exportData = await Promise.all(
             classes.map(async (cls) => {
                 const teacher = await ctx.db.get(cls.teacherId);
-                const school = await ctx.db.get(cls.schoolId);
+                const school = cls.schoolId ? await ctx.db.get(cls.schoolId) : null;
                 const student = await ctx.db.get(cls.studentId);
                 const location = cls.locationId ? await ctx.db.get(cls.locationId) : null;
 

@@ -49,9 +49,27 @@ export default defineSchema({
     .index("by_moderator", ["moderatorId"])
     .index("by_created_at", ["createdAt"]),
 
+  providers: defineTable({
+    name: v.string(),           // Provider name (English)
+    nameTh: v.string(),         // Provider name (Thai)
+    category: v.union(          // Provider type/category
+      v.literal("personal"),
+      v.literal("private"),
+      v.literal("language_school"),
+      v.literal("educational_camp")
+    ),
+    createdBy: v.id("users"),   // Teacher or admin who created it
+    isActive: v.boolean(),      // Soft delete flag
+    createdAt: v.number(),
+  })
+    .index("by_created_by", ["createdBy"])
+    .index("by_category", ["category"])
+    .index("by_active", ["isActive"]),
+
   classes: defineTable({
     teacherId: v.id("users"),
-    schoolId: v.id("schools"),
+    schoolId: v.optional(v.id("schools")), // NOW OPTIONAL - alternative to providerId
+    providerId: v.optional(v.id("providers")), // NEW - alternative to schoolId
     studentId: v.id("students"),
     additionalStudentIds: v.optional(v.array(v.id("students"))), // For multi-student classes
     locationId: v.optional(v.id("locations")), // Optional if using pending location
@@ -101,6 +119,7 @@ export default defineSchema({
   })
     .index("by_teacher", ["teacherId"])
     .index("by_school", ["schoolId"])
+    .index("by_provider", ["providerId"]) // NEW INDEX for provider queries
     .index("by_student", ["studentId"])
     .index("by_status", ["status"])
     .index("by_scheduled_date", ["scheduledDate"])
@@ -113,7 +132,8 @@ export default defineSchema({
     firstName: v.string(),
     lastName: v.string(),
     studentId: v.string(), // Unique identifier
-    schoolId: v.optional(v.id("schools")), // Optional - null if linked to guardian
+    schoolId: v.optional(v.id("schools")), // Optional - null if linked to guardian or provider
+    providerId: v.optional(v.id("providers")), // NEW - alternative to schoolId
     guardianId: v.optional(v.id("users")), // Guardian user ID if linked to guardian
     guardianTitle: v.optional(v.string()), // Guardian relationship description (e.g., "Parent", "Tutor")
     grade: v.string(), // Grade level (e.g., "K1", "K2", "K3")
@@ -140,6 +160,7 @@ export default defineSchema({
   })
     .index("by_student_id", ["studentId"])
     .index("by_school", ["schoolId"])
+    .index("by_provider", ["providerId"]) // NEW INDEX for provider queries
     .index("by_guardian", ["guardianName"])
     .index("by_guardian_id", ["guardianId"])
     .index("by_created_by", ["createdBy"])
@@ -255,7 +276,7 @@ export default defineSchema({
   cancellationRequests: defineTable({
     classId: v.id("classes"),
     teacherId: v.id("users"),
-    schoolId: v.id("schools"),
+    schoolId: v.optional(v.id("schools")), // Optional for provider classes
     requestType: v.union(
       v.literal("cancel"),
       v.literal("postpone")
@@ -307,7 +328,7 @@ export default defineSchema({
     classId: v.id("classes"),
     teacherId: v.id("users"),
     studentId: v.id("students"),
-    schoolId: v.id("schools"),
+    schoolId: v.optional(v.id("schools")), // Optional for provider classes
     // Bilingual content
     notes: v.optional(v.string()),
     notesTh: v.optional(v.string()),

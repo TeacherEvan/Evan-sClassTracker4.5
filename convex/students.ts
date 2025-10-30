@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { AuditActions, AuditTargetTypes, logAudit } from "./auditHelpers";
 import { checkRateLimit, validateLength } from "./rateLimit";
 
 // Helper function to generate unique ID for GUARDIAN students
@@ -89,7 +90,8 @@ export const create = mutation({
   args: {
     firstName: v.string(),
     lastName: v.string(),
-    schoolId: v.optional(v.id("schools")), // Optional for guardian-linked students
+    schoolId: v.optional(v.id("schools")), // Optional for guardian-linked students or provider-linked students
+    providerId: v.optional(v.id("providers")), // NEW - alternative to schoolId
     guardianId: v.optional(v.id("users")), // Guardian user ID
     guardianTitle: v.optional(v.string()), // Relationship description
     grade: v.string(), // Grade level (K1, K2, K3)
@@ -120,6 +122,23 @@ export const create = mutation({
       windowMs: 60000, // 1 minute
     });
 
+    // ✅ NEW: XOR VALIDATION - Student must have EITHER schoolId OR providerId OR guardian (not multiple, not none for provider/school)
+    const hasSchool = !!args.schoolId;
+    const hasProvider = !!args.providerId;
+    const hasGuardian = !!(args.guardianId || args.guardianName);
+
+    // If both school and provider are provided, reject
+    if (hasSchool && hasProvider) {
+      throw new Error("Student cannot be linked to both a school and a provider. Please choose one.");
+    }
+
+    // Guardian students can exist without school or provider
+    // Provider students require providerId
+    // School students require schoolId
+    if (!hasGuardian && !hasSchool && !hasProvider) {
+      throw new Error("Student must be linked to either a school, provider, or guardian");
+    }
+
     // ✅ SECURITY: Verify user permissions
     const creator = await ctx.db.get(args.createdBy);
     if (!creator) {
@@ -137,7 +156,23 @@ export const create = mutation({
       } else if (creator.role !== "admin") {
         throw new Error("Unauthorized: Only teachers, moderators, and admins can create school-linked students");
       }
-    } else {
+    } else if (args.providerId) {
+      // NEW: Provider-linked students (teachers and admins only)
+      if (creator.role === "moderator") {
+        throw new Error("Unauthorized: Moderators cannot create provider-linked students");
+      }
+
+      // Verify provider exists and teacher has access
+      const provider = await ctx.db.get(args.providerId);
+      if (!provider) {
+        throw new Error("Provider not found");
+      }
+
+      // Teachers can only use their own providers, admins can use any
+      if (creator.role === "teacher" && provider.createdBy !== creator._id) {
+        throw new Error("Unauthorized: You can only create students for providers you created");
+      }
+    } else if (hasGuardian) {
       // Guardian-linked students
       if (creator.role === "guardian" && args.guardianId !== creator._id) {
         throw new Error("Guardians can only create students linked to themselves");
@@ -159,8 +194,13 @@ export const create = mutation({
       throw new Error("Class is required for students linked to a school");
     }
 
+    // NEW: Validate provider student requirements (grade still required, but class is optional)
+    if (args.providerId && !args.grade) {
+      throw new Error("Grade is required for provider-linked students");
+    }
+
     // NEW: Validate guardian student requirements
-    const isGuardianStudent = !!(args.guardianId || args.guardianName);
+    const isGuardianStudent = hasGuardian;
     if (isGuardianStudent) {
       if (!args.dateOfBirth) {
         throw new Error("Guardian students must have a birth date for unique identification");
@@ -188,6 +228,28 @@ export const create = mutation({
       if (duplicate) {
         throw new Error(
           `Student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" already exists in ${args.grade}${args.class}`
+        );
+      }
+    }
+
+    // NEW: ✅ PREVENT DUPLICATES for provider students (name + grade + provider)
+    if (args.providerId) {
+      const providerStudents = await ctx.db
+        .query("students")
+        .withIndex("by_provider", (q) => q.eq("providerId", args.providerId!))
+        .collect();
+
+      const providerDuplicate = providerStudents.find(
+        (s) =>
+          s.firstName.toLowerCase() === args.firstName.toLowerCase() &&
+          (s.lastName || "").toLowerCase() === (args.lastName || "").toLowerCase() &&
+          s.grade === args.grade
+      );
+
+      if (providerDuplicate) {
+        const provider = await ctx.db.get(args.providerId);
+        throw new Error(
+          `Student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" already exists in ${args.grade} for provider "${provider?.name || "Unknown"}" (ID: ${providerDuplicate.studentId})`
         );
       }
     }
@@ -224,8 +286,12 @@ export const create = mutation({
         args.dateOfBirth,
         args.area
       );
+    } else if (args.providerId) {
+      // NEW: Provider student: use provider-based ID
+      const providerIdForHash = args.providerId;
+      studentId = generateStudentId(args.firstName, args.lastName || "", providerIdForHash);
     } else {
-      // School student: use timestamp based ID
+      // School student: use school-based ID
       const schoolIdForHash = args.schoolId || "NOSCHOOL";
       studentId = generateStudentId(args.firstName, args.lastName || "", schoolIdForHash);
     }
@@ -247,6 +313,8 @@ export const create = mutation({
       // Regenerate with new random component based on student type
       if (isGuardianStudent && args.dateOfBirth && args.area) {
         studentId = generateGuardianStudentId(args.firstName, args.lastName || "", args.dateOfBirth, args.area);
+      } else if (args.providerId) {
+        studentId = generateStudentId(args.firstName, args.lastName || "", args.providerId);
       } else {
         const schoolIdForHash = args.schoolId || "NOSCHOOL";
         studentId = generateStudentId(args.firstName, args.lastName || "", schoolIdForHash);
@@ -263,6 +331,7 @@ export const create = mutation({
       lastName: args.lastName,
       studentId,
       schoolId: args.schoolId,
+      providerId: args.providerId, // NEW: Provider support
       guardianId: args.guardianId,
       guardianTitle: args.guardianTitle,
       grade: args.grade,
@@ -492,6 +561,26 @@ export const remove = mutation({
         );
       }
     }
+
+    // ✅ CRITICAL: Audit logging BEFORE deletion (so we can track WHO/WHEN/WHY/WHAT)
+    await logAudit(ctx, {
+      userId: operationArgs.deletedBy,
+      action: AuditActions.DELETE_STUDENT,
+      targetType: AuditTargetTypes.STUDENTS,
+      targetId: operationArgs.id,
+      targetName: `${student.firstName} ${student.lastName}`,
+      reason: operationArgs.reason,
+      schoolId: student.schoolId,
+      details: {
+        studentId: student.studentId,
+        grade: student.grade,
+        class: student.class,
+        guardianId: student.guardianId,
+        area: student.area,
+        affectedClasses: activeClasses.length,
+        affectedClassIds: activeClasses.map(c => c._id),
+      },
+    });
 
     await ctx.db.delete(operationArgs.id);
 

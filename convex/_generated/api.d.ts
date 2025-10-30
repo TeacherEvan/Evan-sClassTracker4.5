@@ -33,6 +33,7 @@ import type * as notifications from "../notifications.js";
 import type * as pagination from "../pagination.js";
 import type * as performanceMonitoring from "../performanceMonitoring.js";
 import type * as postClassNotes from "../postClassNotes.js";
+import type * as providers from "../providers.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as schools from "../schools.js";
 import type * as search from "../search.js";
@@ -85,6 +86,7 @@ declare const fullApi: ApiFromModules<{
   pagination: typeof pagination;
   performanceMonitoring: typeof performanceMonitoring;
   postClassNotes: typeof postClassNotes;
+  providers: typeof providers;
   rateLimit: typeof rateLimit;
   schools: typeof schools;
   search: typeof search;

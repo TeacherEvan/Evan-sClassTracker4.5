@@ -142,7 +142,7 @@ export const create = mutation({
             classId: args.classId,
             teacherId: args.teacherId,
             studentId: targetStudentId, // Use the determined student ID
-            schoolId: classData.schoolId,
+            ...(classData.schoolId && { schoolId: classData.schoolId }),
             notes: args.notes,
             notesTh: args.notesTh,
             attendance: args.attendance,
@@ -154,12 +154,13 @@ export const create = mutation({
             createdAt: Date.now(),
         });
 
-        // Log the action if not skipped
-        if (!args.skipped) {
+        // Log the action if not skipped (only for school classes)
+        if (!args.skipped && classData.schoolId) {
+            const schoolId = classData.schoolId; // Store for type safety
             const student = await ctx.db.get(targetStudentId);
             await ctx.db.insert("teacherLogs", {
                 teacherId: args.teacherId,
-                schoolId: classData.schoolId,
+                schoolId,
                 action: "post_class_notes_added",
                 actionTh: "เพิ่มบันทึกหลังเรียน",
                 details: `Added post-class notes for ${student?.firstName} ${student?.lastName} on ${new Date(classData.scheduledDate).toLocaleDateString()}`,

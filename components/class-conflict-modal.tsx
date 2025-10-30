@@ -18,7 +18,7 @@ interface ClassConflictModalProps {
     student: Partial<Doc<"students">> & { _id: Id<"students">; firstName: string; lastName: string } | null;
     location: Partial<Doc<"locations">> & { _id: Id<"locations">; name: string; nameTh: string } | null;
     teacherId: Id<"users">;
-    schoolId: Id<"schools">;
+    schoolId?: Id<"schools">; // Optional for provider classes
   }>;
   newClassData: {
     studentId: Id<"students">;

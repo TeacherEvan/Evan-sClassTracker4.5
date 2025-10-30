@@ -233,7 +233,8 @@ export const listWithDetails = query({
 export const bookWithConflictCheck = mutation({
   args: {
     teacherId: v.id("users"),
-    schoolId: v.id("schools"),
+    schoolId: v.optional(v.id("schools")), // Optional for provider classes
+    providerId: v.optional(v.id("providers")), // Optional for provider classes
     studentId: v.id("students"),
     locationId: v.optional(v.id("locations")),
     pendingLocationName: v.optional(v.string()),
@@ -261,6 +262,16 @@ export const bookWithConflictCheck = mutation({
     forceCreate: v.optional(v.boolean()), // If true, create despite conflicts
   },
   handler: async (ctx, args) => {
+    // XOR validation - must have EITHER schoolId OR providerId (not both, not neither)
+    const hasSchool = args.schoolId !== undefined;
+    const hasProvider = args.providerId !== undefined;
+    if (hasSchool && hasProvider) {
+      throw new Error("Class cannot be linked to both school and provider - choose one");
+    }
+    if (!hasSchool && !hasProvider) {
+      throw new Error("Class must be linked to either a school or a provider");
+    }
+
     // Check for time conflicts first
     const TIME_TOLERANCE = 5 * 60 * 1000; // 5 minutes
     const startRange = args.scheduledDate - TIME_TOLERANCE;
@@ -273,16 +284,21 @@ export const bookWithConflictCheck = mutation({
           .gte("scheduledDate", startRange)
           .lte("scheduledDate", endRange)
       )
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("schoolId"), args.schoolId),
+      .filter((q) => {
+        // Match by school or provider
+        const entityMatch = args.schoolId
+          ? q.eq(q.field("schoolId"), args.schoolId)
+          : q.eq(q.field("providerId"), args.providerId);
+
+        return q.and(
+          entityMatch,
           q.or(
             q.eq(q.field("status"), "approved"),
             q.eq(q.field("status"), "pending"),
             q.eq(q.field("status"), "acknowledged")
           )
-        )
-      )
+        );
+      })
       .collect();
 
     // Filter by location if provided
@@ -411,14 +427,17 @@ export const bookWithConflictCheck = mutation({
     }
 
     // Determine status
+    // Provider classes and guardian-linked classes are auto-approved
     // Moderators and admins creating new classes don't need acknowledgement
     const isModerator = bookingUser.role === "moderator" || bookingUser.role === "admin";
-    const status = isGuardianLinked || isModerator ? "approved" : "pending";
+    const isProviderLinked = args.providerId !== undefined;
+    const status = isProviderLinked || isGuardianLinked || isModerator ? "approved" : "pending";
 
     // Create the class
     const classId = await ctx.db.insert("classes", {
       teacherId: args.teacherId,
-      schoolId: args.schoolId,
+      ...(args.schoolId && { schoolId: args.schoolId }),
+      ...(args.providerId && { providerId: args.providerId }),
       studentId: args.studentId,
       locationId: args.locationId,
       pendingLocationName: args.pendingLocationName,
@@ -440,38 +459,40 @@ export const bookWithConflictCheck = mutation({
       ...(args.classType && { classType: args.classType }),
     });
 
-    // Notifications and logging (same as original)
-    const school = await ctx.db.get(args.schoolId);
-    const location = args.locationId ? await ctx.db.get(args.locationId) : null;
-    const locationText = location?.name || args.pendingLocationName || "Unknown location";
-    const locationTextTh = location?.nameTh || args.pendingLocationNameTh || "ไม่ทราบสถานที่";
+    // Notifications and logging (only for school classes)
+    if (args.schoolId) {
+      const school = await ctx.db.get(args.schoolId);
+      const location = args.locationId ? await ctx.db.get(args.locationId) : null;
+      const locationText = location?.name || args.pendingLocationName || "Unknown location";
+      const locationTextTh = location?.nameTh || args.pendingLocationNameTh || "ไม่ทราบสถานที่";
 
-    if (!isGuardianLinked && !isModerator && school && school.moderatorId) {
-      const teacher = await ctx.db.get(args.teacherId);
-      // Notification for teacher request - requires acknowledgement
-      await ctx.db.insert("notifications", {
-        title: `New Class Request`,
-        titleTh: `คำขอชั้นเรียนใหม่`,
-        message: `Teacher ${teacher?.username || "Unknown"} has requested a class for ${student.firstName} ${student.lastName} at ${locationText}. Please review and acknowledge.`,
-        messageTh: `ครู ${teacher?.username || "ไม่ทราบ"} ได้ขอชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} กรุณาตรวจสอบและรับทราบ`,
-        type: "warning",
-        userId: school.moderatorId,
-        read: false,
+      if (!isGuardianLinked && !isProviderLinked && !isModerator && school && school.moderatorId) {
+        const teacher = await ctx.db.get(args.teacherId);
+        // Notification for teacher request - requires acknowledgement
+        await ctx.db.insert("notifications", {
+          title: `New Class Request`,
+          titleTh: `คำขอชั้นเรียนใหม่`,
+          message: `Teacher ${teacher?.username || "Unknown"} has requested a class for ${student.firstName} ${student.lastName} at ${locationText}. Please review and acknowledge.`,
+          messageTh: `ครู ${teacher?.username || "ไม่ทราบ"} ได้ขอชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} กรุณาตรวจสอบและรับทราบ`,
+          type: "warning",
+          userId: school.moderatorId,
+          read: false,
+          createdAt: Date.now(),
+        });
+      }
+
+      await ctx.db.insert("teacherLogs", {
+        teacherId: args.teacherId,
+        schoolId: args.schoolId,
+        action: isModerator ? "class_booked" : "class_requested",
+        actionTh: isModerator ? "จองชั้นเรียน" : "ขอชั้นเรียน",
+        details: `${isModerator ? "Booked" : "Requested"} class for ${student.firstName} ${student.lastName} at ${locationText} on ${new Date(args.scheduledDate).toLocaleDateString()}`,
+        detailsTh: `${isModerator ? "จอง" : "ขอ"}ชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} วันที่ ${new Date(args.scheduledDate).toLocaleDateString("th-TH")}`,
+        relatedClassId: classId,
+        relatedStudentId: args.studentId,
         createdAt: Date.now(),
       });
     }
-
-    await ctx.db.insert("teacherLogs", {
-      teacherId: args.teacherId,
-      schoolId: args.schoolId,
-      action: isModerator ? "class_booked" : "class_requested",
-      actionTh: isModerator ? "จองชั้นเรียน" : "ขอชั้นเรียน",
-      details: `${isModerator ? "Booked" : "Requested"} class for ${student.firstName} ${student.lastName} at ${locationText} on ${new Date(args.scheduledDate).toLocaleDateString()}`,
-      detailsTh: `${isModerator ? "จอง" : "ขอ"}ชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} วันที่ ${new Date(args.scheduledDate).toLocaleDateString("th-TH")}`,
-      relatedClassId: classId,
-      relatedStudentId: args.studentId,
-      createdAt: Date.now(),
-    });
 
     return {
       success: true,
@@ -485,7 +506,8 @@ export const bookWithConflictCheck = mutation({
 export const book = mutation({
   args: {
     teacherId: v.id("users"),
-    schoolId: v.id("schools"),
+    schoolId: v.optional(v.id("schools")), // NOW OPTIONAL - alternative to providerId
+    providerId: v.optional(v.id("providers")), // NEW - alternative to schoolId
     studentId: v.id("students"),
     locationId: v.optional(v.id("locations")),
     pendingLocationName: v.optional(v.string()),
@@ -511,6 +533,18 @@ export const book = mutation({
     )),
   },
   handler: async (ctx, args) => {
+    // ✅ NEW: XOR VALIDATION - Class must have EITHER schoolId OR providerId (not both, not neither)
+    const hasSchool = !!args.schoolId;
+    const hasProvider = !!args.providerId;
+
+    if (hasSchool && hasProvider) {
+      throw new Error("Class cannot be linked to both a school and a provider. Please choose one.");
+    }
+
+    if (!hasSchool && !hasProvider) {
+      throw new Error("Class must be linked to either a school or a provider");
+    }
+
     // ✅ SECURITY: Rate limiting - max 30 class bookings per minute per user
     await checkRateLimit(ctx, {
       key: `book-class:${args.bookedByUserId}`,
@@ -617,17 +651,20 @@ export const book = mutation({
       throw new Error("User not found");
     }
 
-    // Determine status based on who is booking and whether it's guardian-linked
+    // Determine status based on who is booking and whether it's guardian-linked or provider-linked
     // Guardian-linked classes are auto-approved (no moderator workflow)
+    // Provider-linked classes are auto-approved (no moderator workflow) - NEW
     // Moderators and admins can directly book (approved status) - NO ACKNOWLEDGEMENT NEEDED FOR NEW CLASSES
-    // Teachers create requests (pending status) - REQUIRES ACKNOWLEDGEMENT
+    // Teachers create requests (pending status) - REQUIRES ACKNOWLEDGEMENT (school classes only)
     const isModerator = bookingUser.role === "moderator" || bookingUser.role === "admin";
-    const status = isGuardianLinked || isModerator ? "approved" : "pending";
+    const isProviderLinked = hasProvider; // NEW: Provider classes skip moderator approval
+    const status = isGuardianLinked || isProviderLinked || isModerator ? "approved" : "pending";
 
     // Create the class
     const classId = await ctx.db.insert("classes", {
       teacherId: args.teacherId,
       schoolId: args.schoolId,
+      providerId: args.providerId, // NEW: Provider support
       studentId: args.studentId,
       locationId: args.locationId,
       pendingLocationName: args.pendingLocationName,
@@ -650,20 +687,21 @@ export const book = mutation({
       ...(args.classType && { classType: args.classType }),
     });
 
-    // Get the school to find the moderator
-    const school = await ctx.db.get(args.schoolId);
+    // Get the school to find the moderator (only for school-linked classes)
+    const school = args.schoolId ? await ctx.db.get(args.schoolId) : null;
 
     // Get location info for notifications (if provided)
     const location = args.locationId ? await ctx.db.get(args.locationId) : null;
     const locationText = location?.name || args.pendingLocationName || "Unknown location";
     const locationTextTh = location?.nameTh || args.pendingLocationNameTh || "ไม่ทราบสถานที่";
 
-    // Only send notification if it's a teacher request (pending status)
+    // Only send notification if it's a teacher request (pending status) FOR SCHOOL CLASSES
     // Skip notification for:
     // 1. Guardian-linked classes (auto-approved)
-    // 2. Moderator/admin created classes (they don't need to acknowledge their own new classes)
+    // 2. Provider-linked classes (auto-approved) - NEW
+    // 3. Moderator/admin created classes (they don't need to acknowledge their own new classes)
     // Note: Moderators DO need acknowledgement when EDITING existing classes (handled in editClass mutation)
-    if (!isGuardianLinked && !isModerator && school && school.moderatorId) {
+    if (!isGuardianLinked && !isProviderLinked && !isModerator && school && school.moderatorId) {
       // Get teacher information
       const teacher = await ctx.db.get(args.teacherId);
 
@@ -700,18 +738,20 @@ export const book = mutation({
       });
     }
 
-    // Log the action
-    await ctx.db.insert("teacherLogs", {
-      teacherId: args.teacherId,
-      schoolId: args.schoolId,
-      action: isModerator ? "class_booked" : "class_requested",
-      actionTh: isModerator ? "จองชั้นเรียน" : "ขอชั้นเรียน",
-      details: `${isModerator ? "Booked" : "Requested"} class for ${student.firstName} ${student.lastName} at ${locationText} on ${new Date(args.scheduledDate).toLocaleDateString()}`,
-      detailsTh: `${isModerator ? "จอง" : "ขอ"}ชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} วันที่ ${new Date(args.scheduledDate).toLocaleDateString("th-TH")}`,
-      relatedClassId: classId,
-      relatedStudentId: args.studentId,
-      createdAt: Date.now(),
-    });
+    // Log the action (only for school classes - provider classes don't create logs)
+    if (args.schoolId) {
+      await ctx.db.insert("teacherLogs", {
+        teacherId: args.teacherId,
+        schoolId: args.schoolId,
+        action: isModerator ? "class_booked" : "class_requested",
+        actionTh: isModerator ? "จองชั้นเรียน" : "ขอชั้นเรียน",
+        details: `${isModerator ? "Booked" : "Requested"} class for ${student.firstName} ${student.lastName} at ${locationText} on ${new Date(args.scheduledDate).toLocaleDateString()}`,
+        detailsTh: `${isModerator ? "จอง" : "ขอ"}ชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} วันที่ ${new Date(args.scheduledDate).toLocaleDateString("th-TH")}`,
+        relatedClassId: classId,
+        relatedStudentId: args.studentId,
+        createdAt: Date.now(),
+      });
+    }
 
     return classId;
   },
@@ -1250,8 +1290,8 @@ export const editClass = mutation({
       editHistory: [...existingHistory, editHistoryEntry],
     });
 
-    // 7. Send notification to moderator (if teacher edited)
-    if (user.role === "teacher") {
+    // 7. Send notification to moderator (if teacher edited AND school-linked)
+    if (user.role === "teacher" && classData.schoolId) {
       const school = await ctx.db.get(classData.schoolId);
       if (school?.moderatorId) {
         const student = await ctx.db.get(classData.studentId);
@@ -1268,17 +1308,19 @@ export const editClass = mutation({
       }
     }
 
-    // 8. Log the edit action
-    await ctx.db.insert("teacherLogs", {
-      teacherId: classData.teacherId,
-      schoolId: classData.schoolId,
-      action: "class_edited",
-      actionTh: "แก้ไขคลาส",
-      details: `Class edited by ${user.username}. Changes: ${changes.map(c => c.field).join(", ")}`,
-      detailsTh: `แก้ไขคลาสโดย ${user.username}. การเปลี่ยนแปลง: ${changes.map(c => c.field).join(", ")}`,
-      relatedClassId: args.classId,
-      createdAt: Date.now(),
-    });
+    // 8. Log the edit action (only for school classes)
+    if (classData.schoolId) {
+      await ctx.db.insert("teacherLogs", {
+        teacherId: classData.teacherId,
+        schoolId: classData.schoolId,
+        action: "class_edited",
+        actionTh: "แก้ไขคลาส",
+        details: `Class edited by ${user.username}. Changes: ${changes.map(c => c.field).join(", ")}`,
+        detailsTh: `แก้ไขคลาสโดย ${user.username}. การเปลี่ยนแปลง: ${changes.map(c => c.field).join(", ")}`,
+        relatedClassId: args.classId,
+        createdAt: Date.now(),
+      });
+    }
 
     return { success: true, changesCount: changes.length };
   },
@@ -1332,9 +1374,9 @@ export const addDatesToClass = mutation({
       });
     }
 
-    // 4. Check school exists
-    const school = await ctx.db.get(classData.schoolId);
-    if (!school) {
+    // 4. Check school exists (only for school-linked classes)
+    const school = classData.schoolId ? await ctx.db.get(classData.schoolId) : null;
+    if (classData.schoolId && !school) {
       throw new Error("School not found");
     }
 
@@ -1350,6 +1392,7 @@ export const addDatesToClass = mutation({
       // Create new class with same details but new date
       const newClassId = await ctx.db.insert("classes", {
         schoolId: classData.schoolId,
+        providerId: classData.providerId, // NEW: Include provider if present
         teacherId: classData.teacherId,
         studentId: classData.studentId,
         locationId: classData.locationId,
@@ -1377,8 +1420,8 @@ export const addDatesToClass = mutation({
     const locationText = location?.name || "Unknown location";
     const locationTextTh = location?.nameTh || "ไม่ทราบสถานที่";
 
-    // 8. Send notification to moderator (if teacher added dates)
-    if (!isGuardianLinked && !isModerator && school?.moderatorId) {
+    // 8. Send notification to moderator (if teacher added dates AND school-linked)
+    if (!isGuardianLinked && !isModerator && classData.schoolId && school?.moderatorId) {
       await ctx.db.insert("notifications", {
         userId: school.moderatorId,
         title: `Additional Class Dates Requested`,
@@ -1391,18 +1434,20 @@ export const addDatesToClass = mutation({
       });
     }
 
-    // 9. Log the action
-    await ctx.db.insert("teacherLogs", {
-      teacherId: classData.teacherId,
-      schoolId: classData.schoolId,
-      action: "dates_added",
-      actionTh: "เพิ่มวันเรียน",
-      details: `Added ${args.newDates.length} date(s) for ${student?.firstName} ${student?.lastName} at ${locationText}`,
-      detailsTh: `เพิ่ม ${args.newDates.length} วันสำหรับ ${student?.firstName} ${student?.lastName} ที่ ${locationTextTh}`,
-      relatedClassId: args.classId,
-      relatedStudentId: classData.studentId,
-      createdAt: Date.now(),
-    });
+    // 9. Log the action (only for school classes)
+    if (classData.schoolId) {
+      await ctx.db.insert("teacherLogs", {
+        teacherId: classData.teacherId,
+        schoolId: classData.schoolId,
+        action: "dates_added",
+        actionTh: "เพิ่มวันเรียน",
+        details: `Added ${args.newDates.length} date(s) for ${student?.firstName} ${student?.lastName} at ${locationText}`,
+        detailsTh: `เพิ่ม ${args.newDates.length} วันสำหรับ ${student?.firstName} ${student?.lastName} ที่ ${locationTextTh}`,
+        relatedClassId: args.classId,
+        relatedStudentId: classData.studentId,
+        createdAt: Date.now(),
+      });
+    }
 
     return {
       success: true,
@@ -1631,19 +1676,20 @@ export const addStudentToClass = mutation({
       });
     }
 
-    // Log the action
-    await ctx.db.insert("teacherLogs", {
-      teacherId: classData.teacherId,
-      schoolId: classData.schoolId,
-      action: "student_added_to_class",
-      actionTh: "เพิ่มนักเรียนในคลาส",
-      details: `${user.username} added ${student.firstName} ${student.lastName} to class (now ${updatedAdditionalStudents.length + 1} students)`,
-      detailsTh: `${user.username} เพิ่ม ${student.firstName} ${student.lastName} ในคลาส (ตอนนี้มี ${updatedAdditionalStudents.length + 1} คน)`,
-      relatedClassId: args.classId,
-      relatedStudentId: args.studentId,
-      createdAt: Date.now(),
-    });
-
+    // Log the action (only for school classes)
+    if (classData.schoolId) {
+      await ctx.db.insert("teacherLogs", {
+        teacherId: classData.teacherId,
+        schoolId: classData.schoolId,
+        action: "student_added_to_class",
+        actionTh: "เพิ่มนักเรียนในคลาส",
+        details: `${user.username} added ${student.firstName} ${student.lastName} to class (now ${updatedAdditionalStudents.length + 1} students)`,
+        detailsTh: `${user.username} เพิ่ม ${student.firstName} ${student.lastName} ในคลาส (ตอนนี้มี ${updatedAdditionalStudents.length + 1} คน)`,
+        relatedClassId: args.classId,
+        relatedStudentId: args.studentId,
+        createdAt: Date.now(),
+      });
+    }
     return { success: true, totalStudents: updatedAdditionalStudents.length + 1 };
   },
 });
@@ -1707,18 +1753,20 @@ export const removeStudentFromClass = mutation({
 
     const student = await ctx.db.get(args.studentId);
 
-    // Log the action
-    await ctx.db.insert("teacherLogs", {
-      teacherId: classData.teacherId,
-      schoolId: classData.schoolId,
-      action: "student_removed_from_class",
-      actionTh: "ลบนักเรียนออกจากคลาส",
-      details: `${user.username} removed ${student?.firstName} ${student?.lastName} from class (now ${updatedAdditionalStudents.length + 1} students)`,
-      detailsTh: `${user.username} ลบ ${student?.firstName} ${student?.lastName} ออกจากคลาส (ตอนนี้มี ${updatedAdditionalStudents.length + 1} คน)`,
-      relatedClassId: args.classId,
-      relatedStudentId: args.studentId,
-      createdAt: Date.now(),
-    });
+    // Log the action (only for school classes)
+    if (classData.schoolId) {
+      await ctx.db.insert("teacherLogs", {
+        teacherId: classData.teacherId,
+        schoolId: classData.schoolId,
+        action: "student_removed_from_class",
+        actionTh: "ลบนักเรียนออกจากคลาส",
+        details: `${user.username} removed ${student?.firstName} ${student?.lastName} from class (now ${updatedAdditionalStudents.length + 1} students)`,
+        detailsTh: `${user.username} ลบ ${student?.firstName} ${student?.lastName} ออกจากคลาส (ตอนนี้มี ${updatedAdditionalStudents.length + 1} คน)`,
+        relatedClassId: args.classId,
+        relatedStudentId: args.studentId,
+        createdAt: Date.now(),
+      });
+    }
 
     return { success: true, totalStudents: updatedAdditionalStudents.length + 1 };
   },
@@ -1878,17 +1926,19 @@ export const mergeClasses = mutation({
       await ctx.db.delete(classId);
     }
 
-    // Log the action
-    await ctx.db.insert("teacherLogs", {
-      teacherId: targetClass.teacherId,
-      schoolId: targetClass.schoolId,
-      action: "classes_merged",
-      actionTh: "รวมคลาส",
-      details: `${user.username} merged ${args.sourceClassIds.length} classes into one (Students: ${studentNames}). Total students: ${additionalStudents.size + 1}`,
-      detailsTh: `${user.username} รวม ${args.sourceClassIds.length} คลาสเป็นหนึ่งเดียว (นักเรียน: ${studentNames}) รวม: ${additionalStudents.size + 1} คน`,
-      relatedClassId: args.targetClassId,
-      createdAt: Date.now(),
-    });
+    // Log the action (only for school classes)
+    if (targetClass.schoolId) {
+      await ctx.db.insert("teacherLogs", {
+        teacherId: targetClass.teacherId,
+        schoolId: targetClass.schoolId,
+        action: "classes_merged",
+        actionTh: "รวมคลาส",
+        details: `${user.username} merged ${args.sourceClassIds.length} classes into one (Students: ${studentNames}). Total students: ${additionalStudents.size + 1}`,
+        detailsTh: `${user.username} รวม ${args.sourceClassIds.length} คลาสเป็นหนึ่งเดียว (นักเรียน: ${studentNames}) รวม: ${additionalStudents.size + 1} คน`,
+        relatedClassId: args.targetClassId,
+        createdAt: Date.now(),
+      });
+    }
 
     // Notify the teacher (if not the one who merged)
     if (targetClass.teacherId !== args.userId) {

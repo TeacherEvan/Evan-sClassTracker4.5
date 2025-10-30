@@ -294,3 +294,112 @@ export const cleanOldLogs = mutation({
         };
     },
 });
+
+// ============================================================================
+// QUERY: Get all deleted students (CRITICAL for investigation)
+// ============================================================================
+
+export const getDeletedStudents = query({
+    args: {
+        userId: v.id("users"), // Admin or moderator requesting investigation data
+        limit: v.optional(v.number()),
+    },
+    handler: async (ctx, args) => {
+        // Verify admin or moderator role
+        const user = await ctx.db.get(args.userId);
+        if (!user || (user.role !== "admin" && user.role !== "moderator")) {
+            throw new Error("Admin or moderator access required to view deleted students");
+        }
+
+        // Get all student deletion audit logs
+        let deletionLogs = await ctx.db
+            .query("auditLogs")
+            .withIndex("by_action", q => q.eq("action", "delete_student"))
+            .order("desc")
+            .take(args.limit || 100);
+
+        // For moderators, filter to their school only
+        if (user.role === "moderator" && user.schoolId) {
+            deletionLogs = deletionLogs.filter(log => log.schoolId === user.schoolId);
+        }
+
+        // Parse details for each log
+        const enrichedLogs = deletionLogs.map(log => {
+            const details = log.details ? JSON.parse(log.details) : {};
+            return {
+                ...log,
+                parsedDetails: details,
+                studentName: log.targetName,
+                studentId: details.studentId,
+                deletedBy: log.username,
+                deletedAt: log.timestamp,
+                reason: log.reason,
+                affectedClasses: details.affectedClasses || 0,
+                affectedClassIds: details.affectedClassIds || [],
+            };
+        });
+
+        return enrichedLogs;
+    },
+});
+
+// ============================================================================
+// QUERY: Get orphaned classes (classes referencing deleted students)
+// ============================================================================
+
+export const getOrphanedClasses = query({
+    args: {
+        userId: v.id("users"), // Admin or moderator requesting investigation data
+    },
+    handler: async (ctx, args) => {
+        // Verify admin or moderator role
+        const user = await ctx.db.get(args.userId);
+        if (!user || (user.role !== "admin" && user.role !== "moderator")) {
+            throw new Error("Admin or moderator access required to view orphaned classes");
+        }
+
+        // Get all classes
+        let classes = await ctx.db.query("classes").collect();
+
+        // For moderators, filter to their school only
+        if (user.role === "moderator" && user.schoolId) {
+            classes = classes.filter(c => c.schoolId === user.schoolId);
+        }
+
+        // Check which classes have deleted students
+        const orphanedClasses = [];
+        for (const classItem of classes) {
+            const student = await ctx.db.get(classItem.studentId);
+            if (!student) {
+                // Student has been deleted - this is an orphaned class
+
+                // Try to find deletion audit log for this student
+                const deletionLog = await ctx.db
+                    .query("auditLogs")
+                    .withIndex("by_action", q => q.eq("action", "delete_student"))
+                    .filter(q => q.eq(q.field("targetId"), classItem.studentId))
+                    .first();
+
+                orphanedClasses.push({
+                    classId: classItem._id,
+                    scheduledDate: classItem.scheduledDate,
+                    status: classItem.status,
+                    teacherId: classItem.teacherId,
+                    schoolId: classItem.schoolId,
+                    duration: classItem.duration,
+                    studentCount: classItem.additionalStudentIds ? classItem.additionalStudentIds.length + 1 : 1,
+                    deletedStudentId: classItem.studentId,
+                    deletionInfo: deletionLog ? {
+                        deletedBy: deletionLog.username,
+                        deletedAt: deletionLog.timestamp,
+                        reason: deletionLog.reason,
+                        studentName: deletionLog.targetName,
+                    } : null,
+                });
+            }
+        }
+
+        return orphanedClasses;
+    },
+});
+

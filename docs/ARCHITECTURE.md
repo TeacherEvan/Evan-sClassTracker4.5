@@ -103,15 +103,106 @@ Bilingual (English/Thai) class tracking system built with **Next.js 15**, **Reac
 │  │              │  │ - userId     │  │              │         │
 │  └──────────────┘  └──────────────┘  └──────────────┘         │
 │                                                                 │
-│  ┌──────────────┐  ┌──────────────┐                           │
-│  │ postClassNotes│ │ appUpdates   │                           │
-│  │ - classId    │  │ - title/Th   │                           │
-│  │ - feedback   │  │ - content/Th │                           │
-│  │ - rating     │  │ - isActive   │                           │
-│  │ - teacherId  │  │ - viewedBy   │                           │
-│  └──────────────┘  └──────────────┘                           │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│  │ providers    │  │ postClassNotes│ │ appUpdates   │         │
+│  │ - name       │  │ - classId    │  │ - title/Th   │         │
+│  │ - nameTh     │  │ - feedback   │  │ - content/Th │         │
+│  │ - category   │  │ - rating     │  │ - isActive   │         │
+│  │ - createdBy  │  │ - teacherId  │  │ - viewedBy   │         │
+│  │ - isActive   │  │ - schoolId   │  │              │         │
+│  └──────────────┘  └──────────────┘  └──────────────┘         │
+│                                                                 │
+│  📝 NOTE: schoolId is OPTIONAL in students, classes,           │
+│           postClassNotes, cancellationRequests (Oct 2025)      │
+│           XOR Validation: entities have EITHER schoolId OR     │
+│           providerId (not both, not neither)                   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
+```
+
+## Provider System Architecture (Added Oct 2025 - v4.5.11)
+
+### Multi-Provider Model
+
+The system supports multiple entity types for managing students and classes:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Entity Hierarchy                           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Admin Creates                    Teachers/Admins Create       │
+│      ↓                                    ↓                     │
+│  ┌──────────┐                      ┌──────────┐                │
+│  │ Schools  │                      │Providers │                │
+│  ├──────────┤                      ├──────────┤                │
+│  │ - Public │                      │ Personal │                │
+│  │ - Private│                      │ Private  │                │
+│  │ - Has    │                      │ Language │                │
+│  │   Mods   │                      │ Camp     │                │
+│  └──────────┘                      └──────────┘                │
+│       ↓                                   ↓                     │
+│  ┌────────────────────────────────────────────┐                │
+│  │           Students & Classes               │                │
+│  │  (MUST have EITHER schoolId OR providerId) │                │
+│  └────────────────────────────────────────────┘                │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### XOR Validation Pattern
+
+```typescript
+// Students and Classes enforce XOR constraint
+const hasSchool = args.schoolId !== undefined;
+const hasProvider = args.providerId !== undefined;
+
+if (hasSchool && hasProvider) {
+  throw new Error("Cannot link to both school and provider");
+}
+if (!hasSchool && !hasProvider) {
+  throw new Error("Must link to either school or provider");
+}
+```
+
+### Provider Categories
+
+1. **personal** - Teacher's own private students
+2. **private** - Private tutoring companies
+3. **language_school** - Language learning centers
+4. **educational_camp** - Workshops, summer camps
+
+### Auto-Approval Workflow
+
+```
+School Classes:  pending → acknowledged → approved/rejected
+Provider Classes: ──────────→ approved (auto, no moderator)
+Guardian Classes: ──────────→ approved (auto, no moderator)
+```
+
+### Authorization Matrix
+
+| Action | Admin | Moderator | Teacher |
+|--------|-------|-----------|---------|
+| Create School | ✅ | ❌ | ❌ |
+| Create Provider | ✅ | ❌ | ✅ (own only) |
+| View All Providers | ✅ | ❌ | ❌ |
+| View Own Providers | ✅ | ❌ | ✅ |
+| Book School Class | ✅ | ✅ | ✅ |
+| Book Provider Class | ✅ | ❌ | ✅ (own only) |
+| Approve Classes | ✅ | ✅ (school) | ❌ |
+
+### Student ID Generation
+
+```
+School Students:    SCHOOLHASH-NAMEHASH-TIMESTAMP-RANDOM
+                    Example: BANG-EVTH-abc123-XY4Z
+
+Provider Students:  NOSCHOOL-NAMEHASH-TIMESTAMP-RANDOM
+                    Example: NOSC-JATH-def456-AB1C
+
+Guardian Students:  AREA-NAMEHASH-BIRTHDATE-RANDOM
+                    Example: BKK01-SARA-19920115-X7Y2
 ```
 
 ## Performance Optimizations (Oct 2025)

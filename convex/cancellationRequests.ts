@@ -136,7 +136,7 @@ export const create = mutation({
         const requestId = await ctx.db.insert("cancellationRequests", {
             classId: args.classId,
             teacherId: args.teacherId,
-            schoolId: classData.schoolId,
+            ...(classData.schoolId && { schoolId: classData.schoolId }),
             requestType: args.requestType,
             reason: args.reason,
             reasonTh: args.reasonTh,
@@ -145,8 +145,8 @@ export const create = mutation({
             createdAt: Date.now(),
         });
 
-        // Get school to find moderator
-        const school = await ctx.db.get(classData.schoolId);
+        // Get school to find moderator (only for school classes)
+        const school = classData.schoolId ? await ctx.db.get(classData.schoolId) : null;
 
         // Get student and location for notification
         const student = await ctx.db.get(classData.studentId);
@@ -182,30 +182,33 @@ export const create = mutation({
             });
         }
 
-        // Log the action
-        const isPostpone = args.requestType === "postpone";
-        const newDateForLog = args.newScheduledDate
-            ? new Date(args.newScheduledDate).toLocaleDateString("en-US")
-            : "";
-        const newDateForLogTh = args.newScheduledDate
-            ? new Date(args.newScheduledDate).toLocaleDateString("th-TH")
-            : "";
+        // Log the action (only for school classes)
+        if (classData.schoolId) {
+            const schoolId = classData.schoolId; // Store for type safety
+            const isPostpone = args.requestType === "postpone";
+            const newDateForLog = args.newScheduledDate
+                ? new Date(args.newScheduledDate).toLocaleDateString("en-US")
+                : "";
+            const newDateForLogTh = args.newScheduledDate
+                ? new Date(args.newScheduledDate).toLocaleDateString("th-TH")
+                : "";
 
-        await ctx.db.insert("teacherLogs", {
-            teacherId: args.teacherId,
-            schoolId: classData.schoolId,
-            action: isPostpone ? "postponement_requested" : "cancellation_requested",
-            actionTh: isPostpone ? "ขอเลื่อนชั้นเรียน" : "ขอยกเลิกชั้นเรียน",
-            details: isPostpone
-                ? `Requested postponement for class with ${student?.firstName} ${student?.lastName} at ${location?.name} to ${newDateForLog}. Reason: ${args.reason}`
-                : `Requested cancellation for class with ${student?.firstName} ${student?.lastName} at ${location?.name}. Reason: ${args.reason}`,
-            detailsTh: isPostpone
-                ? `ขอเลื่อนชั้นเรียนกับ ${student?.firstName} ${student?.lastName} ที่ ${location?.nameTh} ไปวันที่ ${newDateForLogTh} เหตุผล: ${args.reasonTh}`
-                : `ขอยกเลิกชั้นเรียนกับ ${student?.firstName} ${student?.lastName} ที่ ${location?.nameTh} เหตุผล: ${args.reasonTh}`,
-            relatedClassId: args.classId,
-            relatedStudentId: classData.studentId,
-            createdAt: Date.now(),
-        });
+            await ctx.db.insert("teacherLogs", {
+                teacherId: args.teacherId,
+                schoolId,
+                action: isPostpone ? "postponement_requested" : "cancellation_requested",
+                actionTh: isPostpone ? "ขอเลื่อนชั้นเรียน" : "ขอยกเลิกชั้นเรียน",
+                details: isPostpone
+                    ? `Requested postponement for class with ${student?.firstName} ${student?.lastName} at ${location?.name} to ${newDateForLog}. Reason: ${args.reason}`
+                    : `Requested cancellation for class with ${student?.firstName} ${student?.lastName} at ${location?.name}. Reason: ${args.reason}`,
+                detailsTh: isPostpone
+                    ? `ขอเลื่อนชั้นเรียนกับ ${student?.firstName} ${student?.lastName} ที่ ${location?.nameTh} ไปวันที่ ${newDateForLogTh} เหตุผล: ${args.reasonTh}`
+                    : `ขอยกเลิกชั้นเรียนกับ ${student?.firstName} ${student?.lastName} ที่ ${location?.nameTh} เหตุผล: ${args.reasonTh}`,
+                relatedClassId: args.classId,
+                relatedStudentId: classData.studentId,
+                createdAt: Date.now(),
+            });
+        }
 
         return requestId;
     },
@@ -297,21 +300,25 @@ export const approve = mutation({
                 ? new Date(request.newScheduledDate).toLocaleDateString("th-TH")
                 : "";
 
-            await ctx.db.insert("teacherLogs", {
-                teacherId: request.teacherId,
-                schoolId: request.schoolId,
-                action: isPostpone ? "class_postponed" : "class_cancelled",
-                actionTh: isPostpone ? "เลื่อนชั้นเรียน" : "ยกเลิกชั้นเรียน",
-                details: isPostpone
-                    ? `Class postponement approved for ${student?.firstName} ${student?.lastName} at ${location?.name} to ${newDateForLog}`
-                    : `Class cancellation approved for ${student?.firstName} ${student?.lastName} at ${location?.name}`,
-                detailsTh: isPostpone
-                    ? `อนุมัติการเลื่อนชั้นเรียนกับ ${student?.firstName} ${student?.lastName} ที่ ${location?.nameTh} ไปวันที่ ${newDateForLogTh}`
-                    : `อนุมัติการยกเลิกชั้นเรียนกับ ${student?.firstName} ${student?.lastName} ที่ ${location?.nameTh}`,
-                relatedClassId: request.classId,
-                relatedStudentId: classData.studentId,
-                createdAt: Date.now(),
-            });
+            // Only log for school classes
+            if (request.schoolId) {
+                const schoolId = request.schoolId; // Store for type safety
+                await ctx.db.insert("teacherLogs", {
+                    teacherId: request.teacherId,
+                    schoolId,
+                    action: isPostpone ? "class_postponed" : "class_cancelled",
+                    actionTh: isPostpone ? "เลื่อนชั้นเรียน" : "ยกเลิกชั้นเรียน",
+                    details: isPostpone
+                        ? `Class postponement approved for ${student?.firstName} ${student?.lastName} at ${location?.name} to ${newDateForLog}`
+                        : `Class cancellation approved for ${student?.firstName} ${student?.lastName} at ${location?.name}`,
+                    detailsTh: isPostpone
+                        ? `อนุมัติการเลื่อนชั้นเรียนกับ ${student?.firstName} ${student?.lastName} ที่ ${location?.nameTh} ไปวันที่ ${newDateForLogTh}`
+                        : `อนุมัติการยกเลิกชั้นเรียนกับ ${student?.firstName} ${student?.lastName} ที่ ${location?.nameTh}`,
+                    relatedClassId: request.classId,
+                    relatedStudentId: classData.studentId,
+                    createdAt: Date.now(),
+                });
+            }
         }
 
         return { success: true };

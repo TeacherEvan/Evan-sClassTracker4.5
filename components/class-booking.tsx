@@ -22,7 +22,7 @@ function detectConflicts(
   classes: Array<{
     _id: Id<"classes">;
     teacherId: Id<"users">;
-    schoolId: Id<"schools">;
+    schoolId?: Id<"schools">;
     locationId?: Id<"locations">;
     scheduledDate: number;
     status: string;
@@ -30,7 +30,7 @@ function detectConflicts(
   targetClass: {
     _id: Id<"classes">;
     teacherId: Id<"users">;
-    schoolId: Id<"schools">;
+    schoolId?: Id<"schools">;
     locationId?: Id<"locations">;
     scheduledDate: number;
     status: string;
@@ -136,12 +136,12 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     student: Partial<Doc<"students">> & { _id: Id<"students">; firstName: string; lastName: string } | null;
     location: Partial<Doc<"locations">> & { _id: Id<"locations">; name: string; nameTh: string } | null;
     teacherId: Id<"users">;
-    schoolId: Id<"schools">;
+    schoolId?: Id<"schools">;
   };
 
   type PendingBookingData = {
     teacherId: Id<"users">;
-    schoolId: Id<"schools">;
+    schoolId?: Id<"schools">;
     studentId: Id<"students">;
     locationId?: Id<"locations">;
     pendingLocationName?: string;
@@ -2083,7 +2083,7 @@ function ClassItemDisplay({
 }: {
   classItem: {
     _id: Id<"classes">;
-    schoolId: Id<"schools">; // Required for school isolation
+    schoolId?: Id<"schools">; // Optional for provider classes
     studentId: Id<"students">;
     additionalStudentIds?: Id<"students">[];
     locationId?: Id<"locations">;
@@ -2122,7 +2122,7 @@ function ClassItemDisplay({
   // Load students filtered by the class's school to prevent cross-school contamination
   const students = useQuery(
     api.students.list,
-    { schoolId: classItem.schoolId }
+    classItem.schoolId ? { schoolId: classItem.schoolId } : "skip"
   );
 
   const addStudentToClass = useMutation(api.classes.addStudentToClass);
