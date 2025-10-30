@@ -331,6 +331,9 @@ export const getMyClassCountDetails = query({
             totalClassCount += classCount;
 
             const primaryStudent = studentMap.get(cls.studentId);
+            const additionalStudents = (cls.additionalStudentIds || [])
+                .map(id => studentMap.get(id))
+                .filter((s): s is NonNullable<typeof s> => s !== undefined);
             const school = cls.schoolId ? schoolMap.get(cls.schoolId) : null; // NEW: Conditional school lookup
             const provider = cls.providerId ? providerMap.get(cls.providerId) : null; // NEW: Provider lookup
             const location = cls.locationId ? locationMap.get(cls.locationId) : null;
@@ -344,6 +347,9 @@ export const getMyClassCountDetails = query({
                 primaryStudentName: primaryStudent
                     ? `${primaryStudent.firstName} ${primaryStudent.lastName}`
                     : "Unknown",
+                additionalStudentNames: additionalStudents.map(s =>
+                    `${s.firstName} ${s.lastName}`.trim()
+                ),
                 schoolName: school?.name || (provider?.name) || "Unknown", // NEW: Fallback to provider
                 schoolNameTh: school?.nameTh || (provider?.nameTh) || "ไม่ทราบ", // NEW: Fallback to provider
                 providerName: provider?.name, // NEW: Provider name

@@ -6,20 +6,16 @@ import { useLanguage } from "@/lib/language-context";
 import { useQuery } from "convex/react";
 import {
     AlertCircle,
-    Building2,
     Calendar,
     CheckCircle,
-    Clock,
     Filter,
     GraduationCap,
-    MapPin,
     Printer,
-    School,
     Search,
-    User,
     X
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { ClassDetailCard } from "./class-detail-card";
 
 interface ClassCountModalProps {
     teacherId: Id<"users">;
@@ -55,6 +51,9 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
     });
 
     const [showAllClasses, setShowAllClasses] = useState(false);
+
+    // Destructure cycleInfo for use in UI
+    const cycleInfo = classCountDetails?.cycleInfo;
 
     // Extract unique providers for filter dropdown (must be before conditional return)
     const uniqueProviders = useMemo(() => {
@@ -272,13 +271,16 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                 ? `<span style="background: #e9d5ff; color: #7e22ce; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">Provider</span>`
                 : '';
 
+            // NEW: Build all students list
+            const allStudents = [cls.primaryStudentName, ...cls.additionalStudentNames];
+            const studentList = allStudents.length === 1
+                ? cls.primaryStudentName
+                : allStudents.map((name, idx) => `${idx + 1}. ${name}`).join('<br>');
+
             return `
                     <tr>
                         <td>${new Date(cls.scheduledDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}</td>
-                        <td>
-                            ${cls.primaryStudentName}
-                            ${cls.additionalStudentNames.length > 0 ? `<br><small>(+${cls.additionalStudentNames.length} more)</small>` : ''}
-                        </td>
+                        <td>${studentList}</td>
                         <td>${entityName} ${entityBadge}</td>
                         <td>${cls.duration} min</td>
                         <td>${cls.studentCount}</td>
@@ -384,18 +386,26 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                                         "นี่คือจำนวนชั้นเรียนปัจจุบันของคุณสำหรับเดือนนี้ ค่าจะรีเซ็ตในตอนท้ายของแต่ละรอบที่กำหนดโดยผู้ดูแลของคุณ"
                                     )}
                                 </p>
-                                <div className="flex items-center gap-2 text-xs text-blue-700 dark:text-blue-300">
-                                    <Calendar className="w-4 h-4" />
-                                    <span>
-                                        {t("Current Cycle:", "รอบปัจจุบัน:")} {new Date(cycleInfo.startDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")} -{" "}
-                                        {new Date(cycleInfo.endDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
-                                    </span>
-                                </div>
-                                {cycleInfo.notes && (
-                                    <p className="text-xs text-blue-600 dark:text-blue-400 italic">
-                                        {language === "th" ? cycleInfo.notesTh || cycleInfo.notes : cycleInfo.notes}
-                                    </p>
-                                )}
+                                {(() => {
+                                    if (!cycleInfo || !cycleInfo.startDate || !cycleInfo.endDate) return null;
+                                    const { startDate, endDate, notes, notesTh } = cycleInfo;
+                                    return (
+                                        <>
+                                            <div className="flex items-center gap-2 text-xs text-blue-700 dark:text-blue-300">
+                                                <Calendar className="w-4 h-4" />
+                                                <span>
+                                                    {t("Current Cycle:", "รอบปัจจุบัน:")} {new Date(startDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")} -{" "}
+                                                    {new Date(endDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
+                                                </span>
+                                            </div>
+                                            {notes && (
+                                                <p className="text-xs text-blue-600 dark:text-blue-400 italic">
+                                                    {language === "th" ? notesTh || notes : notes}
+                                                </p>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </div>
                         </div>
                     </div>
@@ -581,76 +591,9 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                {displayedClasses.map((cls) => {
-                                    const isProvider = !!cls.providerId;
-
-                                    return (
-                                        <div
-                                            key={cls.classId}
-                                            className="bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden"
-                                        >
-                                            {/* Main Card Content */}
-                                            <div className="p-4">
-                                                <div className="flex items-start justify-between mb-2">
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                                            <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                                {cls.primaryStudentName}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
-                                                            <div className="flex items-center gap-1">
-                                                                <Calendar className="w-3.5 h-3.5" />
-                                                                <span>
-                                                                    {new Date(cls.scheduledDate).toLocaleDateString(
-                                                                        language === "th" ? "th-TH" : "en-US"
-                                                                    )}
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex items-center gap-1">
-                                                                <Clock className="w-3.5 h-3.5" />
-                                                                <span>{cls.duration} min</span>
-                                                            </div>
-                                                            {/* Entity Badge - Provider or School */}
-                                                            {isProvider ? (
-                                                                <div className="flex items-center gap-1 px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
-                                                                    <Building2 className="w-3.5 h-3.5" />
-                                                                    <span className="text-xs font-medium">
-                                                                        {language === "th" ? cls.providerNameTh : cls.providerName}
-                                                                    </span>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="flex items-center gap-1">
-                                                                    <School className="w-3.5 h-3.5" />
-                                                                    <span>{language === "th" ? cls.schoolNameTh : cls.schoolName}</span>
-                                                                </div>
-                                                            )}
-                                                            <div className="flex items-center gap-1">
-                                                                <MapPin className="w-3.5 h-3.5" />
-                                                                <span>{language === "th" ? cls.locationNameTh : cls.locationName}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <div className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-full text-sm font-bold">
-                                                            {cls.classCount}
-                                                        </div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                            {cls.studentCount} {cls.studentCount === 1 ? "student" : "students"}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                                                    <CheckCircle className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-                                                    <span className="text-xs text-gray-600 dark:text-gray-400">
-                                                        {t("Acknowledged by", "ยอมรับโดย")} {cls.acknowledgedBy}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                {displayedClasses.map((cls) => (
+                                    <ClassDetailCard key={cls.classId} classData={cls} />
+                                ))}
 
                                 {filteredAndSearchedClasses.length > 5 && !showAllClasses && (
                                     <button
