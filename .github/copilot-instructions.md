@@ -1,7 +1,7 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.10 (Oct 30, 2025)
+**Version:** 4.5.12 (Oct 30, 2025 - In Progress)
 
 ---
 
@@ -140,18 +140,14 @@ This documentation is split into focused sections for efficient knowledge discov
 
 ## 🔄 Last Updated
 
-**October 30, 2025** - Version 4.5.11 - Provider System Phase 1 Complete ✅
-- **NEW: Provider System (Phase 1/4)**: Multi-provider architecture replacing school-only model
-- **Database Schema**: Added providers table with 4 categories (personal, private, language_school, educational_camp)
-- **XOR Validation**: Entities require EITHER schoolId OR providerId (mutual exclusivity enforced)
-- **Auto-Approval Workflow**: Provider-linked classes bypass moderator approval
-- **Role-Based Access**: Teachers create own providers, moderators blocked, admins have full access
-- **Optional schoolId**: Made schoolId optional across 4 tables (classes, students, cancellationRequests, postClassNotes)
-- **Backend Complete**: All CRUD operations, duplicate prevention, batch fetching patterns, conditional logging
-- **TypeScript Fixes**: Type-safe locals pattern for conditional schoolId (cancellationRequests, postClassNotes)
-- **Frontend Types**: ClassWithDetails updated in weekly-calendar.tsx and class-detail-modal.tsx
-- **Build Status**: Next.js build ✅, Convex deploy ✅, 0 TypeScript errors
-- **Documentation**: Added Pattern #22 (Provider System), updated ARCHITECTURE.md, comprehensive implementation summary
+**October 30, 2025** - Version 4.5.12 - Class Count Enhancements & Payment Calculator (In Progress) ⏳
+- **NEW: Payment Calculator (Phase 3/5)**: Security-first ephemeral calculation tool with zero database persistence
+- **Calculator Features**: Mandatory disclaimer, real-time calculation (rate × ClassCount), date range filtering, provider/school filtering, professional print-to-PDF
+- **Enhanced Class Count Modal**: Expandable class cards, all students display, lazy-loaded post-class notes, color-coded badges
+- **Provider Creation Modal**: BilingualInput integration, category selection, callback pattern, ready for UI integration (Phase 4.2 pending)
+- **Build Status**: Next.js ✅, TypeScript ✅ (placeholder fix applied), Convex deploy ✅
+- **Documentation**: Comprehensive implementation summary (IMPLEMENTATION_SUMMARY_CLASS_COUNT_ENHANCEMENTS_OCT_30_2025.md)
+- **Previous (v4.5.11)**: Provider System Phase 1 complete - Multi-provider architecture, XOR validation, auto-approval workflow, role-based access, batch fetching patterns
 - **Previous (v4.5.10)**: Critical bug fixes (duplicate notes, console errors), merged class edit history, teacher cycle reporting enhancements, filter navigation tabs, pagination/collapsible patterns (#19-21)
 
 ---

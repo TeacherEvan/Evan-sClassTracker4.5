@@ -8,6 +8,7 @@ import { useMutation, useQuery } from "convex/react";
 import { Copy, GraduationCap, Mail, Pencil, Phone, Plus, Trash2, User as UserIcon, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { CollapsibleSection } from "./collapsible-section";
+import { CreateProviderModal } from "./create-provider-modal";
 import { PaginatedList } from "./paginated-list";
 
 type Student = {
@@ -16,6 +17,7 @@ type Student = {
     lastName: string;
     studentId: string;
     schoolId?: Id<"schools">;
+    providerId?: Id<"providers">;
     guardianId?: Id<"users">;
     guardianTitle?: string;
     grade: string;
@@ -33,8 +35,9 @@ interface StudentManagementProps {
 }
 
 export function StudentManagement({ currentUser }: StudentManagementProps) {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const schools = useQuery(api.schools.list, {});
+    const myProviders = useQuery(api.providers.list, { userId: currentUser._id });
     const createStudent = useMutation(api.students.create);
     const updateStudent = useMutation(api.students.update);
     const removeStudent = useMutation(api.students.remove);
@@ -52,11 +55,15 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const [grade, setGrade] = useState("");
     const [studentClass, setStudentClass] = useState("");
     const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
+    const [providerId, setProviderId] = useState<Id<"providers"> | "">("");
     const [guardianName, setGuardianName] = useState("");
     const [guardianPhone, setGuardianPhone] = useState("");
     const [guardianEmail, setGuardianEmail] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+
+    // Provider modal state
+    const [showCreateProvider, setShowCreateProvider] = useState(false);
 
     // Optional fields state
     const [dateOfBirth, setDateOfBirth] = useState("");
@@ -136,12 +143,26 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             return;
         }
 
-        // Validate: must have either school OR guardian
-        if (!schoolId && !guardianName.trim()) {
+        // XOR Validation: Student must be linked to EITHER school OR provider OR guardian (not multiple, not none)
+        const hasSchool = !!schoolId;
+        const hasProvider = !!providerId;
+        const hasGuardian = !!guardianName.trim();
+
+        if (hasSchool && hasProvider) {
             setError(
                 t(
-                    "Student must be linked to either a school or guardian",
-                    "นักเรียนต้องเชื่อมโยงกับโรงเรียนหรือผู้ปกครอง"
+                    "Student cannot be linked to both school and provider - please choose one",
+                    "นักเรียนไม่สามารถเชื่อมโยงทั้งโรงเรียนและผู้ให้บริการ - กรุณาเลือกอย่างใดอย่างหนึ่ง"
+                )
+            );
+            return;
+        }
+
+        if (!hasSchool && !hasProvider && !hasGuardian) {
+            setError(
+                t(
+                    "Student must be linked to either a school, provider, or guardian",
+                    "นักเรียนต้องเชื่อมโยงกับโรงเรียน ผู้ให้บริการ หรือผู้ปกครอง"
                 )
             );
             return;
@@ -190,7 +211,8 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                 await createStudent({
                     firstName: nickname, // Use nickname as firstName
                     lastName: "", // Empty lastName
-                    schoolId: schoolId || undefined,
+                    ...(schoolId && { schoolId }),
+                    ...(providerId && { providerId }),
                     grade,
                     class: studentClass && studentClass.trim() ? studentClass.trim() : undefined,
                     guardianName: guardianName || undefined,
@@ -238,6 +260,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         setGrade(student.grade);
         setStudentClass(student.class || "");
         setSchoolId(student.schoolId || "");
+        setProviderId(student.providerId || "");
         setGuardianName(student.guardianName || "");
         setGuardianPhone(student.guardianPhone || "");
         setGuardianEmail(student.guardianEmail || "");
@@ -406,6 +429,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         setGrade("");
         setStudentClass("");
         setSchoolId("");
+        setProviderId("");
         setGuardianName("");
         setGuardianPhone("");
         setGuardianEmail("");
@@ -636,23 +660,96 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                        {t("School", "โรงเรียน")}
-                                    </label>
-                                    <select
-                                        value={schoolId}
-                                        onChange={(e) => setSchoolId(e.target.value as Id<"schools"> | "")}
-                                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        <option value="">{t("No School (Guardian)", "ไม่มีโรงเรียน (ผู้ปกครอง)")}</option>
-                                        {schools?.map((school) => (
-                                            <option key={school._id} value={school._id}>
-                                                {school.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                {/* School OR Provider Selection (not for moderators) */}
+                                {currentUser.role !== "moderator" && (
+                                    <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                        <h4 className="font-semibold text-gray-900 dark:text-white">
+                                            {t("School OR Provider (Choose One)", "โรงเรียนหรือผู้ให้บริการ (เลือกอย่างใดอย่างหนึ่ง)")}
+                                        </h4>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* School Dropdown */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    {t("School", "โรงเรียน")}
+                                                </label>
+                                                <select
+                                                    value={schoolId}
+                                                    onChange={(e) => {
+                                                        setSchoolId(e.target.value as Id<"schools"> | "");
+                                                        if (e.target.value) setProviderId(""); // Clear provider if school selected
+                                                    }}
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                >
+                                                    <option value="">{t("No School", "ไม่มีโรงเรียน")}</option>
+                                                    {schools?.map((school) => (
+                                                        <option key={school._id} value={school._id}>
+                                                            {school.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            {/* Provider Dropdown */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    {t("Provider", "ผู้ให้บริการ")}
+                                                </label>
+                                                <select
+                                                    value={providerId}
+                                                    onChange={(e) => {
+                                                        setProviderId(e.target.value as Id<"providers"> | "");
+                                                        if (e.target.value) setSchoolId(""); // Clear school if provider selected
+                                                    }}
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                >
+                                                    <option value="">{t("No Provider", "ไม่มีผู้ให้บริการ")}</option>
+                                                    {myProviders?.map((provider) => (
+                                                        <option key={provider._id} value={provider._id}>
+                                                            {language === "th" ? provider.nameTh : provider.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowCreateProvider(true)}
+                                                    className="mt-2 w-full px-3 py-2 text-sm bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <Plus className="w-4 h-4" />
+                                                    {t("Create New Provider", "สร้างผู้ให้บริการใหม่")}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            {t(
+                                                "Select either a school OR a provider (not both). Leave both empty to link to guardian only.",
+                                                "เลือกโรงเรียนหรือผู้ให้บริการ (ไม่ใช่ทั้งสองอย่าง) เว้นว่างทั้งสองเพื่อเชื่อมโยงกับผู้ปกครองเท่านั้น"
+                                            )}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Moderators see school dropdown only (no provider option) */}
+                                {currentUser.role === "moderator" && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            {t("School", "โรงเรียน")}
+                                        </label>
+                                        <select
+                                            value={schoolId}
+                                            onChange={(e) => setSchoolId(e.target.value as Id<"schools"> | "")}
+                                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            <option value="">{t("No School (Guardian)", "ไม่มีโรงเรียน (ผู้ปกครอง)")}</option>
+                                            {schools?.map((school) => (
+                                                <option key={school._id} value={school._id}>
+                                                    {school.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Guardian Information */}
@@ -1170,6 +1267,19 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Create Provider Modal */}
+            {showCreateProvider && (
+                <CreateProviderModal
+                    userId={currentUser._id}
+                    onClose={() => setShowCreateProvider(false)}
+                    onCreated={(newProviderId) => {
+                        setProviderId(newProviderId); // Auto-select new provider
+                        setSchoolId(""); // Clear school
+                        setShowCreateProvider(false);
+                    }}
+                />
             )}
         </div>
     );

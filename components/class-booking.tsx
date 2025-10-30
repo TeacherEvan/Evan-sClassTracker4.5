@@ -60,7 +60,7 @@ interface ClassBookingProps {
 }
 
 export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { schools } = useDataContext(); // Use shared context instead of individual query
 
   const [showForm, setShowForm] = useState(false);
@@ -68,6 +68,16 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const [schoolId, setSchoolId] = useState<Id<"schools"> | "">(
     // Moderators auto-select their school, others start empty
     userRole === "moderator" && userSchoolId ? userSchoolId : ""
+  );
+  const [providerId, setProviderId] = useState<Id<"providers"> | "">("");
+
+  // Provider modal state
+  const [showCreateProvider, setShowCreateProvider] = useState(false);
+
+  // Load providers for teachers/admins
+  const myProviders = useQuery(
+    api.providers.list,
+    (userRole === "teacher" || userRole === "admin") ? { userId } : "skip"
   );
 
   // Load students filtered by selected school - prevents cross-school contamination

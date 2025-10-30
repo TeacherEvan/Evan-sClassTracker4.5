@@ -2,6 +2,61 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.12] - October 30, 2025 (In Progress)
+
+### Added - Class Count Enhancements & Payment Calculator
+
+- **Payment Calculator**: Security-first ephemeral calculation tool with zero database persistence
+  - Mandatory disclaimer screen explaining privacy protection
+  - Real-time payment calculation (rate × total ClassCount)
+  - Date range filtering for accurate period calculations
+  - Provider/school entity filtering
+  - Professional print-to-PDF functionality with detailed breakdown
+  - Calculator icon in Class Count Modal header (easy access)
+  - Component: `components/class-payment-calculator.tsx` (~600 lines)
+
+- **Enhanced Class Count Modal**: Interactive drill-down with expandable class details
+  - Expandable class cards showing full details on click
+  - All student names displayed (primary + additional students)
+  - Post-class notes loaded on-demand (lazy loading prevents N+1 queries)
+  - Attendance status with color-coded badges
+  - Behavior and participation notes display
+  - Duration and ClassCount breakdown per class
+
+- **Provider Creation Modal**: Foundation for multi-provider UI integration
+  - Provider category selection (personal, private, language_school, educational_camp)
+  - Bilingual input with 300ms debouncing
+  - Purple gradient header (distinct visual identity)
+  - Callback pattern for auto-selection after creation
+  - Toast notifications for success/error states
+  - Component: `components/create-provider-modal.tsx` (~200 lines)
+
+### Changed
+
+- **Class Count Modal**: Added payment calculator integration
+  - New Calculator button in modal header
+  - State management for calculator visibility
+  - Z-index hierarchy for nested modals
+
+### Fixed
+
+- **TypeScript Error**: Fixed BilingualInput placeholder props in create-provider-modal.tsx
+  - Changed `placeholderEn` → `placeholder` to match component interface
+
+### Technical
+
+- **Build Status**: All builds passing (Next.js ✅, TypeScript ✅, Convex ✅)
+- **Security Design**: Payment calculator maintains zero database persistence
+- **Code Quality**: ~800 lines of new TypeScript/React code with full dark mode support
+- **Performance**: Lazy loading patterns prevent unnecessary queries
+- **Documentation**: Comprehensive implementation summary created
+
+### Pending (Phase 4.2)
+
+- Provider UI integration into student-management.tsx
+- Provider UI integration into class-booking.tsx
+- E2E testing and final deployment
+
 ## [4.5.11] - October 30, 2025
 
 ### Added - Provider System (Phase 1/4)
