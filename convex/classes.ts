@@ -561,6 +561,25 @@ export const book = mutation({
     // Allow scheduling classes in the past - useful for makeup classes or retroactive entries
     // The same acknowledgement workflow applies regardless of past or future dates
 
+    // NEW FEATURE (Oct 30, 2025): Check if past date is within teacher's active cycle
+    const isPastDate = args.scheduledDate < Date.now();
+    let isWithinCycle = false;
+
+    if (isPastDate) {
+      // Check teacher's active cycle
+      const activeCycle = await ctx.db
+        .query("teacherClassCountCycles")
+        .withIndex("by_teacher_and_active", (q) =>
+          q.eq("teacherId", args.teacherId).eq("isActive", true)
+        )
+        .first();
+
+      if (activeCycle) {
+        isWithinCycle = args.scheduledDate >= activeCycle.cycleStartDate &&
+          args.scheduledDate <= activeCycle.cycleEndDate;
+      }
+    }
+
     // Validate location - either locationId or at least one pending location name must be provided
     if (!args.locationId && !args.pendingLocationName && !args.pendingLocationNameTh) {
       throw new Error("Must provide either a location or at least one pending location name");
@@ -648,13 +667,33 @@ export const book = mutation({
       // Get teacher information
       const teacher = await ctx.db.get(args.teacherId);
 
+      // Prepare notification message with past date warning if applicable
+      let notificationMessage = `Teacher ${teacher?.username || "Unknown"} has requested a class for ${student.firstName} ${student.lastName} at ${locationText}.`;
+      let notificationMessageTh = `ครู ${teacher?.username || "ไม่ทราบ"} ได้ขอชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh}`;
+
+      if (isPastDate) {
+        notificationMessage += ` ⚠️ This is a PAST DATE booking (${new Date(args.scheduledDate).toLocaleDateString()})`;
+        notificationMessageTh += ` ⚠️ การจองนี้เป็นวันที่ย้อนหลัง (${new Date(args.scheduledDate).toLocaleDateString("th-TH")})`;
+
+        if (isWithinCycle) {
+          notificationMessage += " within the teacher's active cycle. Approval will count toward ClassCount.";
+          notificationMessageTh += " ภายในรอบที่ใช้งานของครู การอนุมัติจะนับรวมใน ClassCount";
+        } else {
+          notificationMessage += " OUTSIDE the teacher's active cycle. Approval will NOT count toward ClassCount.";
+          notificationMessageTh += " นอกรอบที่ใช้งานของครู การอนุมัติจะไม่นับรวมใน ClassCount";
+        }
+      }
+
+      notificationMessage += " Please review and acknowledge.";
+      notificationMessageTh += " กรุณาตรวจสอบและรับทราบ";
+
       // Create notification for moderator
       await ctx.db.insert("notifications", {
-        title: `New Class Request`,
-        titleTh: `คำขอชั้นเรียนใหม่`,
-        message: `Teacher ${teacher?.username || "Unknown"} has requested a class for ${student.firstName} ${student.lastName} at ${locationText}. Please review and acknowledge.`,
-        messageTh: `ครู ${teacher?.username || "ไม่ทราบ"} ได้ขอชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} กรุณาตรวจสอบและรับทราบ`,
-        type: "warning",
+        title: isPastDate ? "⚠️ Past Date Class Request" : "New Class Request",
+        titleTh: isPastDate ? "⚠️ คำขอชั้นเรียนย้อนหลัง" : "คำขอชั้นเรียนใหม่",
+        message: notificationMessage,
+        messageTh: notificationMessageTh,
+        type: isPastDate ? "warning" : "info",
         userId: school.moderatorId,
         read: false,
         createdAt: Date.now(),

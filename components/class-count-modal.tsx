@@ -9,26 +9,219 @@ import {
     Calendar,
     CheckCircle,
     Clock,
+    Edit3,
     GraduationCap,
     MapPin,
+    Printer,
     School,
     User,
     X,
 } from "lucide-react";
 import { useState } from "react";
+import { TeacherSelfCycleEditor } from "./teacher-self-cycle-editor";
 
 interface ClassCountModalProps {
     teacherId: Id<"users">;
     onClose: () => void;
+    userRole?: string; // Add role to enable teacher-specific features
 }
 
-export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
+export function ClassCountModal({ teacherId, onClose, userRole }: ClassCountModalProps) {
     const { t, language } = useLanguage();
     const classCountDetails = useQuery(api.teacherClassCount.getMyClassCountDetails, {
         teacherId,
     });
+    const printData = useQuery(api.teacherClassCount.getClassCountForPrint, { teacherId });
 
     const [showAllClasses, setShowAllClasses] = useState(false);
+    const [showCycleEditor, setShowCycleEditor] = useState(false);
+
+    // Print function
+    const handlePrint = () => {
+        if (!printData) return;
+
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            alert('Please allow popups to print');
+            return;
+        }
+
+        const html = `
+<!DOCTYPE html>
+<html lang="${language === "th" ? "th" : "en"}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${t("ClassCount Report", "รายงานจำนวนชั้นเรียน")} - ${printData.teacher.username}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            color: #4CAF50;
+            font-size: 28px;
+        }
+        .header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .summary {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .summary-item {
+            text-align: center;
+        }
+        .summary-item .label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .summary-item .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        .class-count-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+        @media print {
+            body { margin: 10px; }
+            .header { page-break-after: avoid; }
+            tr { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>${t("ClassCount Report", "รายงานจำนวนชั้นเรียน")}</h1>
+        <p><strong>${t("Teacher", "ครู")}:</strong> ${printData.teacher.displayName || printData.teacher.username}</p>
+        <p><strong>${t("Cycle Period", "รอบการนับ")}:</strong> ${new Date(printData.cycle.startDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")} - ${new Date(printData.cycle.endDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}</p>
+        <p><strong>${t("Generated", "สร้างเมื่อ")}:</strong> ${new Date(printData.generatedAt).toLocaleString(language === "th" ? "th-TH" : "en-US")}</p>
+    </div>
+
+    <div class="summary">
+        <h2 style="margin: 0 0 10px 0;">${t("Summary", "สรุป")}</h2>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="label">${t("Total ClassCount", "จำนวนชั้นเรียนรวม")}</div>
+                <div class="value">${printData.summary.totalClassCount}</div>
+            </div>
+            <div class="summary-item">
+                <div class="label">${t("Classes Counted", "ชั้นเรียนที่นับ")}</div>
+                <div class="value">${printData.summary.totalClasses}</div>
+            </div>
+            <div class="summary-item">
+                <div class="label">${t("Total Approved", "อนุมัติทั้งหมด")}</div>
+                <div class="value">${printData.summary.totalApprovedClasses}</div>
+            </div>
+        </div>
+    </div>
+
+    <h2>${t("Detailed Breakdown", "รายละเอียด")}</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>${t("Date", "วันที่")}</th>
+                <th>${t("Student(s)", "นักเรียน")}</th>
+                <th>${t("School", "โรงเรียน")}</th>
+                <th>${t("Duration", "ระยะเวลา")}</th>
+                <th>${t("Students", "จำนวนนักเรียน")}</th>
+                <th>${t("ClassCount", "จำนวนชั้นเรียน")}</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${printData.classes.map(cls => `
+                <tr>
+                    <td>${new Date(cls.scheduledDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}</td>
+                    <td>
+                        ${cls.primaryStudentName}
+                        ${cls.additionalStudentNames.length > 0 ? `<br><small>(+${cls.additionalStudentNames.length} more)</small>` : ''}
+                    </td>
+                    <td>${language === "th" ? cls.schoolNameTh : cls.schoolName}</td>
+                    <td>${cls.duration} min</td>
+                    <td>${cls.studentCount}</td>
+                    <td><span class="class-count-badge">${cls.classCount}</span></td>
+                </tr>
+            `).join('')}
+        </tbody>
+    </table>
+
+    ${printData.cycle.notes || printData.cycle.notesTh ? `
+        <div style="margin-top: 30px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+            <h3 style="margin: 0 0 10px 0;">${t("Cycle Notes", "หมายเหตุรอบ")}</h3>
+            <p style="margin: 0;">${language === "th" ? (printData.cycle.notesTh || printData.cycle.notes) : printData.cycle.notes}</p>
+        </div>
+    ` : ''}
+
+    <div class="footer">
+        <p>${t("This report is automatically generated and reflects classes that have been approved and acknowledged.", "รายงานนี้ถูกสร้างขึ้นอัตโนมัติและสะท้อนชั้นเรียนที่ได้รับการอนุมัติและยอมรับแล้ว")}</p>
+        <p>${t("Evan's Class Tracker 4.5", "Evan's Class Tracker 4.5")} - ${new Date().getFullYear()}</p>
+    </div>
+</body>
+</html>
+        `;
+
+        printWindow.document.write(html);
+        printWindow.document.close();
+        printWindow.focus();
+
+        // Wait for content to load then print
+        setTimeout(() => {
+            printWindow.print();
+        }, 250);
+    };
 
     if (!classCountDetails) {
         return (
@@ -66,12 +259,34 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                                 </p>
                             </div>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                        >
-                            <X className="w-6 h-6 text-white" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                            {/* Edit Cycle Button (Teachers only) */}
+                            {userRole === "teacher" && (
+                                <button
+                                    onClick={() => setShowCycleEditor(true)}
+                                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                                    title={t("Edit Cycle", "แก้ไขรอบ")}
+                                >
+                                    <Edit3 className="w-5 h-5 text-white" />
+                                </button>
+                            )}
+                            {/* Print Button */}
+                            <button
+                                onClick={handlePrint}
+                                disabled={!printData}
+                                className="p-2 hover:bg-white/20 rounded-lg transition-colors disabled:opacity-50"
+                                title={t("Print Report", "พิมพ์รายงาน")}
+                            >
+                                <Printer className="w-5 h-5 text-white" />
+                            </button>
+                            {/* Close Button */}
+                            <button
+                                onClick={onClose}
+                                className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                            >
+                                <X className="w-6 h-6 text-white" />
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -221,6 +436,15 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                     </p>
                 </div>
             </div>
+
+            {/* Cycle Editor Modal (Nested) */}
+            {showCycleEditor && (
+                <TeacherSelfCycleEditor
+                    teacherId={teacherId}
+                    currentCycle={cycleInfo}
+                    onComplete={() => setShowCycleEditor(false)}
+                />
+            )}
         </div>
     );
 }
