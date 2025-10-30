@@ -1,7 +1,7 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.9 (Oct 29, 2025)
+**Version:** 4.5.10 (Oct 30, 2025)
 
 ---
 
@@ -133,13 +133,17 @@ This documentation is split into focused sections for efficient knowledge discov
 - **Architecture Diagrams**: 11 ASCII diagrams across integration docs
 - **Test Best Practices**: 7 E2E testing patterns + 4 performance optimizations
 - **Security Warnings**: 4 known limitations clearly marked
-- **Recent Updates**: Visual bloat fix (Oct 29, 2025) - 156-212px vertical space reclaimed
+- **Recent Updates**: Oct 30, 2025 (v4.5.10) - Critical bug fixes (duplicate notes, console errors), merged class edit history, teacher cycle reporting enhancements
 
 ---
 
 ## 🔄 Last Updated
 
-**October 29, 2025** - Version 4.5.9
+**October 30, 2025** - Version 4.5.10
+- **Critical Bug Fixes**: Resolved duplicate notes error via composite index implementation
+- **Console Errors Fixed**: React hydration mismatch suppression, removed non-existent service worker registration
+- **Merged Class Edit History**: Full edit audit trail for merged multi-student classes
+- **Teacher Cycle Past Bookings**: Includes previous cycle bookings in current cycle reporting
 - **Filter Navigation Tabs**: Class Bookings page now has prominent filters at top (70-75% less scrolling)
 - Added Pagination Pattern (#19), Collapsible Section Pattern (#20), and Visual Bloat Fix Pattern (#21)
 - 85-96% DOM reduction, 64% memory reduction, 33% faster mobile loads

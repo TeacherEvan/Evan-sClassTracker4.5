@@ -940,7 +940,6 @@ export default function Home() {
           <Suspense fallback={null}>
             <ClassCountModal
               teacherId={user._id}
-              userRole={user.role}
               onClose={() => setShowClassCountModal(false)}
             />
           </Suspense>

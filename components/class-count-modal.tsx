@@ -9,7 +9,6 @@ import {
     Calendar,
     CheckCircle,
     Clock,
-    Edit3,
     GraduationCap,
     MapPin,
     Printer,
@@ -18,24 +17,36 @@ import {
     X,
 } from "lucide-react";
 import { useState } from "react";
-import { TeacherSelfCycleEditor } from "./teacher-self-cycle-editor";
 
 interface ClassCountModalProps {
     teacherId: Id<"users">;
     onClose: () => void;
-    userRole?: string; // Add role to enable teacher-specific features
 }
 
-export function ClassCountModal({ teacherId, onClose, userRole }: ClassCountModalProps) {
+export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
     const { t, language } = useLanguage();
+
+    // Custom date range filter (client-side only - NOT saved to database)
+    // Default: 1st of current month to 1st of next month
+    const now = new Date();
+    const defaultStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const defaultEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    const [viewStartDate, setViewStartDate] = useState<Date>(defaultStart);
+    const [viewEndDate, setViewEndDate] = useState<Date>(defaultEnd);
+
     const classCountDetails = useQuery(api.teacherClassCount.getMyClassCountDetails, {
         teacherId,
     });
-    const printData = useQuery(api.teacherClassCount.getClassCountForPrint, { teacherId });
+
+    // Print data query WITH custom date range
+    const printData = useQuery(api.teacherClassCount.getClassCountForPrint, {
+        teacherId,
+        customStartDate: viewStartDate.getTime(),
+        customEndDate: viewEndDate.getTime(),
+    });
 
     const [showAllClasses, setShowAllClasses] = useState(false);
-    const [showCycleEditor, setShowCycleEditor] = useState(false);
-
     // Print function
     const handlePrint = () => {
         if (!printData) return;
@@ -237,8 +248,19 @@ export function ClassCountModal({ teacherId, onClose, userRole }: ClassCountModa
         );
     }
 
-    const { cycleInfo, summary, classes } = classCountDetails;
-    const displayedClasses = showAllClasses ? classes : classes.slice(0, 5);
+    const { cycleInfo, classes } = classCountDetails;
+
+    // CLIENT-SIDE FILTERING based on user's selected date range
+    const filteredClasses = classes.filter(cls => {
+        const classDate = new Date(cls.scheduledDate);
+        return classDate >= viewStartDate && classDate <= viewEndDate;
+    });
+
+    // Recalculate summary stats for filtered view
+    const filteredTotalClassCount = filteredClasses.reduce((sum, cls) => sum + cls.classCount, 0);
+    const roundedFilteredTotal = Math.round(filteredTotalClassCount * 10) / 10;
+
+    const displayedClasses = showAllClasses ? filteredClasses : filteredClasses.slice(0, 5);
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -255,21 +277,11 @@ export function ClassCountModal({ teacherId, onClose, userRole }: ClassCountModa
                                     {t("Your ClassCount", "จำนวนชั้นเรียนของคุณ")}
                                 </h2>
                                 <p className="text-sm text-white/90">
-                                    {summary.totalClassCount} {t("classes this cycle", "ชั้นเรียนในรอบนี้")}
+                                    {roundedFilteredTotal} {t("classes in selected period", "ชั้นเรียนในช่วงที่เลือก")}
                                 </p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            {/* Edit Cycle Button (Teachers only) */}
-                            {userRole === "teacher" && (
-                                <button
-                                    onClick={() => setShowCycleEditor(true)}
-                                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                                    title={t("Edit Cycle", "แก้ไขรอบ")}
-                                >
-                                    <Edit3 className="w-5 h-5 text-white" />
-                                </button>
-                            )}
                             {/* Print Button */}
                             <button
                                 onClick={handlePrint}
@@ -320,28 +332,79 @@ export function ClassCountModal({ teacherId, onClose, userRole }: ClassCountModa
                         </div>
                     </div>
 
+                    {/* Custom Date Range Filter (Client-Side View Only) */}
+                    <div className="p-4 md:p-6 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border-b border-purple-200 dark:border-purple-800">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                            <div className="flex items-center gap-2">
+                                <Calendar className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                                <span className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                                    {t("View Period:", "ช่วงเวลาที่ดู:")}
+                                </span>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex items-center gap-2">
+                                    <label className="text-xs text-gray-700 dark:text-gray-300">
+                                        {t("From", "จาก")}:
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={viewStartDate.toISOString().split('T')[0]}
+                                        onChange={(e) => setViewStartDate(new Date(e.target.value))}
+                                        className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <label className="text-xs text-gray-700 dark:text-gray-300">
+                                        {t("To", "ถึง")}:
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={viewEndDate.toISOString().split('T')[0]}
+                                        onChange={(e) => setViewEndDate(new Date(e.target.value))}
+                                        className="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                    />
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setViewStartDate(defaultStart);
+                                        setViewEndDate(defaultEnd);
+                                    }}
+                                    className="px-3 py-1 text-xs bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-700 rounded transition-colors"
+                                >
+                                    {t("Reset to Default", "รีเซ็ตเป็นค่าเริ่มต้น")}
+                                </button>
+                            </div>
+                        </div>
+                        <p className="text-xs text-purple-600 dark:text-purple-400 mt-2 italic">
+                            {t(
+                                "This filter only changes your view - it doesn't modify the actual cycle period.",
+                                "ตัวกรองนี้เปลี่ยนเฉพาะมุมมองของคุณ - ไม่ได้แก้ไขรอบจริง"
+                            )}
+                        </p>
+                    </div>
+
                     {/* Summary Stats */}
                     <div className="p-4 md:p-6 grid grid-cols-2 gap-4 border-b border-gray-200 dark:border-gray-700">
                         <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-lg">
                             <div className="flex items-center gap-2 mb-2">
                                 <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
                                 <span className="text-sm font-medium text-green-900 dark:text-green-100">
-                                    {t("Total ClassCount", "จำนวนชั้นเรียนรวม")}
+                                    {t("ClassCount (Filtered)", "จำนวนชั้นเรียน (กรอง)")}
                                 </span>
                             </div>
                             <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                                {summary.totalClassCount}
+                                {roundedFilteredTotal}
                             </p>
                         </div>
                         <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-4 rounded-lg">
                             <div className="flex items-center gap-2 mb-2">
                                 <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                                 <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                                    {t("Classes Counted", "ชั้นเรียนที่นับ")}
+                                    {t("Classes Shown", "ชั้นเรียนที่แสดง")}
                                 </span>
                             </div>
                             <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                                {summary.totalClasses}
+                                {filteredClasses.length}
                             </p>
                         </div>
                     </div>
@@ -349,13 +412,13 @@ export function ClassCountModal({ teacherId, onClose, userRole }: ClassCountModa
                     {/* Classes List */}
                     <div className="p-4 md:p-6">
                         <h3 className="text-lg font-semibold mb-4">
-                            {t("Classes Counted & Acknowledged", "ชั้นเรียนที่นับและยอมรับแล้ว")}
+                            {t("Classes in Selected Period", "ชั้นเรียนในช่วงที่เลือก")}
                         </h3>
 
-                        {classes.length === 0 ? (
+                        {filteredClasses.length === 0 ? (
                             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                                 <GraduationCap className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                                <p>{t("No classes counted in this cycle yet", "ยังไม่มีชั้นเรียนที่นับในรอบนี้")}</p>
+                                <p>{t("No classes found in this date range", "ไม่พบชั้นเรียนในช่วงวันที่นี้")}</p>
                             </div>
                         ) : (
                             <div className="space-y-3">
@@ -413,12 +476,12 @@ export function ClassCountModal({ teacherId, onClose, userRole }: ClassCountModa
                                     </div>
                                 ))}
 
-                                {classes.length > 5 && !showAllClasses && (
+                                {filteredClasses.length > 5 && !showAllClasses && (
                                     <button
                                         onClick={() => setShowAllClasses(true)}
                                         className="w-full py-3 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg font-medium transition-colors"
                                     >
-                                        {t(`Show All ${classes.length} Classes`, `แสดงทั้งหมด ${classes.length} ชั้นเรียน`)}
+                                        {t(`Show All ${filteredClasses.length} Classes`, `แสดงทั้งหมด ${filteredClasses.length} ชั้นเรียน`)}
                                     </button>
                                 )}
                             </div>
@@ -436,15 +499,6 @@ export function ClassCountModal({ teacherId, onClose, userRole }: ClassCountModa
                     </p>
                 </div>
             </div>
-
-            {/* Cycle Editor Modal (Nested) */}
-            {showCycleEditor && (
-                <TeacherSelfCycleEditor
-                    teacherId={teacherId}
-                    currentCycle={cycleInfo}
-                    onComplete={() => setShowCycleEditor(false)}
-                />
-            )}
         </div>
     );
 }
