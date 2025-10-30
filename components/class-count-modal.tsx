@@ -6,17 +6,20 @@ import { useLanguage } from "@/lib/language-context";
 import { useQuery } from "convex/react";
 import {
     AlertCircle,
+    Building2,
     Calendar,
     CheckCircle,
     Clock,
+    Filter,
     GraduationCap,
     MapPin,
     Printer,
     School,
+    Search,
     User,
-    X,
+    X
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 interface ClassCountModalProps {
     teacherId: Id<"users">;
@@ -35,6 +38,11 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
     const [viewStartDate, setViewStartDate] = useState<Date>(defaultStart);
     const [viewEndDate, setViewEndDate] = useState<Date>(defaultEnd);
 
+    // NEW: Filter and search state
+    const [selectedProvider, setSelectedProvider] = useState<string>("all");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [sortBy, setSortBy] = useState<"date" | "classCount" | "entity">("date");
+
     const classCountDetails = useQuery(api.teacherClassCount.getMyClassCountDetails, {
         teacherId,
     });
@@ -47,6 +55,68 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
     });
 
     const [showAllClasses, setShowAllClasses] = useState(false);
+
+    // Extract unique providers for filter dropdown (must be before conditional return)
+    const uniqueProviders = useMemo(() => {
+        if (!classCountDetails) return [];
+        const { classes } = classCountDetails;
+        const providerSet = new Map<string, { id: string; name: string; nameTh: string }>();
+        classes.forEach(cls => {
+            if (cls.providerId && cls.providerName) {
+                providerSet.set(cls.providerId, {
+                    id: cls.providerId,
+                    name: cls.providerName,
+                    nameTh: cls.providerNameTh || cls.providerName,
+                });
+            }
+        });
+        return Array.from(providerSet.values());
+    }, [classCountDetails]);
+
+    // CLIENT-SIDE FILTERING based on date range, provider, and search (must be before conditional return)
+    const filteredAndSearchedClasses = useMemo(() => {
+        if (!classCountDetails) return [];
+        const { classes } = classCountDetails;
+
+        const result = classes.filter(cls => {
+            const classDate = new Date(cls.scheduledDate);
+            const inDateRange = classDate >= viewStartDate && classDate <= viewEndDate;
+
+            // Provider filter
+            const matchesProvider = selectedProvider === "all" ||
+                (selectedProvider === "schools" && !cls.providerId) ||
+                (cls.providerId === selectedProvider);
+
+            // Search filter (student name or location)
+            const matchesSearch = searchQuery === "" ||
+                cls.primaryStudentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (cls.locationName && cls.locationName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (cls.locationNameTh && cls.locationNameTh.toLowerCase().includes(searchQuery.toLowerCase()));
+
+            return inDateRange && matchesProvider && matchesSearch;
+        });
+
+        // Sort
+        result.sort((a, b) => {
+            if (sortBy === "date") {
+                return b.scheduledDate - a.scheduledDate; // Newest first
+            } else if (sortBy === "classCount") {
+                return b.classCount - a.classCount; // Highest first
+            } else if (sortBy === "entity") {
+                const aEntity = a.providerName || a.schoolName;
+                const bEntity = b.providerName || b.schoolName;
+                return aEntity.localeCompare(bEntity);
+            }
+            return 0;
+        });
+
+        return result;
+    }, [classCountDetails, viewStartDate, viewEndDate, selectedProvider, searchQuery, sortBy]);
+
+    // Recalculate summary stats for filtered view
+    const filteredTotalClassCount = filteredAndSearchedClasses.reduce((sum, cls) => sum + cls.classCount, 0);
+    const roundedFilteredTotal = Math.round(filteredTotalClassCount * 10) / 10;
+
     // Print function
     const handlePrint = () => {
         if (!printData) return;
@@ -186,26 +256,36 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
             <tr>
                 <th>${t("Date", "วันที่")}</th>
                 <th>${t("Student(s)", "นักเรียน")}</th>
-                <th>${t("School", "โรงเรียน")}</th>
+                <th>${t("Entity", "หน่วยงาน")}</th>
                 <th>${t("Duration", "ระยะเวลา")}</th>
                 <th>${t("Students", "จำนวนนักเรียน")}</th>
                 <th>${t("ClassCount", "จำนวนชั้นเรียน")}</th>
             </tr>
         </thead>
         <tbody>
-            ${printData.classes.map(cls => `
-                <tr>
-                    <td>${new Date(cls.scheduledDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}</td>
-                    <td>
-                        ${cls.primaryStudentName}
-                        ${cls.additionalStudentNames.length > 0 ? `<br><small>(+${cls.additionalStudentNames.length} more)</small>` : ''}
-                    </td>
-                    <td>${language === "th" ? cls.schoolNameTh : cls.schoolName}</td>
-                    <td>${cls.duration} min</td>
-                    <td>${cls.studentCount}</td>
-                    <td><span class="class-count-badge">${cls.classCount}</span></td>
-                </tr>
-            `).join('')}
+            ${printData.classes.map(cls => {
+            const isProvider = !!cls.providerId;
+            const entityName = isProvider
+                ? (language === "th" ? cls.providerNameTh : cls.providerName)
+                : (language === "th" ? cls.schoolNameTh : cls.schoolName);
+            const entityBadge = isProvider
+                ? `<span style="background: #e9d5ff; color: #7e22ce; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">Provider</span>`
+                : '';
+
+            return `
+                    <tr>
+                        <td>${new Date(cls.scheduledDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}</td>
+                        <td>
+                            ${cls.primaryStudentName}
+                            ${cls.additionalStudentNames.length > 0 ? `<br><small>(+${cls.additionalStudentNames.length} more)</small>` : ''}
+                        </td>
+                        <td>${entityName} ${entityBadge}</td>
+                        <td>${cls.duration} min</td>
+                        <td>${cls.studentCount}</td>
+                        <td><span class="class-count-badge">${cls.classCount}</span></td>
+                    </tr>
+                `;
+        }).join('')}
         </tbody>
     </table>
 
@@ -248,19 +328,7 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
         );
     }
 
-    const { cycleInfo, classes } = classCountDetails;
-
-    // CLIENT-SIDE FILTERING based on user's selected date range
-    const filteredClasses = classes.filter(cls => {
-        const classDate = new Date(cls.scheduledDate);
-        return classDate >= viewStartDate && classDate <= viewEndDate;
-    });
-
-    // Recalculate summary stats for filtered view
-    const filteredTotalClassCount = filteredClasses.reduce((sum, cls) => sum + cls.classCount, 0);
-    const roundedFilteredTotal = Math.round(filteredTotalClassCount * 10) / 10;
-
-    const displayedClasses = showAllClasses ? filteredClasses : filteredClasses.slice(0, 5);
+    const displayedClasses = showAllClasses ? filteredAndSearchedClasses : filteredAndSearchedClasses.slice(0, 5);
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -383,6 +451,97 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                         </p>
                     </div>
 
+                    {/* NEW: Filter & Search Bar */}
+                    <div className="p-4 md:p-6 bg-gray-50 dark:bg-gray-700/30 border-b border-gray-200 dark:border-gray-700 space-y-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Filter className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {t("Filters & Search", "ตัวกรองและค้นหา")}
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {/* Provider Filter */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t("Entity", "หน่วยงาน")}
+                                </label>
+                                <select
+                                    value={selectedProvider}
+                                    onChange={(e) => setSelectedProvider(e.target.value)}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="all">{t("All Entities", "ทุกหน่วยงาน")}</option>
+                                    <option value="schools">{t("Schools Only", "โรงเรียนเท่านั้น")}</option>
+                                    {uniqueProviders.map(provider => (
+                                        <option key={provider.id} value={provider.id}>
+                                            {language === "th" ? provider.nameTh : provider.name} ({t("Provider", "ผู้ให้บริการ")})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Sort By */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t("Sort By", "เรียงตาม")}
+                                </label>
+                                <select
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value as "date" | "classCount" | "entity")}
+                                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="date">{t("Date (Newest First)", "วันที่ (ใหม่สุดก่อน)")}</option>
+                                    <option value="classCount">{t("ClassCount (Highest First)", "จำนวนชั้นเรียน (มากสุดก่อน)")}</option>
+                                    <option value="entity">{t("Entity (A-Z)", "หน่วยงาน (A-Z)")}</option>
+                                </select>
+                            </div>
+
+                            {/* Search */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t("Search", "ค้นหา")}
+                                </label>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder={t("Student or location...", "นักเรียนหรือสถานที่...")}
+                                        className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Active Filters Badge */}
+                        {(selectedProvider !== "all" || searchQuery !== "") && (
+                            <div className="flex items-center gap-2 flex-wrap">
+                                {selectedProvider !== "all" && (
+                                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full">
+                                        {selectedProvider === "schools" ? t("Schools Only", "โรงเรียนเท่านั้น") :
+                                            uniqueProviders.find(p => p.id === selectedProvider)?.[language === "th" ? "nameTh" : "name"]}
+                                    </span>
+                                )}
+                                {searchQuery !== "" && (
+                                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs rounded-full">
+                                        {t("Search:", "ค้นหา:")} &quot;{searchQuery}&quot;
+                                    </span>
+                                )}
+                                <button
+                                    onClick={() => {
+                                        setSelectedProvider("all");
+                                        setSearchQuery("");
+                                    }}
+                                    className="px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                >
+                                    {t("Clear All", "ล้างทั้งหมด")}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
                     {/* Summary Stats */}
                     <div className="p-4 md:p-6 grid grid-cols-2 gap-4 border-b border-gray-200 dark:border-gray-700">
                         <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-4 rounded-lg">
@@ -404,7 +563,7 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                                 </span>
                             </div>
                             <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                                {filteredClasses.length}
+                                {filteredAndSearchedClasses.length}
                             </p>
                         </div>
                     </div>
@@ -415,73 +574,90 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
                             {t("Classes in Selected Period", "ชั้นเรียนในช่วงที่เลือก")}
                         </h3>
 
-                        {filteredClasses.length === 0 ? (
+                        {filteredAndSearchedClasses.length === 0 ? (
                             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                                 <GraduationCap className="w-12 h-12 mx-auto mb-3 opacity-50" />
                                 <p>{t("No classes found in this date range", "ไม่พบชั้นเรียนในช่วงวันที่นี้")}</p>
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                {displayedClasses.map((cls) => (
-                                    <div
-                                        key={cls.classId}
-                                        className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600"
-                                    >
-                                        <div className="flex items-start justify-between mb-2">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                                                    <span className="font-medium text-gray-900 dark:text-gray-100">
-                                                        {cls.primaryStudentName}
+                                {displayedClasses.map((cls) => {
+                                    const isProvider = !!cls.providerId;
+
+                                    return (
+                                        <div
+                                            key={cls.classId}
+                                            className="bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600 overflow-hidden"
+                                        >
+                                            {/* Main Card Content */}
+                                            <div className="p-4">
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                                            <span className="font-medium text-gray-900 dark:text-gray-100">
+                                                                {cls.primaryStudentName}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
+                                                            <div className="flex items-center gap-1">
+                                                                <Calendar className="w-3.5 h-3.5" />
+                                                                <span>
+                                                                    {new Date(cls.scheduledDate).toLocaleDateString(
+                                                                        language === "th" ? "th-TH" : "en-US"
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1">
+                                                                <Clock className="w-3.5 h-3.5" />
+                                                                <span>{cls.duration} min</span>
+                                                            </div>
+                                                            {/* Entity Badge - Provider or School */}
+                                                            {isProvider ? (
+                                                                <div className="flex items-center gap-1 px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full">
+                                                                    <Building2 className="w-3.5 h-3.5" />
+                                                                    <span className="text-xs font-medium">
+                                                                        {language === "th" ? cls.providerNameTh : cls.providerName}
+                                                                    </span>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center gap-1">
+                                                                    <School className="w-3.5 h-3.5" />
+                                                                    <span>{language === "th" ? cls.schoolNameTh : cls.schoolName}</span>
+                                                                </div>
+                                                            )}
+                                                            <div className="flex items-center gap-1">
+                                                                <MapPin className="w-3.5 h-3.5" />
+                                                                <span>{language === "th" ? cls.locationNameTh : cls.locationName}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-full text-sm font-bold">
+                                                            {cls.classCount}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                            {cls.studentCount} {cls.studentCount === 1 ? "student" : "students"}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                                                    <CheckCircle className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+                                                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                                                        {t("Acknowledged by", "ยอมรับโดย")} {cls.acknowledgedBy}
                                                     </span>
                                                 </div>
-                                                <div className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
-                                                    <div className="flex items-center gap-1">
-                                                        <Calendar className="w-3.5 h-3.5" />
-                                                        <span>
-                                                            {new Date(cls.scheduledDate).toLocaleDateString(
-                                                                language === "th" ? "th-TH" : "en-US"
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <Clock className="w-3.5 h-3.5" />
-                                                        <span>{cls.duration} min</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <School className="w-3.5 h-3.5" />
-                                                        <span>{language === "th" ? cls.schoolNameTh : cls.schoolName}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <MapPin className="w-3.5 h-3.5" />
-                                                        <span>{language === "th" ? cls.locationNameTh : cls.locationName}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-full text-sm font-bold">
-                                                    {cls.classCount}
-                                                </div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                    {cls.studentCount} {cls.studentCount === 1 ? "student" : "students"}
-                                                </div>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
-                                            <CheckCircle className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
-                                            <span className="text-xs text-gray-600 dark:text-gray-400">
-                                                {t("Acknowledged by", "ยอมรับโดย")} {cls.acknowledgedBy}
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
 
-                                {filteredClasses.length > 5 && !showAllClasses && (
+                                {filteredAndSearchedClasses.length > 5 && !showAllClasses && (
                                     <button
                                         onClick={() => setShowAllClasses(true)}
                                         className="w-full py-3 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg font-medium transition-colors"
                                     >
-                                        {t(`Show All ${filteredClasses.length} Classes`, `แสดงทั้งหมด ${filteredClasses.length} ชั้นเรียน`)}
+                                        {t(`Show All ${filteredAndSearchedClasses.length} Classes`, `แสดงทั้งหมด ${filteredAndSearchedClasses.length} ชั้นเรียน`)}
                                     </button>
                                 )}
                             </div>

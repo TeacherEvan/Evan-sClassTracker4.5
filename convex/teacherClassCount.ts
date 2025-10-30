@@ -712,6 +712,7 @@ export const getClassCountForPrint = query({
                 ),
                 schoolName: school?.name || provider?.name || "Unknown", // NEW: Fallback to provider
                 schoolNameTh: school?.nameTh || provider?.nameTh || "ไม่ทราบ", // NEW: Fallback to provider
+                providerId: cls.providerId, // NEW: Provider ID
                 providerName: provider?.name, // NEW: Provider name
                 providerNameTh: provider?.nameTh, // NEW: Provider name (Thai)
                 locationName: location?.name || "N/A",

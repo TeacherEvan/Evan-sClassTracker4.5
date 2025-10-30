@@ -175,7 +175,6 @@ _No items currently in progress_
 - [ ] Add session timeout
 - [ ] Add login attempt rate limiting
 - [ ] Add audit log for admin actions
-- [ ] Add GDPR compliance features
 
 ### Testing
 
