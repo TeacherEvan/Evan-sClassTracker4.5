@@ -18,7 +18,8 @@
 
 import { ConvexHttpClient } from "convex/browser";
 import * as dotenv from "dotenv";
-import { Collection, Db, MongoClient } from "mongodb";
+import { Collection, Db, MongoClient, ObjectId } from "mongodb";
+import { api } from "../convex/_generated/api";
 
 dotenv.config({ path: ".env.local" });
 
@@ -76,10 +77,10 @@ interface BackupMetadata {
 }
 
 interface BackupDocument {
-    _id?: any;
+    _id?: ObjectId;
     metadata: BackupMetadata;
     data: {
-        [tableName: string]: any[];
+        [tableName: string]: unknown[];
     };
 }
 
@@ -121,7 +122,7 @@ async function disconnectMongoDB(): Promise<void> {
 // CONVEX DATA EXPORT
 // ============================================================================
 
-async function exportConvexData(): Promise<{ [tableName: string]: any[] }> {
+async function exportConvexData(): Promise<{ [tableName: string]: unknown[] }> {
     if (!CONVEX_URL) {
         throw new Error("NEXT_PUBLIC_CONVEX_URL not found in .env.local");
     }
@@ -129,14 +130,14 @@ async function exportConvexData(): Promise<{ [tableName: string]: any[] }> {
     console.log(`📡 Connecting to Convex at ${CONVEX_URL}...`);
     const client = new ConvexHttpClient(CONVEX_URL);
 
-    const allData: { [tableName: string]: any[] } = {};
+    const allData: { [tableName: string]: unknown[] } = {};
 
     for (const tableName of TABLES_TO_BACKUP) {
         try {
             console.log(`📥 Exporting table: ${tableName}...`);
 
-            // Query all records from the table
-            const records = await client.query("_system/queryAll" as any, {
+            // Query all records from the table using our custom export function
+            const records = await client.query(api.exports.exportTable, {
                 tableName,
             });
 

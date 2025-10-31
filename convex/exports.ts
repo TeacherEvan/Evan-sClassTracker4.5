@@ -273,3 +273,43 @@ export const exportTeacherLogs = query({
     },
 });
 
+// Generic table export for backup purposes
+export const exportTable = query({
+    args: {
+        tableName: v.string(),
+    },
+    handler: async (ctx, args) => {
+        // Validate table name to prevent injection
+        const validTables = [
+            "users",
+            "schools",
+            "providers",
+            "classes",
+            "students",
+            "locations",
+            "teacherResources",
+            "messages",
+            "notifications",
+            "notificationWindows",
+            "appUpdates",
+            "postClassNotes",
+            "teacherClassCountCycles",
+            "adminContactRequests",
+            "errorReports",
+            "auditLogs",
+            "teacherLogs",
+            "sangsomEvents",
+            "sangsomDeletedStudents",
+        ];
+
+        if (!validTables.includes(args.tableName)) {
+            throw new Error(`Invalid table name: ${args.tableName}`);
+        }
+
+        // Query all records from the specified table
+        // @ts-expect-error - Dynamic table name
+        const records = await ctx.db.query(args.tableName).collect();
+        return records;
+    },
+});
+
