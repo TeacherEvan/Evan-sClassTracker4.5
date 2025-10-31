@@ -2,28 +2,32 @@
 
 All notable changes to this project are documented here.
 
-## [4.5.12] - October 30, 2025 (In Progress)
+## [4.5.12] - October 31, 2025 ✅ COMPLETE
 
-### Added - Class Count Enhancements & Payment Calculator
+### Added - Class Count Enhancements & Payment Calculator (Phase 3 Complete)
 
-- **Payment Calculator**: Security-first ephemeral calculation tool with zero database persistence
+- **Payment Calculator**: Security-first ephemeral calculation tool with zero database persistence ✅
   - Mandatory disclaimer screen explaining privacy protection
   - Real-time payment calculation (rate × total ClassCount)
   - Date range filtering for accurate period calculations
   - Provider/school entity filtering
-  - Professional print-to-PDF functionality with detailed breakdown
+  - Professional single-page print layout (7 columns, 6mm margins, entity badges)
+  - Booking/approval metadata tracking (bookedByUserId, approvedByUserId, approvalSource)
+  - Print-to-PDF with signature lines and security disclaimer footer
   - Calculator icon in Class Count Modal header (easy access)
-  - Component: `components/class-payment-calculator.tsx` (~600 lines)
+  - Component: `components/class-payment-calculator.tsx` (~852 lines)
+  - Backend metadata: `convex/schema.ts`, `convex/classes.ts`, `convex/teacherClassCount.ts`
 
-- **Enhanced Class Count Modal**: Interactive drill-down with expandable class details
+- **Enhanced Class Count Modal**: Interactive drill-down with expandable class details ✅
   - Expandable class cards showing full details on click
   - All student names displayed (primary + additional students)
   - Post-class notes loaded on-demand (lazy loading prevents N+1 queries)
   - Attendance status with color-coded badges
   - Behavior and participation notes display
   - Duration and ClassCount breakdown per class
+  - Component: `components/class-detail-card.tsx`
 
-- **Provider Creation Modal**: Foundation for multi-provider UI integration
+- **Provider Creation Modal**: Foundation for multi-provider UI integration ✅
   - Provider category selection (personal, private, language_school, educational_camp)
   - Bilingual input with 300ms debouncing
   - Purple gradient header (distinct visual identity)
@@ -33,15 +37,36 @@ All notable changes to this project are documented here.
 
 ### Changed
 
-- **Class Count Modal**: Added payment calculator integration
+- **Class Count Modal**: Added payment calculator integration ✅
   - New Calculator button in modal header
   - State management for calculator visibility
   - Z-index hierarchy for nested modals
+  
+- **Class Booking**: Provider booking UI integration completed (Phase 4.2) ✅
+  - Provider selection added to booking form (teachers/admins)
+  - XOR validation enforced in UI (schoolId XOR providerId)
+  - Admin teacher selection enabled when provider is chosen
+  - Conditional payload includes providerId and omits school location requirement
+
+- **Payment Calculator Print Layout**: Radically optimized for single-page output ✅
+  - Reduced columns from 13 → 7 (eliminated Time, Type, Booked by, Approved by, Rate)
+  - Condensed spacing (6mm margins, 7-14px fonts, 1.2 line-height)
+  - Entity summary converted from table to inline format
+  - Compact 3-card summary (removed Average ClassCount card and notes block)
+  - Color-coded entity badges (blue=school, purple=provider)
+  - Professional signature section with reduced heights
 
 ### Fixed
 
-- **TypeScript Error**: Fixed BilingualInput placeholder props in create-provider-modal.tsx
+- **TypeScript Error**: Fixed BilingualInput placeholder props in create-provider-modal.tsx ✅
   - Changed `placeholderEn` → `placeholder` to match component interface
+
+### Documentation
+
+- **Implementation Summaries**: Created comprehensive documentation ✅
+  - `IMPLEMENTATION_SUMMARY_PAYMENT_CALCULATOR_OCT_31_2025.md` - Payment calculator completion
+  - Updated `IMPLEMENTATION_PLAN_CLASS_COUNT_ENHANCEMENTS_NOV_2025.md` - All phases marked complete
+  - `TODO.md` - Payment calculator entry added to Recently Completed section
 
 ### Technical
 
@@ -53,9 +78,8 @@ All notable changes to this project are documented here.
 
 ### Pending (Phase 4.2)
 
-- Provider UI integration into student-management.tsx
-- Provider UI integration into class-booking.tsx
-- E2E testing and final deployment
+- End-to-end testing for provider booking (teacher/admin) and moderator constraints
+- Minor ESLint cleanup in create-provider-modal.tsx (unused variable)
 
 ## [4.5.11] - October 30, 2025
 

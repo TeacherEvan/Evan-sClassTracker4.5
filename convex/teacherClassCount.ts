@@ -299,8 +299,10 @@ export const getMyClassCountDetails = query({
         // Batch fetch students, schools, providers, and locations
         const studentIds = new Set<Id<"students">>();
         const schoolIds = new Set<Id<"schools">>();
-        const providerIds = new Set<Id<"providers">>(); // NEW: Provider IDs
+        const providerIds = new Set<Id<"providers">>();
         const locationIds = new Set<Id<"locations">>();
+        const bookedByIds = new Set<Id<"users">>();
+        const approvedByIds = new Set<Id<"users">>();
 
         classesFiltered.forEach(cls => {
             studentIds.add(cls.studentId);
@@ -308,19 +310,25 @@ export const getMyClassCountDetails = query({
             if (cls.providerId) providerIds.add(cls.providerId); // NEW: Collect provider IDs
             if (cls.locationId) locationIds.add(cls.locationId);
             cls.additionalStudentIds?.forEach(id => studentIds.add(id));
+            if (cls.bookedByUserId) bookedByIds.add(cls.bookedByUserId);
+            if (cls.approvedByUserId) approvedByIds.add(cls.approvedByUserId);
         });
 
-        const [students, schools, providers, locations] = await Promise.all([
+        const userIds = new Set<Id<"users">>([...bookedByIds, ...approvedByIds]);
+
+        const [students, schools, providers, locations, users] = await Promise.all([
             Promise.all(Array.from(studentIds).map(id => ctx.db.get(id))),
             Promise.all(Array.from(schoolIds).map(id => ctx.db.get(id))),
-            Promise.all(Array.from(providerIds).map(id => ctx.db.get(id))), // NEW: Fetch providers
+            Promise.all(Array.from(providerIds).map(id => ctx.db.get(id))),
             Promise.all(Array.from(locationIds).map(id => ctx.db.get(id))),
+            Promise.all(Array.from(userIds).map(id => ctx.db.get(id))),
         ]);
 
         const studentMap = new Map(students.filter(s => s !== null).map(s => [s!._id, s]));
         const schoolMap = new Map(schools.filter(s => s !== null).map(s => [s!._id, s]));
-        const providerMap = new Map(providers.filter(p => p !== null).map(p => [p!._id, p])); // NEW: Provider map
+        const providerMap = new Map(providers.filter(p => p !== null).map(p => [p!._id, p]));
         const locationMap = new Map(locations.filter(l => l !== null).map(l => [l!._id, l]));
+        const userMap = new Map(users.filter(u => u !== null).map(u => [u!._id, u]));
 
         // Calculate total and build class details (only for classes that were counted)
         let totalClassCount = 0;
@@ -337,6 +345,8 @@ export const getMyClassCountDetails = query({
             const school = cls.schoolId ? schoolMap.get(cls.schoolId) : null; // NEW: Conditional school lookup
             const provider = cls.providerId ? providerMap.get(cls.providerId) : null; // NEW: Provider lookup
             const location = cls.locationId ? locationMap.get(cls.locationId) : null;
+            const bookedByUser = cls.bookedByUserId ? userMap.get(cls.bookedByUserId) : null;
+            const approvedByUser = cls.approvedByUserId ? userMap.get(cls.approvedByUserId) : null;
 
             return {
                 classId: cls._id,
@@ -357,8 +367,18 @@ export const getMyClassCountDetails = query({
                 providerId: cls.providerId, // NEW: Provider ID for filtering
                 locationName: location?.name || cls.pendingLocationName || "Not specified",
                 locationNameTh: location?.nameTh || cls.pendingLocationNameTh || "ไม่ระบุ",
-                acknowledgedBy: cls.status === "approved" ? "Moderator" : "System",
-                acknowledgedAt: cls.createdAt,
+                bookedByUserId: cls.bookedByUserId,
+                bookedByUsername: cls.bookedByUsername || bookedByUser?.username || undefined,
+                bookedByRole: bookedByUser?.role,
+                approvedByUserId: cls.approvedByUserId,
+                approvedByUsername: cls.approvedByUsername || approvedByUser?.username || undefined,
+                approvedByRole: approvedByUser?.role,
+                approvedAt: cls.approvedAt,
+                approvalSource: cls.approvalSource,
+                acknowledgedBy: cls.status === "approved"
+                    ? (cls.approvedByUsername || approvedByUser?.username || "Moderator")
+                    : "System",
+                acknowledgedAt: cls.approvedAt || cls.createdAt,
             };
         });
 

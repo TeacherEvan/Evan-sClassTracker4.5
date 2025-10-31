@@ -432,6 +432,37 @@ export const bookWithConflictCheck = mutation({
     const isModerator = bookingUser.role === "moderator" || bookingUser.role === "admin";
     const isProviderLinked = args.providerId !== undefined;
     const status = isProviderLinked || isGuardianLinked || isModerator ? "approved" : "pending";
+    const now = Date.now();
+
+    let approvalMetadata: Record<string, unknown> = {};
+    if (status === "approved") {
+      if (isModerator) {
+        approvalMetadata = {
+          approvedByUserId: bookingUser._id,
+          approvedByUsername: bookingUser.username,
+          approvedAt: now,
+          approvalSource: bookingUser.role === "admin" ? "admin" : "moderator",
+        };
+      } else if (isProviderLinked) {
+        approvalMetadata = {
+          approvedByUsername: "System (Provider Auto)",
+          approvedAt: now,
+          approvalSource: "auto_provider",
+        };
+      } else if (isGuardianLinked) {
+        approvalMetadata = {
+          approvedByUsername: "System (Guardian Auto)",
+          approvedAt: now,
+          approvalSource: "auto_guardian",
+        };
+      } else {
+        approvalMetadata = {
+          approvedByUsername: "System Auto-Approve",
+          approvedAt: now,
+          approvalSource: "system",
+        };
+      }
+    }
 
     // Create the class
     const classId = await ctx.db.insert("classes", {
@@ -446,7 +477,7 @@ export const bookWithConflictCheck = mutation({
       isGuardianLinked,
       status,
       scheduledDate: args.scheduledDate,
-      createdAt: Date.now(),
+      createdAt: now,
       ...(args.duration && { duration: args.duration }),
       ...(args.subject && { subject: args.subject }),
       ...(args.subjectTh && { subjectTh: args.subjectTh }),
@@ -457,6 +488,9 @@ export const bookWithConflictCheck = mutation({
       ...(args.preparationNotes && { preparationNotes: args.preparationNotes }),
       ...(args.preparationNotesTh && { preparationNotesTh: args.preparationNotesTh }),
       ...(args.classType && { classType: args.classType }),
+      bookedByUserId: bookingUser._id,
+      bookedByUsername: bookingUser.username,
+      ...approvalMetadata,
     });
 
     // Notifications and logging (only for school classes)
@@ -657,8 +691,39 @@ export const book = mutation({
     // Moderators and admins can directly book (approved status) - NO ACKNOWLEDGEMENT NEEDED FOR NEW CLASSES
     // Teachers create requests (pending status) - REQUIRES ACKNOWLEDGEMENT (school classes only)
     const isModerator = bookingUser.role === "moderator" || bookingUser.role === "admin";
-    const isProviderLinked = hasProvider; // NEW: Provider classes skip moderator approval
+    const isProviderLinked = args.providerId !== undefined;
     const status = isGuardianLinked || isProviderLinked || isModerator ? "approved" : "pending";
+    const now = Date.now();
+
+    let approvalMetadata: Record<string, unknown> = {};
+    if (status === "approved") {
+      if (isModerator) {
+        approvalMetadata = {
+          approvedByUserId: bookingUser._id,
+          approvedByUsername: bookingUser.username,
+          approvedAt: now,
+          approvalSource: bookingUser.role === "admin" ? "admin" : "moderator",
+        };
+      } else if (isProviderLinked) {
+        approvalMetadata = {
+          approvedByUsername: "System (Provider Auto)",
+          approvedAt: now,
+          approvalSource: "auto_provider",
+        };
+      } else if (isGuardianLinked) {
+        approvalMetadata = {
+          approvedByUsername: "System (Guardian Auto)",
+          approvedAt: now,
+          approvalSource: "auto_guardian",
+        };
+      } else {
+        approvalMetadata = {
+          approvedByUsername: "System Auto-Approve",
+          approvedAt: now,
+          approvalSource: "system",
+        };
+      }
+    }
 
     // Create the class
     const classId = await ctx.db.insert("classes", {
@@ -673,7 +738,7 @@ export const book = mutation({
       isGuardianLinked,
       status,
       scheduledDate: args.scheduledDate,
-      createdAt: Date.now(),
+      createdAt: now,
       // Include optional fields if provided
       ...(args.duration && { duration: args.duration }),
       ...(args.subject && { subject: args.subject }),
@@ -685,6 +750,9 @@ export const book = mutation({
       ...(args.preparationNotes && { preparationNotes: args.preparationNotes }),
       ...(args.preparationNotesTh && { preparationNotesTh: args.preparationNotesTh }),
       ...(args.classType && { classType: args.classType }),
+      bookedByUserId: bookingUser._id,
+      bookedByUsername: bookingUser.username,
+      ...approvalMetadata,
     });
 
     // Get the school to find the moderator (only for school-linked classes)
@@ -824,12 +892,21 @@ export const approve = mutation({
       requireModeratorOrAdmin: true
     });
 
+    const approver = await ctx.db.get(args.userId);
+    if (!approver) {
+      throw new Error("User not found");
+    }
+
     // Get student and location info for notification
     const student = await ctx.db.get(classData.studentId);
     const location = classData.locationId ? await ctx.db.get(classData.locationId) : null;
 
     await ctx.db.patch(args.classId, {
       status: "approved",
+      approvedByUserId: approver._id,
+      approvedByUsername: approver.username,
+      approvedAt: Date.now(),
+      approvalSource: approver.role === "admin" ? "admin" : "moderator",
     });
 
     // Notify the teacher
@@ -879,6 +956,10 @@ export const reject = mutation({
 
     await ctx.db.patch(args.classId, {
       status: "rejected",
+      approvedByUserId: undefined,
+      approvedByUsername: undefined,
+      approvedAt: undefined,
+      approvalSource: undefined,
     });
 
     // Notify the teacher
@@ -932,16 +1013,25 @@ export const updateClass = mutation({
     const user = await ctx.db.get(args.userId);
 
     // Build update object
-    const updates: Partial<{
-      scheduledDate: number;
-      studentId: Id<"students">;
-      locationId: Id<"locations">;
-      status: "pending" | "acknowledged" | "approved" | "rejected";
-    }> = {} as Record<string, unknown>;
+    const updates: Record<string, unknown> = {};
     if (args.scheduledDate) updates.scheduledDate = args.scheduledDate;
     if (args.studentId) updates.studentId = args.studentId;
     if (args.locationId) updates.locationId = args.locationId;
     if (args.status) updates.status = args.status;
+
+    if (args.status) {
+      if (args.status === "approved" && user) {
+        updates.approvedByUserId = user._id;
+        updates.approvedByUsername = user.username;
+        updates.approvedAt = Date.now();
+        updates.approvalSource = user.role === "admin" ? "admin" : "moderator";
+      } else {
+        updates.approvedByUserId = undefined;
+        updates.approvedByUsername = undefined;
+        updates.approvedAt = undefined;
+        updates.approvalSource = undefined;
+      }
+    }
 
     // Update class
     await ctx.db.patch(args.classId, updates);

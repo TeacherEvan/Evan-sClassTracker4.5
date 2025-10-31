@@ -42,6 +42,12 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
         userRole !== "teacher" ? { role: "teacher" } : "skip"
     );
 
+    // For teachers: fetch own user to display name in print header
+    const currentTeacher = useQuery(
+        api.users.getById,
+        userRole === "teacher" && teacherId ? { id: teacherId } : "skip"
+    );
+
     // Load class data for selected teacher (read-only)
     const classCountData = useQuery(
         api.teacherClassCount.getMyClassCountDetails,
@@ -52,7 +58,8 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
 
     // Get teacher details for display
     const selectedTeacher = allTeachers?.find(t => t._id === selectedTeacherId);
-    const teacherName = selectedTeacher?.username || "";
+    const teacherName =
+        (userRole === "teacher" ? currentTeacher?.username : selectedTeacher?.username) || "";
 
     // CALCULATION - Client-side only
     const filteredClasses = classCountData?.classes.filter(cls => {
@@ -105,6 +112,66 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
         });
     }
 
+    // Helpers
+    const formatWeekOfMonth = (date: Date) => {
+        const day = date.getDate();
+        // Week number in month: 1-5 (Mon-Sun based approximation)
+        const week = Math.ceil((day + (new Date(date.getFullYear(), date.getMonth(), 1).getDay() || 7) - 1) / 7);
+        const suffix = (n: number) => (n === 1 ? "1st" : n === 2 ? "2nd" : n === 3 ? "3rd" : `${n}th`);
+        const monthName = date.toLocaleString(language === "th" ? "th-TH" : "en-US", { month: "long" });
+        const weekday = date.toLocaleString(language === "th" ? "th-TH" : "en-US", { weekday: "long" });
+        return { labelEn: `${suffix(week)} week of ${monthName} ${date.getFullYear()}`, weekday, weekNum: week };
+    };
+
+    const buildClassLabel = (cls: typeof filteredClasses[number]) => {
+        const d = new Date(cls.scheduledDate);
+        const info = formatWeekOfMonth(d);
+        const isProvider = !!cls.providerId;
+        const kindEn = isProvider ? "PvtClass" : "SchoolClass";
+        const kindTh = isProvider ? "คลาสส่วนตัว" : "คลาสโรงเรียน";
+        const weekLabelTh = `${info.weekNum} ${t("week", "สัปดาห์")}`; // rough Thai; primary label is date anyway
+        const monthYearTh = d.toLocaleString("th-TH", { month: "long", year: "numeric" });
+        return language === "th"
+            ? `${info.weekday} ${kindTh} - ${weekLabelTh} ของ ${monthYearTh}`
+            : `${info.weekday} ${kindEn} - ${formatWeekOfMonth(d).labelEn}`;
+    };
+
+    const fullStudentList = (cls: typeof filteredClasses[number]) => {
+        const names = [cls.primaryStudentName, ...(cls.additionalStudentNames || [])].filter(Boolean);
+        return names.join(", ");
+    };
+
+    const formatBookedBy = (cls: typeof filteredClasses[number]) => {
+        if (cls.bookedByUsername) {
+            return cls.bookedByUsername;
+        }
+
+        if (teacherName) {
+            return teacherName;
+        }
+
+        return language === "th" ? "ไม่มีข้อมูล" : "Not recorded";
+    };
+
+    const formatApprovedBy = (cls: typeof filteredClasses[number]) => {
+        switch (cls.approvalSource) {
+            case "auto_provider":
+                return language === "th" ? "ระบบ (ผู้ให้บริการ)" : "System (Provider Auto)";
+            case "auto_guardian":
+                return language === "th" ? "ระบบ (ผู้ปกครอง)" : "System (Guardian Auto)";
+            case "system":
+                return language === "th" ? "ระบบ (อนุมัติอัตโนมัติ)" : "System Auto-Approve";
+            default:
+                break;
+        }
+
+        if (cls.approvedByUsername) {
+            return cls.approvedByUsername;
+        }
+
+        return language === "th" ? "ไม่มีข้อมูล" : "Not recorded";
+    };
+
     // Print function - generates HTML report
     const handlePrint = () => {
         if (!selectedTeacherId || !classCountData) return;
@@ -115,6 +182,85 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
             return;
         }
 
+        // Precompute printable rows to avoid heavy string logic in template
+        const printableRows = filteredClasses.map((cls, idx) => {
+            const d = new Date(cls.scheduledDate);
+            const dateText = d.toLocaleDateString(language === "th" ? "th-TH" : "en-US");
+            const timeText = d.toLocaleTimeString(language === "th" ? "th-TH" : "en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+            const students = fullStudentList(cls);
+            const entityName = cls.providerId
+                ? (language === "th" ? cls.providerNameTh || cls.providerName : cls.providerName)
+                : (language === "th" ? cls.schoolNameTh || cls.schoolName : cls.schoolName);
+            const locationName = language === "th" ? cls.locationNameTh || cls.locationName : cls.locationName;
+            const payment = (cls.classCount * rate);
+            const approvedBy = formatApprovedBy(cls);
+            const bookedBy = formatBookedBy(cls);
+            const sessionType = cls.providerId
+                ? (language === "th" ? "คลาสผู้ให้บริการ" : "Provider")
+                : (language === "th" ? "คลาสโรงเรียน" : "School");
+            return {
+                idx: idx + 1,
+                dateText,
+                timeText,
+                sessionType,
+                students,
+                entityName,
+                locationName,
+                duration: cls.duration,
+                classCount: cls.classCount,
+                payment,
+                approvedBy,
+                bookedBy,
+            };
+        });
+
+        const entitySummaryAccumulator = new Map<string, {
+            labelEn: string;
+            labelTh?: string | null;
+            type: "provider" | "school";
+            sessions: number;
+            classCount: number;
+            payment: number;
+        }>();
+
+        filteredClasses.forEach((cls) => {
+            const isProvider = !!cls.providerId;
+            const key = isProvider
+                ? `provider:${cls.providerId}`
+                : `school:${cls.schoolName || cls.schoolNameTh || "unknown"}`;
+
+            if (!entitySummaryAccumulator.has(key)) {
+                entitySummaryAccumulator.set(key, {
+                    labelEn: isProvider ? (cls.providerName || "Provider") : (cls.schoolName || "School"),
+                    labelTh: isProvider ? cls.providerNameTh : cls.schoolNameTh,
+                    type: isProvider ? "provider" : "school",
+                    sessions: 0,
+                    classCount: 0,
+                    payment: 0,
+                });
+            }
+
+            const entry = entitySummaryAccumulator.get(key)!;
+            entry.sessions += 1;
+            entry.classCount += cls.classCount;
+            entry.payment += cls.classCount * rate;
+        });
+
+        const entitySummaries = Array.from(entitySummaryAccumulator.values())
+            .map((entry) => ({
+                label: language === "th" ? entry.labelTh || entry.labelEn : entry.labelEn,
+                typeLabel: entry.type === "provider"
+                    ? t("Provider", "ผู้ให้บริการ")
+                    : t("School", "โรงเรียน"),
+                sessions: entry.sessions,
+                classCount: Math.round(entry.classCount * 10) / 10,
+                payment: entry.payment,
+            }))
+            .sort((a, b) => b.payment - a.payment);
+
         const html = `
 <!DOCTYPE html>
 <html lang="${language === "th" ? "th" : "en"}">
@@ -123,225 +269,260 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${t("Class Payment Calculation Report", "รายงานการคำนวณค่าสอน")} - ${teacherName}</title>
     <style>
+        @page {
+            margin: 6mm;
+            size: A4 portrait;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 20px;
-            color: #333;
-            line-height: 1.6;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            color: #1f2937;
+            line-height: 1.2;
+            background: #ffffff;
+            font-size: 9px;
+        }
+        .report-container {
+            max-width: 100%;
         }
         .header {
-            text-align: center;
-            border-bottom: 3px solid #22c55e;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid #d1d5db;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
         }
         .header h1 {
-            margin: 0;
-            color: #22c55e;
-            font-size: 28px;
+            margin: 0 0 3px;
+            color: #047857;
+            font-size: 14px;
+            font-weight: 700;
         }
-        .header p {
-            margin: 5px 0;
-            color: #666;
+        .header-left {
+            flex: 1;
+        }
+        .header-right {
+            text-align: right;
+            font-size: 8px;
+            color: #6b7280;
+        }
+        .meta-grid {
+            display: grid;
+            grid-template-columns: auto auto;
+            gap: 2px 16px;
+            font-size: 8px;
+            color: #374151;
+        }
+        .meta-grid strong {
+            color: #111827;
         }
         .summary {
-            background: #f0fdf4;
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 4px solid #22c55e;
-            margin-bottom: 20px;
-        }
-        .summary h2 {
-            margin: 0 0 15px 0;
-            color: #16a34a;
-        }
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 15px;
+            display: flex;
+            gap: 8px;
+            margin-bottom: 6px;
+            padding: 4px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
         }
         .summary-item {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
+            flex: 1;
             text-align: center;
         }
         .summary-item .label {
-            font-size: 12px;
-            color: #666;
+            font-size: 7px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
+            color: #6b7280;
         }
         .summary-item .value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #16a34a;
-            margin-top: 5px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #047857;
+            margin-top: 1px;
         }
-        .total-payment {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            text-align: center;
-            margin: 20px 0;
-        }
-        .total-payment .label {
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-        .total-payment .value {
-            font-size: 48px;
-            font-weight: bold;
-        }
-        .total-payment .calculation {
-            font-size: 14px;
-            margin-top: 10px;
-            opacity: 0.9;
+        .entity-note {
+            font-size: 7.5px;
+            color: #6b7280;
+            margin-bottom: 4px;
+            font-style: italic;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            font-size: 7.5px;
         }
         th, td {
-            padding: 12px;
+            padding: 2px 4px;
+            border-bottom: 0.5px solid #e5e7eb;
             text-align: left;
-            border-bottom: 1px solid #ddd;
         }
         th {
-            background-color: #22c55e;
-            color: white;
+            background: #f3f4f6;
+            color: #374151;
+            font-weight: 600;
+            font-size: 7px;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            white-space: nowrap;
+        }
+        td {
+            vertical-align: top;
+        }
+        tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+        .entity-badge {
+            display: inline-block;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 7px;
             font-weight: 600;
         }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        tr:hover {
-            background-color: #f5f5f5;
-        }
-        .class-count-badge {
-            background: #22c55e;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-        }
         .provider-badge {
-            background: #a855f7;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
+            background: #ede9fe;
+            color: #7c3aed;
         }
         .school-badge {
-            background: #3b82f6;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
+            background: #dbeafe;
+            color: #2563eb;
         }
-        .disclaimer {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin-top: 30px;
-            border-radius: 4px;
+        .number-cell {
+            text-align: right;
+            font-weight: 600;
         }
-        .disclaimer strong {
-            color: #ff6b00;
+        .class-count {
+            color: #047857;
+        }
+        .signatures {
+            display: flex;
+            gap: 12px;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .sig-item {
+            flex: 1;
+            text-align: center;
+        }
+        .sig-line {
+            border-bottom: 0.5px solid #9ca3af;
+            height: 18px;
+            margin-bottom: 2px;
+        }
+        .sig-label {
+            font-size: 7px;
+            color: #6b7280;
         }
         .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 2px solid #ddd;
-            text-align: center;
-            color: #666;
-            font-size: 12px;
+            margin-top: 4px;
+            font-size: 7px;
+            color: #9ca3af;
+            display: flex;
+            justify-content: space-between;
         }
         @media print {
-            body { margin: 10px; }
-            .header { page-break-after: avoid; }
-            tr { page-break-inside: avoid; }
+            body {
+                margin: 0;
+            }
+            table {
+                page-break-inside: auto;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>${t("Class Payment Calculation Report", "รายงานการคำนวณค่าสอน")}</h1>
-        <p><strong>${t("Teacher", "ครู")}:</strong> ${teacherName}</p>
-        <p><strong>${t("Period", "ช่วงเวลา")}:</strong> ${startDate.toLocaleDateString(language === "th" ? "th-TH" : "en-US")} - ${endDate.toLocaleDateString(language === "th" ? "th-TH" : "en-US")}</p>
-        <p><strong>${t("Generated", "สร้างเมื่อ")}:</strong> ${new Date().toLocaleString(language === "th" ? "th-TH" : "en-US")}</p>
-    </div>
+    <div class="report-container">
+        <div class="header">
+            <div class="header-left">
+                <h1>${t("Class Payment Report", "รายงานค่าสอน")}</h1>
+                <div class="meta-grid">
+                    <span><strong>${t("Teacher", "ครู")}:</strong> ${teacherName}</span>
+                    <span><strong>${t("Rate", "อัตรา")}:</strong> ฿${rate.toFixed(2)}</span>
+                    <span><strong>${t("Period", "ช่วงเวลา")}:</strong> ${startDate.toLocaleDateString(language === "th" ? "th-TH" : "en-US", { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString(language === "th" ? "th-TH" : "en-US", { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                </div>
+            </div>
+            <div class="header-right">
+                ${new Date().toLocaleDateString(language === "th" ? "th-TH" : "en-US")}<br>
+                ${new Date().toLocaleTimeString(language === "th" ? "th-TH" : "en-US", { hour: '2-digit', minute: '2-digit' })}
+            </div>
+        </div>
 
-    <div class="summary">
-        <h2>${t("Calculation Summary", "สรุปการคำนวณ")}</h2>
-        <div class="summary-grid">
+        <div class="summary">
             <div class="summary-item">
-                <div class="label">${t("Total Classes", "จำนวนคลาส")}</div>
+                <div class="label">${t("Sessions", "จำนวนครั้ง")}</div>
                 <div class="value">${filteredClasses.length}</div>
             </div>
             <div class="summary-item">
-                <div class="label">${t("Total ClassCount", "ClassCount รวม")}</div>
+                <div class="label">${t("ClassCount", "ClassCount")}</div>
                 <div class="value">${totalClassCount.toFixed(1)}</div>
             </div>
             <div class="summary-item">
-                <div class="label">${t("Rate per Class", "อัตราต่อคลาส")}</div>
-                <div class="value">฿ ${rate.toFixed(2)}</div>
+                <div class="label">${t("Total Payment", "ค่าสอนรวม")}</div>
+                <div class="value">฿${totalPayment.toFixed(2)}</div>
             </div>
         </div>
-    </div>
 
-    <div class="total-payment">
-        <div class="label">${t("Total Payment", "ค่าสอนรวม")}</div>
-        <div class="value">฿ ${totalPayment.toFixed(2)}</div>
-        <div class="calculation">${totalClassCount.toFixed(1)} × ฿ ${rate.toFixed(2)} = ฿ ${totalPayment.toFixed(2)}</div>
-    </div>
+        ${entitySummaries.length > 1 ? `<div class="entity-note">${t("Entities", "หน่วยงาน")}: ${entitySummaries.map(e => `${e.label} (${e.sessions} ${t("sessions", "ครั้ง")}, ฿${e.payment.toFixed(2)})`).join(' • ')}</div>` : ''}
 
-    <h2>${t("Detailed Breakdown", "รายละเอียด")}</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>${t("Date", "วันที่")}</th>
-                <th>${t("Student(s)", "นักเรียน")}</th>
-                <th>${t("Entity", "สถานที่")}</th>
-                <th>${t("Duration", "ระยะเวลา")}</th>
-                <th style="text-align: center">${t("ClassCount", "ClassCount")}</th>
-                <th style="text-align: right">${t("Payment", "ค่าสอน")}</th>
-            </tr>
-        </thead>
-        <tbody>
-            ${filteredClasses.map((cls, idx) => `
+        <table>
+            <thead>
                 <tr>
-                    <td>${idx + 1}</td>
-                    <td>${new Date(cls.scheduledDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}</td>
-                    <td>${cls.primaryStudentName}${cls.additionalStudentNames.length > 0 ? ` +${cls.additionalStudentNames.length}` : ''}</td>
-                    <td>
-                        ${cls.providerId
-                ? `<span class="provider-badge">${language === "th" ? cls.providerNameTh || cls.providerName : cls.providerName}</span>`
-                : `<span class="school-badge">${language === "th" ? cls.schoolNameTh || cls.schoolName : cls.schoolName}</span>`
-            }
-                    </td>
-                    <td>${cls.duration} min</td>
-                    <td style="text-align: center"><span class="class-count-badge">${cls.classCount}</span></td>
-                    <td style="text-align: right">฿ ${(cls.classCount * rate).toFixed(2)}</td>
+                    <th style="width:5%">#</th>
+                    <th style="width:11%">${t("Date", "วันที่")}</th>
+                    <th style="width:28%">${t("Student(s)", "นักเรียน")}</th>
+                    <th style="width:22%">${t("Entity / Location", "หน่วยงาน / สถานที่")}</th>
+                    <th style="width:9%">${t("Duration", "ระยะเวลา")}</th>
+                    <th style="width:10%">${t("ClassCount", "ClassCount")}</th>
+                    <th style="width:15%">${t("Payment", "ค่าสอน")}</th>
                 </tr>
-            `).join('')}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                ${printableRows.map((row) => `
+                    <tr>
+                        <td>${row.idx}</td>
+                        <td>${row.dateText}</td>
+                        <td>${row.students}</td>
+                        <td>
+                            ${row.bookedBy === "System (Provider Auto)" || row.sessionType.includes("Provider") || row.sessionType.includes("ผู้ให้บริการ")
+                ? `<span class="entity-badge provider-badge">${row.entityName}</span>`
+                : `<span class="entity-badge school-badge">${row.entityName}</span>`}
+                            ${row.locationName && row.locationName !== "-" ? `<br><small>${row.locationName}</small>` : ''}
+                        </td>
+                        <td>${row.duration} ${t("min", "นาที")}</td>
+                        <td class="number-cell class-count">${row.classCount}</td>
+                        <td class="number-cell">฿${row.payment.toFixed(2)}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
 
-    <div class="disclaimer">
-        <strong>${t("IMPORTANT", "สำคัญ")}:</strong> ${t(
-                "This calculation is for reference only and has not been saved to the system. Please keep this printed report for your records.",
-                "การคำนวณนี้เป็นเพียงข้อมูลอ้างอิงและไม่ได้ถูกบันทึกในระบบ กรุณาเก็บรายงานที่พิมพ์ไว้เป็นหลักฐาน"
-            )}
-    </div>
+        <div class="signatures">
+            <div class="sig-item">
+                <div class="sig-line"></div>
+                <div class="sig-label">${t("Teacher", "ครู")}</div>
+            </div>
+            <div class="sig-item">
+                <div class="sig-line"></div>
+                <div class="sig-label">${t("Reviewer", "ผู้ตรวจสอบ")}</div>
+            </div>
+            <div class="sig-item">
+                <div class="sig-line"></div>
+                <div class="sig-label">${t("Date", "วันที่")}</div>
+            </div>
+        </div>
 
-    <div class="footer">
-        <p>Evan's Class Tracker 4.5 - ${t("Payment Calculator", "เครื่องคำนวณค่าสอน")}</p>
-        <p>${t("This report was generated on", "รายงานนี้สร้างเมื่อ")} ${new Date().toLocaleString(language === "th" ? "th-TH" : "en-US")}</p>
+        <div class="footer">
+            <span>${t("This calculation is for record-keeping only.", "การคำนวณนี้ใช้เก็บบันทึกเท่านั้น")}</span>
+            <span>Evan's Class Tracker 4.5</span>
+        </div>
     </div>
 </body>
 </html>
@@ -563,7 +744,7 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
                         </div>
                     )}
 
-                    {/* Class Breakdown Table */}
+                    {/* Class Breakdown Table (on-screen) */}
                     {selectedTeacherId && filteredClasses.length > 0 && (
                         <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
                             <div className="overflow-x-auto">
@@ -572,8 +753,12 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
                                         <tr>
                                             <th className="p-3 text-left text-sm font-medium">#</th>
                                             <th className="p-3 text-left text-sm font-medium">{t("Date", "วันที่")}</th>
+                                            <th className="p-3 text-left text-sm font-medium">{t("Class Name", "ชื่อคลาส")}</th>
                                             <th className="p-3 text-left text-sm font-medium">{t("Student(s)", "นักเรียน")}</th>
-                                            <th className="p-3 text-left text-sm font-medium">{t("Entity", "สถานที่")}</th>
+                                            <th className="p-3 text-left text-sm font-medium">{t("Entity", "หน่วยงาน/ผู้ให้บริการ")}</th>
+                                            <th className="p-3 text-left text-sm font-medium">{t("Location", "สถานที่เรียน")}</th>
+                                            <th className="p-3 text-left text-sm font-medium">{t("Booked by", "ผู้จอง")}</th>
+                                            <th className="p-3 text-left text-sm font-medium">{t("Approved by", "ผู้อนุมัติ")}</th>
                                             <th className="p-3 text-right text-sm font-medium">{t("ClassCount", "ClassCount")}</th>
                                             <th className="p-3 text-right text-sm font-medium">{t("Payment", "ค่าสอน")}</th>
                                         </tr>
@@ -585,10 +770,8 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
                                                 <td className="p-3 text-sm">
                                                     {new Date(cls.scheduledDate).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
                                                 </td>
-                                                <td className="p-3 text-sm">
-                                                    {cls.primaryStudentName}
-                                                    {cls.additionalStudentNames.length > 0 && ` +${cls.additionalStudentNames.length}`}
-                                                </td>
+                                                <td className="p-3 text-sm">{buildClassLabel(cls)}</td>
+                                                <td className="p-3 text-sm">{fullStudentList(cls)}</td>
                                                 <td className="p-3 text-sm">
                                                     {cls.providerId ? (
                                                         <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs">
@@ -600,6 +783,9 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
                                                         </span>
                                                     )}
                                                 </td>
+                                                <td className="p-3 text-sm">{language === "th" ? cls.locationNameTh || cls.locationName : cls.locationName}</td>
+                                                <td className="p-3 text-sm">{formatBookedBy(cls)}</td>
+                                                <td className="p-3 text-sm">{formatApprovedBy(cls)}</td>
                                                 <td className="p-3 text-right font-bold">{cls.classCount}</td>
                                                 <td className="p-3 text-right">฿ {(cls.classCount * rate).toFixed(2)}</td>
                                             </tr>

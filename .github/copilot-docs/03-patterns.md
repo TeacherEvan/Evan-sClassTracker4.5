@@ -982,3 +982,43 @@ classes.forEach(c => {
 - `convex/teacherClassCount.ts` - Provider aggregation
 
 **Example**: See `IMPLEMENTATION_SUMMARY_PROVIDER_SYSTEM_OCT_30_2025.md` for full implementation
+
+### 23. Ephemeral Calculator Pattern (NEW Oct 2025)
+
+Security-first pattern for temporary calculations in the UI with zero database persistence. Used by the Class Payment Calculator.
+
+```tsx
+// ❌ WRONG - Never persist calculator data
+// const saveCalculation = useMutation(api.calculations.save);
+
+// ✅ CORRECT - All state is component-local and discarded on close
+const [acceptedDisclaimer, setAcceptedDisclaimer] = useState(false);
+const [rate, setRate] = useState<number>(0);
+const [startDate, setStartDate] = useState<number>(Date.now());
+const [endDate, setEndDate] = useState<number>(Date.now());
+
+// Read-only query gated by disclaimer + selection
+const classData = useQuery(
+  api.teacherClassCount.getClassCountForPrint,
+  acceptedDisclaimer ? { teacherId, startDate, endDate } : "skip"
+);
+```
+
+Key rules:
+
+- Show a mandatory disclaimer before any calculation begins.
+- Never call mutations from the calculator; use read-only queries only when necessary.
+- Keep all inputs in local React state; unmounting the component must clear all data.
+- Provide a print-to-PDF option so users can export results without saving to DB.
+- Validate dates (start <= end) and numeric inputs (rate >= 0).
+- Bilingual UI for all strings (EN/TH), using `useLanguage()` and `BilingualInput` when applicable.
+
+Recommended UI structure:
+
+- Flex modal layout with single scroll area (see Pattern #18) and height cap from Pattern #21.
+- Header: Title + close; Content: disclaimer or calculator; Footer: Print and Close buttons.
+
+Related files:
+
+- `components/class-payment-calculator.tsx` – Payment calculator modal implementation
+- `convex/teacherClassCount.ts` – Read-only query used for class data (no persistence)

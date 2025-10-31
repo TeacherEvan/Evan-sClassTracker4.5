@@ -1,12 +1,60 @@
 # TODO List - Evan's Class Tracker 4.5
 
-**Last Updated:** October 27, 2025
+**Last Updated:** October 31, 2025
 
 ---
 
 ## 🚀 New Features
 
 _No new features planned at this time_
+
+---
+
+## ✅ Recently Completed (October 31, 2025)
+
+### Class Payment Calculator (Security-First Ephemeral Tool) ✅
+
+**Description:** Professional payment calculator with audit-ready single-page print output that never persists financial data to the database.
+
+**Implemented Features:**
+
+- ✅ Security-first design: All calculations ephemeral (component-level state only)
+- ✅ Mandatory disclaimer screen before access
+- ✅ Teacher selection (moderators/admins) or auto-filled for teachers
+- ✅ Date range filtering (default: current month)
+- ✅ Entity filtering (all/schools/providers/specific entity)
+- ✅ Real-time calculation: ClassCount × Rate = Total Payment
+- ✅ Professional single-page print layout with:
+  - Compact header with metadata grid (teacher, period, rate, generated timestamp)
+  - 4-card summary (total classes, ClassCount, average ClassCount per session, total payment)
+  - Entity-level summary table (sessions, ClassCount, payment by school/provider)
+  - Full session breakdown with: Date, Time, Type, Students, Entity, Location, Booked by, Approved by, Duration, ClassCount, Rate, Payment
+  - Reviewer notes section for manual annotations
+  - Signature lines (Teacher, Reviewer, Date)
+  - Security disclaimer and system footer
+- ✅ Complete bilingual support (EN/TH) throughout all sections
+- ✅ Booking/approval metadata tracking:
+  - `bookedByUserId`, `bookedByUsername` (persisted in schema)
+  - `approvedByUserId`, `approvedByUsername`, `approvalSource` (persisted in schema)
+  - Auto-approval sources: `auto_provider`, `auto_guardian`, `system`, `admin`, `moderator`
+  - Display formatting with localized labels and fallbacks
+- ✅ Print optimization:
+  - Condensed typography (8.5px–16px font sizes)
+  - Tight spacing (8mm page margins, minimal padding)
+  - Professional grayscale styling (no heavy color fills)
+  - Single-page output for typical monthly reports
+- ✅ On-screen table view (first 20 classes with pagination note)
+
+**Technical Implementation:**
+
+- Component: `components/class-payment-calculator.tsx` (852 lines)
+- Backend: `convex/teacherClassCount.ts` (getMyClassCountDetails query with booking/approval metadata)
+- Schema: `convex/schema.ts` (optional booking/approval fields in classes table)
+- Mutations: `convex/classes.ts` (bookWithConflictCheck, book, approve, reject, updateClass with metadata population)
+- Print: Custom HTML generation with professional work-log layout
+- Security: Zero database persistence for rate/payment calculations
+
+**Status:** ✅ **COMPLETE** - Production-ready (security disclaimer required before access)
 
 ---
 

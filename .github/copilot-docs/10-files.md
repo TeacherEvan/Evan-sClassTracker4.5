@@ -114,6 +114,12 @@
 - Read receipts
 - Direct and group messages
 
+**`convex/providers.ts`**
+
+- Provider CRUD (create/list/get/update/soft delete)
+- Role-based access (teachers/admins only; moderators blocked)
+- Validations for categories and ownership
+
 ---
 
 ## UI Components
@@ -184,6 +190,17 @@
 - Confirmation flow
 - Reason requirement
 - Admin-only access
+
+**`components/class-payment-calculator.tsx`**
+
+- Ephemeral Class Payment Calculator modal
+- Disclaimer screen, read-only data fetch, print-to-PDF
+- Client-side calculation only (no persistence)
+
+**`components/class-detail-card.tsx`**
+
+- Expandable class card used in Class Count modal
+- Shows all students, notes, attendance, and provider/school info
 
 ---
 

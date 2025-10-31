@@ -31,7 +31,7 @@
 - **Styling**: Tailwind CSS v4
 - **Language**: TypeScript + bilingual UI (English/Thai)
 
-**Latest Version:** 4.5.10 (Oct 30, 2025)
+**Latest Version:** 4.5.12 (Oct 31, 2025)
 
 **Recent Optimizations**: 40-50% faster loads and 10-100x faster queries via N+1 elimination (Oct 2025)
 

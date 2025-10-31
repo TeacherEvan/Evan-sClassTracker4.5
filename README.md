@@ -2,7 +2,7 @@
 
 Bilingual English/Thai class tracker for teachers and schools - Built with Next.js 15, React 19, Convex & Tailwind v4
 
-## ✨ Latest Updates (Oct 29, 2025)
+## ✨ Latest Updates (Oct 31, 2025)
 
 ### New Features & Improvements
 
@@ -15,6 +15,9 @@ Bilingual English/Thai class tracker for teachers and schools - Built with Next.
 - ✅ **Enhanced Class Count System**: Teacher selection, print language choice, detailed reporting for moderators
 - ✅ **Post-Class Validation Fix**: Now truly allows optional bilingual notes (at least one language)
 - ✅ **Professional Print Reports**: Custom HTML generation with full class breakdown and student details
+
+- ✅ **Provider Booking Integration (Phase 4.2)**: Provider selection added to class booking with XOR validation (schoolId XOR providerId). Admin can select teacher when provider is chosen.
+- ✅ **Payment Calculator (Ephemeral)**: Security-first calculator with disclaimer, read-only data fetch, and print-to-PDF. No data is saved to the database.
 
 ### Removed Features
 

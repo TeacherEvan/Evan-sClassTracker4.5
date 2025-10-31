@@ -1,7 +1,7 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.12 (Oct 30, 2025 - In Progress)
+**Version:** 4.5.12 (Oct 31, 2025 - In Progress)
 
 ---
 
@@ -25,7 +25,7 @@ This documentation is split into focused sections for efficient knowledge discov
 
 ### 📚 Core Documentation
 
-**[Non-Negotiable Patterns](./copilot-docs/03-patterns.md)** (21 patterns)
+**[Non-Negotiable Patterns](./copilot-docs/03-patterns.md)** (23 patterns)
 - Bilingual-first development
 - Index-first queries (performance critical)
 - N+1 query prevention
@@ -129,24 +129,24 @@ This documentation is split into focused sections for efficient knowledge discov
 
 ## 📊 Documentation Stats
 
-- **Total Documentation**: ~2700 lines split into 10 focused files
-- **Code Patterns**: 22 non-negotiable patterns documented
+- **Total Documentation**: ~2800 lines split into 10 focused files
+- **Code Patterns**: 23 non-negotiable patterns documented
 - **Architecture Diagrams**: 12 ASCII diagrams across integration docs
 - **Test Best Practices**: 7 E2E testing patterns + 4 performance optimizations
 - **Security Warnings**: 4 known limitations clearly marked
-- **Recent Updates**: Oct 30, 2025 (v4.5.11) - Provider System Phase 1 complete (database schema & backend)
+- **Recent Updates**: Oct 31, 2025 (v4.5.12) - Provider booking UI integrated in class booking
 
 ---
 
 ## 🔄 Last Updated
 
-**October 30, 2025** - Version 4.5.12 - Class Count Enhancements & Payment Calculator (In Progress) ⏳
+**October 31, 2025** - Version 4.5.12 - Class Count Enhancements & Payment Calculator (In Progress) ⏳
 - **NEW: Payment Calculator (Phase 3/5)**: Security-first ephemeral calculation tool with zero database persistence
 - **Calculator Features**: Mandatory disclaimer, real-time calculation (rate × ClassCount), date range filtering, provider/school filtering, professional print-to-PDF
 - **Enhanced Class Count Modal**: Expandable class cards, all students display, lazy-loaded post-class notes, color-coded badges
-- **Provider Creation Modal**: BilingualInput integration, category selection, callback pattern, ready for UI integration (Phase 4.2 pending)
-- **Build Status**: Next.js ✅, TypeScript ✅ (placeholder fix applied), Convex deploy ✅
-- **Documentation**: Comprehensive implementation summary (IMPLEMENTATION_SUMMARY_CLASS_COUNT_ENHANCEMENTS_OCT_30_2025.md)
+- **Provider Booking Integration (Phase 4.2)**: Provider selection added to class booking with XOR validation (schoolId XOR providerId), admin teacher selection enabled when provider chosen
+- **Build Status**: Next.js ✅, TypeScript ✅, Convex deploy ✅
+- **Documentation**: Implementation plan and Nov summary added (IMPLEMENTATION_PLAN_CLASS_COUNT_ENHANCEMENTS_NOV_2025.md, IMPLEMENTATION_SUMMARY_CLASS_COUNT_ENHANCEMENTS_NOV_2025.md)
 - **Previous (v4.5.11)**: Provider System Phase 1 complete - Multi-provider architecture, XOR validation, auto-approval workflow, role-based access, batch fetching patterns
 - **Previous (v4.5.10)**: Critical bug fixes (duplicate notes, console errors), merged class edit history, teacher cycle reporting enhancements, filter navigation tabs, pagination/collapsible patterns (#19-21)
 

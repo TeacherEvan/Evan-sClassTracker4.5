@@ -116,6 +116,18 @@ export default defineSchema({
         newValue: v.string(),
       })),
     }))),
+    bookedByUserId: v.optional(v.id("users")),
+    bookedByUsername: v.optional(v.string()),
+    approvedByUserId: v.optional(v.id("users")),
+    approvedByUsername: v.optional(v.string()),
+    approvedAt: v.optional(v.number()),
+    approvalSource: v.optional(v.union(
+      v.literal("moderator"),
+      v.literal("admin"),
+      v.literal("auto_provider"),
+      v.literal("auto_guardian"),
+      v.literal("system")
+    )),
   })
     .index("by_teacher", ["teacherId"])
     .index("by_school", ["schoolId"])

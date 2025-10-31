@@ -7,10 +7,11 @@ import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { UserRole } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
-import { AlertTriangle, Calendar, Check, Edit2, MapPin, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
+import { AlertTriangle, Calendar, Check, Edit2, MapPin, Plus, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
 import { useState } from "react";
 import { ClassConflictModal } from "./class-conflict-modal";
 import { CollapsibleSection } from "./collapsible-section";
+import { CreateProviderModal } from "./create-provider-modal";
 import { EditClassModal } from "./edit-class-modal";
 import { HierarchicalStudentSelector } from "./hierarchical-student-selector";
 import LocationProposalForm from "./location-proposal-form";
@@ -235,8 +236,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   // Form validation
   const isFormValid =
     studentId &&
-    schoolId &&
-    (locationId || requestingNewLocation) &&
+    // School OR Provider required (XOR enforced on submit)
+    (schoolId || providerId) &&
+    // Location required only for school-linked classes; providers don't use school locations
+    (schoolId ? (locationId || requestingNewLocation) : true) &&
     (requestingNewLocation ? (pendingLocationName.trim() || pendingLocationNameTh.trim()) : true) &&
     (selectedDates.length > 0 || scheduledDate) &&
     (isGuardianLocation ? guardianTitle.trim() : true) &&
@@ -249,9 +252,24 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     setLoading(true);
 
     try {
-      if (!schoolId) {
-        throw new Error("Please select a school");
+      // XOR Validation: Must have EITHER schoolId OR providerId (not both, not neither)
+      const hasSchool = !!schoolId;
+      const hasProvider = !!providerId;
+
+      if (hasSchool && hasProvider) {
+        throw new Error(t(
+          "Cannot book with both school and provider - please choose one",
+          "ไม่สามารถจองทั้งโรงเรียนและผู้ให้บริการพร้อมกัน - กรุณาเลือกอย่างใดอย่างหนึ่ง"
+        ));
       }
+
+      if (!hasSchool && !hasProvider) {
+        throw new Error(t(
+          "Please select either a school or a provider",
+          "กรุณาเลือกโรงเรียนหรือผู้ให้บริการ"
+        ));
+      }
+
       if (!studentId) {
         throw new Error("Please select a student");
       }
@@ -329,7 +347,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         const bookingPromises = datesToBook.map(timestamp =>
           bookClass({
             teacherId: effectiveTeacherId,
-            schoolId: schoolId as Id<"schools">,
+            ...(schoolId && { schoolId: schoolId as Id<"schools"> }),
+            ...(providerId && { providerId: providerId as Id<"providers"> }),
             studentId: studentId as Id<"students">,
             locationId: locationId ? (locationId as Id<"locations">) : undefined,
             pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
@@ -350,7 +369,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         // For single date, use conflict checking
         const result = await bookClassWithConflictCheck({
           teacherId: effectiveTeacherId,
-          schoolId: schoolId as Id<"schools">,
+          ...(schoolId && { schoolId: schoolId as Id<"schools"> }),
+          ...(providerId && { providerId: providerId as Id<"providers"> }),
           studentId: studentId as Id<"students">,
           locationId: locationId ? (locationId as Id<"locations">) : undefined,
           pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
@@ -378,7 +398,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
           setPendingBookingData({
             ...optionalFields,
             teacherId: effectiveTeacherId,
-            schoolId: schoolId as Id<"schools">,
+            ...(schoolId && { schoolId: schoolId as Id<"schools"> }),
+            ...(providerId && { providerId: providerId as Id<"providers"> }),
             studentId: studentId as Id<"students">,
             locationId: locationId ? (locationId as Id<"locations">) : undefined,
             pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
@@ -410,6 +431,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       // Reset form
       setStudentId("");
       setSchoolId("");
+      setProviderId("");
       setLocationId("");
       setScheduledDate("");
       setSelectedDates([]);
@@ -943,51 +965,142 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
             </h3>
 
             <form onSubmit={handleBookClass} className="space-y-4">
-              {/* Step 1: School Selection - FIRST PRIORITY */}
+              {/* Step 1: School OR Provider Selection (Teachers/Admins) OR School Only (Moderators) */}
               <div className="space-y-4">
-                <div className="relative">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">1</span>
-                    <label htmlFor="school" className="block text-sm font-medium">
-                      {t("School", "โรงเรียน")} *
-                    </label>
-                  </div>
-                  <select
-                    id="school"
-                    value={schoolId}
-                    onChange={(e) => {
-                      setSchoolId(e.target.value as Id<"schools"> | "");
-                      setLocationId(""); // Reset location when school changes
-                      setStudentId(""); // Reset student when school changes
-                      if (userRole === "admin" || userRole === "moderator") {
+                {/* Moderators: School-only (locked to their school) */}
+                {userRole === "moderator" && (
+                  <div className="relative">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">1</span>
+                      <label htmlFor="school" className="block text-sm font-medium">
+                        {t("School", "โรงเรียน")} *
+                      </label>
+                    </div>
+                    <select
+                      id="school"
+                      value={schoolId}
+                      onChange={(e) => {
+                        setSchoolId(e.target.value as Id<"schools"> | "");
+                        setLocationId(""); // Reset location when school changes
+                        setStudentId(""); // Reset student when school changes
                         setSelectedTeacherId(""); // Reset teacher selection
-                      }
-                    }}
-                    className="w-full px-4 py-3 md:py-2 text-base md:text-sm border-2 border-blue-500 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-600 dark:bg-gray-800 dark:border-blue-600 touch-manipulation transition-all shadow-sm"
-                    required
-                    disabled={loading || userRole === "moderator"} // Moderators can't change their school
-                  >
-                    <option value="">{t("Select a school first", "เลือกโรงเรียนก่อน")}</option>
-                    {schools === undefined ? (
-                      <option disabled>{t("Loading schools...", "กำลังโหลดโรงเรียน...")}</option>
-                    ) : (
-                      schools?.map((school) => (
-                        <option key={school._id} value={school._id}>
-                          {school.name}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                  {userRole === "moderator" && (
+                      }}
+                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border-2 border-blue-500 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-600 dark:bg-gray-800 dark:border-blue-600 touch-manipulation transition-all shadow-sm"
+                      required
+                      disabled={loading} // Moderators have pre-selected school
+                    >
+                      <option value="">{t("Select a school first", "เลือกโรงเรียนก่อน")}</option>
+                      {schools === undefined ? (
+                        <option disabled>{t("Loading schools...", "กำลังโหลดโรงเรียน...")}</option>
+                      ) : (
+                        schools?.map((school) => (
+                          <option key={school._id} value={school._id}>
+                            {school.name}
+                          </option>
+                        ))
+                      )}
+                    </select>
                     <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                       {t("Your school is pre-selected", "โรงเรียนของคุณถูกเลือกไว้แล้ว")}
                     </p>
-                  )}
-                </div>
+                  </div>
+                )}
+
+                {/* Teachers/Admins: School OR Provider selection */}
+                {(userRole === "teacher" || userRole === "admin") && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">1</span>
+                      <label className="block text-sm font-medium">
+                        {t("School OR Provider (Choose One)", "โรงเรียนหรือผู้ให้บริการ (เลือกอย่างใดอย่างหนึ่ง")} *
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* School Dropdown */}
+                      <div>
+                        <label htmlFor="school" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                          {t("School", "โรงเรียน")}
+                        </label>
+                        <select
+                          id="school"
+                          value={schoolId}
+                          onChange={(e) => {
+                            setSchoolId(e.target.value as Id<"schools"> | "");
+                            if (e.target.value) setProviderId(""); // Clear provider if school selected
+                            setLocationId(""); // Reset location
+                            setStudentId(""); // Reset student
+                            if (userRole === "admin") setSelectedTeacherId("");
+                          }}
+                          className="w-full px-4 py-3 md:py-2 text-base md:text-sm border-2 border-blue-500 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-600 dark:bg-gray-800 dark:border-blue-600 touch-manipulation transition-all shadow-sm"
+                          disabled={loading}
+                        >
+                          <option value="">{t("No School", "ไม่มีโรงเรียน")}</option>
+                          {schools === undefined ? (
+                            <option disabled>{t("Loading schools...", "กำลังโหลดโรงเรียน...")}</option>
+                          ) : (
+                            schools?.map((school) => (
+                              <option key={school._id} value={school._id}>
+                                {school.name}
+                              </option>
+                            ))
+                          )}
+                        </select>
+                      </div>
+
+                      {/* Provider Dropdown */}
+                      <div>
+                        <label htmlFor="provider" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                          {t("Provider", "ผู้ให้บริการ")}
+                        </label>
+                        <select
+                          id="provider"
+                          value={providerId}
+                          onChange={(e) => {
+                            setProviderId(e.target.value as Id<"providers"> | "");
+                            if (e.target.value) setSchoolId(""); // Clear school if provider selected
+                            setLocationId(""); // Reset location
+                            setStudentId(""); // Reset student
+                            if (userRole === "admin") setSelectedTeacherId("");
+                          }}
+                          className="w-full px-4 py-3 md:py-2 text-base md:text-sm border-2 border-purple-500 rounded-xl md:rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-600 dark:bg-gray-800 dark:border-purple-600 touch-manipulation transition-all shadow-sm"
+                          disabled={loading}
+                        >
+                          <option value="">{t("No Provider", "ไม่มีผู้ให้บริการ")}</option>
+                          {myProviders === undefined ? (
+                            <option disabled>{t("Loading providers...", "กำลังโหลดผู้ให้บริการ...")}</option>
+                          ) : (
+                            myProviders?.map((provider) => (
+                              <option key={provider._id} value={provider._id}>
+                                {language === "th" ? provider.nameTh : provider.name}
+                              </option>
+                            ))
+                          )}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => setShowCreateProvider(true)}
+                          className="mt-2 w-full px-3 py-2 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                          disabled={loading}
+                        >
+                          <Plus className="w-4 h-4" />
+                          {t("Create New Provider", "สร้างผู้ให้บริการใหม่")}
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {t(
+                        "Select either a school OR a provider (not both). At least one is required.",
+                        "เลือกโรงเรียนหรือผู้ให้บริการ (ไม่ใช่ทั้งสองอย่าง) ต้องเลือกอย่างน้อยหนึ่งอย่าง"
+                      )}
+                    </p>
+                  </div>
+                )}
 
                 {/* Step 2: Teacher Selection (Admin/Moderator only) */}
                 {(userRole === "admin" || userRole === "moderator") && (
-                  <div className={`relative transition-opacity ${schoolId ? 'opacity-100' : 'opacity-50'}`}>
+                  <div className={`relative transition-opacity ${(schoolId || providerId) ? 'opacity-100' : 'opacity-50'}`}>
                     <div className="flex items-center gap-2 mb-2">
                       <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">2</span>
                       <label htmlFor="teacher" className="block text-sm font-medium">
@@ -1000,10 +1113,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       onChange={(e) => setSelectedTeacherId(e.target.value as Id<"users"> | "")}
                       className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-all"
                       required
-                      disabled={loading || !schoolId}
+                      disabled={loading || !(schoolId || providerId)}
                     >
                       <option value="">
-                        {schoolId
+                        {(schoolId || providerId)
                           ? t("Select a teacher", "เลือกครูผู้สอน")
                           : t("Select school first", "เลือกโรงเรียนก่อน")
                         }
@@ -1027,8 +1140,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   </div>
                 )}
 
-                {/* Step 3: Student Selection - Filtered by School */}
-                <div className={`relative transition-opacity ${schoolId ? 'opacity-100' : 'opacity-50'}`}>
+                {/* Step 3: Student Selection - Filtered by School (or provider flow for guardian students) */}
+                <div className={`relative transition-opacity ${(schoolId || providerId) ? 'opacity-100' : 'opacity-50'}`}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">
@@ -1038,7 +1151,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                         {t("Student Name", "ชื่อนักเรียน")} *
                       </label>
                     </div>
-                    {schoolId && (
+                    {(schoolId || providerId) && (
                       <button
                         type="button"
                         onClick={() => {
@@ -1047,9 +1160,13 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                           if (!creatingStudent && schoolId) {
                             setNewStudentSchoolId(schoolId);
                           }
+                          // If provider flow, default to guardian student creation
+                          if (!creatingStudent && providerId && !schoolId) {
+                            setStudentType("guardian");
+                          }
                         }}
                         className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
-                        disabled={!schoolId}
+                        disabled={!(schoolId || providerId)}
                       >
                         {creatingStudent
                           ? t("← Select Existing", "← เลือกนักเรียนที่มีอยู่")
@@ -1059,7 +1176,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     )}
                   </div>
 
-                  {creatingStudent && schoolId ? (
+                  {creatingStudent && (schoolId || providerId) ? (
                     <div className="space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                       {/* Student Type Selection */}
                       <div className="flex gap-2">
@@ -1194,7 +1311,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       students={students}
                       value={studentId}
                       onChange={setStudentId}
-                      disabled={loading || !schoolId}
+                      disabled={loading || !(schoolId || providerId)}
                       required
                       schoolId={schoolId}
                     />
@@ -1959,6 +2076,19 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         <LocationProposalForm
           userId={userId}
           onClose={() => setShowProposalForm(false)}
+        />
+      )}
+
+      {/* Create Provider Modal */}
+      {showCreateProvider && (
+        <CreateProviderModal
+          userId={userId}
+          onClose={() => setShowCreateProvider(false)}
+          onCreated={(newProviderId) => {
+            setProviderId(newProviderId);
+            setSchoolId(""); // Clear school when provider is selected
+            setShowCreateProvider(false);
+          }}
         />
       )}
 
