@@ -855,8 +855,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                 </div>
               )}
 
-              {/* School Filter */}
-              {userRole === "admin" && (
+              {/* School Filter - Admins see all schools, Teachers see only schools where they teach */}
+              {(userRole === "admin" || userRole === "teacher") && (
                 <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
                   <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
                     <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -870,11 +870,34 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
                   >
                     <option value="all">{t("All Schools", "โรงเรียนทั้งหมด")}</option>
-                    {schools?.map((school) => (
-                      <option key={school._id} value={school._id}>
-                        {school.name}
-                      </option>
-                    ))}
+                    {(() => {
+                      // Admins see all schools
+                      if (userRole === "admin") {
+                        return schools?.map((school) => (
+                          <option key={school._id} value={school._id}>
+                            {school.name}
+                          </option>
+                        ));
+                      }
+
+                      // Teachers see only schools where they have classes
+                      if (userRole === "teacher" && classes) {
+                        const teacherSchoolIds = new Set(
+                          classes
+                            .filter(c => c.schoolId) // Only school-linked classes
+                            .map(c => c.schoolId as Id<"schools">)
+                        );
+                        return schools
+                          ?.filter(school => teacherSchoolIds.has(school._id))
+                          .map((school) => (
+                            <option key={school._id} value={school._id}>
+                              {school.name}
+                            </option>
+                          ));
+                      }
+
+                      return null;
+                    })()}
                   </select>
                 </div>
               )}
