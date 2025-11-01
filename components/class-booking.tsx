@@ -222,7 +222,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const [filterStudentId, setFilterStudentId] = useState<Id<"students"> | "all">("all");
   const [filterGrade, setFilterGrade] = useState<string>("all");
   const [filterClass, setFilterClass] = useState<string>("all");
-  
+
   // Filter panel collapse state
   const [isFilterPanelExpanded, setIsFilterPanelExpanded] = useState(false);
 
@@ -989,7 +989,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
               if (activeChips.length > 0) {
                 return (
                   <div className="mb-4">
-                    <div 
+                    <div
                       className="flex flex-wrap gap-2 p-3 bg-white/50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600"
                       role="list"
                       aria-label={t("Active filters", "ตัวกรองที่ใช้งาน")}
@@ -1030,188 +1030,188 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
             {/* Collapsible Filter Dropdowns */}
             {isFilterPanelExpanded && (
               <div className="space-y-4">
-              {/* Teacher Filter */}
-              {(userRole === "admin" || userRole === "moderator") && (
-                <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
-                  <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
-                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    {t("Filter by Teacher", "กรองตามครู")}
-                  </label>
-                  <select
-                    value={filterTeacherId}
-                    onChange={(e) => setFilterTeacherId(e.target.value as Id<"users"> | "all")}
-                    className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
-                  >
-                    <option value="all">{t("All Teachers", "ครูทั้งหมด")}</option>
-                    {allTeachers?.map((teacher) => (
-                      <option key={teacher._id} value={teacher._id}>
-                        {teacher.username}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+                {/* Teacher Filter */}
+                {(userRole === "admin" || userRole === "moderator") && (
+                  <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
+                    <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      {t("Filter by Teacher", "กรองตามครู")}
+                    </label>
+                    <select
+                      value={filterTeacherId}
+                      onChange={(e) => setFilterTeacherId(e.target.value as Id<"users"> | "all")}
+                      className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
+                    >
+                      <option value="all">{t("All Teachers", "ครูทั้งหมด")}</option>
+                      {allTeachers?.map((teacher) => (
+                        <option key={teacher._id} value={teacher._id}>
+                          {teacher.username}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
-              {/* School Filter - Admins see all schools, Teachers see only schools where they teach */}
-              {(userRole === "admin" || userRole === "teacher") && (
-                <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
-                  <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
-                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                    {t("Filter by School", "กรองตามโรงเรียน")}
-                  </label>
-                  <select
-                    value={filterSchoolId}
-                    onChange={(e) => setFilterSchoolId(e.target.value as Id<"schools"> | "all")}
-                    className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
-                  >
-                    <option value="all">{t("All Schools", "โรงเรียนทั้งหมด")}</option>
-                    {(() => {
-                      // Admins see all schools
-                      if (userRole === "admin") {
-                        return schools?.map((school) => (
-                          <option key={school._id} value={school._id}>
-                            {school.name}
-                          </option>
-                        ));
-                      }
-
-                      // Teachers see only schools where they have classes
-                      if (userRole === "teacher" && classes) {
-                        const teacherSchoolIds = new Set(
-                          classes
-                            .filter(c => c.schoolId) // Only school-linked classes
-                            .map(c => c.schoolId as Id<"schools">)
-                        );
-                        return schools
-                          ?.filter(school => teacherSchoolIds.has(school._id))
-                          .map((school) => (
+                {/* School Filter - Admins see all schools, Teachers see only schools where they teach */}
+                {(userRole === "admin" || userRole === "teacher") && (
+                  <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
+                    <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      {t("Filter by School", "กรองตามโรงเรียน")}
+                    </label>
+                    <select
+                      value={filterSchoolId}
+                      onChange={(e) => setFilterSchoolId(e.target.value as Id<"schools"> | "all")}
+                      className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
+                    >
+                      <option value="all">{t("All Schools", "โรงเรียนทั้งหมด")}</option>
+                      {(() => {
+                        // Admins see all schools
+                        if (userRole === "admin") {
+                          return schools?.map((school) => (
                             <option key={school._id} value={school._id}>
                               {school.name}
                             </option>
                           ));
-                      }
+                        }
 
-                      return null;
-                    })()}
+                        // Teachers see only schools where they have classes
+                        if (userRole === "teacher" && classes) {
+                          const teacherSchoolIds = new Set(
+                            classes
+                              .filter(c => c.schoolId) // Only school-linked classes
+                              .map(c => c.schoolId as Id<"schools">)
+                          );
+                          return schools
+                            ?.filter(school => teacherSchoolIds.has(school._id))
+                            .map((school) => (
+                              <option key={school._id} value={school._id}>
+                                {school.name}
+                              </option>
+                            ));
+                        }
+
+                        return null;
+                      })()}
+                    </select>
+                  </div>
+                )}
+
+                {/* Student Filter */}
+                <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
+                  <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    {t("Filter by Student", "กรองตามนักเรียน")}
+                  </label>
+                  <select
+                    value={filterStudentId}
+                    onChange={(e) => setFilterStudentId(e.target.value as Id<"students"> | "all")}
+                    className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
+                  >
+                    <option value="all">{t("All Students", "นักเรียนทั้งหมด")}</option>
+                    {/* Get unique students from classes */}
+                    {Array.from(new Set(classes.map(c => c.studentId)))
+                      .map(studentId => {
+                        const classWithStudent = classes.find(c => c.studentId === studentId);
+                        return classWithStudent?.student ? (
+                          <option key={studentId} value={studentId}>
+                            {classWithStudent.student.firstName} {classWithStudent.student.lastName}
+                            {classWithStudent.student.nickname ? ` (${classWithStudent.student.nickname})` : ""}
+                          </option>
+                        ) : null;
+                      })
+                      .filter(Boolean)
+                    }
                   </select>
                 </div>
-              )}
 
-              {/* Student Filter */}
-              <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
-                <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
-                  <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                  {t("Filter by Student", "กรองตามนักเรียน")}
-                </label>
-                <select
-                  value={filterStudentId}
-                  onChange={(e) => setFilterStudentId(e.target.value as Id<"students"> | "all")}
-                  className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
-                >
-                  <option value="all">{t("All Students", "นักเรียนทั้งหมด")}</option>
-                  {/* Get unique students from classes */}
-                  {Array.from(new Set(classes.map(c => c.studentId)))
-                    .map(studentId => {
-                      const classWithStudent = classes.find(c => c.studentId === studentId);
-                      return classWithStudent?.student ? (
-                        <option key={studentId} value={studentId}>
-                          {classWithStudent.student.firstName} {classWithStudent.student.lastName}
-                          {classWithStudent.student.nickname ? ` (${classWithStudent.student.nickname})` : ""}
+                {/* Grade Filter */}
+                <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
+                  <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                    <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    {t("Filter by Grade", "กรองตามชั้น")}
+                  </label>
+                  <select
+                    value={filterGrade}
+                    onChange={(e) => setFilterGrade(e.target.value)}
+                    className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
+                  >
+                    <option value="all">{t("All Grades", "ชั้นทั้งหมด")}</option>
+                    {/* Get unique grades from classes */}
+                    {Array.from(new Set(classes.map(c => c.student?.grade).filter(Boolean)))
+                      .sort()
+                      .map(grade => (
+                        <option key={grade} value={grade}>
+                          {grade}
                         </option>
-                      ) : null;
-                    })
-                    .filter(Boolean)
-                  }
-                </select>
-              </div>
+                      ))
+                    }
+                  </select>
+                </div>
 
-              {/* Grade Filter */}
-              <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
-                <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
-                  <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  {t("Filter by Grade", "กรองตามชั้น")}
-                </label>
-                <select
-                  value={filterGrade}
-                  onChange={(e) => setFilterGrade(e.target.value)}
-                  className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
-                >
-                  <option value="all">{t("All Grades", "ชั้นทั้งหมด")}</option>
-                  {/* Get unique grades from classes */}
-                  {Array.from(new Set(classes.map(c => c.student?.grade).filter(Boolean)))
-                    .sort()
-                    .map(grade => (
-                      <option key={grade} value={grade}>
-                        {grade}
-                      </option>
-                    ))
-                  }
-                </select>
-              </div>
+                {/* Class Filter */}
+                <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
+                  <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                    <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    {t("Filter by Class", "กรองตามห้อง")}
+                  </label>
+                  <select
+                    value={filterClass}
+                    onChange={(e) => setFilterClass(e.target.value)}
+                    className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
+                  >
+                    <option value="all">{t("All Classes", "ห้องทั้งหมด")}</option>
+                    {/* Get unique classes from classes */}
+                    {Array.from(new Set(classes.map(c => c.student?.class).filter(Boolean)))
+                      .sort()
+                      .map(cls => (
+                        <option key={cls} value={cls}>
+                          {cls}
+                        </option>
+                      ))
+                    }
+                  </select>
+                </div>
 
-              {/* Class Filter */}
-              <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
-                <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
-                  <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  {t("Filter by Class", "กรองตามห้อง")}
-                </label>
-                <select
-                  value={filterClass}
-                  onChange={(e) => setFilterClass(e.target.value)}
-                  className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
-                >
-                  <option value="all">{t("All Classes", "ห้องทั้งหมด")}</option>
-                  {/* Get unique classes from classes */}
-                  {Array.from(new Set(classes.map(c => c.student?.class).filter(Boolean)))
-                    .sort()
-                    .map(cls => (
-                      <option key={cls} value={cls}>
-                        {cls}
-                      </option>
-                    ))
-                  }
-                </select>
-              </div>
-
-              {/* Filter Summary */}
-              <div className="bg-white dark:bg-gray-700 rounded-lg px-4 py-3 shadow-sm">
-                <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                  {(() => {
-                    const filteredCount = classes.filter((classItem) => {
-                      if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
-                      if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
-                      if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
-                      if (filterGrade !== "all" && classItem.student?.grade !== filterGrade) return false;
-                      if (filterClass !== "all" && classItem.student?.class !== filterClass) return false;
-                      return true;
-                    }).length;
-                    return (
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-bold">
-                          {filteredCount}
-                        </span>
-                        <span className="text-gray-700 dark:text-gray-300">
-                          {t(
-                            `of ${classes.length} ${classes.length === 1 ? 'class' : 'classes'}`,
-                            `จาก ${classes.length} คลาส`
-                          )}
-                        </span>
-                      </div>
-                    );
-                  })()}
+                {/* Filter Summary */}
+                <div className="bg-white dark:bg-gray-700 rounded-lg px-4 py-3 shadow-sm">
+                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {(() => {
+                      const filteredCount = classes.filter((classItem) => {
+                        if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
+                        if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
+                        if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
+                        if (filterGrade !== "all" && classItem.student?.grade !== filterGrade) return false;
+                        if (filterClass !== "all" && classItem.student?.class !== filterClass) return false;
+                        return true;
+                      }).length;
+                      return (
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-bold">
+                            {filteredCount}
+                          </span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            {t(
+                              `of ${classes.length} ${classes.length === 1 ? 'class' : 'classes'}`,
+                              `จาก ${classes.length} คลาส`
+                            )}
+                          </span>
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
               </div>
-            </div>
             )}
           </div>
         )}
@@ -2509,6 +2509,12 @@ function ClassItemDisplay({
         newValue: unknown;
       }>;
     }>;
+    bookedByUserId?: Id<"users">;
+    bookedByUsername?: string;
+    approvedByUserId?: Id<"users">;
+    approvedByUsername?: string;
+    approvedAt?: number;
+    approvalSource?: "moderator" | "admin" | "auto_provider" | "auto_guardian" | "system";
   };
   userRole: UserRole;
   userId: Id<"users">;
@@ -2705,6 +2711,64 @@ function ClassItemDisplay({
             </span>
             <span>{new Date(classItem.scheduledDate).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
           </div>
+
+          {/* Metadata Row - Who Booked & Who Approved */}
+          {(classItem.bookedByUsername || classItem.approvedByUsername || classItem.approvalSource) && (
+            <div className="flex flex-wrap items-center gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+              {/* Booked By */}
+              {classItem.bookedByUsername && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded text-xs">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span className="font-medium">
+                    {t("Booked by:", "จองโดย:")}{" "}
+                    <span className="font-semibold">{classItem.bookedByUsername}</span>
+                  </span>
+                </div>
+              )}
+
+              {/* Approved By */}
+              {classItem.approvedByUsername && classItem.status === "approved" && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded text-xs">
+                  <Check className="w-3 h-3" />
+                  <span className="font-medium">
+                    {t("Approved by:", "อนุมัติโดย:")}{" "}
+                    <span className="font-semibold">{classItem.approvedByUsername}</span>
+                  </span>
+                  {classItem.approvedAt && (
+                    <span className="opacity-75 ml-1">
+                      ({new Date(classItem.approvedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })})
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Approval Source Badge */}
+              {classItem.approvalSource && classItem.status === "approved" && (
+                <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
+                  classItem.approvalSource === "auto_provider"
+                    ? "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400"
+                    : classItem.approvalSource === "auto_guardian"
+                    ? "bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-400"
+                    : classItem.approvalSource === "moderator"
+                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
+                    : classItem.approvalSource === "admin"
+                    ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
+                    : "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400"
+                }`}>
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  {classItem.approvalSource === "auto_provider" && t("Auto-approved (Provider)", "อนุมัติอัตโนมัติ (ผู้ให้บริการ)")}
+                  {classItem.approvalSource === "auto_guardian" && t("Auto-approved (Guardian)", "อนุมัติอัตโนมัติ (ผู้ปกครอง)")}
+                  {classItem.approvalSource === "moderator" && t("Moderator Approval", "อนุมัติโดยผู้ดูแล")}
+                  {classItem.approvalSource === "admin" && t("Admin Approval", "อนุมัติโดยผู้จัดการ")}
+                  {classItem.approvalSource === "system" && t("System Approval", "อนุมัติโดยระบบ")}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
