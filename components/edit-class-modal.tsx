@@ -5,7 +5,7 @@ import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import { useMutation, useQuery } from "convex/react";
-import { AlertCircle, Calendar, ChevronDown, ChevronUp, Edit3, MapPin, User, X } from "lucide-react";
+import { AlertCircle, Calendar, ChevronDown, ChevronUp, Edit3, MapPin, User, UserPlus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { MultiDateCalendar } from "./multi-date-calendar";
 
@@ -73,6 +73,15 @@ export function EditClassModal({
     const [selectedNewDates, setSelectedNewDates] = useState<number[]>([]);
     const [selectedTime, setSelectedTime] = useState("09:00");
     const addDatesToClass = useMutation(api.classes.addDatesToClass);
+
+    // State for adding students feature
+    const [showAddStudents, setShowAddStudents] = useState(false);
+    const [selectedStudentToAdd, setSelectedStudentToAdd] = useState<Id<"students"> | "">("");
+    const [currentAdditionalStudents, setCurrentAdditionalStudents] = useState<Id<"students">[]>(
+        classData.additionalStudentIds || []
+    );
+    const addStudentToClass = useMutation(api.classes.addStudentToClass);
+    const removeStudentFromClass = useMutation(api.classes.removeStudentFromClass);
 
     // Show optional section if any optional fields have values
     useEffect(() => {
@@ -452,6 +461,167 @@ export function EditClassModal({
                                                 `Add ${selectedNewDates.length} Date${selectedNewDates.length > 1 ? 's' : ''}`,
                                                 `เพิ่ม ${selectedNewDates.length} วัน`
                                             )}
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Add Students to This Class Section */}
+                        <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+                            <button
+                                type="button"
+                                onClick={() => setShowAddStudents(!showAddStudents)}
+                                className="flex items-center gap-2 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 font-medium mb-4"
+                            >
+                                {showAddStudents ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                                <UserPlus className="w-5 h-5" />
+                                {t("Add Student(s) to This Class", "เพิ่มนักเรียนในคลาสนี้")}
+                            </button>
+
+                            {showAddStudents && (
+                                <div className="space-y-4 bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        {t(
+                                            "Add additional students to this class session. The primary student will remain unchanged.",
+                                            "เพิ่มนักเรียนเพิ่มเติมในคลาสนี้ นักเรียนหลักจะไม่เปลี่ยนแปลง"
+                                        )}
+                                    </p>
+
+                                    {/* Current students display */}
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">
+                                            {t("Current Students in Class", "นักเรียนในคลาสปัจจุบัน")}
+                                        </label>
+                                        <div className="space-y-2">
+                                            {/* Primary Student */}
+                                            {students && (() => {
+                                                const primaryStudent = students.find(s => s._id === studentId);
+                                                if (!primaryStudent) return null;
+                                                return (
+                                                    <div className="flex items-center justify-between p-3 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-lg">
+                                                        <div className="flex items-center gap-2">
+                                                            <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                                            <span className="font-medium text-blue-900 dark:text-blue-100">
+                                                                {primaryStudent.firstName} {primaryStudent.lastName}
+                                                            </span>
+                                                            <span className="text-xs px-2 py-0.5 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded">
+                                                                {t("Primary", "หลัก")}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* Additional Students */}
+                                            {currentAdditionalStudents.length > 0 && students && currentAdditionalStudents.map((addStudentId) => {
+                                                const student = students.find(s => s._id === addStudentId);
+                                                if (!student) return null;
+                                                return (
+                                                    <div key={addStudentId} className="flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg">
+                                                        <div className="flex items-center gap-2">
+                                                            <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                                            <span className="font-medium">
+                                                                {student.firstName} {student.lastName}
+                                                            </span>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={async () => {
+                                                                try {
+                                                                    await removeStudentFromClass({
+                                                                        userId: currentUserId,
+                                                                        classId: classData._id,
+                                                                        studentId: addStudentId,
+                                                                    });
+                                                                    setCurrentAdditionalStudents(prev => 
+                                                                        prev.filter(id => id !== addStudentId)
+                                                                    );
+                                                                    toast.success(
+                                                                        "Student removed from class",
+                                                                        "ลบนักเรียนออกจากคลาสแล้ว"
+                                                                    );
+                                                                    onSuccess(); // Refresh parent
+                                                                } catch (err) {
+                                                                    toast.error(
+                                                                        err instanceof Error ? err.message : "Failed to remove student",
+                                                                        "ไม่สามารถลบนักเรียนได้"
+                                                                    );
+                                                                }
+                                                            }}
+                                                            className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded transition-colors"
+                                                            title={t("Remove student", "ลบนักเรียน")}
+                                                        >
+                                                            <X className="w-4 h-4 text-red-600 dark:text-red-400" />
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+
+                                            {currentAdditionalStudents.length === 0 && (
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                                                    {t("No additional students added yet", "ยังไม่มีนักเรียนเพิ่มเติม")}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Add Student Selector */}
+                                    <div>
+                                        <label className="block text-sm font-medium mb-2">
+                                            {t("Select Student to Add", "เลือกนักเรียนที่จะเพิ่ม")}
+                                        </label>
+                                        <select
+                                            value={selectedStudentToAdd}
+                                            onChange={(e) => setSelectedStudentToAdd(e.target.value as Id<"students"> | "")}
+                                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-gray-700"
+                                        >
+                                            <option value="">{t("-- Select Student --", "-- เลือกนักเรียน --")}</option>
+                                            {students && (() => {
+                                                // Use Set for O(1) lookup performance
+                                                const additionalStudentsSet = new Set(currentAdditionalStudents);
+                                                return students.filter(s => 
+                                                    s._id !== studentId && // Not the primary student
+                                                    !additionalStudentsSet.has(s._id) // Not already added
+                                                ).map((student) => (
+                                                    <option key={student._id} value={student._id}>
+                                                        {student.firstName} {student.lastName} ({student.grade}{student.class})
+                                                    </option>
+                                                ));
+                                            })()}
+                                        </select>
+                                    </div>
+
+                                    {selectedStudentToAdd && (
+                                        <button
+                                            type="button"
+                                            onClick={async () => {
+                                                try {
+                                                    await addStudentToClass({
+                                                        userId: currentUserId,
+                                                        classId: classData._id,
+                                                        studentId: selectedStudentToAdd as Id<"students">,
+                                                    });
+                                                    setCurrentAdditionalStudents(prev => 
+                                                        [...prev, selectedStudentToAdd as Id<"students">]
+                                                    );
+                                                    setSelectedStudentToAdd("");
+                                                    toast.success(
+                                                        "Student added to class!",
+                                                        "เพิ่มนักเรียนในคลาสสำเร็จ!"
+                                                    );
+                                                    onSuccess(); // Refresh parent
+                                                } catch (err) {
+                                                    toast.error(
+                                                        err instanceof Error ? err.message : "Failed to add student",
+                                                        "ไม่สามารถเพิ่มนักเรียนได้"
+                                                    );
+                                                }
+                                            }}
+                                            className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors flex items-center justify-center gap-2"
+                                        >
+                                            <UserPlus className="w-5 h-5" />
+                                            {t("Add Student", "เพิ่มนักเรียน")}
                                         </button>
                                     )}
                                 </div>
