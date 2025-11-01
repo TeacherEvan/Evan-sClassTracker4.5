@@ -802,9 +802,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
               className="flex-1 md:flex-none bg-blue-500 text-white px-4 py-3 md:py-2 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-95 transition-all font-medium flex items-center justify-center gap-2 touch-manipulation shadow-lg shadow-blue-500/20 text-base md:text-sm"
             >
               <Calendar className="w-5 h-5" />
-              {userRole === "moderator" || userRole === "admin"
-                ? t("Book Class", "จองชั้นเรียน")
-                : t("Req/Book Class", "ขอ/จองชั้นเรียน")}
+              {t("Book Class", "จองชั้นเรียน")}
             </button>
             {classes && classes.length > 1 && (
               <button
@@ -1017,9 +1015,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         {showForm && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 mb-4 md:mb-6">
             <h3 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-6 pb-3 border-b-2 border-gray-200 dark:border-gray-700">
-              {userRole === "moderator" || userRole === "admin"
-                ? t("Book a New Class", "จองชั้นเรียนใหม่")
-                : t("Request a New Class", "ขอชั้นเรียนใหม่")}
+              {t("Book a New Class", "จองชั้นเรียนใหม่")}
             </h3>
 
             <form onSubmit={handleBookClass} className="space-y-4">
