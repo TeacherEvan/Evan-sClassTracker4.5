@@ -7,8 +7,9 @@ import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { UserRole } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
-import { AlertTriangle, Calendar, Check, Edit2, MapPin, Plus, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
+import { AlertTriangle, BarChart3, Calendar, Check, Edit2, MapPin, Plus, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
 import { useState } from "react";
+import { ClassAnalytics } from "./class-analytics";
 import { ClassConflictModal } from "./class-conflict-modal";
 import { CollapsibleSection } from "./collapsible-section";
 import { CreateProviderModal } from "./create-provider-modal";
@@ -136,6 +137,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
   // Merge classes state
   const [showMergeModal, setShowMergeModal] = useState(false);
+
+  // Analytics modal state
+  const [showAnalytics, setShowAnalytics] = useState(false);
 
   // Conflict detection state
   type ConflictClass = {
@@ -807,6 +811,13 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
             >
               <Calendar className="w-5 h-5" />
               {t("Book Class", "จองชั้นเรียน")}
+            </button>
+            <button
+              onClick={() => setShowAnalytics(true)}
+              className="flex-1 md:flex-none bg-indigo-500 text-white px-4 py-3 md:py-2 rounded-xl md:rounded-lg hover:bg-indigo-600 active:scale-95 transition-all font-medium flex items-center justify-center gap-2 touch-manipulation shadow-lg shadow-indigo-500/20 text-base md:text-sm"
+            >
+              <BarChart3 className="w-5 h-5" />
+              {t("Analytics", "การวิเคราะห์")}
             </button>
             {classes && classes.length > 1 && (
               <button
@@ -2466,6 +2477,14 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
           </div>
         </div>
       )}
+
+      {/* Analytics Modal */}
+      {showAnalytics && (
+        <ClassAnalytics
+          userId={userId}
+          onClose={() => setShowAnalytics(false)}
+        />
+      )}
     </>
   );
 }
@@ -2746,17 +2765,16 @@ function ClassItemDisplay({
 
               {/* Approval Source Badge */}
               {classItem.approvalSource && classItem.status === "approved" && (
-                <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${
-                  classItem.approvalSource === "auto_provider"
-                    ? "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400"
-                    : classItem.approvalSource === "auto_guardian"
+                <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${classItem.approvalSource === "auto_provider"
+                  ? "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400"
+                  : classItem.approvalSource === "auto_guardian"
                     ? "bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-400"
                     : classItem.approvalSource === "moderator"
-                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
-                    : classItem.approvalSource === "admin"
-                    ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
-                    : "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400"
-                }`}>
+                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
+                      : classItem.approvalSource === "admin"
+                        ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
+                        : "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400"
+                  }`}>
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>

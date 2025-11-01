@@ -4,7 +4,22 @@ Bilingual English/Thai class tracker for teachers and schools - Built with Next.
 
 ## ✨ Latest Updates (Nov 1, 2025)
 
-### Class Booking UX Overhaul (Phases 1-3 Complete) 🎨
+### Class Booking UX Overhaul (Phases 1-5 Complete) 🎨
+
+#### Phase 5: Analytics Dashboard 📊 (NEW)
+
+- ✅ **Educational Performance Insights**: Comprehensive analytics for teachers and administrators
+  - 4 visual summary cards (Total Classes, Attendance Rate, Active Students, Avg ClassCount)
+  - Student performance table with attendance tracking
+  - Color-coded performance ratings (Excellent/Good/Needs Improvement)
+  - Date range filtering for custom period analysis
+  - CSV export for data portability
+  - Role-based views (teacher/moderator/admin see appropriate data)
+  - Analytics button in Class Booking interface (indigo icon)
+  - Component: `components/class-analytics.tsx` (352 lines)
+  - Backend: `convex/analytics.ts` (294 lines)
+
+#### Phases 1-3: Filter Panel & UI Improvements ✅
 
 - ✅ **Material Design 3 Filter Chips**: Horizontal chip-based filter panel with 80% space reduction
   - Active filters visible as colored chips (Teacher: Blue, School: Green, Student: Purple, Grade: Orange, Class: Teal)
@@ -66,7 +81,7 @@ See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 - 🎨 **Modern UI** - Built with Next.js 15 and Tailwind CSS
 - 🌙 **Dark Mode** - Automatic dark mode support
 - 🔍 **Advanced Search** - Bilingual search across students, classes, users, and schools
-- 📊 **Analytics & Reporting** - Teacher performance metrics, trends, statistics, and detailed print reports
+- 📊 **Analytics & Reporting** - Teacher performance metrics, student attendance tracking, ClassCount analysis, CSV export, role-based access
 - 📄 **Data Export** - CSV/Excel export for classes, students, and analytics
 - 🚀 **Bulk Operations** - Import/create multiple students or users at once
 - 📑 **Pagination** - Efficient handling of large datasets with pagination support
