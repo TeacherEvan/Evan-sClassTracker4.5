@@ -1022,3 +1022,213 @@ Related files:
 
 - `components/class-payment-calculator.tsx` – Payment calculator modal implementation
 - `convex/teacherClassCount.ts` – Read-only query used for class data (no persistence)
+
+### 24. Analytics Dashboard Pattern (NEW Nov 2025)
+
+Performance metrics and reporting system with role-based access, optimized queries, and data export capabilities. Used by the Class Analytics Dashboard.
+
+```tsx
+// ✅ CORRECT - Role-based analytics with performance optimization
+export const getSummaryAnalytics = query({
+  args: {
+    userId: v.id("users"),
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // 1. Get user to determine role
+    const user = await ctx.db.get(args.userId);
+    if (!user) throw new Error("User not found");
+
+    // 2. Date range defaults to last 30 days
+    const now = Date.now();
+    const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+    const startDate = args.startDate || thirtyDaysAgo;
+    const endDate = args.endDate || now;
+
+    // 3. Query classes based on role with index
+    let classes: Doc<"classes">[];
+    if (user.role === "teacher") {
+      classes = await ctx.db
+        .query("classes")
+        .withIndex("by_teacher", q => q.eq("teacherId", args.userId))
+        .filter(q => 
+          q.and(
+            q.gte(q.field("scheduledDate"), startDate),
+            q.lte(q.field("scheduledDate"), endDate)
+          )
+        )
+        .collect();
+    } else if (user.role === "moderator" && user.schoolId) {
+      classes = await ctx.db
+        .query("classes")
+        .withIndex("by_school_and_date", q =>
+          q.eq("schoolId", user.schoolId).gte("scheduledDate", startDate)
+        )
+        .filter(q => q.lte(q.field("scheduledDate"), endDate))
+        .collect();
+    } else {
+      // Admin sees all
+      classes = await ctx.db
+        .query("classes")
+        .withIndex("by_scheduled_date", q => q.gte("scheduledDate", startDate))
+        .filter(q => q.lte(q.field("scheduledDate"), endDate))
+        .collect();
+    }
+
+    // 4. Batch fetch related data (prevents N+1)
+    const studentIds = [...new Set(classes.map(c => c.studentId))];
+    const students = await Promise.all(studentIds.map(id => ctx.db.get(id)));
+    const studentMap = new Map(students.map(s => [s._id, s]));
+
+    // 5. Calculate metrics
+    const totalClasses = classes.length;
+    const attendedClasses = classes.filter(c => c.attended).length;
+    const attendanceRate = totalClasses > 0 
+      ? Math.round((attendedClasses / totalClasses) * 100) 
+      : 0;
+    
+    return {
+      totalClasses,
+      attendanceRate,
+      activeStudents: studentIds.length,
+      avgClassCount: /* calculation */
+    };
+  }
+});
+```
+
+**Frontend Pattern:**
+
+```tsx
+// ✅ CORRECT - Analytics modal with summary cards and data table
+export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
+  const { t, language } = useLanguage();
+  
+  // Date range state (defaults to last 30 days)
+  const [startDate, setStartDate] = useState<number>(
+    Date.now() - 30 * 24 * 60 * 60 * 1000
+  );
+  const [endDate, setEndDate] = useState<number>(Date.now());
+
+  // Fetch analytics data
+  const summaryData = useQuery(api.analytics.getSummaryAnalytics, {
+    userId,
+    startDate,
+    endDate,
+  });
+
+  const studentPerformanceData = useQuery(api.analytics.getStudentPerformance, {
+    userId,
+    startDate,
+    endDate,
+  });
+
+  // CSV Export
+  const handleExportCSV = () => {
+    if (!studentPerformanceData) return;
+    
+    const headers = [
+      language === "en" ? "Student Name" : "ชื่อนักเรียน",
+      language === "en" ? "Total Classes" : "คลาสทั้งหมด",
+      language === "en" ? "Attended" : "เข้าเรียน",
+      language === "en" ? "Attendance Rate" : "อัตราเข้าเรียน",
+      language === "en" ? "Avg ClassCount" : "ClassCount เฉลี่ย",
+      language === "en" ? "Rating" : "การประเมิน"
+    ];
+
+    const rows = studentPerformanceData.map((student) => [
+      student.studentName,
+      student.totalClasses,
+      student.attendedClasses,
+      `${student.attendanceRate}%`,
+      student.avgClassCount.toFixed(2),
+      getRatingText(student.performanceRating)[language]
+    ]);
+
+    const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `class-analytics-${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-6xl w-full flex flex-col max-h-[85vh]">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Total Classes, Attendance Rate, Active Students, Avg ClassCount */}
+        </div>
+        
+        {/* Student Performance Table */}
+        <div className="overflow-y-auto flex-grow">
+          <table className="w-full">
+            {/* Color-coded ratings */}
+          </table>
+        </div>
+        
+        {/* Export Button */}
+        <button onClick={handleExportCSV}>
+          <Download className="w-4 h-4" />
+          {t("Export CSV", "ส่งออก CSV")}
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+**Key Rules:**
+
+1. **Role-Based Access**: Query only data user is authorized to see (teacher/moderator/admin)
+2. **Index-Based Queries**: ALWAYS use `.withIndex()` to avoid table scans
+3. **Batch Fetching**: Use `Promise.all()` and Map lookups to prevent N+1 queries
+4. **Type Safety**: Use explicit `Doc<"classes">[]` type annotations
+5. **Date Range Filtering**: Default to reasonable period (e.g., last 30 days)
+6. **Performance Ratings**: Color-code metrics (green/blue/yellow) for quick insights
+7. **CSV Export**: Provide bilingual headers and proper data formatting
+8. **Empty States**: Handle zero data gracefully with user-friendly messages
+9. **Loading States**: Show loading indicators during data fetch
+10. **Responsive Design**: Mobile-friendly cards and tables
+
+**Performance Optimizations:**
+
+- Index-based queries reduce query time from seconds to milliseconds
+- Batch fetching prevents N+1 problems (1 query instead of N queries)
+- Map lookups provide O(1) access instead of O(n) array `.find()`
+- Duration-based calculations (minutes / 60) computed server-side
+
+**Related Files:**
+
+- `components/class-analytics.tsx` – Analytics modal with summary cards and table
+- `convex/analytics.ts` – Backend queries with role-based access control
+- `components/class-booking.tsx` – Integration point (Analytics button)
+
+**Integration Example:**
+
+```tsx
+// In class-booking.tsx
+const [showAnalytics, setShowAnalytics] = useState(false);
+
+<button onClick={() => setShowAnalytics(true)}>
+  <BarChart3 className="w-5 h-5" />
+  {t("Analytics", "การวิเคราะห์")}
+</button>
+
+{showAnalytics && (
+  <ClassAnalytics 
+    userId={currentUser._id} 
+    onClose={() => setShowAnalytics(false)} 
+  />
+)}
+```
+
+**User Impact:**
+
+- Teachers: Track individual student performance and attendance
+- Moderators: Monitor school-wide trends and teacher effectiveness
+- Admins: System-wide insights for strategic decision-making

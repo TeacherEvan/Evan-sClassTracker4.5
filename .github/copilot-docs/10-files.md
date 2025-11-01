@@ -101,6 +101,19 @@
 - Cycle management
 - Confirmation flow for cycle changes
 
+**`convex/analytics.ts`**
+
+- Educational performance metrics
+- Role-based analytics (teacher/moderator/admin)
+- Summary analytics (total classes, attendance rate, active students, avg ClassCount)
+- Student performance analysis with ratings
+- Index-based queries with batch fetching
+- Type-safe with Doc<"classes">[] annotations
+
+**`convex/notifications.ts`**
+- Cycle management
+- Confirmation flow for cycle changes
+
 **`convex/notifications.ts`**
 
 - System-generated notifications
@@ -183,6 +196,17 @@
 - Filters and statistics
 - CSV export
 - Full audit trail
+
+**`components/class-analytics.tsx`**
+
+- Analytics dashboard modal
+- 4 summary cards (Total Classes, Attendance Rate, Active Students, Avg ClassCount)
+- Student performance table with color-coded ratings
+- Date range filtering
+- CSV export functionality
+- Role-based data access
+- Bilingual support
+- Responsive design
 
 **`components/sangsom-delete-button.tsx`**
 
