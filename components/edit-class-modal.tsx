@@ -495,19 +495,23 @@ export function EditClassModal({
                                         </label>
                                         <div className="space-y-2">
                                             {/* Primary Student */}
-                                            {students && (
-                                                <div className="flex items-center justify-between p-3 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-lg">
-                                                    <div className="flex items-center gap-2">
-                                                        <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                                        <span className="font-medium text-blue-900 dark:text-blue-100">
-                                                            {students.find(s => s._id === studentId)?.firstName} {students.find(s => s._id === studentId)?.lastName}
-                                                        </span>
-                                                        <span className="text-xs px-2 py-0.5 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded">
-                                                            {t("Primary", "หลัก")}
-                                                        </span>
+                                            {students && (() => {
+                                                const primaryStudent = students.find(s => s._id === studentId);
+                                                if (!primaryStudent) return null;
+                                                return (
+                                                    <div className="flex items-center justify-between p-3 bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 rounded-lg">
+                                                        <div className="flex items-center gap-2">
+                                                            <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                                            <span className="font-medium text-blue-900 dark:text-blue-100">
+                                                                {primaryStudent.firstName} {primaryStudent.lastName}
+                                                            </span>
+                                                            <span className="text-xs px-2 py-0.5 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded">
+                                                                {t("Primary", "หลัก")}
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            )}
+                                                );
+                                            })()}
 
                                             {/* Additional Students */}
                                             {currentAdditionalStudents.length > 0 && students && currentAdditionalStudents.map((addStudentId) => {
@@ -573,14 +577,18 @@ export function EditClassModal({
                                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-gray-700"
                                         >
                                             <option value="">{t("-- Select Student --", "-- เลือกนักเรียน --")}</option>
-                                            {students?.filter(s => 
-                                                s._id !== studentId && // Not the primary student
-                                                !currentAdditionalStudents.includes(s._id) // Not already added
-                                            ).map((student) => (
-                                                <option key={student._id} value={student._id}>
-                                                    {student.firstName} {student.lastName} ({student.grade}{student.class})
-                                                </option>
-                                            ))}
+                                            {students && (() => {
+                                                // Use Set for O(1) lookup performance
+                                                const additionalStudentsSet = new Set(currentAdditionalStudents);
+                                                return students.filter(s => 
+                                                    s._id !== studentId && // Not the primary student
+                                                    !additionalStudentsSet.has(s._id) // Not already added
+                                                ).map((student) => (
+                                                    <option key={student._id} value={student._id}>
+                                                        {student.firstName} {student.lastName} ({student.grade}{student.class})
+                                                    </option>
+                                                ));
+                                            })()}
                                         </select>
                                     </div>
 
