@@ -38,6 +38,7 @@ import type * as rateLimit from "../rateLimit.js";
 import type * as schools from "../schools.js";
 import type * as search from "../search.js";
 import type * as seedAppUpdate from "../seedAppUpdate.js";
+import type * as seedPrivateClasses from "../seedPrivateClasses.js";
 import type * as seedSangsomProject from "../seedSangsomProject.js";
 import type * as simpleAnalytics from "../simpleAnalytics.js";
 import type * as students from "../students.js";
@@ -91,6 +92,7 @@ declare const fullApi: ApiFromModules<{
   schools: typeof schools;
   search: typeof search;
   seedAppUpdate: typeof seedAppUpdate;
+  seedPrivateClasses: typeof seedPrivateClasses;
   seedSangsomProject: typeof seedSangsomProject;
   simpleAnalytics: typeof simpleAnalytics;
   students: typeof students;

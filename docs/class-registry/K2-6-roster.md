@@ -1,3 +1,5 @@
+<!-- cspell:ignore Sangsom BEYA CELINE ASHI KHUN TINTIN LULLALIN GYPSY SANSAN LALIN DAIWA NAMI PUNN DJENT KACCHAN -->
+
 # K2/6 Class Roster
 
 **Sangsom Kindergarten**  

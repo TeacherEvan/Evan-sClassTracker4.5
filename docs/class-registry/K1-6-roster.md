@@ -1,3 +1,5 @@
+<!-- cspell:ignore Sangsom ING JEDI WINNIE AYA GOMU MUNGKORN Leica TAIGA PREME MICKEY PUMA LALYN PHUGAN AKIM MINNIE DARIN EUPEACH Piglet Thee IRENE NITAN -->
+
 # K1/6 Class Roster
 
 **Sangsom Kindergarten**  

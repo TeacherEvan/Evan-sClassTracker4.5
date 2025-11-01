@@ -1,3 +1,5 @@
+<!-- cspell:ignore Sangsom AHLINN NATEE PUNN NADA ONGSA PAPANG PEACHII MOEY PLAWAN KARTOON CHUN TYME ARPRO Lalyn -->
+
 # K1/5 Class Roster
 
 **Sangsom Kindergarten**  

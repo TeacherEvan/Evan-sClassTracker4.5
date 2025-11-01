@@ -1,3 +1,5 @@
+<!-- cspell:ignore Sangsom MAPRAW PHAENG MEWNA KAEMSAI SUEA SETIN NICHA PHUKHAO ANYA TANKHUN MANOW RAYNE -->
+
 # K1/1 Class Roster
 
 **Sangsom Kindergarten**  

@@ -1,3 +1,5 @@
+<!-- cspell:ignore Sangsom LALYN -->
+
 # Sangsom Class Registry Index
 
 **School:** Sangsom Kindergarten  

@@ -1,3 +1,5 @@
+<!-- cspell:ignore Sangsom NAPHAT Harbin THAMES PROUD SHANE BUBU MILYN TARYN PUNN TAITAI LALYNN FOND JENNINE SUEA Pangping CELINE CHILYN -->
+
 # K1/9 Class Roster
 
 **Sangsom Kindergarten**  
