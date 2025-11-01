@@ -175,8 +175,8 @@ export function MultiDateCalendar({
 
             {/* Day names */}
             <div className="grid grid-cols-7 gap-1 mb-2">
-                {dayNames.map((day) => (
-                    <div key={day} className="text-center text-sm font-medium text-gray-600 dark:text-gray-400 py-2">
+                {dayNames.map((day, index) => (
+                    <div key={`day-${index}`} className="text-center text-sm font-medium text-gray-600 dark:text-gray-400 py-2">
                         {day}
                     </div>
                 ))}
