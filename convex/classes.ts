@@ -2240,6 +2240,139 @@ export const findRecurringSeries = query({
 });
 
 /**
+ * Bulk Approve Classes Mutation
+ * Allows moderators/admins to approve multiple classes at once (e.g., recurring bookings)
+ * SECURITY: Requires moderator or admin role, school-scoped for moderators
+ */
+export const bulkApprove = mutation({
+  args: {
+    userId: v.id("users"),
+    classIds: v.array(v.id("classes")),
+    teacherId: v.optional(v.id("users")), // For filtering classes by teacher
+    dateRange: v.optional(v.object({
+      startDate: v.number(),
+      endDate: v.number(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    // 1. Verify user and role
+    const user = await ctx.db.get(args.userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.role !== "moderator" && user.role !== "admin") {
+      throw new Error("Unauthorized: Only moderators and admins can bulk approve classes");
+    }
+
+    // 2. Validate batch size
+    if (args.classIds.length > 100) {
+      throw new Error("Maximum 100 classes can be approved at once");
+    }
+
+    const results = {
+      approved: 0,
+      skipped: 0,
+      failed: [] as Array<{ classId: string; error: string; studentName?: string }>,
+    };
+
+    // 3. Batch fetch all classes to approve
+    const classes = await Promise.all(
+      args.classIds.map(id => ctx.db.get(id))
+    );
+
+    // 4. Process each class
+    for (let i = 0; i < classes.length; i++) {
+      const classData = classes[i];
+      const classId = args.classIds[i];
+
+      if (!classData) {
+        results.failed.push({
+          classId: classId.toString(),
+          error: "Class not found",
+        });
+        continue;
+      }
+
+      try {
+        // Authorization check: moderators can only approve their school
+        if (user.role === "moderator") {
+          if (!user.schoolId || classData.schoolId !== user.schoolId) {
+            results.failed.push({
+              classId: classId.toString(),
+              error: "Unauthorized: Can only approve classes from your assigned school",
+            });
+            continue;
+          }
+        }
+
+        // Skip if already approved
+        if (classData.status === "approved") {
+          results.skipped++;
+          continue;
+        }
+
+        // Skip if rejected (require manual review)
+        if (classData.status === "rejected") {
+          results.failed.push({
+            classId: classId.toString(),
+            error: "Cannot bulk approve rejected classes",
+          });
+          continue;
+        }
+
+        // Approve the class
+        await ctx.db.patch(classId, {
+          status: "approved",
+          approvedByUserId: user._id,
+          approvedByUsername: user.username,
+          approvedAt: Date.now(),
+          approvalSource: user.role === "admin" ? "admin" : "moderator",
+        });
+
+        results.approved++;
+
+      } catch (error) {
+        results.failed.push({
+          classId: classId.toString(),
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }
+
+    // 5. Create single bulk notification to teacher
+    if (results.approved > 0 && args.teacherId) {
+      const teacher = await ctx.db.get(args.teacherId);
+      if (teacher) {
+        await ctx.db.insert("notifications", {
+          title: "Classes Bulk Approved",
+          titleTh: "อนุมัติชั้นเรียนจำนวนมาก",
+          message: `${results.approved} of your class requests have been approved by ${user.username}.`,
+          messageTh: `${results.approved} คำขอชั้นเรียนของคุณได้รับการอนุมัติโดย ${user.username}`,
+          type: "success",
+          userId: args.teacherId,
+          read: false,
+          createdAt: Date.now(),
+        });
+      }
+    }
+
+    // 6. Log audit trail
+    await logAudit(ctx, {
+      userId: args.userId,
+      action: "BULK_APPROVE_CLASSES" as const,
+      targetType: "CLASSES" as const,
+      targetId: args.classIds[0], // Reference first class ID
+      targetName: `Bulk approved ${results.approved} classes`,
+      reason: `Bulk approval: ${results.approved} approved, ${results.skipped} skipped, ${results.failed.length} failed`,
+      schoolId: user.schoolId,
+    });
+
+    return results;
+  },
+});
+
+/**
  * Delete Recurring Series Mutation
  * Bulk deletes classes in a recurring series with authorization and audit logging
  */

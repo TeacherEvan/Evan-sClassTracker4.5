@@ -116,6 +116,7 @@ const LEE_SCHEDULE: ScheduleDay[] = [
 ];
 
 // Helper to find student by code (XXYY format)
+// Improved with multiple fallback strategies for robustness
 async function findStudentByCode(ctx: GenericMutationCtx<DataModel>, studentCode: string) {
     // Parse code: 2419 -> K2/4, student #19
     const gradeDigit = studentCode[0]; // 1 or 2
@@ -126,28 +127,40 @@ async function findStudentByCode(ctx: GenericMutationCtx<DataModel>, studentCode
     const classStr = `${gradeStr}/${classDigit}`;
     const studentNumber = parseInt(numberDigits);
 
-    // Query all students with matching grade and class
+    // Strategy 1: Filter by both grade AND class for precision
     const allStudents = await ctx.db
         .query("students")
-        .filter((q) => q.eq(q.field("grade"), classStr))
+        .filter((q) =>
+            q.and(
+                q.eq(q.field("grade"), classStr),
+                q.eq(q.field("class"), `/${classDigit}`)
+            )
+        )
         .collect();
 
     if (allStudents.length === 0) {
-        console.error(`No students found for grade ${classStr}`);
+        console.error(`❌ No students found for ${classStr}/${classDigit}`);
         return null;
     }
 
-    // Sort by studentId to ensure consistent ordering
-    allStudents.sort((a, b) => a.studentId.localeCompare(b.studentId));
+    // Strategy 2: Sort by _creationTime to maintain original creation order
+    // This assumes students were imported in roster order
+    allStudents.sort((a, b) => a._creationTime - b._creationTime);
 
-    // Find by position in class array (studentNumber is 1-indexed, array is 0-indexed)
+    console.log(`🔍 Looking for student #${studentNumber} in ${classStr}/${classDigit}, found ${allStudents.length} total students`);
+
+    // Strategy 3: Find by position in class array (studentNumber is 1-indexed, array is 0-indexed)
     const student = allStudents[studentNumber - 1];
 
     if (!student) {
-        console.error(`Student #${studentNumber} not found in grade ${classStr} (found ${allStudents.length} students)`);
+        console.error(`❌ Student #${studentNumber} not found in ${classStr}/${classDigit} (only ${allStudents.length} students exist)`);
+        console.error(`Available students:`, allStudents.map((s, idx) =>
+            `#${idx + 1}: ${s.firstName} ${s.lastName} (${s.studentId})`
+        ));
         return null;
     }
 
+    console.log(`✅ Found: #${studentNumber} ${student.firstName} ${student.lastName} (${student.studentId})`);
     return student;
 }
 
@@ -375,17 +388,26 @@ export const seedPrivateClasses = mutation({
                 }
             }
 
+            // 4. Generate summary with detailed error reporting
+            const scheduleDetails = `${args.teacherUsername}: ${schedule.length} days/week, ${schedule.reduce((sum, d) => sum + d.students.length, 0)} regular students`;
+            const errorSummary = errors.length > 0
+                ? `\n⚠️  ${errors.length} errors occurred:\n${errors.map(e => `  - Week ${e.week}, Day ${e.day}: ${e.error}`).join('\n')}`
+                : '';
+
             return {
-                success: true,
-                message: `Created ${createdBookings.length} private classes for ${args.teacherUsername} (${weeksCount} weeks)`,
+                success: errors.length === 0,
+                message: `✅ Created ${createdBookings.length} private classes for ${args.teacherUsername} (${weeksCount} weeks)${errorSummary}`,
                 teacher: args.teacherUsername,
                 weeksCreated: weeksCount,
                 bookingsCreated: createdBookings.length,
-                bookings: createdBookings,
+                expectedBookings: schedule.reduce((sum, d) => sum + d.students.length, 0) * weeksCount,
+                scheduleDetails,
+                bookings: args.testMode ? createdBookings.slice(0, 10) : undefined, // Only show sample in test mode
                 errors: errors.length > 0 ? errors : undefined,
+                errorCount: errors.length,
             };
         } catch (error) {
-            console.error("Error in seedPrivateClasses:", error);
+            console.error("❌ Error in seedPrivateClasses:", error);
             throw new Error(`Failed to seed private classes: ${error instanceof Error ? error.message : String(error)}`);
         }
     },

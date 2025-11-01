@@ -165,6 +165,7 @@ export const AuditActions = {
     // Class Management
     DELETE_CLASS: "delete_class",
     BULK_DELETE_CLASSES: "bulk_delete_classes",
+    BULK_APPROVE_CLASSES: "bulk_approve_classes",
     EDIT_CLASS: "edit_class",
     APPROVE_CLASS: "approve_class",
     REJECT_CLASS: "reject_class",

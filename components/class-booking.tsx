@@ -219,6 +219,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const [filterTeacherId, setFilterTeacherId] = useState<Id<"users"> | "all">("all");
   const [filterSchoolId, setFilterSchoolId] = useState<Id<"schools"> | "all">("all");
   const [filterStudentId, setFilterStudentId] = useState<Id<"students"> | "all">("all");
+  const [filterGrade, setFilterGrade] = useState<string>("all");
+  const [filterClass, setFilterClass] = useState<string>("all");
 
   // Hierarchical display state - track which students are expanded
   const [expandedStudents, setExpandedStudents] = useState<Set<Id<"students">>>(new Set());
@@ -909,6 +911,58 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                 </select>
               </div>
 
+              {/* Grade Filter */}
+              <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
+                <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                  <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  {t("Filter by Grade", "กรองตามชั้น")}
+                </label>
+                <select
+                  value={filterGrade}
+                  onChange={(e) => setFilterGrade(e.target.value)}
+                  className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
+                >
+                  <option value="all">{t("All Grades", "ชั้นทั้งหมด")}</option>
+                  {/* Get unique grades from classes */}
+                  {Array.from(new Set(classes.map(c => c.student?.grade).filter(Boolean)))
+                    .sort()
+                    .map(grade => (
+                      <option key={grade} value={grade}>
+                        {grade}
+                      </option>
+                    ))
+                  }
+                </select>
+              </div>
+
+              {/* Class Filter */}
+              <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
+                <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
+                  <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  {t("Filter by Class", "กรองตามห้อง")}
+                </label>
+                <select
+                  value={filterClass}
+                  onChange={(e) => setFilterClass(e.target.value)}
+                  className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
+                >
+                  <option value="all">{t("All Classes", "ห้องทั้งหมด")}</option>
+                  {/* Get unique classes from classes */}
+                  {Array.from(new Set(classes.map(c => c.student?.class).filter(Boolean)))
+                    .sort()
+                    .map(cls => (
+                      <option key={cls} value={cls}>
+                        {cls}
+                      </option>
+                    ))
+                  }
+                </select>
+              </div>
+
               {/* Filter Summary & Clear Button */}
               <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2">
                 <div className="bg-white dark:bg-gray-700 rounded-lg px-4 py-3 shadow-sm flex-1">
@@ -918,6 +972,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                         if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
                         if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
                         if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
+                        if (filterGrade !== "all" && classItem.student?.grade !== filterGrade) return false;
+                        if (filterClass !== "all" && classItem.student?.class !== filterClass) return false;
                         return true;
                       }).length;
                       return (
@@ -936,13 +992,15 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     })()}
                   </div>
                 </div>
-                {(filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all") && (
+                {(filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all" || filterGrade !== "all" || filterClass !== "all") && (
                   <button
                     type="button"
                     onClick={() => {
                       setFilterTeacherId("all");
                       setFilterSchoolId("all");
                       setFilterStudentId("all");
+                      setFilterGrade("all");
+                      setFilterClass("all");
                     }}
                     className="px-6 py-3 md:py-2.5 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl md:rounded-lg hover:from-red-600 hover:to-pink-700 active:scale-95 transition-all font-semibold shadow-lg text-base md:text-sm flex items-center justify-center gap-2 touch-manipulation"
                   >
@@ -1888,11 +1946,13 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
               if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
               if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
               if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
+              if (filterGrade !== "all" && classItem.student?.grade !== filterGrade) return false;
+              if (filterClass !== "all" && classItem.student?.class !== filterClass) return false;
               return true;
             }) || [];
 
             // When ANY filter is active, group by student for hierarchical navigation
-            const hasActiveFilters = filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all";
+            const hasActiveFilters = filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all" || filterGrade !== "all" || filterClass !== "all";
 
             if (hasActiveFilters && filteredClasses.length > 0) {
               // Group classes by student
@@ -2037,12 +2097,14 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
             if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
             if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
             if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
+            if (filterGrade !== "all" && classItem.student?.grade !== filterGrade) return false;
+            if (filterClass !== "all" && classItem.student?.class !== filterClass) return false;
             return true;
           }).length === 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center text-gray-500 dark:text-gray-400">
                 <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p className="text-sm">
-                  {(filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all") ? (
+                  {(filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all" || filterGrade !== "all" || filterClass !== "all") ? (
                     t("No classes match the selected filters", "ไม่พบคลาสที่ตรงกับตัวกรองที่เลือก")
                   ) : (
                     userRole === "moderator" || userRole === "admin"
