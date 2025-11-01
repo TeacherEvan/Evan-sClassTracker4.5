@@ -126,14 +126,27 @@ async function findStudentByCode(ctx: GenericMutationCtx<DataModel>, studentCode
     const classStr = `${gradeStr}/${classDigit}`;
     const studentNumber = parseInt(numberDigits);
 
-    // Query all students with matching grade
+    // Query all students with matching grade and class
     const allStudents = await ctx.db
         .query("students")
         .filter((q) => q.eq(q.field("grade"), classStr))
         .collect();
 
+    if (allStudents.length === 0) {
+        console.error(`No students found for grade ${classStr}`);
+        return null;
+    }
+
+    // Sort by studentId to ensure consistent ordering
+    allStudents.sort((a, b) => a.studentId.localeCompare(b.studentId));
+
     // Find by position in class array (studentNumber is 1-indexed, array is 0-indexed)
     const student = allStudents[studentNumber - 1];
+
+    if (!student) {
+        console.error(`Student #${studentNumber} not found in grade ${classStr} (found ${allStudents.length} students)`);
+        return null;
+    }
 
     return student;
 }
@@ -145,135 +158,93 @@ export const seedPrivateClasses = mutation({
         testMode: v.optional(v.boolean()), // If true, only creates Week 1
     },
     handler: async (ctx, args) => {
-        const weeksCount = args.testMode ? 1 : (args.weeksCount || 12);
-        const schedule =
-            args.teacherUsername === "Che" ? CHE_SCHEDULE :
-                args.teacherUsername === "Cale" ? CALE_SCHEDULE :
-                    LEE_SCHEDULE;
+        try {
+            const weeksCount = args.testMode ? 1 : (args.weeksCount || 12);
+            const schedule =
+                args.teacherUsername === "Che" ? CHE_SCHEDULE :
+                    args.teacherUsername === "Cale" ? CALE_SCHEDULE :
+                        LEE_SCHEDULE;
 
-        // 1. Get teacher by username
-        const teacher = await ctx.db
-            .query("users")
-            .withIndex("by_username", (q) => q.eq("username", args.teacherUsername))
-            .first();
-
-        if (!teacher) {
-            throw new Error(`Teacher "${args.teacherUsername}" not found`);
-        }
-
-        // Get teacher's school (or use first available school for private classes)
-        let teacherSchoolId = teacher.schoolId;
-        if (!teacherSchoolId) {
-            const firstSchool = await ctx.db.query("schools").first();
-            if (!firstSchool) {
-                throw new Error("No schools found in the system");
-            }
-            teacherSchoolId = firstSchool._id;
-        }
-
-        // 2. Get or create locations
-        const locationNames = [...new Set(schedule.map(s => s.location))];
-        const locations = new Map<string, Id<"locations">>();
-
-        for (const locationName of locationNames) {
-            const location = await ctx.db
-                .query("locations")
-                .filter((q) =>
-                    q.and(
-                        q.eq(q.field("name"), locationName),
-                        q.eq(q.field("isActive"), true)
-                    )
-                )
+            // 1. Get teacher by username
+            const teacher = await ctx.db
+                .query("users")
+                .withIndex("by_username", (q) => q.eq("username", args.teacherUsername))
                 .first();
 
-            if (!location) {
-                // Create location if it doesn't exist
-                const locationId = await ctx.db.insert("locations", {
-                    name: locationName,
-                    nameTh: locationName, // Use same for Thai (can update later)
-                    schoolId: teacherSchoolId, // Use teacher's school or default
-                    type: "guardian", // Private tutoring locations
-                    isActive: true,
-                    createdAt: Date.now(),
-                    createdBy: teacher._id,
-                });
-                locations.set(locationName, locationId);
-            } else {
-                locations.set(locationName, location._id);
+            if (!teacher) {
+                throw new Error(`Teacher "${args.teacherUsername}" not found. Please ensure teacher account exists with username: ${args.teacherUsername}`);
             }
-        }
 
-        // 3. Loop through weeks and create bookings
-        const createdBookings = [];
-        const errors = [];
-        const startDate = new Date("2025-11-04"); // Monday, Nov 4, 2025
-
-        for (let week = 0; week < weeksCount; week++) {
-            for (const daySchedule of schedule) {
-                const classDate = new Date(startDate);
-                classDate.setDate(startDate.getDate() + (week * 7) + (daySchedule.day - 1));
-                classDate.setHours(15, 0, 0, 0); // 15:00 (3:00 PM)
-
-                const locationId = locations.get(daySchedule.location);
-                if (!locationId) {
-                    errors.push({
-                        error: `Location "${daySchedule.location}" not found`,
-                        week: week + 1,
-                        day: daySchedule.day,
-                    });
-                    continue;
+            // Get teacher's school (or use first available school for private classes)
+            let teacherSchoolId = teacher.schoolId;
+            if (!teacherSchoolId) {
+                const firstSchool = await ctx.db.query("schools").first();
+                if (!firstSchool) {
+                    throw new Error("No schools found in the system");
                 }
+                teacherSchoolId = firstSchool._id;
+            }
 
-                // Regular students (all weeks)
-                for (const studentCode of daySchedule.students) {
-                    const student = await findStudentByCode(ctx, studentCode);
+            // 2. Get or create locations
+            const locationNames = [...new Set(schedule.map(s => s.location))];
+            const locations = new Map<string, Id<"locations">>();
 
-                    if (!student) {
+            for (const locationName of locationNames) {
+                const location = await ctx.db
+                    .query("locations")
+                    .filter((q) =>
+                        q.and(
+                            q.eq(q.field("name"), locationName),
+                            q.eq(q.field("isActive"), true)
+                        )
+                    )
+                    .first();
+
+                if (!location) {
+                    // Create location if it doesn't exist
+                    const locationId = await ctx.db.insert("locations", {
+                        name: locationName,
+                        nameTh: locationName, // Use same for Thai (can update later)
+                        schoolId: teacherSchoolId, // Use teacher's school or default
+                        type: "guardian", // Private tutoring locations
+                        isActive: true,
+                        createdAt: Date.now(),
+                        createdBy: teacher._id,
+                    });
+                    locations.set(locationName, locationId);
+                } else {
+                    locations.set(locationName, location._id);
+                }
+            }
+
+            // 3. Loop through weeks and create bookings
+            const createdBookings = [];
+            const errors = [];
+            const startDate = new Date("2025-11-04"); // Monday, Nov 4, 2025
+
+            for (let week = 0; week < weeksCount; week++) {
+                for (const daySchedule of schedule) {
+                    const classDate = new Date(startDate);
+                    classDate.setDate(startDate.getDate() + (week * 7) + (daySchedule.day - 1));
+                    classDate.setHours(15, 0, 0, 0); // 15:00 (3:00 PM)
+
+                    const locationId = locations.get(daySchedule.location);
+                    if (!locationId) {
                         errors.push({
-                            error: `Student ${studentCode} not found`,
+                            error: `Location "${daySchedule.location}" not found`,
                             week: week + 1,
                             day: daySchedule.day,
                         });
                         continue;
                     }
 
-                    try {
-                        const classId = await ctx.db.insert("classes", {
-                            teacherId: teacher._id,
-                            studentId: student._id,
-                            locationId: locationId,
-                            scheduledDate: classDate.getTime(),
-                            status: "approved", // Auto-approved
-                            isGuardianLinked: true, // Private tutoring
-                            guardianTitle: "Private Student",
-                            createdAt: Date.now(),
-                        });
-
-                        createdBookings.push({
-                            classId,
-                            date: classDate.toISOString().split("T")[0],
-                            teacher: args.teacherUsername,
-                            student: `${student.firstName} ${student.lastName}`,
-                            location: daySchedule.location,
-                        });
-                    } catch (err) {
-                        errors.push({
-                            error: `Failed to create class: ${err instanceof Error ? err.message : "Unknown error"}`,
-                            studentCode,
-                            week: week + 1,
-                            day: daySchedule.day,
-                        });
-                    }
-                }
-
-                // One-time students (first occurrence only)
-                if (week === 0 && daySchedule.oneTimeStudents) {
-                    for (const studentCode of daySchedule.oneTimeStudents) {
+                    // Regular students (all weeks)
+                    for (const studentCode of daySchedule.students) {
                         const student = await findStudentByCode(ctx, studentCode);
 
                         if (!student) {
                             errors.push({
-                                error: `One-time student ${studentCode} not found`,
+                                error: `Student ${studentCode} not found`,
                                 week: week + 1,
                                 day: daySchedule.day,
                             });
@@ -286,9 +257,9 @@ export const seedPrivateClasses = mutation({
                                 studentId: student._id,
                                 locationId: locationId,
                                 scheduledDate: classDate.getTime(),
-                                status: "approved",
-                                isGuardianLinked: true,
-                                guardianTitle: "Private Student (One-Time)",
+                                status: "approved", // Auto-approved
+                                isGuardianLinked: true, // Private tutoring
+                                guardianTitle: "Private Student",
                                 createdAt: Date.now(),
                             });
 
@@ -296,32 +267,27 @@ export const seedPrivateClasses = mutation({
                                 classId,
                                 date: classDate.toISOString().split("T")[0],
                                 teacher: args.teacherUsername,
-                                student: `${student.firstName} ${student.lastName} (ONE-TIME)`,
+                                student: `${student.firstName} ${student.lastName}`,
                                 location: daySchedule.location,
                             });
                         } catch (err) {
                             errors.push({
-                                error: `Failed to create one-time class: ${err instanceof Error ? err.message : "Unknown error"}`,
+                                error: `Failed to create class: ${err instanceof Error ? err.message : "Unknown error"}`,
                                 studentCode,
                                 week: week + 1,
                                 day: daySchedule.day,
                             });
                         }
                     }
-                }
 
-                // Date-range students (within specific dates)
-                if (daySchedule.dateRangeStudents) {
-                    for (const rangeStudent of daySchedule.dateRangeStudents) {
-                        const classTimestamp = classDate.getTime();
-
-                        // Only create if within date range
-                        if (classTimestamp >= rangeStudent.startDate && classTimestamp <= rangeStudent.endDate) {
-                            const student = await findStudentByCode(ctx, rangeStudent.code);
+                    // One-time students (first occurrence only)
+                    if (week === 0 && daySchedule.oneTimeStudents) {
+                        for (const studentCode of daySchedule.oneTimeStudents) {
+                            const student = await findStudentByCode(ctx, studentCode);
 
                             if (!student) {
                                 errors.push({
-                                    error: `Date-range student ${rangeStudent.code} not found`,
+                                    error: `One-time student ${studentCode} not found`,
                                     week: week + 1,
                                     day: daySchedule.day,
                                 });
@@ -336,7 +302,7 @@ export const seedPrivateClasses = mutation({
                                     scheduledDate: classDate.getTime(),
                                     status: "approved",
                                     isGuardianLinked: true,
-                                    guardianTitle: "Private Student (Date Range)",
+                                    guardianTitle: "Private Student (One-Time)",
                                     createdAt: Date.now(),
                                 });
 
@@ -344,32 +310,84 @@ export const seedPrivateClasses = mutation({
                                     classId,
                                     date: classDate.toISOString().split("T")[0],
                                     teacher: args.teacherUsername,
-                                    student: `${student.firstName} ${student.lastName} (DATE RANGE)`,
+                                    student: `${student.firstName} ${student.lastName} (ONE-TIME)`,
                                     location: daySchedule.location,
                                 });
                             } catch (err) {
                                 errors.push({
-                                    error: `Failed to create date-range class: ${err instanceof Error ? err.message : "Unknown error"}`,
-                                    studentCode: rangeStudent.code,
+                                    error: `Failed to create one-time class: ${err instanceof Error ? err.message : "Unknown error"}`,
+                                    studentCode,
                                     week: week + 1,
                                     day: daySchedule.day,
                                 });
                             }
                         }
                     }
+
+                    // Date-range students (within specific dates)
+                    if (daySchedule.dateRangeStudents) {
+                        for (const rangeStudent of daySchedule.dateRangeStudents) {
+                            const classTimestamp = classDate.getTime();
+
+                            // Only create if within date range
+                            if (classTimestamp >= rangeStudent.startDate && classTimestamp <= rangeStudent.endDate) {
+                                const student = await findStudentByCode(ctx, rangeStudent.code);
+
+                                if (!student) {
+                                    errors.push({
+                                        error: `Date-range student ${rangeStudent.code} not found`,
+                                        week: week + 1,
+                                        day: daySchedule.day,
+                                    });
+                                    continue;
+                                }
+
+                                try {
+                                    const classId = await ctx.db.insert("classes", {
+                                        teacherId: teacher._id,
+                                        studentId: student._id,
+                                        locationId: locationId,
+                                        scheduledDate: classDate.getTime(),
+                                        status: "approved",
+                                        isGuardianLinked: true,
+                                        guardianTitle: "Private Student (Date Range)",
+                                        createdAt: Date.now(),
+                                    });
+
+                                    createdBookings.push({
+                                        classId,
+                                        date: classDate.toISOString().split("T")[0],
+                                        teacher: args.teacherUsername,
+                                        student: `${student.firstName} ${student.lastName} (DATE RANGE)`,
+                                        location: daySchedule.location,
+                                    });
+                                } catch (err) {
+                                    errors.push({
+                                        error: `Failed to create date-range class: ${err instanceof Error ? err.message : "Unknown error"}`,
+                                        studentCode: rangeStudent.code,
+                                        week: week + 1,
+                                        day: daySchedule.day,
+                                    });
+                                }
+                            }
+                        }
+                    }
                 }
             }
-        }
 
-        return {
-            success: true,
-            message: `Created ${createdBookings.length} private classes for ${args.teacherUsername} (${weeksCount} weeks)`,
-            teacher: args.teacherUsername,
-            weeksCreated: weeksCount,
-            bookingsCreated: createdBookings.length,
-            bookings: createdBookings,
-            errors: errors.length > 0 ? errors : undefined,
-        };
+            return {
+                success: true,
+                message: `Created ${createdBookings.length} private classes for ${args.teacherUsername} (${weeksCount} weeks)`,
+                teacher: args.teacherUsername,
+                weeksCreated: weeksCount,
+                bookingsCreated: createdBookings.length,
+                bookings: createdBookings,
+                errors: errors.length > 0 ? errors : undefined,
+            };
+        } catch (error) {
+            console.error("Error in seedPrivateClasses:", error);
+            throw new Error(`Failed to seed private classes: ${error instanceof Error ? error.message : String(error)}`);
+        }
     },
 });
 
