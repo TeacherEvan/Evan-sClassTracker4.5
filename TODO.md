@@ -4,6 +4,85 @@
 
 ---
 
+## 📊 2025 System Audit - Priority Recommendations
+
+**Audit Completed:** November 1, 2025  
+**Full Report:** See `AUDIT_REPORT_2025.md` and `OPTIMIZATION_ROADMAP.md`  
+**Overall Grade:** A- (Excellent with room for optimization)
+
+### 🔴 High Priority (Next 30 Days)
+
+**1. Accessibility Audit & WCAG 2.1 Compliance** (16-24 hours)
+- [ ] Install ESLint accessibility plugin (`eslint-plugin-jsx-a11y`)
+- [ ] Add ARIA labels to 150+ interactive elements
+- [ ] Implement keyboard navigation for all modals
+- [ ] Fix color contrast issues (target: 4.5:1 minimum)
+- [ ] Test with NVDA (Windows) and VoiceOver (Mac) screen readers
+- [ ] Generate Lighthouse accessibility report (target: ≥95 score)
+- [ ] Document findings in `ACCESSIBILITY_REPORT.md`
+
+**Why:** Legal compliance + inclusive design (WCAG 2.1 Level AA increasingly mandatory)
+
+**2. Bundle Size Analysis & Optimization** (8-12 hours)
+- [ ] Configure bundle analyzer (`@next/bundle-analyzer` already installed)
+- [ ] Run baseline analysis and document results
+- [ ] Split `class-booking.tsx` (3,115 lines) into modular components
+- [ ] Identify Server Component candidates (convert 3-5 components)
+- [ ] Re-run analysis and measure improvements (target: <300KB client bundle)
+- [ ] Document in `BUNDLE_ANALYSIS_RESULTS.md`
+
+**Why:** 30-40% faster initial load, better mobile experience
+
+**3. Fix npm Vulnerability** (1 hour)
+- [ ] Run `npm audit fix` to update tar package
+- [ ] Verify build and tests pass
+- [ ] Add security audit to CI/CD (`.github/workflows/security-audit.yml`)
+- [ ] Document resolution in `SECURITY_AUDIT_LOG.md`
+
+**Why:** Security hygiene, prepare for compliance scans
+
+### 🟡 Medium Priority (Q1 2026)
+
+**4. Feature Discoverability Enhancements** (12-16 hours)
+- [ ] Create Student Creation Wizard (following `booking-wizard.tsx` pattern)
+- [ ] Create User Management Wizard
+- [ ] Implement first-time user tour (using `react-joyride` or `driver.js`)
+- [ ] Add contextual tooltips to complex features
+- [ ] Target: User onboarding time <5 minutes
+
+**5. Enhanced Error Messaging** (4-6 hours)
+- [ ] Create error code system (`lib/errors.ts`)
+- [ ] Audit all catch blocks (~150-200 instances)
+- [ ] Replace generic messages with descriptive bilingual errors
+- [ ] Add error code tracking in logs
+
+**6. Unit Test Coverage** (16-24 hours)
+- [ ] Set up Vitest testing framework
+- [ ] Write tests for critical Convex functions (classes.ts, users.ts, analytics.ts)
+- [ ] Target 60%+ backend test coverage
+- [ ] Add test coverage to CI/CD
+- [ ] Document testing guidelines
+
+### 🟢 Low Priority (Nice to Have)
+
+**7. Storybook Component Library** (8-12 hours)
+- [ ] Initialize Storybook
+- [ ] Document 10 core components
+- [ ] Add visual regression testing
+
+**8. Progressive Security Hardening** (12-16 hours) - Only if deploying publicly
+- [ ] Migrate to bcrypt password hashing
+- [ ] Implement HttpOnly cookie sessions
+- [ ] Add CSRF protection
+- [ ] Progressive login delays
+
+**9. Mobile UX Enhancements** (12-16 hours)
+- [ ] Implement bottom sheets for actions
+- [ ] Add haptic feedback
+- [ ] Optimize forms for mobile (progressive disclosure)
+
+---
+
 ## 🚀 New Features
 
 _No new features planned at this time_
