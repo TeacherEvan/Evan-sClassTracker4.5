@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { login, navigateToTab, TEST_USERS, waitForToast } from './helpers';
+import { login, navigateToTab, TEST_USERS } from './helpers';
 
 test.describe('Merge Classes Multi-Select Feature', () => {
     test.beforeEach(async ({ page }) => {
@@ -270,12 +270,8 @@ test.describe('Merge Classes Multi-Select Feature', () => {
                 // Enable the group
                 await groupCheckboxes.first().click();
 
-                // Wait a bit for UI update
-                await page.waitForTimeout(200);
-
-                // Check updated state (should have purple border)
-                const updatedClass = await firstGroup.getAttribute('class');
-                expect(updatedClass).toContain('border-purple');
+                // Wait for purple border class to be applied
+                await expect(firstGroup).toHaveClass(/border-purple/);
             }
 
             // Close modal

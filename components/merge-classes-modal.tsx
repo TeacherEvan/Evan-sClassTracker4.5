@@ -151,7 +151,13 @@ export function MergeClassesModal({
         let failCount = 0;
 
         for (const group of groupsToMerge) {
-            const selection = groupSelections.get(group.key)!;
+            const selection = groupSelections.get(group.key);
+            
+            // Defensive check: skip if selection is undefined
+            if (!selection) {
+                console.error(`Selection missing for group ${group.key}`);
+                continue;
+            }
             
             // Update status to merging
             setGroupSelections(prev => {
@@ -190,6 +196,8 @@ export function MergeClassesModal({
 
         setLoading(false);
 
+        const AUTO_CLOSE_DELAY_MS = 1000;
+
         // Show summary toast
         if (successCount > 0 && failCount === 0) {
             toast.success(
@@ -197,8 +205,8 @@ export function MergeClassesModal({
                 `รวมคลาสสำเร็จ ${successCount} กลุ่ม!`
             );
             onSuccess();
-            // Auto-close after 1 second
-            setTimeout(() => onClose(), 1000);
+            // Auto-close after delay
+            setTimeout(() => onClose(), AUTO_CLOSE_DELAY_MS);
         } else if (successCount > 0 && failCount > 0) {
             toast.warning(
                 `Merged ${successCount} group(s), ${failCount} failed`,
