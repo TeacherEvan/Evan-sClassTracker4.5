@@ -55,10 +55,13 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: "--prod --yes --build-env NEXT_PUBLIC_CONVEX_URL=${{ needs.deploy-convex.outputs.convex_url }}"
+          # Removed --yes flag: not supported by current Vercel CLI
+          # Non-interactive deployment is ensured by VERCEL_TOKEN
+          vercel-args: "--prod --build-env NEXT_PUBLIC_CONVEX_URL=${{ needs.deploy-convex.outputs.convex_url }}"
 
       - name: Deployment summary
         run: |
           echo "✅ Production deployment complete!"
           echo "🔗 Convex URL: ${{ needs.deploy-convex.outputs.convex_url }}"
           echo "🚀 Vercel deployment: https://vercel.com/${{ secrets.VERCEL_ORG_ID }}/${{ secrets.VERCEL_PROJECT_ID }}"
+          echo "ℹ️  Vercel deploy command updated - removed unsupported --yes flag"

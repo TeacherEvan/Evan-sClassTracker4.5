@@ -54,7 +54,9 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: "--yes --build-env NEXT_PUBLIC_CONVEX_URL=${{ needs.deploy-convex-staging.outputs.convex_url }}"
+          # Removed --yes flag: not supported by current Vercel CLI
+          # Non-interactive deployment is ensured by VERCEL_TOKEN
+          vercel-args: "--build-env NEXT_PUBLIC_CONVEX_URL=${{ needs.deploy-convex-staging.outputs.convex_url }}"
           # No --prod flag = preview/staging deployment
 
       - name: Deployment summary
@@ -62,3 +64,4 @@ jobs:
           echo "✅ Staging deployment complete!"
           echo "🔗 Convex URL: ${{ needs.deploy-convex-staging.outputs.convex_url }}"
           echo "🚀 Vercel preview: Check PR or Vercel dashboard"
+          echo "ℹ️  Vercel deploy command updated - removed unsupported --yes flag"
