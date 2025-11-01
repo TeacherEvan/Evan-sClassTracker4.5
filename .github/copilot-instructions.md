@@ -1,7 +1,7 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.13 (Nov 1, 2025 - Analytics Dashboard Complete)
+**Version:** 4.5.14 (Nov 1, 2025 - Security Patch: Moderator Authorization Fix)
 
 ---
 
@@ -143,15 +143,19 @@ This documentation is split into focused sections for efficient knowledge discov
 
 ## 🔄 Last Updated
 
-**November 1, 2025** - Version 4.5.13 - Analytics Dashboard Complete ✅
-- **NEW: Analytics Dashboard (Phase 5)**: Comprehensive educational performance metrics with visual insights
-- **Dashboard Features**: 4 summary cards (Total Classes, Attendance Rate, Active Students, Avg ClassCount), student performance table with color-coded ratings, date range filtering, CSV export, role-based access
-- **Technical Excellence**: Index-based queries, batch fetching (avoids N+1), Map lookups (O(1) access), type-safe with Doc<"classes">[] annotations
-- **Integration**: Analytics button in Class Booking header (indigo gradient), opens modal with comprehensive performance data
+**November 1, 2025** - Version 4.5.14 - Security Patch (Moderator Authorization Fix) 🔒
+- **CRITICAL FIX: Moderator Authorization Bypass**: Fixed security vulnerability where moderators could book classes at ANY school instead of being strictly scoped to their assigned school
+  - Backend: Added strict schoolId validation in `convex/classes.ts` book mutation (30 lines)
+  - Frontend: Permanently locked school dropdown for moderators (`disabled={true}`)
+  - Verified: All other mutations (approve/reject/edit/delete) already protected via `verifyClassAccess()`
+  - Impact: Authorization bypass closed - moderators now strictly school-scoped
+  - Documentation: `IMPLEMENTATION_SUMMARY_MODERATOR_AUTHORIZATION_FIX_NOV_1_2025.md` (500+ lines)
+- **Contact Admin UX Fix**: Clarified validation labels from "(Required)" to "(At least one language required)" - matches actual behavior (allows English-only, Thai-only, or both)
+- **Payment Calculator Integration**: Added missing imports in Analytics modal (Calculator icon, ClassPaymentCalculator component)
 - **Build Status**: Next.js ✅, TypeScript ✅, Convex deploy ✅, Production deployment ✅
-- **Documentation**: Implementation summary (IMPLEMENTATION_SUMMARY_ANALYTICS_DASHBOARD_NOV_1_2025.md), Agent handoff (AGENT_HANDOFF_PHASE_5_COMPLETION_NOV_1_2025.md)
-- **Previous (v4.5.12)**: Payment Calculator - Security-first ephemeral tool with print-to-PDF, Provider booking integration with XOR validation
-- **Previous (v4.5.11)**: Provider System Phase 1 - Multi-provider architecture, auto-approval workflow, role-based access
+- **Previous (v4.5.13)**: Analytics Dashboard - Comprehensive educational performance metrics with visual insights
+- **Previous (v4.5.12)**: Payment Calculator - Security-first ephemeral tool with print-to-PDF
+- **Previous (v4.5.11)**: Provider System Phase 1 - Multi-provider architecture
 
 ---
 
@@ -161,7 +165,7 @@ This documentation is split into focused sections for efficient knowledge discov
 
 ## 🚀 Quick Start for AI Agents (Preview)
 
-**If you only read 5 things, read these:**
+**If you only read 7 things, read these:**
 
 1. **NEVER reorder providers** in `app/layout.tsx` - the hierarchy is load-bearing (ErrorBoundary → ConvexClientProvider → DeviceProvider → DataProvider → LanguageProvider). Reordering causes runtime failures.
 
@@ -174,6 +178,8 @@ This documentation is split into focused sections for efficient knowledge discov
 5. **All components need `"use client"`** - Next.js App Router requires this directive for client-side hooks (`useQuery`, `useMutation`, `useState`).
 
 6. **Guardian students auto-approve** - Classes with `isGuardianLinked: true` bypass moderator approval workflow (NEW Oct 2025).
+
+7. **Moderators are STRICTLY school-scoped** - Moderators can ONLY access their assigned school's data. Teachers are multi-school. Admins have God mode. NEVER allow moderators to bypass school boundaries (NEW Nov 2025).
 
 **Start Convex FIRST**: `npx convex dev` (must be running before `npm run dev`)
 

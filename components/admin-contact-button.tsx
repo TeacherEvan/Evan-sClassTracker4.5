@@ -343,8 +343,8 @@ export function AdminContactButton({
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   {t("Subject", "หัวเรื่อง")}
-                  <span className="ml-2 text-xs font-normal text-red-500">
-                    {t("(Required)", "(จำเป็น)")}
+                  <span className="ml-2 text-xs font-normal text-blue-600 dark:text-blue-400">
+                    {t("(At least one language required)", "(ต้องระบุอย่างน้อยหนึ่งภาษา)")}
                   </span>
                 </label>
                 <input
@@ -373,8 +373,8 @@ export function AdminContactButton({
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   {t("Message", "ข้อความ")}
-                  <span className="ml-2 text-xs font-normal text-red-500">
-                    {t("(Required)", "(จำเป็น)")}
+                  <span className="ml-2 text-xs font-normal text-blue-600 dark:text-blue-400">
+                    {t("(At least one language required)", "(ต้องระบุอย่างน้อยหนึ่งภาษา)")}
                   </span>
                 </label>
                 <textarea

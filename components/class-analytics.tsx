@@ -6,6 +6,7 @@ import { useLanguage } from "@/lib/language-context";
 import { useQuery } from "convex/react";
 import {
     BarChart3,
+    Calculator,
     Calendar,
     CheckCircle2,
     Download,
@@ -14,6 +15,7 @@ import {
     X
 } from "lucide-react";
 import { useState } from "react";
+import { ClassPaymentCalculator } from "./class-payment-calculator";
 
 interface ClassAnalyticsProps {
     userId: Id<"users">;
@@ -23,11 +25,17 @@ interface ClassAnalyticsProps {
 export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
     const { t, language } = useLanguage();
 
+    // Fetch user to check role
+    const user = useQuery(api.users.getById, { id: userId });
+
     // Default to last 30 days
     const [startDate, setStartDate] = useState<number>(
         Date.now() - 30 * 24 * 60 * 60 * 1000
     );
     const [endDate, setEndDate] = useState<number>(Date.now());
+
+    // Payment Calculator state
+    const [showPaymentCalculator, setShowPaymentCalculator] = useState(false);
 
     // Helper: Convert rating enum to bilingual string
     const getRatingText = (rating: "excellent" | "good" | "needs_improvement"): { en: string; th: string } => {
@@ -251,13 +259,27 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
                                 <Users className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                                 {t("Student Performance", "ผลการเรียนของนักเรียน")}
                             </h3>
-                            <button
-                                onClick={exportToCSV}
-                                className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
-                            >
-                                <Download className="w-4 h-4" />
-                                {t("Export CSV", "ส่งออก CSV")}
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {/* Payment Calculator Button (Moderators Only) */}
+                                {user?.role === "moderator" && (
+                                    <button
+                                        onClick={() => setShowPaymentCalculator(true)}
+                                        className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm"
+                                        title={t("Payment Calculator", "เครื่องคำนวณค่าสอน")}
+                                    >
+                                        <Calculator className="w-4 h-4" />
+                                        {t("Calculator", "คำนวณ")}
+                                    </button>
+                                )}
+                                {/* Export CSV Button */}
+                                <button
+                                    onClick={exportToCSV}
+                                    className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    {t("Export CSV", "ส่งออก CSV")}
+                                </button>
+                            </div>
                         </div>
 
                         {studentPerformanceData.length === 0 ? (
@@ -309,10 +331,10 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
                                                     <td className="px-4 py-3 text-sm">
                                                         <span
                                                             className={`font-semibold ${student.attendanceRate >= 80
-                                                                    ? "text-green-600 dark:text-green-400"
-                                                                    : student.attendanceRate >= 60
-                                                                        ? "text-yellow-600 dark:text-yellow-400"
-                                                                        : "text-red-600 dark:text-red-400"
+                                                                ? "text-green-600 dark:text-green-400"
+                                                                : student.attendanceRate >= 60
+                                                                    ? "text-yellow-600 dark:text-yellow-400"
+                                                                    : "text-red-600 dark:text-red-400"
                                                                 }`}
                                                         >
                                                             {student.attendanceRate}%
@@ -346,6 +368,15 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
                     </button>
                 </div>
             </div>
+
+            {/* Payment Calculator Modal (Moderators Only) */}
+            {showPaymentCalculator && user?.role === "moderator" && (
+                <ClassPaymentCalculator
+                    teacherId={userId}
+                    userRole={user.role}
+                    onClose={() => setShowPaymentCalculator(false)}
+                />
+            )}
         </div>
     );
 }

@@ -111,6 +111,7 @@
 - Type-safe with Doc<"classes">[] annotations
 
 **`convex/notifications.ts`**
+
 - Cycle management
 - Confirmation flow for cycle changes
 

@@ -685,6 +685,32 @@ export const book = mutation({
       throw new Error("User not found");
     }
 
+    // ✅ SECURITY: STRICT MODERATOR SCHOOL SCOPING (Nov 1, 2025)
+    // Moderators can ONLY book classes at their OWN assigned school
+    // This prevents cross-school data contamination and unauthorized access
+    if (bookingUser.role === "moderator") {
+      // Moderator must have an assigned school
+      if (!bookingUser.schoolId) {
+        throw new Error("Moderator account must have an assigned school. Contact administrator.");
+      }
+
+      // For school-based classes (not provider classes), validate school matches
+      if (args.schoolId && args.schoolId !== bookingUser.schoolId) {
+        const moderatorSchool = await ctx.db.get(bookingUser.schoolId);
+        const attemptedSchool = await ctx.db.get(args.schoolId);
+        throw new Error(
+          `Authorization failed: Moderators can only book classes at their assigned school. ` +
+          `Your school: ${moderatorSchool?.name || "Unknown"} (${bookingUser.schoolId}). ` +
+          `Attempted school: ${attemptedSchool?.name || "Unknown"} (${args.schoolId}).`
+        );
+      }
+
+      // Moderators cannot create provider classes
+      if (args.providerId) {
+        throw new Error("Moderators cannot create provider classes. Providers are only available to teachers and admins.");
+      }
+    }
+
     // Determine status based on who is booking and whether it's guardian-linked or provider-linked
     // Guardian-linked classes are auto-approved (no moderator workflow)
     // Provider-linked classes are auto-approved (no moderator workflow) - NEW

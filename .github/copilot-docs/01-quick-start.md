@@ -6,7 +6,7 @@
 
 ## 🚀 Critical Rules (Read These First!)
 
-**If you only read 5 things, read these:**
+**If you only read 7 things, read these:**
 
 1. **NEVER reorder providers** in `app/layout.tsx` - the hierarchy is load-bearing (ErrorBoundary → ConvexClientProvider → DeviceProvider → DataProvider → LanguageProvider). Reordering causes runtime failures.
 
@@ -19,6 +19,8 @@
 5. **All components need `"use client"`** - Next.js App Router requires this directive for client-side hooks (`useQuery`, `useMutation`, `useState`).
 
 6. **Guardian students auto-approve** - Classes with `isGuardianLinked: true` bypass moderator approval workflow (NEW Oct 2025).
+
+7. **Moderators are STRICTLY school-scoped** - Moderators can ONLY access their assigned school's data. Teachers are multi-school. Admins have God mode. NEVER allow moderators to bypass school boundaries (NEW Nov 2025).
 
 **Start Convex FIRST**: `npx convex dev` (must be running before `npm run dev`)
 

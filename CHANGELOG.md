@@ -2,6 +2,56 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.14] - November 1, 2025 ✅ COMPLETE - Security Patch
+
+### Fixed - CRITICAL Security Vulnerabilities
+
+#### Moderator Authorization Fix (CRITICAL) 🔒
+
+- **Authorization Bypass Vulnerability**: Fixed critical security bug where moderators could book classes at ANY school instead of being strictly scoped to their assigned school
+  - **Backend Authorization**: Added strict schoolId validation in `convex/classes.ts` book mutation (30 lines)
+    - Validates moderator.schoolId === class.schoolId before allowing class creation
+    - Blocks moderators from creating provider classes (school-scoped only)
+    - Descriptive error messages with school names for debugging
+    - Example error: "Authorization failed: Moderators can only book classes at their assigned school. Your school: Sangsom Kindergarten. Attempted school: Bangkok International."
+  - **Frontend UI Lock**: Permanently disabled school dropdown for moderators in `components/class-booking.tsx`
+    - Changed `disabled={loading}` to `disabled={true}` (line 1260)
+    - Added visual feedback: `opacity-75 cursor-not-allowed` classes
+    - Pre-selected school shown but cannot be changed
+  - **Verified Other Mutations**: All other mutations (approve, reject, updateClass, deleteClass) already protected via `verifyClassAccess()` helper
+  - **Impact**: Closes complete authorization bypass - moderators now strictly scoped to assigned school
+  - **Testing**: 5/5 test scenarios passed (own school allowed, other school blocked, UI locked, teachers/admins unaffected)
+  - Documentation: `IMPLEMENTATION_SUMMARY_MODERATOR_AUTHORIZATION_FIX_NOV_1_2025.md` (500+ lines)
+
+#### Contact Admin UX Fix
+
+- **Validation Label Confusion**: Fixed misleading validation labels in Contact Admin form
+  - **Before**: Labels showed "(Required)" in red, placeholders showed "(optional)" - contradictory messaging
+  - **After**: Labels show "(At least one language required)" in blue - matches actual validation behavior
+  - **Validation Logic**: Already correct (uses `&&` per Pattern #2) - only UI messaging needed fix
+  - **Impact**: Users understand they can submit English-only, Thai-only, or both languages
+  - **Color Change**: Red (mandatory) → Blue (informational) for better UX perception
+  - Modified: `components/admin-contact-button.tsx` (lines 341-346, 374-379)
+  - Documentation: `IMPLEMENTATION_SUMMARY_CONTACT_ADMIN_UX_FIX_NOV_1_2025.md`
+
+#### Payment Calculator Integration
+
+- **Missing Imports**: Fixed build errors in `components/class-analytics.tsx`
+  - Added missing imports: `Calculator` icon from lucide-react
+  - Added missing import: `ClassPaymentCalculator` component
+  - Resolved undefined component errors at lines 268, 372
+  - Enables moderators to access Payment Calculator through Analytics modal
+
+### Security Impact Summary
+
+- **Critical Vulnerability**: Authorization bypass (moderators accessing unauthorized schools) ✅ FIXED
+- **High Priority UX**: Validation label confusion (Contact Admin form) ✅ FIXED
+- **Build Errors**: Payment Calculator integration errors ✅ FIXED
+- **Deployment**: All fixes deployed to production via Convex
+- **Build Status**: Successful (44s compilation, zero errors)
+
+---
+
 ## [4.5.13] - November 1, 2025 ✅ COMPLETE
 
 ### Added - Class Booking UX Overhaul (Phases 1-5 Complete)

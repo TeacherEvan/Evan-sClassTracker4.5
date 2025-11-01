@@ -1255,9 +1255,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                         setStudentId(""); // Reset student when school changes
                         setSelectedTeacherId(""); // Reset teacher selection
                       }}
-                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border-2 border-blue-500 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-600 dark:bg-gray-800 dark:border-blue-600 touch-manipulation transition-all shadow-sm"
+                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border-2 border-blue-500 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-600 dark:bg-gray-800 dark:border-blue-600 touch-manipulation transition-all shadow-sm opacity-75 cursor-not-allowed"
                       required
-                      disabled={loading} // Moderators have pre-selected school
+                      disabled={true} // ✅ SECURITY FIX (Nov 1, 2025): Moderators CANNOT change school (strictly locked to their assigned school)
                     >
                       <option value="">{t("Select a school first", "เลือกโรงเรียนก่อน")}</option>
                       {schools === undefined ? (
@@ -2166,7 +2166,31 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
             // When ANY filter is active, group by student for hierarchical navigation
             const hasActiveFilters = filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all" || filterGrade !== "all" || filterClass !== "all";
 
-            if (hasActiveFilters && filteredClasses.length > 0) {
+            // NEW: Require filters to be active before displaying classes (prevents scrolling hell)
+            if (!hasActiveFilters) {
+              return (
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-lg shadow-md p-8 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                      <Calendar className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+                        {t("Select Filters to View Classes", "เลือกตัวกรองเพื่อดูคลาส")}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 max-w-md">
+                        {t(
+                          "Use the filters above to search by teacher, school, student, grade, or class. This helps improve performance and makes it easier to find what you need.",
+                          "ใช้ตัวกรองด้านบนเพื่อค้นหาตามครู โรงเรียน นักเรียน ระดับชั้น หรือห้องเรียน ช่วยเพิ่มประสิทธิภาพและทำให้ค้นหาสิ่งที่ต้องการได้ง่ายขึ้น"
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (filteredClasses.length > 0) {
               // Group classes by student
               const studentGroups = new Map<Id<"students">, typeof filteredClasses>();
               filteredClasses.forEach((classItem) => {
@@ -2277,55 +2301,35 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
               });
             }
 
-            // No filters active - show flat list
-            return filteredClasses.map((classItem) => {
-              const conflictIds = detectConflicts(classes || [], classItem);
-              const hasConflicts = conflictIds.length > 0;
-
-              return (
-                <ClassItemDisplay
-                  key={classItem._id}
-                  classItem={classItem}
-                  userRole={userRole}
-                  userId={userId}
-                  hasConflicts={hasConflicts}
-                  conflictCount={conflictIds.length}
-                  onAcknowledge={handleAcknowledge}
-                  onApprove={handleApprove}
-                  onReject={handleReject}
-                  onDelete={handleDelete}
-                  onRequestCancellation={handleRequestCancellation}
-                  onEdit={(item) => {
-                    const classDoc = item as unknown as Doc<"classes">;
-                    setEditingClass(classDoc);
-                  }}
-                />
-              );
-            });
+            // Filters active but no matches - show "no results" message
+            return null;
           })()}
 
-          {/* No classes found */}
-          {classes && classes.filter((classItem) => {
-            if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
-            if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
-            if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
-            if (filterGrade !== "all" && classItem.student?.grade !== filterGrade) return false;
-            if (filterClass !== "all" && classItem.student?.class !== filterClass) return false;
-            return true;
-          }).length === 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center text-gray-500 dark:text-gray-400">
-                <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p className="text-sm">
-                  {(filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all" || filterGrade !== "all" || filterClass !== "all") ? (
-                    t("No classes match the selected filters", "ไม่พบคลาสที่ตรงกับตัวกรองที่เลือก")
-                  ) : (
-                    userRole === "moderator" || userRole === "admin"
-                      ? t("No classes found", "ไม่พบชั้นเรียน")
-                      : t("No class requests found", "ไม่พบคำขอชั้นเรียน")
-                  )}
-                </p>
-              </div>
-            )}
+          {/* No classes found - only show when filters are active */}
+          {(() => {
+            const hasActiveFilters = filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all" || filterGrade !== "all" || filterClass !== "all";
+            const filteredCount = classes?.filter((classItem) => {
+              if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
+              if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
+              if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
+              if (filterGrade !== "all" && classItem.student?.grade !== filterGrade) return false;
+              if (filterClass !== "all" && classItem.student?.class !== filterClass) return false;
+              return true;
+            }).length || 0;
+
+            // Only show "no results" message when filters are active AND no matches found
+            if (hasActiveFilters && filteredCount === 0) {
+              return (
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center text-gray-500 dark:text-gray-400">
+                  <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">
+                    {t("No classes match the selected filters", "ไม่พบคลาสที่ตรงกับตัวกรองที่เลือก")}
+                  </p>
+                </div>
+              );
+            }
+            return null;
+          })()}
         </div>
         {/* End of main content container */}
       </div>

@@ -4,9 +4,26 @@ Bilingual English/Thai class tracker for teachers and schools - Built with Next.
 
 ## ✨ Latest Updates (Nov 1, 2025)
 
-### Class Booking UX Overhaul (Phases 1-5 Complete) 🎨
+### Version 4.5.14 - Security Patch 🔒
 
-#### Phase 5: Analytics Dashboard 📊 (NEW)
+- 🔒 **CRITICAL FIX: Moderator Authorization**: Fixed authorization bypass where moderators could book classes at ANY school instead of being strictly scoped to their assigned school
+  - Backend validation added to enforce moderator.schoolId === class.schoolId
+  - Frontend school dropdown permanently locked for moderators
+  - Descriptive error messages show school names when authorization fails
+  - All other mutations (approve/reject/edit/delete) already protected
+
+- ✅ **Contact Admin UX Fix**: Clarified validation labels to match actual behavior
+  - Labels now show "(At least one language required)" instead of "(Required)"
+  - Color changed from red to blue (mandatory → informational)
+  - Users understand they can submit English-only, Thai-only, or both languages
+
+- ✅ **Payment Calculator Integration**: Fixed missing imports in Analytics modal
+  - Added Calculator icon and ClassPaymentCalculator component imports
+  - Resolved build errors preventing moderator access to calculator
+
+### Version 4.5.13 - Class Booking UX Overhaul (Phases 1-5 Complete) 🎨
+
+#### Phase 5: Analytics Dashboard 📊
 
 - ✅ **Educational Performance Insights**: Comprehensive analytics for teachers and administrators
   - 4 visual summary cards (Total Classes, Attendance Rate, Active Students, Avg ClassCount)
