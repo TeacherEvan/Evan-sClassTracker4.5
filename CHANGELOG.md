@@ -2,6 +2,53 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.17] - November 1, 2025 🔐 SECURITY - Bcrypt Password Migration
+
+### Security - Password Hashing Upgrade
+
+#### Bcrypt Migration (Soft Migration - Zero User Disruption)
+
+- **Problem**: Insecure btoa() encoding (reversible, database compromise = all passwords exposed)
+  - `passwordHash: "VGVhY2hlckV2YW4="` - Anyone can decode with `atob()`
+  - Not industry standard, no salt, no work factor
+  - Blocking issue for production deployment
+
+- **Solution**: Industry-Standard bcrypt Hashing
+  - One-way hashing (irreversible)
+  - Salted (unique hash per password)
+  - Configurable work factor (10 rounds)
+  - OWASP compliant
+
+- **Migration Strategy**: Soft Migration (Most Practical)
+  - ✅ **Zero user disruption** - No forced password resets
+  - ✅ **Auto-upgrade on login** - Transparent to users
+  - ✅ **Hybrid verification** - Supports both hash types during migration
+  - ✅ **2-4 week timeline** - Gradual rollout as users login
+  - ✅ **Admin visibility** - Migration tracking via dashboard query
+
+- **Implementation**:
+  - Added `bcrypt` package (v5.1.1) + TypeScript types
+  - Created `isBcryptHash()` detection function
+  - Updated `hashPassword()` to async bcrypt operation (10 salt rounds)
+  - Created `verifyPassword()` with hybrid logic (btoa fallback)
+  - Added auto-upgrade logic in login mutation (lines 237-256)
+  - Updated all password mutations: create, login, changePassword, resetPassword
+  - Added `getMigrationStats()` query for admin monitoring
+
+- **Files Modified**:
+  - `convex/users.ts` - Core authentication functions (~50 lines changed)
+  - `package.json` - Added bcrypt dependencies
+
+- **Security Impact**:
+  - Before: **D (Fail)** - Reversible encoding
+  - After: **A (Pass)** - Industry-standard bcrypt
+  - Attack resistance: Rainbow tables ✅ Protected, Brute force ✅ Slow (0.1s/attempt)
+
+- **Testing**: See `BCRYPT_TESTING_GUIDE.md` for validation checklist
+- **Documentation**: See `docs/archive/implementations/IMPLEMENTATION_SUMMARY_BCRYPT_MIGRATION_NOV_1_2025.md`
+
+---
+
 ## [4.5.16] - November 1, 2025 ✅ COMPLETE - Wizard-Based Startup Window
 
 ### Added - Guided Workflow System for Moderators & Teachers

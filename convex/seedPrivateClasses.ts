@@ -127,16 +127,16 @@ async function findStudentByCode(ctx: GenericMutationCtx<DataModel>, studentCode
     const classStr = `${gradeStr}/${classDigit}`;
     const studentNumber = parseInt(numberDigits);
 
-    // Strategy 1: Filter by both grade AND class for precision
-    const allStudents = await ctx.db
+    // Strategy 1: Collect all students then filter by both grade AND class for precision
+    // Note: Using JavaScript filter after .collect() because Convex requires .withIndex() before .filter()
+    const allStudentsRaw = await ctx.db
         .query("students")
-        .filter((q) =>
-            q.and(
-                q.eq(q.field("grade"), classStr),
-                q.eq(q.field("class"), `/${classDigit}`)
-            )
-        )
         .collect();
+
+    const allStudents = allStudentsRaw.filter(student =>
+        student.grade === classStr &&
+        student.class === `/${classDigit}`
+    );
 
     if (allStudents.length === 0) {
         console.error(`❌ No students found for ${classStr}/${classDigit}`);
@@ -203,15 +203,15 @@ export const seedPrivateClasses = mutation({
             const locations = new Map<string, Id<"locations">>();
 
             for (const locationName of locationNames) {
-                const location = await ctx.db
+                // Note: Using JavaScript filter after .collect() because Convex requires .withIndex() before .filter()
+                const allLocations = await ctx.db
                     .query("locations")
-                    .filter((q) =>
-                        q.and(
-                            q.eq(q.field("name"), locationName),
-                            q.eq(q.field("isActive"), true)
-                        )
-                    )
-                    .first();
+                    .collect();
+
+                const location = allLocations.find(loc =>
+                    loc.name === locationName &&
+                    loc.isActive === true
+                );
 
                 if (!location) {
                     // Create location if it doesn't exist

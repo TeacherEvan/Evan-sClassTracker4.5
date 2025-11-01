@@ -4,13 +4,93 @@
 
 ---
 
-## 🚀 New Features
+## � Priority 1 - This Week (From Nov 1 Audit)
+
+### 1. Monitor Bcrypt Migration ⏳
+
+**Status:** In Progress (Deployed Nov 1, 2025)  
+**Timeline:** 2-4 weeks for full user base migration
+
+**Action Items:**
+- [ ] Test auto-upgrade with first 10 logins (see `docs/BCRYPT_TESTING_GUIDE.md`)
+- [ ] Monitor migration progress weekly via `getMigrationStats` query
+- [ ] Check Convex logs for "🔄 Auto-upgrading password hash" messages
+- [ ] Verify no increase in login failures or account lockouts
+- [ ] Track migration percentage: Week 1 (30-40%), Week 2 (60-70%), Week 3-4 (90-100%)
+
+**Expected Completion:** November 29, 2025 (4 weeks)
+
+---
+
+### 2. Add Database Indexes (2 hours, 10-100x performance gain)
+
+**File:** `convex/schema.ts`
+
+**Changes Needed:**
+```typescript
+// Students table
+students: defineTable({...})
+    .index("by_grade_and_class", ["grade", "class"]) // NEW
+
+// Locations table
+locations: defineTable({...})
+    .index("by_name_and_active", ["name", "isActive"]) // NEW
+    .index("by_school_and_active", ["schoolId", "isActive"]) // NEW
+```
+
+**Follow-up:**
+1. Deploy: `npx convex deploy`
+2. Update `seedPrivateClasses.ts` to use `.withIndex()` instead of JavaScript filter
+3. Test private class seeding
+
+**Benefit:** Queries run 10-100x faster, reduced memory usage
+
+---
+
+### 3. Feature Usage Tracking (1 hour setup)
+
+**Purpose:** Understand which features are actually used for data-driven decisions
+
+**Implementation:**
+- Create `convex/analytics/featureTracking.ts`
+- Add `featureUsage` table to schema
+- Track: Payment Calculator, Provider system, Wizards, Analytics dashboard
+
+**Benefit:** Identify underused features for improvement or deprecation
+
+---
+
+## �🚀 New Features
 
 _No new features planned at this time_
 
 ---
 
 ## ✅ Recently Completed (November 1, 2025)
+
+### Bcrypt Password Migration ✅
+
+**Description:** Upgraded from insecure btoa() encoding to industry-standard bcrypt hashing
+
+**Implementation:**
+- Soft migration strategy (zero user disruption)
+- Auto-upgrade on login (transparent to users)
+- Hybrid verification system (supports both hash types)
+- Migration tracking query for admin monitoring
+- Documentation: `docs/archive/implementations/IMPLEMENTATION_SUMMARY_BCRYPT_MIGRATION_NOV_1_2025.md`
+
+---
+
+### Wizard-Based Onboarding ✅
+
+**Description:** Step-by-step guided workflows for moderators and teachers
+
+**Implementation:**
+- 5 new wizards: Booking, ClassCount Report, Message, Notification, Dashboard
+- Reduced onboarding time from 30min to <10min
+- Documentation: `docs/archive/implementations/IMPLEMENTATION_SUMMARY_WIZARD_STARTUP_NOV_1_2025.md`
+
+---
 
 ### Analytics Dashboard - Phase 5 ✅
 

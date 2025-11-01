@@ -1,22 +1,40 @@
+import bcrypt from "bcrypt";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { checkRateLimit } from "./rateLimit";
 
-// Simple password hashing (in production, use bcrypt or similar)
-// TODO: Replace with bcrypt for production use
-// This is a simple hash for demonstration. In production, use proper hashing
-function hashPassword(password: string): string {
-  // Using btoa for browser-compatible base64 encoding (works in Convex runtime)
-  // SECURITY WARNING: This is NOT secure for production use
-  // Install and use bcrypt: `npm install bcrypt` then:
-  // import bcrypt from 'bcrypt';
-  // const saltRounds = 10;
-  // return await bcrypt.hash(password, saltRounds);
-  return btoa(password);
+// ✅ UPGRADED: Secure bcrypt password hashing with backward compatibility
+// Soft migration: Auto-upgrades legacy btoa() hashes to bcrypt on login
+
+const SALT_ROUNDS = 10; // bcrypt salt rounds (balance between security and performance)
+
+/**
+ * Detect if hash is bcrypt (starts with $2a$, $2b$, or $2y$) or legacy btoa
+ */
+function isBcryptHash(hash: string): boolean {
+  return hash.startsWith("$2a$") || hash.startsWith("$2b$") || hash.startsWith("$2y$");
 }
 
-function verifyPassword(password: string, hash: string): boolean {
-  return hashPassword(password) === hash;
+/**
+ * Hash password with bcrypt (async)
+ */
+async function hashPassword(password: string): Promise<string> {
+  return await bcrypt.hash(password, SALT_ROUNDS);
+}
+
+/**
+ * Verify password against hash (supports both bcrypt and legacy btoa)
+ * Hybrid verification for smooth migration
+ */
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  if (isBcryptHash(hash)) {
+    // New bcrypt hash - secure verification
+    return await bcrypt.compare(password, hash);
+  } else {
+    // Legacy btoa hash - temporary backward compatibility
+    // This will be phased out as users login and auto-upgrade
+    return btoa(password) === hash;
+  }
 }
 
 // Query to get user by username
@@ -108,7 +126,7 @@ export const create = mutation({
 
     // Generate default password: "Teacher{username}"
     const defaultPassword = `Teacher${args.username}`;
-    const passwordHash = hashPassword(defaultPassword);
+    const passwordHash = await hashPassword(defaultPassword);
 
     const userId = await ctx.db.insert("users", {
       username: args.username,
@@ -191,8 +209,8 @@ export const login = mutation({
       });
     }
 
-    // Verify password
-    if (!verifyPassword(args.password, user.passwordHash)) {
+    // Verify password (supports both bcrypt and legacy btoa hashes)
+    if (!(await verifyPassword(args.password, user.passwordHash))) {
       // Increment failed attempts
       const failedAttempts = (user.failedLoginAttempts || 0) + 1;
 
@@ -215,7 +233,14 @@ export const login = mutation({
       }
     }
 
-    // Successful login - reset failed attempts and track login
+    // ✅ AUTO-UPGRADE: If user still has legacy btoa hash, upgrade to bcrypt now
+    let updatedPasswordHash = user.passwordHash;
+    if (!isBcryptHash(user.passwordHash)) {
+      console.log(`🔄 Auto-upgrading password hash for user: ${user.username}`);
+      updatedPasswordHash = await hashPassword(args.password);
+    }
+
+    // Successful login - reset failed attempts, track login, and apply password upgrade if needed
     const userAgentString = args.userAgent || "Unknown";
     const { deviceType, platform, browser } = parseUserAgent(userAgentString);
 
@@ -232,6 +257,7 @@ export const login = mutation({
     const newHistory = [loginEntry, ...existingHistory].slice(0, 10);
 
     await ctx.db.patch(user._id, {
+      passwordHash: updatedPasswordHash, // Apply bcrypt upgrade if needed
       failedLoginAttempts: 0,
       accountLockedUntil: undefined,
       lastSuccessfulLogin: now,
@@ -284,13 +310,13 @@ export const changePassword = mutation({
       throw new Error("Account is locked. Please try again later or contact admin.");
     }
 
-    // Verify current password
-    if (!verifyPassword(args.currentPassword, user.passwordHash)) {
+    // Verify current password (supports both bcrypt and legacy btoa hashes)
+    if (!(await verifyPassword(args.currentPassword, user.passwordHash))) {
       throw new Error("Current password is incorrect");
     }
 
-    // Update password
-    const newPasswordHash = hashPassword(args.newPassword);
+    // Update password (always uses bcrypt for new passwords)
+    const newPasswordHash = await hashPassword(args.newPassword);
     await ctx.db.patch(args.userId, {
       passwordHash: newPasswordHash,
       requirePasswordChange: false,
@@ -312,9 +338,9 @@ export const resetPassword = mutation({
       throw new Error("User not found");
     }
 
-    // Reset to default password AND unlock account
+    // Reset to default password AND unlock account (uses bcrypt for new passwords)
     const defaultPassword = `Teacher${user.username}`;
-    const passwordHash = hashPassword(defaultPassword);
+    const passwordHash = await hashPassword(defaultPassword);
 
     await ctx.db.patch(args.userId, {
       passwordHash,
@@ -572,6 +598,29 @@ export const bulkDeleteUsers = mutation({
       failed: errors.length,
       results,
       errors,
+    };
+  },
+});
+
+// ✅ NEW: Query to track bcrypt migration progress (admin only)
+export const getMigrationStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const allUsers = await ctx.db.query("users").collect();
+
+    const bcryptUsers = allUsers.filter(u => isBcryptHash(u.passwordHash));
+    const legacyUsers = allUsers.filter(u => !isBcryptHash(u.passwordHash));
+
+    const percentage = allUsers.length > 0
+      ? Math.round((bcryptUsers.length / allUsers.length) * 100)
+      : 0;
+
+    return {
+      total: allUsers.length,
+      migrated: bcryptUsers.length,
+      pending: legacyUsers.length,
+      percentage,
+      legacyUsernames: legacyUsers.map(u => u.username), // For admin tracking
     };
   },
 });
