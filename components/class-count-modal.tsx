@@ -21,10 +21,11 @@ import { ClassPaymentCalculator } from "./class-payment-calculator";
 
 interface ClassCountModalProps {
     teacherId: Id<"users">;
+    userRole: string;
     onClose: () => void;
 }
 
-export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
+export function ClassCountModal({ teacherId, userRole, onClose }: ClassCountModalProps) {
     const { t, language } = useLanguage();
 
     // Custom date range filter (client-side only - NOT saved to database)
@@ -636,7 +637,7 @@ export function ClassCountModal({ teacherId, onClose }: ClassCountModalProps) {
             {showPaymentCalculator && (
                 <ClassPaymentCalculator
                     teacherId={teacherId}
-                    userRole="teacher"
+                    userRole={userRole}
                     onClose={() => setShowPaymentCalculator(false)}
                 />
             )}
