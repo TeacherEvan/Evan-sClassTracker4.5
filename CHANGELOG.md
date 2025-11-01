@@ -2,6 +2,82 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.13] - November 1, 2025 ⏳ IN PROGRESS
+
+### Added - Class Booking UX Overhaul (Phases 1-3 Complete)
+
+- **FilterChip Component**: Material Design 3 compliant filter chip ✅
+  - 48x48dp touch targets (WCAG 2.1 Level AA - 2.5.5 Target Size)
+  - 5 color variants matching filter types (blue, green, purple, orange, teal)
+  - Remove button with X icon
+  - Bilingual support (EN/TH) with ARIA labels
+  - Dark mode support
+  - Keyboard accessible (Tab + Enter/Space)
+  - Max 120px value truncation with tooltip
+  - Component: `components/filter-chip.tsx` (~88 lines)
+
+- **Chip-based Filter Panel**: Collapsible horizontal chip UI ✅
+  - Active filter chips ALWAYS visible (at-a-glance status)
+  - Collapse/Expand toggle in header
+  - Active filter badge count in header
+  - Filter dropdowns collapsible (Show/Hide Filters button)
+  - Clear All button integrated in chip panel
+  - 80% vertical space reduction when collapsed (~80px vs ~400px)
+  - Horizontal scroll for overflow chips (max 2 rows)
+  - Professional color-coded chips (Teacher: Blue, School: Green, Student: Purple, Grade: Orange, Class: Teal)
+
+- **School Filter for Teachers**: Multi-school teaching support ✅
+  - School filter now visible to teachers AND admins (was admin-only)
+  - Teachers see only schools where they have classes (Set-based filtering)
+  - Admins continue to see all schools
+  - Moderators remain school-scoped (no filter needed)
+  - Essential for teachers who substitute at multiple locations
+
+### Changed
+
+- **Booking Terminology Standardization**: Consistent language across all roles ✅
+  - Removed conditional "Req/Book Class" vs "Book Class" in button
+  - Removed conditional "Request a New Class" vs "Book a New Class" in form header
+  - All roles now see "Book Class" and "Book a New Class"
+  - Eliminates confusion about booking vs requesting workflow
+
+- **Filter Panel UX**: Complete redesign for mobile-first experience ✅
+  - Replaced vertical dropdown stack with horizontal chip panel
+  - Active filters visible without scrolling
+  - Filter dropdowns hidden by default (Show Filters to expand)
+  - Touch-friendly 48x48px minimum targets
+  - WCAG 2.1 Level AA compliant (keyboard nav, focus visible, contrast ratios)
+  - Material Design 3 validated pattern
+
+### Technical Improvements
+
+- **Accessibility**: WCAG 2.1 Level AA compliance ✅
+  - Keyboard navigation (2.1.1 Keyboard)
+  - Focus visible (2.4.7 Focus Visible)
+  - Target size 48x48px (2.5.5 Target Size)
+  - Contrast ratios 4.5:1 text, 3:1 UI (1.4.3 Contrast)
+  - ARIA labels for screen readers (4.1.2 Name, Role, Value)
+
+- **Performance**: Reduced DOM complexity ✅
+  - Collapsible filter panel reduces initial render size
+  - Active chips render only when filters applied
+  - Lazy rendering of filter dropdowns
+
+### Documentation
+
+- **Research Findings**: Material Design 3 + WCAG 2.1 validation ✅
+  - File: `docs/RESEARCH_FINDINGS_CLASS_BOOKING_UX_NOV_2025.md`
+  - Comprehensive analysis of filter chip patterns
+  - Touch target sizing requirements
+  - Accessibility best practices
+
+- **Implementation Plans**: Detailed phase-by-phase execution ✅
+  - Original plan: `docs/IMPLEMENTATION_PLAN_CLASS_BOOKING_UX_OVERHAUL_NOV_2025.md`
+  - Streamlined plan: `docs/IMPLEMENTATION_PLAN_STREAMLINED_NOV_2025.md`
+  - 5 phases, 9.5 days total timeline
+
+---
+
 ## [4.5.12] - October 31, 2025 ✅ COMPLETE
 
 ### Added - Class Count Enhancements & Payment Calculator (Phase 3 Complete)

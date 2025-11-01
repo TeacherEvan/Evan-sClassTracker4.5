@@ -2,22 +2,33 @@
 
 Bilingual English/Thai class tracker for teachers and schools - Built with Next.js 15, React 19, Convex & Tailwind v4
 
-## ✨ Latest Updates (Oct 31, 2025)
+## ✨ Latest Updates (Nov 1, 2025)
 
-### New Features & Improvements
+### Class Booking UX Overhaul (Phases 1-3 Complete) 🎨
 
-- ✅ **Filter Navigation Tabs**: Prominent filter controls at top of Class Bookings page
-  - Teacher, School, Student filters always visible (no scrolling needed)
-  - Color-coded icons for quick recognition
-  - Live results count and Clear All Filters button
-  - 70-75% reduction in scroll distance for navigation
-- ✅ **Hierarchical Student Selector**: Progressive filtering (Grade → Class → Student) reduces cognitive load
-- ✅ **Enhanced Class Count System**: Teacher selection, print language choice, detailed reporting for moderators
-- ✅ **Post-Class Validation Fix**: Now truly allows optional bilingual notes (at least one language)
-- ✅ **Professional Print Reports**: Custom HTML generation with full class breakdown and student details
+- ✅ **Material Design 3 Filter Chips**: Horizontal chip-based filter panel with 80% space reduction
+  - Active filters visible as colored chips (Teacher: Blue, School: Green, Student: Purple, Grade: Orange, Class: Teal)
+  - Collapsible filter dropdowns (Show/Hide Filters toggle)
+  - 48x48dp touch targets (WCAG 2.1 Level AA compliant)
+  - Keyboard accessible with ARIA labels for screen readers
+  - Clear All button integrated in chip panel
+  - Component: `components/filter-chip.tsx`
 
-- ✅ **Provider Booking Integration (Phase 4.2)**: Provider selection added to class booking with XOR validation (schoolId XOR providerId). Admin can select teacher when provider is chosen.
-- ✅ **Payment Calculator (Ephemeral)**: Security-first calculator with disclaimer, read-only data fetch, and print-to-PDF. No data is saved to the database.
+- ✅ **School Filter for Teachers**: Multi-school teaching support
+  - Teachers can now filter their classes by school
+  - See only schools where they have classes (not all schools)
+  - Essential for substitute teachers at multiple locations
+
+- ✅ **Terminology Standardization**: Consistent "Book Class" language across all roles
+  - Removed confusing "Req/Book" conditional terminology
+  - All users see same booking workflow regardless of role
+
+### Previous Updates (Oct 31, 2025)
+
+- ✅ **Payment Calculator (Ephemeral)**: Security-first calculator with disclaimer, read-only data fetch, and print-to-PDF
+- ✅ **Provider Booking Integration**: Provider selection with XOR validation (schoolId XOR providerId)
+- ✅ **Enhanced Class Count Modal**: Expandable class cards with lazy-loaded notes
+- ✅ **Filter Navigation Tabs**: Prominent filter controls with live results count
 
 ### Removed Features
 
