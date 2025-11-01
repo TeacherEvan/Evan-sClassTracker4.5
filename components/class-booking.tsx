@@ -13,6 +13,7 @@ import { ClassConflictModal } from "./class-conflict-modal";
 import { CollapsibleSection } from "./collapsible-section";
 import { CreateProviderModal } from "./create-provider-modal";
 import { EditClassModal } from "./edit-class-modal";
+import { FilterChip } from "./filter-chip";
 import { HierarchicalStudentSelector } from "./hierarchical-student-selector";
 import LocationProposalForm from "./location-proposal-form";
 import { MergeClassesModal } from "./merge-classes-modal";
@@ -221,6 +222,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const [filterStudentId, setFilterStudentId] = useState<Id<"students"> | "all">("all");
   const [filterGrade, setFilterGrade] = useState<string>("all");
   const [filterClass, setFilterClass] = useState<string>("all");
+  
+  // Filter panel collapse state
+  const [isFilterPanelExpanded, setIsFilterPanelExpanded] = useState(false);
 
   // Hierarchical display state - track which students are expanded
   const [expandedStudents, setExpandedStudents] = useState<Set<Id<"students">>>(new Set());
@@ -819,18 +823,213 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         {/* Filter Navigation Tabs - Always visible when classes exist */}
         {classes && classes.length > 0 && (
           <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-750 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 mb-4 border-2 border-blue-200 dark:border-blue-900">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
+            {/* Filter Header with Collapse Toggle */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
+                  {t("Filter & Navigate Classes", "กรองและค้นหาคลาส")}
+                </h3>
+                {(() => {
+                  const activeFilterCount = [
+                    filterTeacherId !== "all",
+                    filterSchoolId !== "all",
+                    filterStudentId !== "all",
+                    filterGrade !== "all",
+                    filterClass !== "all",
+                  ].filter(Boolean).length;
+
+                  if (activeFilterCount > 0) {
+                    return (
+                      <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-blue-600 text-white text-xs font-bold">
+                        {activeFilterCount}
+                      </span>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
-              <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
-                {t("Filter & Navigate Classes", "กรองและค้นหาคลาส")}
-              </h3>
+              <button
+                type="button"
+                onClick={() => setIsFilterPanelExpanded(!isFilterPanelExpanded)}
+                className="px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors flex items-center gap-2"
+                aria-expanded={isFilterPanelExpanded}
+                aria-label={t("Toggle filter panel", "สลับแผงกรอง")}
+              >
+                {isFilterPanelExpanded ? (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    </svg>
+                    {t("Hide Filters", "ซ่อนตัวกรอง")}
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    {t("Show Filters", "แสดงตัวกรอง")}
+                  </>
+                )}
+              </button>
             </div>
 
-            <div className="space-y-4">
+            {/* Active Filter Chips - Always Visible */}
+            {(() => {
+              const activeChips: Array<{
+                key: string;
+                label: string;
+                labelTh: string;
+                value: string;
+                onRemove: () => void;
+                icon: React.ReactNode;
+                color: "blue" | "green" | "purple" | "orange" | "teal";
+              }> = [];
+
+              // Teacher filter chip
+              if (filterTeacherId !== "all") {
+                const teacher = allTeachers?.find(t => t._id === filterTeacherId);
+                if (teacher) {
+                  activeChips.push({
+                    key: "teacher",
+                    label: "Teacher",
+                    labelTh: "ครู",
+                    value: teacher.username,
+                    onRemove: () => setFilterTeacherId("all"),
+                    icon: (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    ),
+                    color: "blue",
+                  });
+                }
+              }
+
+              // School filter chip
+              if (filterSchoolId !== "all") {
+                const school = schools?.find(s => s._id === filterSchoolId);
+                if (school) {
+                  activeChips.push({
+                    key: "school",
+                    label: "School",
+                    labelTh: "โรงเรียน",
+                    value: school.name,
+                    onRemove: () => setFilterSchoolId("all"),
+                    icon: (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    ),
+                    color: "green",
+                  });
+                }
+              }
+
+              // Student filter chip
+              if (filterStudentId !== "all") {
+                const classWithStudent = classes.find(c => c.studentId === filterStudentId);
+                if (classWithStudent?.student) {
+                  const student = classWithStudent.student;
+                  const studentName = `${student.firstName} ${student.lastName}${student.nickname ? ` (${student.nickname})` : ""}`;
+                  activeChips.push({
+                    key: "student",
+                    label: "Student",
+                    labelTh: "นักเรียน",
+                    value: studentName,
+                    onRemove: () => setFilterStudentId("all"),
+                    icon: (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    ),
+                    color: "purple",
+                  });
+                }
+              }
+
+              // Grade filter chip
+              if (filterGrade !== "all") {
+                activeChips.push({
+                  key: "grade",
+                  label: "Grade",
+                  labelTh: "ชั้น",
+                  value: filterGrade,
+                  onRemove: () => setFilterGrade("all"),
+                  icon: (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  ),
+                  color: "orange",
+                });
+              }
+
+              // Class filter chip
+              if (filterClass !== "all") {
+                activeChips.push({
+                  key: "class",
+                  label: "Class",
+                  labelTh: "ห้อง",
+                  value: filterClass,
+                  onRemove: () => setFilterClass("all"),
+                  icon: (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  ),
+                  color: "teal",
+                });
+              }
+
+              if (activeChips.length > 0) {
+                return (
+                  <div className="mb-4">
+                    <div 
+                      className="flex flex-wrap gap-2 p-3 bg-white/50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600"
+                      role="list"
+                      aria-label={t("Active filters", "ตัวกรองที่ใช้งาน")}
+                    >
+                      {activeChips.map(chip => (
+                        <FilterChip
+                          key={chip.key}
+                          label={chip.label}
+                          labelTh={chip.labelTh}
+                          value={chip.value}
+                          onRemove={chip.onRemove}
+                          icon={chip.icon}
+                          color={chip.color}
+                        />
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFilterTeacherId("all");
+                          setFilterSchoolId("all");
+                          setFilterStudentId("all");
+                          setFilterGrade("all");
+                          setFilterClass("all");
+                        }}
+                        className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full text-sm font-medium transition-colors flex items-center gap-2 min-h-[48px] md:min-h-[44px]"
+                        aria-label={t("Clear all filters", "ล้างตัวกรองทั้งหมด")}
+                      >
+                        <X className="w-4 h-4" />
+                        {t("Clear All", "ล้างทั้งหมด")}
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            {/* Collapsible Filter Dropdowns */}
+            {isFilterPanelExpanded && (
+              <div className="space-y-4">
               {/* Teacher Filter */}
               {(userRole === "admin" || userRole === "moderator") && (
                 <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
@@ -984,53 +1183,36 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                 </select>
               </div>
 
-              {/* Filter Summary & Clear Button */}
-              <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-2">
-                <div className="bg-white dark:bg-gray-700 rounded-lg px-4 py-3 shadow-sm flex-1">
-                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                    {(() => {
-                      const filteredCount = classes.filter((classItem) => {
-                        if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
-                        if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
-                        if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
-                        if (filterGrade !== "all" && classItem.student?.grade !== filterGrade) return false;
-                        if (filterClass !== "all" && classItem.student?.class !== filterClass) return false;
-                        return true;
-                      }).length;
-                      return (
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-bold">
-                            {filteredCount}
-                          </span>
-                          <span className="text-gray-700 dark:text-gray-300">
-                            {t(
-                              `of ${classes.length} ${classes.length === 1 ? 'class' : 'classes'}`,
-                              `จาก ${classes.length} คลาส`
-                            )}
-                          </span>
-                        </div>
-                      );
-                    })()}
-                  </div>
+              {/* Filter Summary */}
+              <div className="bg-white dark:bg-gray-700 rounded-lg px-4 py-3 shadow-sm">
+                <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {(() => {
+                    const filteredCount = classes.filter((classItem) => {
+                      if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
+                      if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
+                      if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
+                      if (filterGrade !== "all" && classItem.student?.grade !== filterGrade) return false;
+                      if (filterClass !== "all" && classItem.student?.class !== filterClass) return false;
+                      return true;
+                    }).length;
+                    return (
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-blue-600 text-white text-xs font-bold">
+                          {filteredCount}
+                        </span>
+                        <span className="text-gray-700 dark:text-gray-300">
+                          {t(
+                            `of ${classes.length} ${classes.length === 1 ? 'class' : 'classes'}`,
+                            `จาก ${classes.length} คลาส`
+                          )}
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
-                {(filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all" || filterGrade !== "all" || filterClass !== "all") && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setFilterTeacherId("all");
-                      setFilterSchoolId("all");
-                      setFilterStudentId("all");
-                      setFilterGrade("all");
-                      setFilterClass("all");
-                    }}
-                    className="px-6 py-3 md:py-2.5 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-xl md:rounded-lg hover:from-red-600 hover:to-pink-700 active:scale-95 transition-all font-semibold shadow-lg text-base md:text-sm flex items-center justify-center gap-2 touch-manipulation"
-                  >
-                    <X className="w-4 h-4" />
-                    {t("Clear All Filters", "ล้างตัวกรอง")}
-                  </button>
-                )}
               </div>
             </div>
+            )}
           </div>
         )}
 
