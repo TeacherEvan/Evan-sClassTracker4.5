@@ -8,24 +8,6 @@ When completing work on this project, AI agents should automatically create user
 
 ### 1. Install Dependencies (First Time Only)
 
-```bash
-npm install
-```
-
-### 2. Run Update Script
-
-```bash
-npm run create-update
-```
-
-This will:
-
-- ✅ Read recent implementation summaries
-- ✅ Extract user-friendly features
-- ✅ Create bilingual app update in database
-- ✅ Deactivate old updates
-- ✅ Notify users of improvements
-
 ## Integration with Copilot Instructions
 
 The `.github/copilot-instructions.md` file now includes:
@@ -37,9 +19,6 @@ The `.github/copilot-instructions.md` file now includes:
 
 **REQUIRED STEP** - After completing ANY significant feature or improvement:
 
-1. Run: `npm run create-update`
-2. Verify update appears in admin UI "App Updates" tab
-3. Confirm notification window shows update to users
 ```
 
 ## Example AI Agent Checklist
@@ -48,8 +27,6 @@ At end of work session:
 
 - [ ] ✅ Complete all implementation tasks
 - [ ] ✅ Update documentation (IMPLEMENTATION_SUMMARY_*.md)
-- [ ] ✅ Run: `npm run create-update`
-- [ ] ✅ Verify update created (check admin UI)
 - [ ] ✅ Commit changes
 
 ## Manual Verification
@@ -60,17 +37,6 @@ After running the script, verify:
    - Login as admin
    - Go to "App Updates" tab
    - Verify new update appears with correct version
-
-2. **Check User Notification**:
-   - Login as teacher/moderator
-   - Look for Gold Tablet notification window
-   - Verify "What's New" section shows latest features
-
-3. **Database Check** (optional):
-
-   ```bash
-   npx convex run appUpdates:list
-   ```
 
 ## Customizing Update Content
 

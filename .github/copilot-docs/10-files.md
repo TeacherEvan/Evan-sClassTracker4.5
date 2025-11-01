@@ -227,6 +227,34 @@
 - Expandable class card used in Class Count modal
 - Shows all students, notes, attendance, and provider/school info
 
+**`components/booking-wizard.tsx`**
+
+- Multi-step booking wizard (teacher→grade→class→type→calendar)
+- 30-day interactive calendar for once-off bookings
+- Recurring class configurator (weeks + day/time selection)
+- Completes to class booking form
+
+**`components/class-count-report-wizard.tsx`**
+
+- Report generation wizard (teacher→date→view/print)
+- Date range selector with validation
+- Completes to analytics modal
+
+**`components/message-wizard.tsx`**
+
+- Messaging wizard (recipients→compose→send)
+- Multi-recipient teacher selection
+- Bilingual message composer (EN+TH)
+- Auto-send with status animation
+- Auto-redirects to dashboard after 1.5s
+
+**`components/startup-window.tsx`**
+
+- Main entry point for moderators/teachers
+- 5 wizard-triggering buttons (Book, Report, Message, Notification, Dashboard)
+- Wizard integration and state management
+- Role-based menu options
+
 ---
 
 ## Feature Documentation
@@ -236,6 +264,13 @@
 - Notification window implementation
 - One-time display system
 - School-specific vs broadcast targeting
+
+**`IMPLEMENTATION_SUMMARY_WIZARD_STARTUP_NOV_1_2025.md`**
+
+- Wizard-based onboarding implementation
+- 5 guided workflows for moderators/teachers
+- Complete technical documentation (300+ lines)
+- Workflow diagrams and testing checklist
 
 **`IMPLEMENTATION_SUMMARY_CYCLE_EDITOR.md`**
 

@@ -1,21 +1,24 @@
 "use client";
 
+import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
 import {
+    BarChart3,
+    Bell,
     BookOpen,
-    Calendar,
     Globe,
-    HelpCircle,
     LayoutDashboard,
-    LineChart,
-    Mail,
-    MessageSquare,
+    Send,
     Sparkles,
     Star,
     X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { BookingWizard } from "./booking-wizard";
+import { ClassAnalytics } from "./class-analytics";
+import { ClassCountReportWizard } from "./class-count-report-wizard";
+import { MessageWizard } from "./message-wizard";
 
 interface StartupWindowProps {
     user: User;
@@ -31,6 +34,12 @@ export function StartupWindow({
     const { t, language, setLanguage } = useLanguage();
     const [isVisible, setIsVisible] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
+
+    // Wizard states
+    const [showBookingWizard, setShowBookingWizard] = useState(false);
+    const [showClassCountWizard, setShowClassCountWizard] = useState(false);
+    const [showMessageWizard, setShowMessageWizard] = useState(false);
+    const [showAnalytics, setShowAnalytics] = useState(false);
 
     // Check if user has dismissed startup window
     useEffect(() => {
@@ -61,6 +70,24 @@ export function StartupWindow({
     };
 
     const handleOptionClick = (tab: string) => {
+        // Handle wizard flows
+        if (tab === "booking-wizard") {
+            setShowBookingWizard(true);
+            return;
+        }
+        if (tab === "class-count-wizard") {
+            setShowClassCountWizard(true);
+            return;
+        }
+        if (tab === "message-wizard") {
+            setShowMessageWizard(true);
+            return;
+        }
+        if (tab === "analytics-wizard") {
+            setShowAnalytics(true);
+            return;
+        }
+
         handleClose(false);
         onNavigate(tab);
     };
@@ -132,95 +159,69 @@ export function StartupWindow({
     // Menu options
     const menuOptions: MenuOption[] = [
         {
-            id: "book",
-            tab: "classes",
+            id: "book-wizard",
+            tab: "booking-wizard",
             icon: BookOpen,
             title: t("Book a Class", "จองคลาส"),
             description: t(
-                "Schedule a new class session",
-                "กำหนดเวลาเรียนใหม่"
+                "Step-by-step class booking wizard",
+                "ตัวช่วยจองคลาสทีละขั้นตอน"
             ),
             color: "from-blue-500 to-blue-600",
             hoverColor: "hover:from-blue-600 hover:to-blue-700",
-            roles: ["teacher", "guardian"], // Most relevant for teachers/guardians
+            roles: ["moderator", "teacher"],
         },
         {
-            id: "investigate",
-            tab: user.role === "admin" ? "analytics" : "activity",
-            icon: LineChart,
-            title: t("Investigate", "ตรวจสอบข้อมูล"),
+            id: "class-count-report",
+            tab: "class-count-wizard",
+            icon: BarChart3,
+            title: t("Class Count Report", "รายงาน ClassCount"),
             description: t(
-                "View logs, analytics, reports & history",
-                "ดูบันทึก การวิเคราะห์ รายงาน และประวัติ"
+                "Select teacher → Select date → View/Print",
+                "เลือกครู → เลือกวันที่ → ดู/พิมพ์"
             ),
             color: "from-purple-500 to-purple-600",
             hoverColor: "hover:from-purple-600 hover:to-purple-700",
-            roles: ["admin", "moderator"], // Most relevant for admin/moderators
+            roles: ["moderator", "teacher"],
         },
         {
-            id: "reminder",
-            tab: "notifications",
-            icon: MessageSquare,
-            title: t("Create Reminder", "สร้างการแจ้งเตือน"),
+            id: "message-teacher",
+            tab: "message-wizard",
+            icon: Send,
+            title: t("Message Teacher/User", "ส่งข้อความถึงครู"),
             description: t(
-                "Send reminders to everyone or specific users",
-                "ส่งการแจ้งเตือนให้ทุกคนหรือผู้ใช้เฉพาะ"
-            ),
-            color: "from-green-500 to-green-600",
-            hoverColor: "hover:from-green-600 hover:to-green-700",
-            roles: ["moderator", "admin"], // Only moderators/admins can send notifications
-        },
-        {
-            id: "calendar",
-            tab: "calendar",
-            icon: Calendar,
-            title: t("View Calendar", "ดูปฏิทิน"),
-            description: t(
-                "Check schedules and upcoming classes",
-                "ตรวจสอบตารางและชั้นเรียนที่กำลังจะมาถึง"
-            ),
-            color: "from-orange-500 to-orange-600",
-            hoverColor: "hover:from-orange-600 hover:to-orange-700",
-            // Available to all roles
-        },
-        {
-            id: "messages",
-            tab: "messages",
-            icon: Mail,
-            title: t("Messages & Inbox", "ข้อความและกล่องจดหมาย"),
-            description: t(
-                "Send messages and check your inbox",
-                "ส่งข้อความและตรวจสอบกล่องจดหมายของคุณ"
+                "Select teacher(s) → Message → Status → Dashboard",
+                "เลือกครู → ข้อความ → สถานะ → แดชบอร์ด"
             ),
             color: "from-pink-500 to-pink-600",
             hoverColor: "hover:from-pink-600 hover:to-pink-700",
-            // Available to all roles
+            roles: ["moderator", "teacher"],
         },
         {
-            id: "help",
-            tab: "help", // Special case - triggers help window modal
-            icon: HelpCircle,
-            title: t("Help & Features", "ช่วยเหลือและฟีเจอร์"),
+            id: "create-notification",
+            tab: "notifications",
+            icon: Bell,
+            title: t("Create EVENT/Notification", "สร้างอีเว้นท์/การแจ้งเตือน"),
             description: t(
-                "Learn about all features interactively",
-                "เรียนรู้เกี่ยวกับฟีเจอร์ทั้งหมดแบบโต้ตอบ"
+                "Go to notifications/events window",
+                "ไปที่หน้าต่างการแจ้งเตือน/อีเว้นท์"
             ),
-            color: "from-teal-500 to-teal-600",
-            hoverColor: "hover:from-teal-600 hover:to-teal-700",
-            // Available to all roles
+            color: "from-green-500 to-green-600",
+            hoverColor: "hover:from-green-600 hover:to-green-700",
+            roles: ["moderator", "teacher"],
         },
         {
             id: "dashboard",
             tab: "calendar",
             icon: LayoutDashboard,
-            title: t("Something Else", "อย่างอื่น"),
+            title: t("Proceed to Dashboard", "ไปที่แดชบอร์ด"),
             description: t(
                 "Go to your default dashboard",
                 "ไปที่แดชบอร์ดเริ่มต้นของคุณ"
             ),
             color: "from-gray-500 to-gray-600",
             hoverColor: "hover:from-gray-600 hover:to-gray-700",
-            // Available to all roles
+            roles: ["moderator", "teacher"],
         },
     ];
 
@@ -408,6 +409,60 @@ export function StartupWindow({
                     </div>
                 </div>
             </div>
+
+            {/* Wizard Modals */}
+            {showBookingWizard && (
+                <BookingWizard
+                    userId={user._id}
+                    userRole={user.role as "teacher" | "moderator"}
+                    userSchoolId={user.schoolId as Id<"schools"> | undefined}
+                    onComplete={() => {
+                        setShowBookingWizard(false);
+                        handleClose(false);
+                        // Navigate to class booking tab
+                        onNavigate("classes");
+                    }}
+                    onClose={() => setShowBookingWizard(false)}
+                />
+            )}
+
+            {showClassCountWizard && (
+                <ClassCountReportWizard
+                    userId={user._id}
+                    userRole={user.role as "teacher" | "moderator"}
+                    userSchoolId={user.schoolId as Id<"schools"> | undefined}
+                    onComplete={() => {
+                        setShowClassCountWizard(false);
+                        setShowAnalytics(true);
+                    }}
+                    onClose={() => setShowClassCountWizard(false)}
+                />
+            )}
+
+            {showMessageWizard && (
+                <MessageWizard
+                    userId={user._id}
+                    userRole={user.role as "teacher" | "moderator"}
+                    userSchoolId={user.schoolId as Id<"schools"> | undefined}
+                    onComplete={() => {
+                        setShowMessageWizard(false);
+                        handleClose(false);
+                        onNavigate("calendar"); // Return to dashboard
+                    }}
+                    onClose={() => setShowMessageWizard(false)}
+                />
+            )}
+
+            {showAnalytics && (
+                <ClassAnalytics
+                    userId={user._id}
+                    onClose={() => {
+                        setShowAnalytics(false);
+                        handleClose(false);
+                        onNavigate("calendar"); // Return to dashboard
+                    }}
+                />
+            )}
         </div>
     );
 }
