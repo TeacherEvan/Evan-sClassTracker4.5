@@ -12,7 +12,7 @@
 
 ### 🔴 High Priority (Next 30 Days)
 
-**1. Accessibility Audit & WCAG 2.1 Compliance** (16-24 hours)
+**1. Accessibility Audit & WCAG 2.1 Compliance** (17-23 hours)
 - [ ] Install ESLint accessibility plugin (`eslint-plugin-jsx-a11y`)
 - [ ] Add ARIA labels to 150+ interactive elements
 - [ ] Implement keyboard navigation for all modals
