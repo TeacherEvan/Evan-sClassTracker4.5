@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { checkRateLimit } from "./rateLimit";
