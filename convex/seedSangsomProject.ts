@@ -1,22 +1,18 @@
 import type { Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
+import { hashPassword } from "./users";
 
 /**
  * Seed script for Sangsom Project schedule (November 2025)
  * Based on the paper schedule provided by Teacher พงศกร หน่อไฟ
- * 
+ *
  * This script creates:
  * - Sangsom School
  * - Teacher user (พงศกร หน่อไฟ)
  * - EVENTS for each scheduled class session
- * 
+ *
  * NOTE: Creates EVENTS, not classes with students!
  */
-
-// Helper function for password hashing (consistent with users.ts)
-function hashPassword(password: string): string {
-  return btoa(password);
-}
 
 // Schedule data from the image - November 2025
 const SCHEDULE_DATA = [
@@ -406,7 +402,7 @@ export const seedSangsomProject = mutation({
       });
 
       // Create moderator for the school
-      const moderatorPassword = hashPassword("TeacherSangsomModerator");
+      const moderatorPassword = await hashPassword("TeacherSangsomModerator");
       moderatorId = await ctx.db.insert("users", {
         username: "sangsom_moderator",
         passwordHash: moderatorPassword,
@@ -422,7 +418,7 @@ export const seedSangsomProject = mutation({
       });
 
       // Create teacher (พงศกร หน่อไฟ)
-      const teacherPassword = hashPassword("TeacherPongsak");
+      const teacherPassword = await hashPassword("TeacherPongsak");
       teacherId = await ctx.db.insert("users", {
         username: "sangsom_teacher",
         passwordHash: teacherPassword,

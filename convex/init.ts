@@ -1,10 +1,5 @@
 import { mutation, query } from "./_generated/server";
-
-// Helper function for password hashing (same as in users.ts)
-function hashPassword(password: string): string {
-  // Using btoa for browser-compatible base64 encoding (works in Convex runtime)
-  return btoa(password);
-}
+import { hashPassword } from "./users";
 
 // Mutation to initialize the database with sample data
 export const initializeDatabase = mutation({
@@ -21,7 +16,7 @@ export const initializeDatabase = mutation({
     }
 
     // Create admin user
-    const adminPassword = hashPassword("TeacherAdmin");
+    const adminPassword = await hashPassword("TeacherAdmin");
     const adminId = await ctx.db.insert("users", {
       username: "admin",
       passwordHash: adminPassword,
@@ -51,7 +46,7 @@ export const initializeDatabase = mutation({
     });
 
     // Create sample moderator for school 1
-    const moderatorPassword = hashPassword("TeacherModerator1");
+    const moderatorPassword = await hashPassword("TeacherModerator1");
     const moderator1Id = await ctx.db.insert("users", {
       username: "moderator1",
       passwordHash: moderatorPassword,
@@ -67,7 +62,7 @@ export const initializeDatabase = mutation({
     });
 
     // Create sample teacher
-    const teacherPassword = hashPassword("TeacherEvan");
+    const teacherPassword = await hashPassword("TeacherEvan");
     await ctx.db.insert("users", {
       username: "Evan",
       passwordHash: teacherPassword,

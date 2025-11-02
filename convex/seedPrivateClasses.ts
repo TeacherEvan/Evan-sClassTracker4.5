@@ -1,6 +1,5 @@
-import type { GenericMutationCtx } from "convex/server";
 import { v } from "convex/values";
-import type { DataModel, Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
 
 /**
@@ -115,55 +114,6 @@ const LEE_SCHEDULE: ScheduleDay[] = [
     },
 ];
 
-// Helper to find student by code (XXYY format)
-// Improved with multiple fallback strategies for robustness
-async function findStudentByCode(ctx: GenericMutationCtx<DataModel>, studentCode: string) {
-    // Parse code: 2419 -> K2/4, student #19
-    const gradeDigit = studentCode[0]; // 1 or 2
-    const classDigit = studentCode[1];
-    const numberDigits = studentCode.slice(2); // "19"
-
-    const gradeStr = gradeDigit === "1" ? "K1" : "K2";
-    const classStr = `${gradeStr}/${classDigit}`;
-    const studentNumber = parseInt(numberDigits);
-
-    // Strategy 1: Collect all students then filter by both grade AND class for precision
-    // Note: Using JavaScript filter after .collect() because Convex requires .withIndex() before .filter()
-    const allStudentsRaw = await ctx.db
-        .query("students")
-        .collect();
-
-    const allStudents = allStudentsRaw.filter(student =>
-        student.grade === classStr &&
-        student.class === `/${classDigit}`
-    );
-
-    if (allStudents.length === 0) {
-        console.error(`❌ No students found for ${classStr}/${classDigit}`);
-        return null;
-    }
-
-    // Strategy 2: Sort by _creationTime to maintain original creation order
-    // This assumes students were imported in roster order
-    allStudents.sort((a, b) => a._creationTime - b._creationTime);
-
-    console.log(`🔍 Looking for student #${studentNumber} in ${classStr}/${classDigit}, found ${allStudents.length} total students`);
-
-    // Strategy 3: Find by position in class array (studentNumber is 1-indexed, array is 0-indexed)
-    const student = allStudents[studentNumber - 1];
-
-    if (!student) {
-        console.error(`❌ Student #${studentNumber} not found in ${classStr}/${classDigit} (only ${allStudents.length} students exist)`);
-        console.error(`Available students:`, allStudents.map((s, idx) =>
-            `#${idx + 1}: ${s.firstName} ${s.lastName} (${s.studentId})`
-        ));
-        return null;
-    }
-
-    console.log(`✅ Found: #${studentNumber} ${student.firstName} ${student.lastName} (${student.studentId})`);
-    return student;
-}
-
 export const seedPrivateClasses = mutation({
     args: {
         teacherUsername: v.union(v.literal("Che"), v.literal("Cale"), v.literal("Lee")),
@@ -198,20 +148,66 @@ export const seedPrivateClasses = mutation({
                 teacherSchoolId = firstSchool._id;
             }
 
-            // 2. Get or create locations
+            // 2. ✅ BATCH FETCH ALL STUDENTS ONCE (instead of per-lookup)
+            console.log("📚 Batch fetching all students...");
+            const allStudents = await ctx.db.query("students").collect();
+            console.log(`✅ Fetched ${allStudents.length} students`);
+
+            // Group students by grade/class for O(1) lookup
+            const studentsByGradeClass = new Map<string, Doc<"students">[]>();
+            for (const student of allStudents) {
+                const key = `${student.grade}/${student.class?.replace("/", "")}`;
+                if (!studentsByGradeClass.has(key)) {
+                    studentsByGradeClass.set(key, []);
+                }
+                studentsByGradeClass.get(key)!.push(student);
+            }
+
+            // Helper function for student lookup (uses Map, no database query)
+            const findStudent = (studentCode: string) => {
+                const gradeDigit = studentCode[0];
+                const classDigit = studentCode[1];
+                const numberDigits = studentCode.slice(2);
+                const gradeStr = gradeDigit === "1" ? "K1" : "K2";
+                const classStr = `${gradeStr}/${classDigit}`;
+
+                const students = studentsByGradeClass.get(classStr) || [];
+                if (students.length === 0) {
+                    console.warn(`⚠️  No students found for ${classStr}`);
+                    return null;
+                }
+
+                // Sort by creation time and get by position
+                students.sort((a, b) => a._creationTime - b._creationTime);
+                const studentNumber = parseInt(numberDigits);
+                const student = students[studentNumber - 1];
+
+                if (!student) {
+                    console.error(`❌ Student #${studentNumber} not found in ${classStr}`);
+                    return null;
+                }
+
+                return student;
+            };
+
+            // 3. ✅ BATCH FETCH ALL LOCATIONS ONCE (instead of per-iteration)
+            console.log("📍 Batch fetching all locations...");
+            const allLocations = await ctx.db.query("locations").collect();
+            console.log(`✅ Fetched ${allLocations.length} locations`);
+
+            // Build location Map for O(1) lookup
+            const locationMap = new Map(
+                allLocations
+                    .filter(loc => loc.isActive === true)
+                    .map(loc => [loc.name, loc])
+            );
+
+            // Get or create locations
             const locationNames = [...new Set(schedule.map(s => s.location))];
             const locations = new Map<string, Id<"locations">>();
 
             for (const locationName of locationNames) {
-                // Note: Using JavaScript filter after .collect() because Convex requires .withIndex() before .filter()
-                const allLocations = await ctx.db
-                    .query("locations")
-                    .collect();
-
-                const location = allLocations.find(loc =>
-                    loc.name === locationName &&
-                    loc.isActive === true
-                );
+                const location = locationMap.get(locationName);
 
                 if (!location) {
                     // Create location if it doesn't exist
@@ -230,7 +226,7 @@ export const seedPrivateClasses = mutation({
                 }
             }
 
-            // 3. Loop through weeks and create bookings
+            // 4. Loop through weeks and create bookings (using Map lookups - NO MORE DATABASE QUERIES!)
             const createdBookings = [];
             const errors = [];
             const startDate = new Date("2025-11-04"); // Monday, Nov 4, 2025
@@ -251,9 +247,9 @@ export const seedPrivateClasses = mutation({
                         continue;
                     }
 
-                    // Regular students (all weeks)
+                    // Regular students (all weeks) - ✅ Map lookup instead of database query
                     for (const studentCode of daySchedule.students) {
-                        const student = await findStudentByCode(ctx, studentCode);
+                        const student = findStudent(studentCode);
 
                         if (!student) {
                             errors.push({
@@ -293,10 +289,10 @@ export const seedPrivateClasses = mutation({
                         }
                     }
 
-                    // One-time students (first occurrence only)
+                    // One-time students (first occurrence only) - ✅ Map lookup
                     if (week === 0 && daySchedule.oneTimeStudents) {
                         for (const studentCode of daySchedule.oneTimeStudents) {
-                            const student = await findStudentByCode(ctx, studentCode);
+                            const student = findStudent(studentCode);
 
                             if (!student) {
                                 errors.push({
@@ -337,14 +333,14 @@ export const seedPrivateClasses = mutation({
                         }
                     }
 
-                    // Date-range students (within specific dates)
+                    // Date-range students (within specific dates) - ✅ Map lookup
                     if (daySchedule.dateRangeStudents) {
                         for (const rangeStudent of daySchedule.dateRangeStudents) {
                             const classTimestamp = classDate.getTime();
 
                             // Only create if within date range
                             if (classTimestamp >= rangeStudent.startDate && classTimestamp <= rangeStudent.endDate) {
-                                const student = await findStudentByCode(ctx, rangeStudent.code);
+                                const student = findStudent(rangeStudent.code);
 
                                 if (!student) {
                                     errors.push({
@@ -388,7 +384,7 @@ export const seedPrivateClasses = mutation({
                 }
             }
 
-            // 4. Generate summary with detailed error reporting
+            // 5. Generate summary with detailed error reporting
             const scheduleDetails = `${args.teacherUsername}: ${schedule.length} days/week, ${schedule.reduce((sum, d) => sum + d.students.length, 0)} regular students`;
             const errorSummary = errors.length > 0
                 ? `\n⚠️  ${errors.length} errors occurred:\n${errors.map(e => `  - Week ${e.week}, Day ${e.day}: ${e.error}`).join('\n')}`

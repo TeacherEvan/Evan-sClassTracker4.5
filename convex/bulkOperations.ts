@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
 import { checkRateLimit, validateLength } from "./rateLimit";
+import { hashPassword } from "./users";
 
 // Helper function to generate unique student ID
 function generateStudentId(firstName: string, lastName: string, schoolId: string): string {
@@ -166,9 +167,7 @@ export const bulkCreateUsers = mutation({
 
                 // Generate default password
                 const defaultPassword = `Teacher${user.username}`;
-                const passwordHash = btoa(defaultPassword);
-
-                const id = await ctx.db.insert("users", {
+                const passwordHash = await hashPassword(defaultPassword); const id = await ctx.db.insert("users", {
                     username: user.username,
                     passwordHash,
                     role: user.role,

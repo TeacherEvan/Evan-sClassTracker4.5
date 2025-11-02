@@ -44,7 +44,7 @@ function hexToBytes(hex: string): Uint8Array {
 /**
  * Hash password using PBKDF2 with Web Crypto API
  */
-async function hashPassword(password: string): Promise<string> {
+export async function hashPassword(password: string): Promise<string> {
   // Generate random salt
   const saltArray = new Uint8Array(16);
   crypto.getRandomValues(saltArray);
@@ -79,7 +79,7 @@ async function hashPassword(password: string): Promise<string> {
 /**
  * Verify password (supports PBKDF2, legacy bcrypt, and btoa)
  */
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   if (isPBKDF2Hash(hash)) {
     // New PBKDF2 hash
     const parts = hash.split('$');
