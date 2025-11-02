@@ -1,7 +1,7 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.18 (Nov 2, 2025 - Security: PBKDF2 Password Migration)
+**Version:** 4.5.21 (Nov 3, 2025 - Latest: T. Evan Private Classes Addition)
 
 ---
 
@@ -12,12 +12,14 @@ This documentation is split into focused sections for efficient knowledge discov
 ### 🚀 Essential Reading (Start Here)
 
 **[Quick Start Guide](./copilot-docs/01-quick-start.md)** ⭐ **READ FIRST**
+
 - 7 critical rules that prevent runtime failures
 - Tech stack overview
 - Critical files reference
 - How to start development servers
 
 **[Architecture Essentials](./copilot-docs/02-architecture.md)**
+
 - Provider hierarchy (load-bearing order)
 - Convex backend patterns
 - Authentication & session management
@@ -26,6 +28,7 @@ This documentation is split into focused sections for efficient knowledge discov
 ### 📚 Core Documentation
 
 **[Non-Negotiable Patterns](./copilot-docs/03-patterns.md)** (25 patterns)
+
 - Bilingual-first development
 - Index-first queries (performance critical)
 - N+1 query prevention
@@ -54,6 +57,7 @@ This documentation is split into focused sections for efficient knowledge discov
 - Wizard-based onboarding pattern (NEW Nov 2025)
 
 **[Integration Points & Architecture](./copilot-docs/04-integration.md)**
+
 - System architecture overview (3-tier)
 - Core data flow patterns
 - Class booking workflow (end-to-end)
@@ -66,6 +70,7 @@ This documentation is split into focused sections for efficient knowledge discov
 - Audit logging integration
 
 **[Security Considerations](./copilot-docs/05-security.md)** ⚠️
+
 - Security context & environment (private repo)
 - Known limitations (NOT production-ready)
 - Password hashing issues
@@ -75,6 +80,7 @@ This documentation is split into focused sections for efficient knowledge discov
 ### 🛠️ Development & Testing
 
 **[Development Workflow](./copilot-docs/06-development.md)**
+
 - Local development setup (PowerShell)
 - Convex schema changes & migrations
 - Debugging real-time updates
@@ -85,6 +91,7 @@ This documentation is split into focused sections for efficient knowledge discov
 - Testing new features
 
 **[E2E Testing Guide](./copilot-docs/07-testing.md)**
+
 - Playwright setup & commands
 - Test structure overview
 - 7 Best practices for writing tests
@@ -96,17 +103,20 @@ This documentation is split into focused sections for efficient knowledge discov
 ### 📖 Reference Materials
 
 **[Common Pitfalls](./copilot-docs/08-pitfalls.md)**
+
 - What NOT to do (8 critical warnings)
 - Safe changes you can make
 - When to ask before proceeding
 
 **[Post-Implementation Procedures](./copilot-docs/09-procedures.md)**
+
 - Update notification workflow (automated)
 - Implementation summary conventions
 - School-specific vs broadcast notifications
 - Version tracking & changelog
 
 **[Key Files Reference](./copilot-docs/10-files.md)**
+
 - Architecture & schema files
 - Core patterns & helpers
 - Backend logic files
@@ -116,6 +126,7 @@ This documentation is split into focused sections for efficient knowledge discov
 ### 🚨 Operations & Recovery
 
 **[Disaster Recovery Protocols](./copilot-docs/11-disaster-recovery.md)** ⚠️ **EMERGENCY RUNBOOK**
+
 - 10 critical failure scenarios with step-by-step recovery
 - Convex offline recovery
 - Vercel deployment failures
@@ -124,6 +135,7 @@ This documentation is split into focused sections for efficient knowledge discov
 - Emergency contact information
 
 **[Logging & Monitoring Guide](./copilot-docs/12-logging-monitoring.md)**
+
 - Convex logs & real-time debugging
 - Vercel deployment logs
 - Browser console debugging
@@ -134,6 +146,7 @@ This documentation is split into focused sections for efficient knowledge discov
 - Log aggregation strategies
 
 **[Stack Alternatives & Migration](./copilot-docs/13-stack-alternatives.md)**
+
 - Migration paths from Vercel (Netlify, Cloudflare Pages)
 - Convex alternatives (Firebase, Supabase, PlanetScale)
 - MongoDB replacement options
@@ -142,6 +155,7 @@ This documentation is split into focused sections for efficient knowledge discov
 - Self-hosted options
 
 **[How-To Guides](./copilot-docs/14-how-to-guides.md)** 📝 **COPY-PASTE READY**
+
 - Deploy to production (step-by-step)
 - Rollback failed deployment
 - User management operations
@@ -150,6 +164,7 @@ This documentation is split into focused sections for efficient knowledge discov
 - Quick reference card
 
 **[Code Refactoring Guide](./copilot-docs/15-refactoring-guide.md)** 🔧
+
 - Priority files for refactoring (2000+ line components)
 - Splitting strategy for class-booking.tsx (2,930 lines)
 - Modularizing classes.ts backend (2,213 lines)
@@ -187,30 +202,29 @@ This documentation is split into focused sections for efficient knowledge discov
 - **Disaster Recovery**: 10 critical failure scenarios with step-by-step recovery
 - **Operational Guides**: 5 practical how-to procedures with copy-paste commands
 - **Refactoring Candidates**: 4 files identified (2,930 to 1,065 lines each)
-- **Recent Updates**: Nov 2, 2025 (v4.5.18) - PBKDF2 password migration deployed
+- **Recent Updates**: Nov 3, 2025 (v4.5.21) - T. Evan Private Classes Addition
 
 ---
 
 ## 🔄 Last Updated
 
-**November 2, 2025** - Version 4.5.18 - PBKDF2 Password Migration 🔐
-- **Security Upgrade**: Migrated from bcrypt to PBKDF2 (Web Crypto API)
-  - Problem: bcrypt incompatible with Convex runtime (requires Node.js modules)
-  - Solution: PBKDF2 using Web Crypto API (pure JavaScript, 100,000 iterations)
-  - Strategy: Soft migration - zero user disruption, auto-upgrade on login
-  - Triple hybrid verification: Supports PBKDF2, bcrypt (legacy), and btoa (legacy)
-  - Timeline: Gradual migration as users login naturally
-  - Monitoring: Admin dashboard query tracks migration progress (total/migrated/pending)
-  - Implementation: Pure JavaScript, no external dependencies
-  - Security Impact: Before A (bcrypt), After A+ (PBKDF2 100K iterations = 100x stronger)
-  - Files: `convex/users.ts` (~120 lines), removed bcryptjs package
-  - Documentation: Updated for PBKDF2 implementation
+**November 3, 2025** - Version 4.5.21 - T. Evan Private Classes Addition �
+
+- **Feature Update**: Fourth teacher schedule added to private classes system
+  - Teacher: T. Evan (K1/6 + K1/4 students)
+  - Schedule: 5 days/week, 8 unique students, 10 weekly classes
+  - Location: PLAY ROOM B.5 (all classes)
+  - Duration: 12 weeks (Nov 4, 2025 - Jan 24, 2026)
+  - Special: GOMU GOMU (1607) attends twice weekly
+  - Implementation: Added EVAN_SCHEDULE constant, 8 student name mappings
+  - System now supports 4 teachers (T. Che, T. Cale, T. Lee, T. Evan)
+  - Files: `convex/seedPrivateClasses.ts`, `docs/Images/PvtClasses/T_Evan_1-6_Schedule.md`
 - **Build Status**: Next.js ✅, TypeScript ✅, Convex deploy ✅
+- **Previous (v4.5.20)**: PBKDF2 Migration Completion - Fixed password creation vulnerability
+- **Previous (v4.5.18)**: PBKDF2 Password Migration - Web Crypto API implementation
 - **Previous (v4.5.17)**: Bcrypt migration (superseded due to Convex incompatibility)
 - **Previous (v4.5.16)**: Wizard-Based Startup Window - 5 guided workflows for moderators/teachers
-- **Previous (v4.5.15)**: Filter-Required Display - Eliminated scrolling hell in class bookings (95-98% DOM reduction)
-- **Previous (v4.5.14)**: Security Patch - Moderator authorization bypass fixed
-- **Previous (v4.5.13)**: Analytics Dashboard - Comprehensive educational performance metrics
+- **Previous (v4.5.15)**: Filter-Required Display - Eliminated scrolling hell in class bookings
 
 ---
 
@@ -241,4 +255,3 @@ This documentation is split into focused sections for efficient knowledge discov
 ---
 
 **For complete documentation on each topic, see the linked files in the sections above.**
-
