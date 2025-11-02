@@ -74,7 +74,16 @@ jobs:
               env:
                   CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
               run: |
-                  npx convex env delete "ci-${{ github.run_id }}" --yes || true
+                  # Debug Convex CLI so we can see what commands are available in the job logs
+                  npx convex --version || true
+                  npx convex --help | sed -n '1,160p' || true
+
+                  # Try known variants to remove the preview environment. Tolerate failure so cleanup never fails the job.
+                  npx convex env delete "ci-${{ github.run_id }}" --yes || \
+                  npx convex env remove "ci-${{ github.run_id }}" --yes || \
+                  npx convex env destroy "ci-${{ github.run_id }}" --yes || \
+                  npx convex delete "ci-${{ github.run_id }}" --yes || \
+                  true
 
             # Upload artifacts
             - name: Upload Playwright report
