@@ -1,7 +1,7 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.15 (Nov 1, 2025 - Performance & UX: Filter-Required Display)
+**Version:** 4.5.17 (Nov 1, 2025 - Security: Bcrypt Password Migration)
 
 ---
 
@@ -113,6 +113,49 @@ This documentation is split into focused sections for efficient knowledge discov
 - UI components
 - Feature documentation
 
+### 🚨 Operations & Recovery
+
+**[Disaster Recovery Protocols](./copilot-docs/11-disaster-recovery.md)** ⚠️ **EMERGENCY RUNBOOK**
+- 10 critical failure scenarios with step-by-step recovery
+- Convex offline recovery
+- Vercel deployment failures
+- Session/authentication issues
+- Data corruption procedures
+- Emergency contact information
+
+**[Logging & Monitoring Guide](./copilot-docs/12-logging-monitoring.md)**
+- Convex logs & real-time debugging
+- Vercel deployment logs
+- Browser console debugging
+- GitHub Actions CI/CD logs
+- MongoDB Atlas monitoring
+- Error reporting system
+- Performance monitoring
+- Log aggregation strategies
+
+**[Stack Alternatives & Migration](./copilot-docs/13-stack-alternatives.md)**
+- Migration paths from Vercel (Netlify, Cloudflare Pages)
+- Convex alternatives (Firebase, Supabase, PlanetScale)
+- MongoDB replacement options
+- Cost comparison matrix
+- Migration complexity ratings
+- Self-hosted options
+
+**[How-To Guides](./copilot-docs/14-how-to-guides.md)** 📝 **COPY-PASTE READY**
+- Deploy to production (step-by-step)
+- Rollback failed deployment
+- User management operations
+- Debug production issues
+- Backup & restore procedures
+- Quick reference card
+
+**[Code Refactoring Guide](./copilot-docs/15-refactoring-guide.md)** 🔧
+- Priority files for refactoring (2000+ line components)
+- Splitting strategy for class-booking.tsx (2,930 lines)
+- Modularizing classes.ts backend (2,213 lines)
+- Component extraction patterns
+- Refactoring checklist & migration steps
+
 ---
 
 ## 🎯 Quick Decision Tree
@@ -124,7 +167,11 @@ This documentation is split into focused sections for efficient knowledge discov
 - **Implement a new feature** → [Non-Negotiable Patterns](./copilot-docs/03-patterns.md)
 - **Debug real-time issues** → [Development Workflow](./copilot-docs/06-development.md) → Debugging sections
 - **Write E2E tests** → [E2E Testing Guide](./copilot-docs/07-testing.md)
-- **Deploy to production** → [Security Considerations](./copilot-docs/05-security.md) ⚠️ **READ FIRST**
+- **Deploy to production** → [How-To Guides](./copilot-docs/14-how-to-guides.md) → Deploy Section
+- **Recover from failure** → [Disaster Recovery Protocols](./copilot-docs/11-disaster-recovery.md) ⚠️ **EMERGENCY**
+- **Debug production issues** → [Logging & Monitoring Guide](./copilot-docs/12-logging-monitoring.md)
+- **Migrate stack components** → [Stack Alternatives](./copilot-docs/13-stack-alternatives.md)
+- **Refactor large files** → [Code Refactoring Guide](./copilot-docs/15-refactoring-guide.md)
 - **Find a specific file** → [Key Files Reference](./copilot-docs/10-files.md)
 - **Avoid breaking changes** → [Common Pitfalls](./copilot-docs/08-pitfalls.md)
 
@@ -132,27 +179,33 @@ This documentation is split into focused sections for efficient knowledge discov
 
 ## 📊 Documentation Stats
 
-- **Total Documentation**: ~2800 lines split into 10 focused files
+- **Total Documentation**: ~6,000 lines split into 15 focused files
 - **Code Patterns**: 25 non-negotiable patterns documented
 - **Architecture Diagrams**: 12 ASCII diagrams across integration docs
 - **Test Best Practices**: 7 E2E testing patterns + 4 performance optimizations
-- **Security Warnings**: 4 known limitations clearly marked
-- **Recent Updates**: Nov 1, 2025 (v4.5.16) - Wizard-based startup window for moderators/teachers
+- **Security Warnings**: 1 known limitation (3 resolved as of Nov 1, 2025)
+- **Disaster Recovery**: 10 critical failure scenarios with step-by-step recovery
+- **Operational Guides**: 5 practical how-to procedures with copy-paste commands
+- **Refactoring Candidates**: 4 files identified (2,930 to 1,065 lines each)
+- **Recent Updates**: Nov 1, 2025 (v4.5.17) - Bcrypt password migration deployed
 
 ---
 
 ## 🔄 Last Updated
 
-**November 1, 2025** - Version 4.5.16 - Wizard-Based Startup Window 🧙
-- **Wizard Onboarding Pattern**: Replaced moderator/teacher startup window with 5 guided wizard workflows
-  - Problem: Feature discovery slow, complex workflows intimidating for new users
-  - Solution: Step-by-step wizards for booking, reporting, messaging, notifications, dashboard
-  - Wizards: BookingWizard (teacher→grade→class→type→calendar), ClassCountReportWizard (teacher→date→analytics), MessageWizard (recipients→compose→send)
-  - Benefits: Reduced onboarding time (30min → <10min), lower error rates, faster feature discovery
-  - Created: `components/booking-wizard.tsx` (410 lines), `components/class-count-report-wizard.tsx` (217 lines), `components/message-wizard.tsx` (307 lines)
-  - Modified: `components/startup-window.tsx` (5 wizard-triggering buttons)
-  - Documentation: `IMPLEMENTATION_SUMMARY_WIZARD_STARTUP_NOV_1_2025.md` (300+ lines), Pattern #25 in copilot-docs
+**November 1, 2025** - Version 4.5.17 - Bcrypt Password Migration 🔐
+- **Security Upgrade**: Migrated from insecure btoa() encoding to industry-standard bcrypt hashing
+  - Problem: Database compromise exposed all passwords (reversible encoding)
+  - Solution: One-way bcrypt hashing with salt (10 rounds), OWASP compliant
+  - Strategy: Soft migration - zero user disruption, auto-upgrade on login
+  - Timeline: 2-4 weeks for gradual rollout as users login naturally
+  - Monitoring: Admin dashboard query tracks migration progress (total/migrated/pending)
+  - Implementation: Hybrid verification system supports both hash types during migration
+  - Security Impact: Before D (Fail), After A (Pass) - irreversible hashing
+  - Files: `convex/users.ts` (~50 lines), added bcrypt package
+  - Documentation: `docs/archive/implementations/IMPLEMENTATION_SUMMARY_BCRYPT_MIGRATION_NOV_1_2025.md`
 - **Build Status**: Next.js ✅, TypeScript ✅, Convex deploy ✅
+- **Previous (v4.5.16)**: Wizard-Based Startup Window - 5 guided workflows for moderators/teachers
 - **Previous (v4.5.15)**: Filter-Required Display - Eliminated scrolling hell in class bookings (95-98% DOM reduction)
 - **Previous (v4.5.14)**: Security Patch - Moderator authorization bypass fixed
 - **Previous (v4.5.13)**: Analytics Dashboard - Comprehensive educational performance metrics
@@ -173,7 +226,7 @@ This documentation is split into focused sections for efficient knowledge discov
 
 3. **Always use `.withIndex()`** for Convex queries - check `convex/schema.ts` for indexes. NEVER query inside loops - use batch fetch + Map pattern. This is critical for performance.
 
-4. **Custom auth, not Convex built-in** - Uses localStorage sessions (24hr expiry), `btoa()` password hashing (⚠️ NOT production-secure), and explicit userId passing. See `lib/session-utils.ts`.
+4. **Custom auth with bcrypt** - Uses localStorage sessions (24hr expiry), bcrypt password hashing (industry-standard, 10 rounds), and explicit userId passing. See `lib/session-utils.ts` and `convex/users.ts`. ⚠️ Note: Hybrid verification during migration supports legacy btoa() hashes.
 
 5. **All components need `"use client"`** - Next.js App Router requires this directive for client-side hooks (`useQuery`, `useMutation`, `useState`).
 

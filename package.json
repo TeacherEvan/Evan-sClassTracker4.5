@@ -7,6 +7,9 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
+    "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\" \"#node_modules\"",
+    "prepare": "husky install",
     "create-update": "tsx scripts/create-app-update.ts",
     "backup": "tsx scripts/backup-to-mongodb.ts backup",
     "backup:list": "tsx scripts/backup-to-mongodb.ts list",
@@ -42,8 +45,19 @@
     "dotenv": "^16.4.5",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "markdownlint-cli2": "^0.16.0",
     "tailwindcss": "^4",
     "tsx": "^4.20.6",
     "typescript": "^5"
+  },
+  "lint-staged": {
+    "*.md": [
+      "markdownlint-cli2 --fix"
+    ],
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix"
+    ]
   }
 }

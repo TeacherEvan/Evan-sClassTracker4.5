@@ -14,7 +14,7 @@
 
 3. **Always use `.withIndex()`** for Convex queries - check `convex/schema.ts` for indexes. NEVER query inside loops - use batch fetch + Map pattern. This is critical for performance.
 
-4. **Custom auth, not Convex built-in** - Uses localStorage sessions (24hr expiry), `btoa()` password hashing (⚠️ NOT production-secure), and explicit userId passing. See `lib/session-utils.ts`.
+4. **Custom auth with bcrypt** - Uses localStorage sessions (24hr expiry), bcrypt password hashing (industry-standard, 10 rounds), and explicit userId passing. See `lib/session-utils.ts` and `convex/users.ts`. ⚠️ Note: Hybrid verification during migration supports legacy btoa() hashes.
 
 5. **All components need `"use client"`** - Next.js App Router requires this directive for client-side hooks (`useQuery`, `useMutation`, `useState`).
 
@@ -33,7 +33,7 @@
 - **Styling**: Tailwind CSS v4
 - **Language**: TypeScript + bilingual UI (English/Thai)
 
-**Latest Version:** 4.5.12 (Oct 31, 2025)
+**Latest Version:** 4.5.17 (Nov 1, 2025)
 
 **Recent Optimizations**: 40-50% faster loads and 10-100x faster queries via N+1 elimination (Oct 2025)
 

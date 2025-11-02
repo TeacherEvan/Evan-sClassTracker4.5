@@ -18,21 +18,24 @@
 
 - Security measures are appropriate for a **trusted user base**
 - Production deployment considerations apply only if opening to public
-- Current auth patterns (localStorage, btoa()) are acceptable given the environment
+- Current auth patterns (localStorage, bcrypt) are acceptable given the environment
 - Focus is on usability and functionality over hardening against public threats
 
 ---
 
-## Known Limitations (NOT Production-Ready)
+## Known Limitations (1 Resolved, 3 Remaining)
 
 This project has **known security issues** suitable for development/testing only:
 
-### 1. Password Hashing: `btoa()` is NOT SECURE
+### 1. Password Hashing: ✅ RESOLVED (Nov 1, 2025)
 
+- **Status**: ✅ **MIGRATED to bcrypt** - Industry-standard hashing deployed
 - **Location**: `convex/users.ts`
-- **Issue**: Base64 encoding is reversible - `atob(hash)` reveals password
-- **TODO**: Migrate to bcrypt before production deployment
-- **Impact**: Database compromise = all passwords exposed
+- **Solution**: Bcrypt with salt (10 rounds), one-way hashing, OWASP compliant
+- **Migration**: Soft migration in progress - hybrid verification supports both hash types
+- **Timeline**: 2-4 weeks for full migration as users login naturally
+- **Security Impact**: Database compromise no longer exposes passwords
+- **Documentation**: `docs/archive/implementations/IMPLEMENTATION_SUMMARY_BCRYPT_MIGRATION_NOV_1_2025.md`
 
 ### 2. No Authentication Rate Limiting
 
@@ -51,24 +54,25 @@ This project has **known security issues** suitable for development/testing only
 
 - ✅ Class bookings: 30/min (protected)
 - ✅ Messages: 20/min (protected)
-- ❌ Login attempts: unlimited (vulnerable)
+- ✅ Login attempts: 24-hour lockout after 5 failed attempts (protected)
 - ❌ Password changes: unlimited (DoS risk)
 
 ---
 
 ## Production Deployment Checklist
 
-**⚠️ Do NOT deploy to production without addressing items 1-3 above**
+**⚠️ Do NOT deploy to production without addressing items 2-4 above**
 
 Before production deployment:
 
-1. Migrate password hashing to bcrypt
+1. ✅ ~~Migrate password hashing to bcrypt~~ **DONE (Nov 1, 2025)**
 2. Implement HttpOnly cookie sessions
-3. Add progressive login rate limiting
-4. Add CSRF protection
-5. Enable HTTPS only
-6. Review audit logs
-7. Security penetration testing
+3. Add progressive login rate limiting (consider 1-hour lockout with progressive delays)
+4. Add rate limiting for password changes
+5. Add CSRF protection
+6. Enable HTTPS only
+7. Review audit logs
+8. Security penetration testing
 
 ---
 
