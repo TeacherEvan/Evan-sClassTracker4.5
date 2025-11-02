@@ -413,6 +413,7 @@ export function StartupWindow({
             {/* Wizard Modals */}
             {showBookingWizard && (
                 <BookingWizard
+                    key={`booking-wizard-${language}`}
                     userId={user._id}
                     userRole={user.role as "teacher" | "moderator"}
                     userSchoolId={user.schoolId as Id<"schools"> | undefined}
@@ -428,6 +429,7 @@ export function StartupWindow({
 
             {showClassCountWizard && (
                 <ClassCountReportWizard
+                    key={`class-count-wizard-${language}`}
                     userId={user._id}
                     userRole={user.role as "teacher" | "moderator"}
                     userSchoolId={user.schoolId as Id<"schools"> | undefined}
@@ -441,6 +443,7 @@ export function StartupWindow({
 
             {showMessageWizard && (
                 <MessageWizard
+                    key={`message-wizard-${language}`}
                     userId={user._id}
                     userRole={user.role as "teacher" | "moderator"}
                     userSchoolId={user.schoolId as Id<"schools"> | undefined}
@@ -455,6 +458,7 @@ export function StartupWindow({
 
             {showAnalytics && (
                 <ClassAnalytics
+                    key={`analytics-${language}`}
                     userId={user._id}
                     onClose={() => {
                         setShowAnalytics(false);
