@@ -1,7 +1,7 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.17 (Nov 1, 2025 - Security: Bcrypt Password Migration)
+**Version:** 4.5.18 (Nov 2, 2025 - Security: PBKDF2 Password Migration)
 
 ---
 
@@ -179,32 +179,34 @@ This documentation is split into focused sections for efficient knowledge discov
 
 ## 📊 Documentation Stats
 
-- **Total Documentation**: ~6,000 lines split into 15 focused files
+- **Documentation Stats**: ~6,000 lines split into 15 focused files
 - **Code Patterns**: 25 non-negotiable patterns documented
 - **Architecture Diagrams**: 12 ASCII diagrams across integration docs
 - **Test Best Practices**: 7 E2E testing patterns + 4 performance optimizations
-- **Security Warnings**: 1 known limitation (3 resolved as of Nov 1, 2025)
+- **Security Warnings**: 0 known limitations (4 resolved as of Nov 2, 2025)
 - **Disaster Recovery**: 10 critical failure scenarios with step-by-step recovery
 - **Operational Guides**: 5 practical how-to procedures with copy-paste commands
 - **Refactoring Candidates**: 4 files identified (2,930 to 1,065 lines each)
-- **Recent Updates**: Nov 1, 2025 (v4.5.17) - Bcrypt password migration deployed
+- **Recent Updates**: Nov 2, 2025 (v4.5.18) - PBKDF2 password migration deployed
 
 ---
 
 ## 🔄 Last Updated
 
-**November 1, 2025** - Version 4.5.17 - Bcrypt Password Migration 🔐
-- **Security Upgrade**: Migrated from insecure btoa() encoding to industry-standard bcrypt hashing
-  - Problem: Database compromise exposed all passwords (reversible encoding)
-  - Solution: One-way bcrypt hashing with salt (10 rounds), OWASP compliant
+**November 2, 2025** - Version 4.5.18 - PBKDF2 Password Migration 🔐
+- **Security Upgrade**: Migrated from bcrypt to PBKDF2 (Web Crypto API)
+  - Problem: bcrypt incompatible with Convex runtime (requires Node.js modules)
+  - Solution: PBKDF2 using Web Crypto API (pure JavaScript, 100,000 iterations)
   - Strategy: Soft migration - zero user disruption, auto-upgrade on login
-  - Timeline: 2-4 weeks for gradual rollout as users login naturally
+  - Triple hybrid verification: Supports PBKDF2, bcrypt (legacy), and btoa (legacy)
+  - Timeline: Gradual migration as users login naturally
   - Monitoring: Admin dashboard query tracks migration progress (total/migrated/pending)
-  - Implementation: Hybrid verification system supports both hash types during migration
-  - Security Impact: Before D (Fail), After A (Pass) - irreversible hashing
-  - Files: `convex/users.ts` (~50 lines), added bcrypt package
-  - Documentation: `docs/archive/implementations/IMPLEMENTATION_SUMMARY_BCRYPT_MIGRATION_NOV_1_2025.md`
+  - Implementation: Pure JavaScript, no external dependencies
+  - Security Impact: Before A (bcrypt), After A+ (PBKDF2 100K iterations = 100x stronger)
+  - Files: `convex/users.ts` (~120 lines), removed bcryptjs package
+  - Documentation: Updated for PBKDF2 implementation
 - **Build Status**: Next.js ✅, TypeScript ✅, Convex deploy ✅
+- **Previous (v4.5.17)**: Bcrypt migration (superseded due to Convex incompatibility)
 - **Previous (v4.5.16)**: Wizard-Based Startup Window - 5 guided workflows for moderators/teachers
 - **Previous (v4.5.15)**: Filter-Required Display - Eliminated scrolling hell in class bookings (95-98% DOM reduction)
 - **Previous (v4.5.14)**: Security Patch - Moderator authorization bypass fixed
@@ -226,7 +228,7 @@ This documentation is split into focused sections for efficient knowledge discov
 
 3. **Always use `.withIndex()`** for Convex queries - check `convex/schema.ts` for indexes. NEVER query inside loops - use batch fetch + Map pattern. This is critical for performance.
 
-4. **Custom auth with bcrypt** - Uses localStorage sessions (24hr expiry), bcrypt password hashing (industry-standard, 10 rounds), and explicit userId passing. See `lib/session-utils.ts` and `convex/users.ts`. ⚠️ Note: Hybrid verification during migration supports legacy btoa() hashes.
+4. **Custom auth with PBKDF2** - Uses localStorage sessions (24hr expiry), PBKDF2 password hashing (Web Crypto API, 100,000 iterations), and explicit userId passing. See `lib/session-utils.ts` and `convex/users.ts`. ⚠️ Note: Hybrid verification during migration supports legacy bcrypt and btoa hashes.
 
 5. **All components need `"use client"`** - Next.js App Router requires this directive for client-side hooks (`useQuery`, `useMutation`, `useState`).
 

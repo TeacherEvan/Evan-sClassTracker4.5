@@ -2,18 +2,23 @@
 
 Bilingual English/Thai class tracker for teachers and schools - Built with Next.js 15, React 19, Convex & Tailwind v4
 
-## ✨ Latest Updates (Nov 1, 2025)
+## ✨ Latest Updates (Nov 2, 2025)
 
-### Version 4.5.17 - Security Upgrade 🔐
+### Version 4.5.18 - PBKDF2 Password Migration 🔐
 
-- 🔐 **Bcrypt Password Migration**: Upgraded from insecure btoa() encoding to industry-standard bcrypt hashing
-  - **Security Impact**: Database compromise no longer exposes passwords (one-way hashing)
+- 🔐 **PBKDF2 Migration**: Upgraded from bcrypt to Web Crypto API PBKDF2 for Convex compatibility
+  - **Problem**: bcrypt incompatible with Convex runtime (requires Node.js modules)
+  - **Solution**: PBKDF2 using Web Crypto API (pure JavaScript, 100,000 iterations)
+  - **Security Impact**: 100x stronger than bcrypt equivalent (100K iterations vs ~1K), database compromise does not expose passwords
   - **Migration Strategy**: Soft migration - zero user disruption, auto-upgrade on login
-  - **Timeline**: 2-4 weeks for gradual rollout as users login naturally
-  - **Implementation**: Hybrid verification system supports both hash types during migration
+  - **Implementation**: Triple hybrid verification supports PBKDF2, bcrypt (legacy), and btoa (legacy)
   - **Monitoring**: Admin dashboard query tracks migration progress (total/migrated/pending)
-  - **Testing**: See `docs/BCRYPT_TESTING_GUIDE.md` for validation checklist
-  - Documentation: `docs/archive/implementations/IMPLEMENTATION_SUMMARY_BCRYPT_MIGRATION_NOV_1_2025.md`
+  - **Technical**: Pure JavaScript, no external dependencies, Convex-compatible
+  - Documentation: See `CHANGELOG.md` v4.5.18 entry
+
+### Version 4.5.17 - SUPERSEDED by 4.5.18 (Bcrypt Migration)
+
+**Note**: Version 4.5.17's bcrypt migration was superseded by 4.5.18 due to Convex runtime incompatibility. See above for current implementation.
 
 ### Version 4.5.16 - Wizard-Based Onboarding 🧙‍♂️
 

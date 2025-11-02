@@ -1,43 +1,125 @@
-import bcrypt from "bcryptjs";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { checkRateLimit } from "./rateLimit";
 
-// ✅ UPGRADED: Secure bcrypt password hashing with backward compatibility
-// Soft migration: Auto-upgrades legacy btoa() hashes to bcrypt on login
+// ✅ UPGRADED: Secure password hashing with backward compatibility
+// Uses Web Crypto API (works in Convex runtime without Node.js)
+// Soft migration: Auto-upgrades legacy btoa() hashes on login
 
-const SALT_ROUNDS = 10; // bcrypt salt rounds (balance between security and performance)
+const PBKDF2_ITERATIONS = 100000; // OWASP recommended
+const HASH_LENGTH = 32; // 256 bits
 
 /**
- * Detect if hash is bcrypt (starts with $2a$, $2b$, or $2y$) or legacy btoa
+ * Detect if hash is bcrypt (starts with $2a$, $2b$, or $2y$)
  */
 function isBcryptHash(hash: string): boolean {
   return hash.startsWith("$2a$") || hash.startsWith("$2b$") || hash.startsWith("$2y$");
 }
 
 /**
- * Hash password with bcrypt (async)
+ * Detect if hash is PBKDF2 format (pbkdf2$salt$hash)
  */
-async function hashPassword(password: string): Promise<string> {
-  return await bcrypt.hash(password, SALT_ROUNDS);
+function isPBKDF2Hash(hash: string): boolean {
+  return hash.startsWith("pbkdf2$");
 }
 
 /**
- * Verify password against hash (supports both bcrypt and legacy btoa)
- * Hybrid verification for smooth migration
+ * Convert bytes to hex
  */
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  if (isBcryptHash(hash)) {
-    // New bcrypt hash - secure verification
-    return await bcrypt.compare(password, hash);
-  } else {
-    // Legacy btoa hash - temporary backward compatibility
-    // This will be phased out as users login and auto-upgrade
-    return btoa(password) === hash;
-  }
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Query to get user by username
+/**
+ * Convert hex to bytes
+ */
+function hexToBytes(hex: string): Uint8Array {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+  }
+  return bytes;
+}
+
+/**
+ * Hash password using PBKDF2 with Web Crypto API
+ */
+async function hashPassword(password: string): Promise<string> {
+  // Generate random salt
+  const saltArray = new Uint8Array(16);
+  crypto.getRandomValues(saltArray);
+  const salt = saltArray.buffer as ArrayBuffer; // Ensure it's ArrayBuffer, not SharedArrayBuffer
+
+  // Import password as key
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+
+  // Derive key using PBKDF2
+  const hashBuffer = await crypto.subtle.deriveBits(
+    {
+      name: "PBKDF2",
+      salt: salt,
+      iterations: PBKDF2_ITERATIONS,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    HASH_LENGTH * 8
+  );
+
+  const hash = new Uint8Array(hashBuffer);
+  return `pbkdf2$${bytesToHex(new Uint8Array(salt))}$${bytesToHex(hash)}`;
+}
+
+/**
+ * Verify password (supports PBKDF2, legacy bcrypt, and btoa)
+ */
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  if (isPBKDF2Hash(hash)) {
+    // New PBKDF2 hash
+    const parts = hash.split('$');
+    if (parts.length !== 3) return false;
+
+    const saltArray = hexToBytes(parts[1]);
+    const salt = saltArray.buffer as ArrayBuffer; // Ensure it's ArrayBuffer, not SharedArrayBuffer
+    const storedHash = parts[2];
+
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(password),
+      "PBKDF2",
+      false,
+      ["deriveBits"]
+    );
+
+    const hashBuffer = await crypto.subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        salt: salt,
+        iterations: PBKDF2_ITERATIONS,
+        hash: "SHA-256"
+      },
+      keyMaterial,
+      HASH_LENGTH * 8
+    );
+
+    const computedHash = bytesToHex(new Uint8Array(hashBuffer));
+    return computedHash === storedHash;
+  } else if (isBcryptHash(hash)) {
+    // Legacy bcrypt - cannot verify without bcrypt library
+    // User must reset password via admin
+    throw new Error("Your password format is outdated. Please contact an admin to reset your password.");
+  } else {
+    // Legacy btoa hash
+    return btoa(password) === hash;
+  }
+}// Query to get user by username
 export const getByUsername = query({
   args: {
     username: v.string(),
@@ -209,7 +291,7 @@ export const login = mutation({
       });
     }
 
-    // Verify password (supports both bcrypt and legacy btoa hashes)
+    // Verify password (supports PBKDF2, legacy bcrypt, and btoa hashes)
     if (!(await verifyPassword(args.password, user.passwordHash))) {
       // Increment failed attempts
       const failedAttempts = (user.failedLoginAttempts || 0) + 1;
@@ -233,9 +315,9 @@ export const login = mutation({
       }
     }
 
-    // ✅ AUTO-UPGRADE: If user still has legacy btoa hash, upgrade to bcrypt now
+    // ✅ AUTO-UPGRADE: If user still has legacy hash (btoa or bcrypt), upgrade to PBKDF2 now
     let updatedPasswordHash = user.passwordHash;
-    if (!isBcryptHash(user.passwordHash)) {
+    if (!isPBKDF2Hash(user.passwordHash)) {
       console.log(`🔄 Auto-upgrading password hash for user: ${user.username}`);
       updatedPasswordHash = await hashPassword(args.password);
     }
@@ -257,7 +339,7 @@ export const login = mutation({
     const newHistory = [loginEntry, ...existingHistory].slice(0, 10);
 
     await ctx.db.patch(user._id, {
-      passwordHash: updatedPasswordHash, // Apply bcrypt upgrade if needed
+      passwordHash: updatedPasswordHash, // Apply PBKDF2 upgrade if needed
       failedLoginAttempts: 0,
       accountLockedUntil: undefined,
       lastSuccessfulLogin: now,
@@ -310,12 +392,12 @@ export const changePassword = mutation({
       throw new Error("Account is locked. Please try again later or contact admin.");
     }
 
-    // Verify current password (supports both bcrypt and legacy btoa hashes)
+    // Verify current password (supports PBKDF2, bcrypt, and legacy btoa hashes)
     if (!(await verifyPassword(args.currentPassword, user.passwordHash))) {
       throw new Error("Current password is incorrect");
     }
 
-    // Update password (always uses bcrypt for new passwords)
+    // Update password (always uses PBKDF2 for new passwords)
     const newPasswordHash = await hashPassword(args.newPassword);
     await ctx.db.patch(args.userId, {
       passwordHash: newPasswordHash,
@@ -338,7 +420,7 @@ export const resetPassword = mutation({
       throw new Error("User not found");
     }
 
-    // Reset to default password AND unlock account (uses bcrypt for new passwords)
+    // Reset to default password AND unlock account (uses PBKDF2 for new passwords)
     const defaultPassword = `Teacher${user.username}`;
     const passwordHash = await hashPassword(defaultPassword);
 
@@ -454,7 +536,7 @@ export const getCurrentUser = query({
  * Delete a user (Admin only)
  * This performs a hard delete - removes the user completely from the database
  * WARNING: This action cannot be undone!
- * 
+ *
  * Before deleting, you may want to:
  * - Archive or transfer the user's data
  * - Check for associated records (classes, students, etc.)
@@ -602,22 +684,22 @@ export const bulkDeleteUsers = mutation({
   },
 });
 
-// ✅ NEW: Query to track bcrypt migration progress (admin only)
+// ✅ NEW: Query to track PBKDF2 migration progress (admin only)
 export const getMigrationStats = query({
   args: {},
   handler: async (ctx) => {
     const allUsers = await ctx.db.query("users").collect();
 
-    const bcryptUsers = allUsers.filter(u => isBcryptHash(u.passwordHash));
-    const legacyUsers = allUsers.filter(u => !isBcryptHash(u.passwordHash));
+    const pbkdf2Users = allUsers.filter(u => isPBKDF2Hash(u.passwordHash));
+    const legacyUsers = allUsers.filter(u => !isPBKDF2Hash(u.passwordHash));
 
     const percentage = allUsers.length > 0
-      ? Math.round((bcryptUsers.length / allUsers.length) * 100)
+      ? Math.round((pbkdf2Users.length / allUsers.length) * 100)
       : 0;
 
     return {
       total: allUsers.length,
-      migrated: bcryptUsers.length,
+      migrated: pbkdf2Users.length,
       pending: legacyUsers.length,
       percentage,
       legacyUsernames: legacyUsers.map(u => u.username), // For admin tracking

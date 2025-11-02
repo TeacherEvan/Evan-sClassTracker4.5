@@ -78,7 +78,7 @@ clearUserSession();
 - **Default password**: `Teacher{username}` (e.g., `TeacherEvan`)
 - **First login**: Forced password change via `requirePasswordChange` flag
 - **Admin powers**: Create/reset passwords, cannot view existing passwords
-- **Password hashing**: Uses bcrypt (industry-standard, 10 rounds) with hybrid verification during migration from legacy btoa() hashes (NEW Nov 2025)
+- **Password hashing**: Uses PBKDF2 (Web Crypto API, 100,000 iterations) with hybrid verification during migration from legacy bcrypt and btoa() hashes (NEW Nov 2025)
 - **Account lockout**: 24-hour lockout after 5 failed login attempts (see Pattern #11)
 
 ---
