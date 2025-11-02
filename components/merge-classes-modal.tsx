@@ -49,6 +49,7 @@ export function MergeClassesModal({
     const [groupSelections, setGroupSelections] = useState<Map<string, GroupMergeSelection>>(new Map());
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [selectAllMode, setSelectAllMode] = useState(false); // NEW: Track if "Select All" is active
 
     // Filter classes to only show those that can be merged
     // Group by teacher, school, location, and scheduled date WITH TIME TOLERANCE
@@ -71,6 +72,40 @@ export function MergeClassesModal({
     const mergeableGroups = Array.from(groupedClasses.entries())
         .filter(([, group]) => group.length > 1)
         .map(([key, group]) => ({ key, classes: group }));
+
+    // NEW: Handle "Select All Groups" - auto-selects target and sources intelligently
+    const handleSelectAllGroups = () => {
+        const newMap = new Map<string, GroupMergeSelection>();
+
+        mergeableGroups.forEach(group => {
+            // Auto-select first class as target, rest as sources
+            const firstClass = group.classes[0];
+            const otherClasses = group.classes.slice(1);
+
+            newMap.set(group.key, {
+                enabled: true,
+                targetClassId: firstClass._id,
+                sourceClassIds: otherClasses.map(c => c._id),
+            });
+        });
+
+        setGroupSelections(newMap);
+        setSelectAllMode(true);
+        toast.success(
+            `Selected all ${mergeableGroups.length} groups for merging`,
+            `เลือกทั้งหมด ${mergeableGroups.length} กลุ่มสำหรับการรวม`
+        );
+    };
+
+    // NEW: Handle "Clear All Selections"
+    const handleClearAllGroups = () => {
+        setGroupSelections(new Map());
+        setSelectAllMode(false);
+        toast.success(
+            "Cleared all selections",
+            "ล้างการเลือกทั้งหมดแล้ว"
+        );
+    };
 
     // Toggle group enabled/disabled
     const handleToggleGroup = (groupKey: string) => {
@@ -131,9 +166,9 @@ export function MergeClassesModal({
         // Get all enabled groups with valid selections
         const groupsToMerge = mergeableGroups.filter(group => {
             const selection = groupSelections.get(group.key);
-            return selection?.enabled && 
-                   selection.targetClassId && 
-                   selection.sourceClassIds.length > 0;
+            return selection?.enabled &&
+                selection.targetClassId &&
+                selection.sourceClassIds.length > 0;
         });
 
         if (groupsToMerge.length === 0) {
@@ -152,13 +187,13 @@ export function MergeClassesModal({
 
         for (const group of groupsToMerge) {
             const selection = groupSelections.get(group.key);
-            
+
             // Defensive check: skip if selection is undefined
             if (!selection) {
                 console.error(`Selection missing for group ${group.key}`);
                 continue;
             }
-            
+
             // Update status to merging
             setGroupSelections(prev => {
                 const newMap = new Map(prev);
@@ -172,7 +207,7 @@ export function MergeClassesModal({
                     targetClassId: selection.targetClassId as Id<"classes">,
                     sourceClassIds: selection.sourceClassIds,
                 });
-                
+
                 // Update status to success
                 setGroupSelections(prev => {
                     const newMap = new Map(prev);
@@ -183,7 +218,7 @@ export function MergeClassesModal({
             } catch (err) {
                 console.error(`Merge failed for group ${group.key}:`, err);
                 const errorMessage = err instanceof Error ? err.message : "Failed to merge classes";
-                
+
                 // Update status to error
                 setGroupSelections(prev => {
                     const newMap = new Map(prev);
@@ -285,6 +320,36 @@ export function MergeClassesModal({
                             </p>
                         </div>
 
+                        {/* NEW: Batch Selection Buttons */}
+                        <div className="flex flex-wrap gap-3 justify-between items-center bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                            <div className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                                {t(
+                                    `${mergeableGroups.length} mergeable groups found`,
+                                    `พบ ${mergeableGroups.length} กลุ่มที่สามารถรวมได้`
+                                )}
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={handleSelectAllGroups}
+                                    disabled={loading || selectAllMode}
+                                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-all"
+                                >
+                                    <Check className="w-4 h-4" />
+                                    {t("Select All Groups", "เลือกทั้งหมด")}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleClearAllGroups}
+                                    disabled={loading}
+                                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-all"
+                                >
+                                    <X className="w-4 h-4" />
+                                    {t("Clear All", "ล้างทั้งหมด")}
+                                </button>
+                            </div>
+                        </div>
+
                         {error && (
                             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                                 <p className="text-sm text-red-900 dark:text-red-100">{error}</p>
@@ -295,23 +360,22 @@ export function MergeClassesModal({
                             const firstClass = group.classes[0];
                             const location = firstClass.location;
                             const dateStr = new Date(firstClass.scheduledDate).toLocaleString();
-                            const selection = groupSelections.get(group.key) || { 
-                                enabled: false, 
-                                targetClassId: "", 
-                                sourceClassIds: [] 
+                            const selection = groupSelections.get(group.key) || {
+                                enabled: false,
+                                targetClassId: "",
+                                sourceClassIds: []
                             };
                             const isGroupEnabled = selection.enabled;
                             const targetClassId = selection.targetClassId;
                             const selectedSourceIds = selection.sourceClassIds;
 
                             return (
-                                <div 
-                                    key={group.key} 
-                                    className={`space-y-4 border-2 rounded-xl p-4 transition-all ${
-                                        isGroupEnabled 
-                                            ? "border-purple-300 dark:border-purple-700 bg-purple-50/30 dark:bg-purple-900/10" 
+                                <div
+                                    key={group.key}
+                                    className={`space-y-4 border-2 rounded-xl p-4 transition-all ${isGroupEnabled
+                                            ? "border-purple-300 dark:border-purple-700 bg-purple-50/30 dark:bg-purple-900/10"
                                             : "border-gray-200 dark:border-gray-700"
-                                    }`}
+                                        }`}
                                 >
                                     {/* Group Header with Enable Checkbox */}
                                     <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4">
@@ -378,11 +442,10 @@ export function MergeClassesModal({
                                                         return (
                                                             <label
                                                                 key={cls._id}
-                                                                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                                                                    targetClassId === cls._id
+                                                                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${targetClassId === cls._id
                                                                         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                                                                         : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                                                                }`}
+                                                                    }`}
                                                             >
                                                                 <input
                                                                     type="radio"
@@ -430,11 +493,10 @@ export function MergeClassesModal({
                                                                 return (
                                                                     <label
                                                                         key={cls._id}
-                                                                        className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                                                                            selectedSourceIds.includes(cls._id)
+                                                                        className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedSourceIds.includes(cls._id)
                                                                                 ? "border-green-500 bg-green-50 dark:bg-green-900/20"
                                                                                 : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                                                                        }`}
+                                                                            }`}
                                                                     >
                                                                         <input
                                                                             type="checkbox"

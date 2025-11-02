@@ -6,6 +6,7 @@ import { useLanguage } from "@/lib/language-context";
 import { useQuery } from "convex/react";
 import { Calendar, ChevronLeft, ChevronRight, Clock, Users, X } from "lucide-react";
 import { useState } from "react";
+import { MultiDateCalendar } from "./multi-date-calendar"; // NEW: Import MultiDateCalendar
 
 interface BookingWizardProps {
     userId: Id<"users">;
@@ -19,6 +20,7 @@ export interface BookingWizardData {
     teacherId: Id<"users">;
     grade: string;
     class: string;
+    studentId: Id<"students">; // NEW: Added studentId
     bookingType: "once-off" | "recurring";
     // Once-off data
     selectedDate?: number;
@@ -27,7 +29,7 @@ export interface BookingWizardData {
     selectedDays?: Array<{ day: string; time: string }>;
 }
 
-type WizardStep = "teacher" | "grade" | "class" | "booking-type" | "once-off-calendar" | "recurring-config";
+type WizardStep = "teacher" | "grade" | "class" | "student" | "booking-type" | "once-off-calendar" | "recurring-config"; // NEW: Added "student"
 
 export function BookingWizard({
     userRole,
@@ -41,10 +43,11 @@ export function BookingWizard({
     const [selectedTeacherId, setSelectedTeacherId] = useState<Id<"users"> | "">("");
     const [selectedGrade, setSelectedGrade] = useState("");
     const [selectedClass, setSelectedClass] = useState("");
+    const [selectedStudentId, setSelectedStudentId] = useState<Id<"students"> | "">("");  // NEW: Added student selection
     const [bookingType, setBookingType] = useState<"once-off" | "recurring" | "">("");
 
-    // Once-off state
-    const [selectedDate, setSelectedDate] = useState<number | null>(null);
+    // Once-off state - Changed to array for MultiDateCalendar compatibility
+    const [selectedDates, setSelectedDates] = useState<number[]>([]); // Changed from single date to array
 
     // Recurring state
     const [weeksCount, setWeeksCount] = useState(1);
@@ -91,6 +94,8 @@ export function BookingWizard({
         } else if (currentStep === "grade" && selectedGrade) {
             setCurrentStep("class");
         } else if (currentStep === "class" && selectedClass) {
+            setCurrentStep("student"); // NEW: Navigate to student selection
+        } else if (currentStep === "student" && selectedStudentId) {  // NEW: Student step
             setCurrentStep("booking-type");
         } else if (currentStep === "booking-type" && bookingType) {
             if (bookingType === "once-off") {
@@ -98,14 +103,15 @@ export function BookingWizard({
             } else {
                 setCurrentStep("recurring-config");
             }
-        } else if (currentStep === "once-off-calendar" && selectedDate) {
-            // Complete wizard with once-off data
+        } else if (currentStep === "once-off-calendar" && selectedDates.length > 0) { // Changed: Check array length
+            // Complete wizard with once-off data (use first date from array)
             onComplete({
                 teacherId: selectedTeacherId as Id<"users">,
                 grade: selectedGrade,
                 class: selectedClass,
+                studentId: selectedStudentId as Id<"students">, // NEW: Include studentId
                 bookingType: "once-off",
-                selectedDate,
+                selectedDate: selectedDates[0], // Changed: Extract first date from array
             });
         } else if (currentStep === "recurring-config" && weeksCount > 0 && selectedDays.length > 0) {
             // Complete wizard with recurring data
@@ -113,6 +119,7 @@ export function BookingWizard({
                 teacherId: selectedTeacherId as Id<"users">,
                 grade: selectedGrade,
                 class: selectedClass,
+                studentId: selectedStudentId as Id<"students">, // NEW: Include studentId
                 bookingType: "recurring",
                 weeksCount,
                 selectedDays,
@@ -123,7 +130,8 @@ export function BookingWizard({
     const handleBack = () => {
         if (currentStep === "grade") setCurrentStep("teacher");
         else if (currentStep === "class") setCurrentStep("grade");
-        else if (currentStep === "booking-type") setCurrentStep("class");
+        else if (currentStep === "student") setCurrentStep("class"); // NEW: Student back navigation
+        else if (currentStep === "booking-type") setCurrentStep("student"); // NEW: Booking type goes back to student
         else if (currentStep === "once-off-calendar") setCurrentStep("booking-type");
         else if (currentStep === "recurring-config") setCurrentStep("booking-type");
     };
@@ -132,8 +140,9 @@ export function BookingWizard({
         if (currentStep === "teacher") return !!selectedTeacherId;
         if (currentStep === "grade") return !!selectedGrade;
         if (currentStep === "class") return !!selectedClass;
+        if (currentStep === "student") return !!selectedStudentId; // NEW: Student validation
         if (currentStep === "booking-type") return !!bookingType;
-        if (currentStep === "once-off-calendar") return !!selectedDate;
+        if (currentStep === "once-off-calendar") return selectedDates.length > 0; // Changed: Check array length
         if (currentStep === "recurring-config") return weeksCount > 0 && selectedDays.length > 0;
         return false;
     };
@@ -143,6 +152,7 @@ export function BookingWizard({
             case "teacher": return t("Select Teacher", "เลือกครู");
             case "grade": return t("Select Grade", "เลือกระดับชั้น");
             case "class": return t("Select Class", "เลือกห้องเรียน");
+            case "student": return t("Select Student", "เลือกนักเรียน"); // NEW: Student title
             case "booking-type": return t("Booking Type", "ประเภทการจอง");
             case "once-off-calendar": return t("Select Date", "เลือกวันที่");
             case "recurring-config": return t("Configure Recurring", "ตั้งค่าการจองซ้ำ");
@@ -211,6 +221,48 @@ export function BookingWizard({
                     </div>
                 );
 
+            case "student":  // NEW: Student selection step
+                {
+                    // Filter students by selected grade and class
+                    const filteredStudents = students?.filter(s =>
+                        s.grade === selectedGrade && s.class === selectedClass
+                    ) || [];
+
+                    return (
+                        <div className="space-y-4">
+                            <p className="text-gray-600 dark:text-gray-400">
+                                {t(
+                                    `Select a student from ${selectedGrade}/${selectedClass}`,
+                                    `เลือกนักเรียนจาก ${selectedGrade}/${selectedClass}`
+                                )}
+                            </p>
+                            {filteredStudents.length === 0 ? (
+                                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                                    <p className="text-sm text-yellow-900 dark:text-yellow-100">
+                                        {t(
+                                            "No students found for this grade/class combination",
+                                            "ไม่พบนักเรียนในระดับชั้น/ห้องนี้"
+                                        )}
+                                    </p>
+                                </div>
+                            ) : (
+                                <select
+                                    value={selectedStudentId}
+                                    onChange={(e) => setSelectedStudentId(e.target.value as Id<"students">)}
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                                >
+                                    <option value="">{t("-- Select Student --", "-- เลือกนักเรียน --")}</option>
+                                    {filteredStudents.map(student => (
+                                        <option key={student._id} value={student._id}>
+                                            {student.firstName} {student.lastName} ({student.studentId})
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
+                    );
+                }
+
             case "booking-type":
                 return (
                     <div className="space-y-4">
@@ -221,8 +273,8 @@ export function BookingWizard({
                             <button
                                 onClick={() => setBookingType("once-off")}
                                 className={`p-6 rounded-lg border-2 transition-all ${bookingType === "once-off"
-                                        ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                                        : "border-gray-300 dark:border-gray-600 hover:border-blue-300"
+                                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                                    : "border-gray-300 dark:border-gray-600 hover:border-blue-300"
                                     }`}
                             >
                                 <Calendar className="w-12 h-12 mx-auto mb-3 text-blue-600" />
@@ -234,8 +286,8 @@ export function BookingWizard({
                             <button
                                 onClick={() => setBookingType("recurring")}
                                 className={`p-6 rounded-lg border-2 transition-all ${bookingType === "recurring"
-                                        ? "border-green-500 bg-green-50 dark:bg-green-900/20"
-                                        : "border-gray-300 dark:border-gray-600 hover:border-green-300"
+                                    ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                                    : "border-gray-300 dark:border-gray-600 hover:border-green-300"
                                     }`}
                             >
                                 <Clock className="w-12 h-12 mx-auto mb-3 text-green-600" />
@@ -252,11 +304,12 @@ export function BookingWizard({
                 return (
                     <div className="space-y-4">
                         <p className="text-gray-600 dark:text-gray-400">
-                            {t("Select a date within the next 30 days", "เลือกวันที่ภายใน 30 วันข้างหน้า")}
+                            {t("Select a date for your class", "เลือกวันที่สำหรับคลาสของคุณ")}
                         </p>
-                        <ThirtyDayCalendar
-                            selectedDate={selectedDate}
-                            onSelectDate={setSelectedDate}
+                        <MultiDateCalendar
+                            selectedDates={selectedDates}
+                            onDatesChange={setSelectedDates}
+                            maxSelections={1}
                         />
                     </div>
                 );
@@ -336,50 +389,6 @@ export function BookingWizard({
                     </button>
                 </div>
             </div>
-        </div>
-    );
-}
-
-// 30-day calendar component
-function ThirtyDayCalendar({
-    selectedDate,
-    onSelectDate,
-}: {
-    selectedDate: number | null;
-    onSelectDate: (date: number) => void;
-}) {
-    const today = new Date();
-    const days = [];
-
-    for (let i = 0; i < 30; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        days.push(date);
-    }
-
-    return (
-        <div className="grid grid-cols-7 gap-2">
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(day => (
-                <div key={day} className="text-center text-xs font-semibold text-gray-600 dark:text-gray-400 p-2">
-                    {day}
-                </div>
-            ))}
-            {days.map((date, index) => {
-                const dateTimestamp = date.setHours(0, 0, 0, 0);
-                const isSelected = selectedDate === dateTimestamp;
-                return (
-                    <button
-                        key={index}
-                        onClick={() => onSelectDate(dateTimestamp)}
-                        className={`p-3 rounded-lg text-sm transition-all ${isSelected
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                            }`}
-                    >
-                        {date.getDate()}
-                    </button>
-                );
-            })}
         </div>
     );
 }

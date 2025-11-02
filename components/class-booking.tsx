@@ -11,6 +11,7 @@ import { AlertTriangle, BarChart3, Calendar, Check, Edit2, MapPin, Plus, Trash2,
 import { useState } from "react";
 import { ClassAnalytics } from "./class-analytics";
 import { ClassConflictModal } from "./class-conflict-modal";
+import { CleanupUnpopulatedClassesButton } from "./cleanup-unpopulated-classes-button";
 import { CollapsibleSection } from "./collapsible-section";
 import { CreateProviderModal } from "./create-provider-modal";
 import { EditClassModal } from "./edit-class-modal";
@@ -827,6 +828,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                 <Users className="w-5 h-5" />
                 {t("Merge Classes", "รวมคลาส")}
               </button>
+            )}
+            {userRole === "admin" && (
+              <CleanupUnpopulatedClassesButton userId={userId} userRole={userRole} />
             )}
           </div>
         </div>

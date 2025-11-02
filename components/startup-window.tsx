@@ -1,8 +1,11 @@
 "use client";
 
+import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import { toast } from "@/lib/toast";
 import type { User } from "@/lib/types";
+import { useMutation } from "convex/react";
 import {
     BarChart3,
     Bell,
@@ -40,6 +43,9 @@ export function StartupWindow({
     const [showClassCountWizard, setShowClassCountWizard] = useState(false);
     const [showMessageWizard, setShowMessageWizard] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
+
+    // Mutation for creating bookings
+    const bookClass = useMutation(api.classes.book);
 
     // Check if user has dismissed startup window
     useEffect(() => {
@@ -417,11 +423,89 @@ export function StartupWindow({
                     userId={user._id}
                     userRole={user.role as "teacher" | "moderator"}
                     userSchoolId={user.schoolId as Id<"schools"> | undefined}
-                    onComplete={() => {
-                        setShowBookingWizard(false);
-                        handleClose(false);
-                        // Navigate to class booking tab
-                        onNavigate("classes");
+                    onComplete={async (data) => {
+                        try {
+                            // Determine the school ID based on user role
+                            const schoolId = user.role === "moderator"
+                                ? user.schoolId as Id<"schools">
+                                : undefined; // Teachers can book at any school, will be determined by student
+
+                            if (data.bookingType === "once-off" && data.selectedDate) {
+                                // Create single booking
+                                await bookClass({
+                                    teacherId: data.teacherId,
+                                    schoolId: schoolId,
+                                    studentId: data.studentId,
+                                    scheduledDate: data.selectedDate,
+                                    bookedByUserId: user._id,
+                                    duration: 60, // Default 1 hour
+                                    classType: "regular",
+                                });
+
+                                toast.success(
+                                    "Class booked successfully!",
+                                    "จองคลาสสำเร็จ!"
+                                );
+                            } else if (data.bookingType === "recurring" && data.weeksCount && data.selectedDays) {
+                                // Create multiple recurring bookings
+                                const bookingPromises = [];
+                                const now = new Date();
+
+                                for (let week = 0; week < data.weeksCount; week++) {
+                                    for (const dayTime of data.selectedDays) {
+                                        // Calculate the date for this booking
+                                        const daysMap: { [key: string]: number } = {
+                                            "Sunday": 0, "Monday": 1, "Tuesday": 2, "Wednesday": 3,
+                                            "Thursday": 4, "Friday": 5, "Saturday": 6,
+                                            "อาทิตย์": 0, "จันทร์": 1, "อังคาร": 2, "พุธ": 3,
+                                            "พฤหัสบดี": 4, "ศุกร์": 5, "เสาร์": 6,
+                                        };
+
+                                        const targetDayOfWeek = daysMap[dayTime.day];
+                                        const currentDayOfWeek = now.getDay();
+                                        let daysUntilTarget = targetDayOfWeek - currentDayOfWeek;
+                                        if (daysUntilTarget < 0) daysUntilTarget += 7;
+
+                                        const bookingDate = new Date(now);
+                                        bookingDate.setDate(now.getDate() + daysUntilTarget + (week * 7));
+
+                                        // Set time from dayTime.time (format: "HH:MM")
+                                        const [hours, minutes] = dayTime.time.split(":").map(Number);
+                                        bookingDate.setHours(hours, minutes, 0, 0);
+
+                                        bookingPromises.push(
+                                            bookClass({
+                                                teacherId: data.teacherId,
+                                                schoolId: schoolId,
+                                                studentId: data.studentId,
+                                                scheduledDate: bookingDate.getTime(),
+                                                bookedByUserId: user._id,
+                                                duration: 60, // Default 1 hour
+                                                classType: "regular",
+                                            })
+                                        );
+                                    }
+                                }
+
+                                await Promise.all(bookingPromises);
+
+                                toast.success(
+                                    `${bookingPromises.length} classes booked successfully!`,
+                                    `จอง ${bookingPromises.length} คลาสสำเร็จ!`
+                                );
+                            }
+
+                            // Close wizard and navigate to classes tab
+                            setShowBookingWizard(false);
+                            handleClose(false);
+                            onNavigate("classes");
+                        } catch (error) {
+                            console.error("Failed to book class:", error);
+                            toast.error(
+                                "Failed to book class. Please try again.",
+                                "การจองคลาสล้มเหลว กรุณาลองอีกครั้ง"
+                            );
+                        }
                     }}
                     onClose={() => setShowBookingWizard(false)}
                 />

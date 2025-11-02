@@ -49,10 +49,15 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
     );
 
     // Load class data for selected teacher (read-only)
+    // Use getClassCountForPrint to support custom date ranges (same as modal)
     const classCountData = useQuery(
-        api.teacherClassCount.getMyClassCountDetails,
+        api.teacherClassCount.getClassCountForPrint,
         selectedTeacherId && acceptedDisclaimer
-            ? { teacherId: selectedTeacherId }
+            ? {
+                teacherId: selectedTeacherId,
+                customStartDate: startDate.getTime(),
+                customEndDate: endDate.getTime(),
+            }
             : "skip"
     );
 
@@ -61,12 +66,9 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
     const teacherName =
         (userRole === "teacher" ? currentTeacher?.username : selectedTeacher?.username) || "";
 
-    // CALCULATION - Client-side only
+    // CALCULATION - Client-side filtering by provider only (date already filtered by backend query)
     const filteredClasses = classCountData?.classes.filter(cls => {
-        const classDate = cls.scheduledDate;
-        const inDateRange = classDate >= startDate.getTime() && classDate <= endDate.getTime();
-
-        if (!inDateRange) return false;
+        // Date filtering removed - backend query already filters by customStartDate/customEndDate
 
         if (filterProvider === "all") return true;
         if (filterProvider === "schools") return !cls.providerId; // Has no providerId means it's a school class
@@ -141,35 +143,17 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
         return names.join(", ");
     };
 
-    const formatBookedBy = (cls: typeof filteredClasses[number]) => {
-        if (cls.bookedByUsername) {
-            return cls.bookedByUsername;
-        }
-
-        if (teacherName) {
-            return teacherName;
-        }
-
-        return language === "th" ? "ไม่มีข้อมูล" : "Not recorded";
+    // Note: getClassCountForPrint doesn't include bookedByUsername or approvalSource fields
+    // These are simplified versions that just show teacher name
+    const formatBookedBy = () => {
+        // Print query doesn't include bookedByUsername, so just show teacher name
+        return teacherName || (language === "th" ? "ไม่มีข้อมูล" : "Not recorded");
     };
 
-    const formatApprovedBy = (cls: typeof filteredClasses[number]) => {
-        switch (cls.approvalSource) {
-            case "auto_provider":
-                return language === "th" ? "ระบบ (ผู้ให้บริการ)" : "System (Provider Auto)";
-            case "auto_guardian":
-                return language === "th" ? "ระบบ (ผู้ปกครอง)" : "System (Guardian Auto)";
-            case "system":
-                return language === "th" ? "ระบบ (อนุมัติอัตโนมัติ)" : "System Auto-Approve";
-            default:
-                break;
-        }
-
-        if (cls.approvedByUsername) {
-            return cls.approvedByUsername;
-        }
-
-        return language === "th" ? "ไม่มีข้อมูล" : "Not recorded";
+    const formatApprovedBy = () => {
+        // Print query doesn't include approvalSource or approvedByUsername
+        // Just return a generic approved status
+        return language === "th" ? "อนุมัติแล้ว" : "Approved";
     };
 
     // Print function - generates HTML report
@@ -196,8 +180,8 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
                 : (language === "th" ? cls.schoolNameTh || cls.schoolName : cls.schoolName);
             const locationName = language === "th" ? cls.locationNameTh || cls.locationName : cls.locationName;
             const payment = (cls.classCount * rate);
-            const approvedBy = formatApprovedBy(cls);
-            const bookedBy = formatBookedBy(cls);
+            const approvedBy = formatApprovedBy();
+            const bookedBy = formatBookedBy();
             const sessionType = cls.providerId
                 ? (language === "th" ? "คลาสผู้ให้บริการ" : "Provider")
                 : (language === "th" ? "คลาสโรงเรียน" : "School");
@@ -692,6 +676,26 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
                         </select>
                     </div>
 
+                    {/* Loading State */}
+                    {selectedTeacherId && classCountData === undefined && (
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-8 text-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                            <p className="text-blue-900 dark:text-blue-100 font-medium">
+                                {t("Loading class data...", "กำลังโหลดข้อมูลคลาส...")}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* No Teacher Selected */}
+                    {!selectedTeacherId && userRole !== "teacher" && (
+                        <div className="bg-gray-50 dark:bg-gray-700/50 border-2 border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center">
+                            <Calculator className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                            <p className="text-gray-600 dark:text-gray-400">
+                                {t("Please select a teacher to begin", "กรุณาเลือกครูเพื่อเริ่มต้น")}
+                            </p>
+                        </div>
+                    )}
+
                     {/* Calculation Results */}
                     {selectedTeacherId && classCountData && (
                         <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border-2 border-green-200 dark:border-green-800">
@@ -784,8 +788,8 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: ClassPa
                                                     )}
                                                 </td>
                                                 <td className="p-3 text-sm">{language === "th" ? cls.locationNameTh || cls.locationName : cls.locationName}</td>
-                                                <td className="p-3 text-sm">{formatBookedBy(cls)}</td>
-                                                <td className="p-3 text-sm">{formatApprovedBy(cls)}</td>
+                                                <td className="p-3 text-sm">{formatBookedBy()}</td>
+                                                <td className="p-3 text-sm">{formatApprovedBy()}</td>
                                                 <td className="p-3 text-right font-bold">{cls.classCount}</td>
                                                 <td className="p-3 text-right">฿ {(cls.classCount * rate).toFixed(2)}</td>
                                             </tr>

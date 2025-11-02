@@ -9,7 +9,7 @@ import { checkRateLimit, validateLength } from "./rateLimit";
  * - Admins: Can access all schools
  * - Moderators: Can only access classes from their assigned school
  * - Teachers: Can only access their own classes (optional check)
- * 
+ *
  * @throws Error if unauthorized
  */
 async function verifyClassAccess(
@@ -2465,6 +2465,136 @@ export const deleteRecurringSeries = mutation({
           targetType: "CLASSES" as const,
           targetId: classId,
           targetName: `Recurring class on ${new Date(classData.scheduledDate).toLocaleDateString()}`,
+          reason: args.reason,
+          schoolId: classData.schoolId,
+        });
+      } catch (error) {
+        results.failed.push({
+          classId: classId.toString(),
+          error: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }
+
+    return results;
+  },
+});
+
+/**
+ * Find and Clean Up Unpopulated Classes
+ * Finds classes that have missing/invalid student references or are orphaned
+ * Admin-only operation with dry-run support
+ */
+export const findUnpopulatedClasses = query({
+  args: {
+    userId: v.id("users"),
+    includeOrphaned: v.optional(v.boolean()), // Include classes with deleted student references
+  },
+  handler: async (ctx, args) => {
+    // Verify admin access
+    const user = await ctx.db.get(args.userId);
+    if (!user || user.role !== "admin") {
+      throw new Error("Admin access required");
+    }
+
+    // Get all classes
+    const allClasses = await ctx.db.query("classes").collect();
+
+    const unpopulatedClasses: Array<{
+      _id: Id<"classes">;
+      reason: string;
+      scheduledDate: number;
+      teacherId: Id<"users">;
+      schoolId?: Id<"schools">;
+      status: string;
+    }> = [];
+
+    // Check each class for issues
+    for (const classItem of allClasses) {
+      // Check if student exists
+      if (args.includeOrphaned) {
+        const student = await ctx.db.get(classItem.studentId);
+        if (!student) {
+          unpopulatedClasses.push({
+            _id: classItem._id,
+            reason: "Student reference not found (deleted or invalid)",
+            scheduledDate: classItem.scheduledDate,
+            teacherId: classItem.teacherId,
+            schoolId: classItem.schoolId,
+            status: classItem.status,
+          });
+        }
+      }
+    }
+
+    return {
+      count: unpopulatedClasses.length,
+      classes: unpopulatedClasses,
+    };
+  },
+});
+
+/**
+ * Clean Up Unpopulated Classes
+ * Deletes classes with missing/invalid student references
+ * Admin-only operation with audit logging
+ */
+export const cleanUpUnpopulatedClasses = mutation({
+  args: {
+    userId: v.id("users"),
+    classIds: v.array(v.id("classes")), // Specific classes to delete
+    reason: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Verify admin access
+    const admin = await ctx.db.get(args.userId);
+    if (!admin || admin.role !== "admin") {
+      throw new Error("Admin access required for cleanup operation");
+    }
+
+    // Validate batch size
+    if (args.classIds.length > 500) {
+      throw new Error("Maximum 500 classes can be cleaned up at once");
+    }
+
+    const results = {
+      successful: [] as string[],
+      failed: [] as { classId: string; error: string }[],
+    };
+
+    // Delete each class
+    for (const classId of args.classIds) {
+      try {
+        const classData = await ctx.db.get(classId);
+        if (!classData) {
+          results.failed.push({
+            classId: classId.toString(),
+            error: "Class not found",
+          });
+          continue;
+        }
+
+        // Verify it's actually unpopulated
+        const student = await ctx.db.get(classData.studentId);
+        if (student) {
+          results.failed.push({
+            classId: classId.toString(),
+            error: "Class has valid student reference - cannot clean up",
+          });
+          continue;
+        }
+
+        // Delete the class
+        await ctx.db.delete(classId);
+        results.successful.push(classId.toString());
+
+        // Log the deletion
+        await logAudit(ctx, {
+          userId: args.userId,
+          action: "DELETE_CLASS" as const,
+          targetType: "CLASSES" as const,
+          targetId: classId,
+          targetName: `Unpopulated class on ${new Date(classData.scheduledDate).toLocaleDateString()}`,
           reason: args.reason,
           schoolId: classData.schoolId,
         });
