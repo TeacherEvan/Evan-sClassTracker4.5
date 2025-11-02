@@ -1,8 +1,8 @@
 # Private Classes Implementation Plan
 
-**Date:** November 1, 2025  
-**Teachers:** Che, Cale, and Lee  
-**Duration:** 12 weeks recurring (Nov 4, 2025 - Jan 26, 2026)
+**Date:** November 1, 2025 (Updated November 3, 2025)  
+**Teachers:** Che, Cale, Lee, and Evan  
+**Duration:** 12 weeks recurring (Nov 4, 2025 - Jan 24, 2026)
 
 ## 📋 Overview
 
@@ -11,6 +11,7 @@
 1. **T. Che** - Private classes for K2/8, K2/2, K2/7 students
 2. **T. Cale** - Private classes for K1/7, K2/4, K2/7, K1/8 students
 3. **T. Lee** - Private classes for K1/1 students (Tuesday-Friday only)
+4. **T. Evan** - Private classes for K1/6, K1/4 students (Monday-Friday) ← **ADDED NOV 3, 2025**
 
 ### Schedule Pattern
 
@@ -157,6 +158,44 @@
 
 ---
 
+## 📊 T. Evan Private Classes - Breakdown
+
+**ADDED:** November 3, 2025
+
+### Total Students: 8 unique students
+
+### Total Weekly Sessions: 5 days × 12 weeks = 60 sessions
+
+### Total Weekly Classes: 10 classes (GOMU GOMU attends twice)
+
+| Day | Location | Students | Count | Notes |
+|-----|----------|----------|-------|-------|
+| Monday | PLAY ROOM B.5 | ING-ING, GOMU GOMU | 2 | |
+| Tuesday | PLAY ROOM B.5 | PIGLET | 1 | |
+| Wednesday | PLAY ROOM B.5 | LALYNN, JEDI | 2 | |
+| Thursday | PLAY ROOM B.5 | GOMU GOMU, DARIN, MAYU | 3 | GOMU GOMU's 2nd class |
+| Friday | PLAY ROOM B.5 | MICKEY | 1 | |
+
+**Student Codes:**
+
+- 1601 ING-ING (K1/6, #01)
+- 1607 GOMU GOMU (K1/6, #07) - **Appears Monday & Thursday**
+- 1625 PIGLET (K1/6, #25)
+- 1620 LALYNN (K1/6, #20)
+- 1602 JEDI (K1/6, #02)
+- 1623 DARIN (K1/6, #23)
+- 1403 MAYU (K1/4, #03) - **Only K1/4 student**
+- 1618 MICKEY (K1/6, #18)
+
+**Special Notes:**
+
+- All classes at PLAY ROOM B.5 (consistent location)
+- GOMU GOMU (1607) is the only student attending twice weekly
+- MAYU (1403) is from K1/4, all others from K1/6
+- Total 12-week booking: 120 classes (10 classes/week × 12 weeks)
+
+---
+
 ## ⚠️ Special Cases to Handle
 
 ### 1. One-Time Classes
@@ -187,6 +226,7 @@ Some students appear multiple days per week:
 - **1717 Link** (Cale): Tuesday & Thursday
 - **2712 THAMESN'E** (Cale): Wednesday & Friday
 - **1105 NARA** (Lee): Tuesday, Wednesday & Thursday
+- **1607 GOMU GOMU** (Evan): Monday & Thursday ← **ADDED NOV 3, 2025**
 
 ---
 
@@ -338,15 +378,15 @@ const student = await ctx.db
 
 ## ✅ Completion Checklist
 
-- [x] Teachers verified in system (Che, Cale, Lee)
+- [x] Teachers verified in system (Che, Cale, Lee, Evan) ← **UPDATED NOV 3, 2025**
 - [ ] All students exist and verified
 - [x] Locations auto-created with guardian type
 - [x] Mutation created and deployed (`convex/seedPrivateClasses.ts`)
-- [ ] Week 1 test successful (testMode: true)
-- [ ] Full 12-week seed executed
+- [ ] Week 1 test successful (testMode: true) for all 4 teachers
+- [ ] Full 12-week seed executed for all 4 teachers
 - [ ] Special cases handled correctly (BRAVE, MILIN, trial students)
 - [ ] UI validation complete
-- [x] Documentation updated
+- [x] Documentation updated (added T. Evan Nov 3, 2025)
 - [ ] Teachers notified of schedule
 
 ---
@@ -356,7 +396,8 @@ const student = await ctx.db
 - **T. Che:** 60 bookings (5 days × 12 weeks, all recurring)
 - **T. Cale:** 59 bookings (5 days × 12 weeks - BRAVE is one-time only, MILIN is date-range)
 - **T. Lee:** 45 bookings (4 days × 12 weeks - MARINE and Thang Thang are one-time only)
-- **Grand Total:** ~164 private class bookings across all 3 teachers
+- **T. Evan:** 120 bookings (10 classes/week × 12 weeks, GOMU GOMU twice weekly) ← **ADDED NOV 3, 2025**
+- **Grand Total:** ~284 private class bookings across all 4 teachers
 
 ---
 
@@ -365,5 +406,6 @@ const student = await ctx.db
 1. `docs/Images/PvtClasses/T_Che_2-8_Schedule.md` - Che's schedule documentation
 2. `docs/Images/PvtClasses/T_CALE_1-7_Schedule.md` - Cale's schedule documentation
 3. `docs/Images/PvtClasses/T_Lee_1-1_Schedule.md` - Lee's schedule documentation
-4. `convex/seedPrivateClasses.ts` - Main seeding mutation with all 3 teachers
-5. `docs/IMPLEMENTATION_PLAN_PRIVATE_CLASSES_NOV_2025.md` - This comprehensive plan
+4. `docs/Images/PvtClasses/T_Evan_1-6_Schedule.md` - Evan's schedule documentation ← **ADDED NOV 3, 2025**
+5. `convex/seedPrivateClasses.ts` - Main seeding mutation with all 4 teachers
+6. `docs/IMPLEMENTATION_PLAN_PRIVATE_CLASSES_NOV_2025.md` - This comprehensive plan

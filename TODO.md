@@ -44,13 +44,61 @@ locations: defineTable({...})
 
 1. Deploy: `npx convex deploy`
 2. Update `seedPrivateClasses.ts` to use `.withIndex()` instead of JavaScript filter
-3. Test private class seeding
+3. Test private class seeding for all 4 teachers (Che, Cale, Lee, Evan)
 
 **Benefit:** Queries run 10-100x faster, reduced memory usage
 
 ---
 
-### 3. Feature Usage Tracking (1 hour setup)
+### 3. Test T. Evan Private Classes (30 minutes)
+
+**Status:** Ready for Testing (Deployed Nov 3, 2025)  
+**Timeline:** This week
+
+**Test Steps:**
+
+```javascript
+// In Convex Dashboard Functions tab:
+
+// 1. Test Week 1 only (testMode)
+await ctx.runMutation("seedPrivateClasses", {
+  teacherUsername: "Evan",
+  testMode: true
+});
+// Expected: 10 classes created for Week 1
+
+// 2. Verify students auto-created
+// Check students table for:
+// - 1601 ING-ING, 1607 GOMU GOMU, 1625 PIGLET
+// - 1620 LALYNN, 1602 JEDI, 1623 DARIN
+// - 1403 MAYU, 1618 MICKEY
+
+// 3. Verify duplicate detection
+// Run again - should skip all 10 classes
+await ctx.runMutation("seedPrivateClasses", {
+  teacherUsername: "Evan",
+  testMode: true
+});
+// Expected: 0 new classes, 10 skipped duplicates
+
+// 4. Run full 12-week seeding (if test passes)
+await ctx.runMutation("seedPrivateClasses", {
+  teacherUsername: "Evan"
+});
+// Expected: ~120 classes total (10/week × 12 weeks)
+```
+
+**Verification:**
+
+- [ ] All 8 students created with correct names
+- [ ] GOMU GOMU (1607) has 2 classes on Monday and Thursday
+- [ ] All classes at PLAY ROOM B.5 location
+- [ ] All classes auto-approved (isGuardianLinked: true)
+- [ ] Duplicate detection works (re-run creates 0 new classes)
+
+---
+
+### 4. Feature Usage Tracking (1 hour setup)
 
 **Purpose:** Understand which features are actually used for data-driven decisions
 
@@ -64,9 +112,42 @@ locations: defineTable({...})
 
 ---
 
-## �🚀 New Features
+## 🚀 New Features
 
-_No new features planned at this time_
+No new features planned at this time
+
+---
+
+## ✅ Recently Completed (November 3, 2025)
+
+### T. Evan Private Classes Schedule ✅
+
+**Description:** Added fourth teacher (T. Evan) to private classes seeding system
+
+**Implementation:**
+
+- Added `EVAN_SCHEDULE` constant with 5 days (Monday-Friday)
+- 8 unique students: ING-ING, GOMU GOMU (×2), PIGLET, LALYNN, JEDI, DARIN, MAYU, MICKEY
+- Location: PLAY ROOM B.5 (all classes)
+- 10 weekly classes (GOMU GOMU attends Monday + Thursday)
+- Auto-creation support for missing students
+- Duplicate detection prevents re-creating existing classes
+- TestMode support for safe testing (Week 1 only)
+- Documentation: `docs/Images/PvtClasses/T_Evan_1-6_Schedule.md`
+
+**System Now Supports:**
+
+- T. Che (K2/8): 11 students, OLD MUSIC TOILET
+- T. Cale (K1/7 + K2/7): 12 students, Big kitchen/OLD TEG
+- T. Lee (K1/1): 6 students, PLAY ROOM B.5
+- T. Evan (K1/6 + K1/4): 8 students, PLAY ROOM B.5 ← **NEW**
+
+**Files Modified:**
+
+- `convex/seedPrivateClasses.ts` - Schedule data, student mappings, documentation
+- `docs/Images/PvtClasses/T_Evan_1-6_Schedule.md` - Schedule documentation
+
+**Next Step:** Test in production (see TODO #3)
 
 ---
 
@@ -324,7 +405,7 @@ _No new features planned at this time_
 
 ## 🔄 In Progress
 
-_No items currently in progress_
+No items currently in progress
 
 ---
 
@@ -385,7 +466,7 @@ _No items currently in progress_
 
 ## 🐛 Known Issues
 
-_No known issues at this time_
+No known issues at this time
 
 ---
 
@@ -456,4 +537,4 @@ For questions or support:
 
 ---
 
-**End of TODO List**
+End of TODO List

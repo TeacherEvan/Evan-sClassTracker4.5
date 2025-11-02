@@ -2,7 +2,18 @@
 
 Bilingual English/Thai class tracker for teachers and schools - Built with Next.js 15, React 19, Convex & Tailwind v4
 
-## ✨ Latest Updates (Nov 2, 2025)
+## ✨ Latest Updates (Nov 3, 2025)
+
+### Version 4.5.21 - T. Evan Private Classes 📚
+
+- 📚 **Fourth Teacher Schedule**: Added T. Evan's private class schedule to seeding system
+  - **Students**: 8 unique students (10 weekly classes - GOMU GOMU attends twice)
+  - **Location**: PLAY ROOM B.5 (all classes)
+  - **Schedule**: Monday-Friday, 15:00-16:00
+  - **Grades**: K1/6 (7 students) + K1/4 (1 student: MAYU)
+  - **System**: Auto-creates missing students, duplicate detection, testMode support
+  - **Teachers Supported**: T. Che, T. Cale, T. Lee, and T. Evan (4 total)
+  - Documentation: `docs/Images/PvtClasses/T_Evan_1-6_Schedule.md`
 
 ### Version 4.5.18 - PBKDF2 Password Migration 🔐
 
@@ -154,19 +165,19 @@ See [CHANGELOG.md](CHANGELOG.md) for complete version history.
 npm install
 ```
 
-2. **Set up Convex**:
+1. **Set up Convex**:
 
 ```bash
 npx convex dev
 ```
 
-3. **Run the development server**:
+1. **Run the development server**:
 
 ```bash
 npm run dev
 ```
 
-4. **Initialize database**:
+1. **Initialize database**:
    - Open [http://localhost:3001](http://localhost:3001)
    - Click "Initialize Database" button
    - Note the default credentials displayed
@@ -201,7 +212,7 @@ When creating a new user (e.g., "Evan"):
 
 Each student gets a unique identifier in format:
 
-```
+```text
 {SchoolHash}-{NameHash}-{Timestamp}-{Random}
 ```
 
@@ -271,7 +282,7 @@ Look for the green **"Help"** button in the top-right corner of the application 
 
 ## Project Structure
 
-```
+```text
 ├── app/                  # Next.js app directory
 │   ├── layout.tsx       # Root layout with providers
 │   ├── page.tsx         # Home page with authentication

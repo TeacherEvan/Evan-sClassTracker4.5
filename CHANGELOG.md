@@ -2,6 +2,63 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.21] - November 3, 2025 📚 FEATURE - T. Evan Private Classes Addition
+
+### Added - T. Evan's Private Class Schedule
+
+#### Fourth Teacher Schedule Added to Private Classes System
+
+- **NEW TEACHER**: T. Evan private classes schedule (K1/6 + K1/4 students)
+  - **Schedule**: 5 days/week (Monday-Friday), 8 unique students, 10 weekly classes
+  - **Location**: PLAY ROOM B.5 (all classes)
+  - **Time**: 15:00-16:00 (standard private class time)
+  - **Duration**: 12 weeks (Nov 4, 2025 - Jan 24, 2026)
+  - **Special Note**: GOMU GOMU (1607) attends twice weekly (Monday + Thursday)
+
+- **Implementation Details**:
+  - Added `EVAN_SCHEDULE` constant with 5 schedule days (Lines 117-146)
+  - Added 8 student name mappings (1601-1618) to `STUDENT_NAME_MAP` (Lines 230-237)
+  - Integrated into existing `teacherUsername` union type (already supported)
+  - Uses same duplicate detection and auto-creation as other teachers
+  - Supports `testMode` for safe testing (Week 1 only)
+
+- **Students**:
+  - 1601 ING-ING (K1/6, #01)
+  - 1607 GOMU GOMU (K1/6, #07) - **Twice weekly**
+  - 1625 PIGLET (K1/6, #25)
+  - 1620 LALYNN (K1/6, #20)
+  - 1602 JEDI (K1/6, #02)
+  - 1623 DARIN (K1/6, #23)
+  - 1403 MAYU (K1/4, #03)
+  - 1618 MICKEY (K1/6, #18)
+
+- **Weekly Schedule**:
+  - Monday: 2 students (ING-ING, GOMU GOMU)
+  - Tuesday: 1 student (PIGLET)
+  - Wednesday: 2 students (LALYNN, JEDI)
+  - Thursday: 3 students (GOMU GOMU, DARIN, MAYU)
+  - Friday: 1 student (MICKEY)
+
+- **System Now Supports 4 Teachers**:
+  - T. Che (K2/8): 11 students, OLD MUSIC TOILET
+  - T. Cale (K1/7 + K2/7): 12 students, Big kitchen/OLD TEG
+  - T. Lee (K1/1): 6 students, PLAY ROOM B.5
+  - T. Evan (K1/6 + K1/4): 8 students, PLAY ROOM B.5 ← **NEW**
+
+- **Files Modified**:
+  - `convex/seedPrivateClasses.ts` - Updated file header, added EVAN_SCHEDULE, added student mappings
+
+- **Documentation Created**:
+  - `docs/Images/PvtClasses/T_Evan_1-6_Schedule.md` - Complete schedule documentation
+
+- **Deployment**: ✅ Successfully deployed to Convex production (Nov 3, 2025)
+
+- **Testing**: Ready for test mode execution
+  - Run: `seedPrivateClasses({ teacherUsername: "Evan", testMode: true })`
+  - Expected: 10 classes created for Week 1, students auto-created if missing
+
+---
+
 ## [4.5.20] - November 2, 2025 🔐 CRITICAL SECURITY FIX - Complete PBKDF2 Migration
 
 ### Security - Password Creation Vulnerability Fixed
