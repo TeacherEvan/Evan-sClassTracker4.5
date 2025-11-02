@@ -12,6 +12,7 @@
 **Timeline:** 2-4 weeks for full user base migration
 
 **Action Items:**
+
 - [ ] Test auto-upgrade with first 10 logins (see `docs/BCRYPT_TESTING_GUIDE.md`)
 - [ ] Monitor migration progress weekly via `getMigrationStats` query
 - [ ] Check Convex logs for "🔄 Auto-upgrading password hash" messages
@@ -27,6 +28,7 @@
 **File:** `convex/schema.ts`
 
 **Changes Needed:**
+
 ```typescript
 // Students table
 students: defineTable({...})
@@ -39,6 +41,7 @@ locations: defineTable({...})
 ```
 
 **Follow-up:**
+
 1. Deploy: `npx convex deploy`
 2. Update `seedPrivateClasses.ts` to use `.withIndex()` instead of JavaScript filter
 3. Test private class seeding
@@ -52,6 +55,7 @@ locations: defineTable({...})
 **Purpose:** Understand which features are actually used for data-driven decisions
 
 **Implementation:**
+
 - Create `convex/analytics/featureTracking.ts`
 - Add `featureUsage` table to schema
 - Track: Payment Calculator, Provider system, Wizards, Analytics dashboard
@@ -73,6 +77,7 @@ _No new features planned at this time_
 **Description:** Upgraded from insecure btoa() encoding to industry-standard bcrypt hashing
 
 **Implementation:**
+
 - Soft migration strategy (zero user disruption)
 - Auto-upgrade on login (transparent to users)
 - Hybrid verification system (supports both hash types)
@@ -86,6 +91,7 @@ _No new features planned at this time_
 **Description:** Step-by-step guided workflows for moderators and teachers
 
 **Implementation:**
+
 - 5 new wizards: Booking, ClassCount Report, Message, Notification, Dashboard
 - Reduced onboarding time from 30min to <10min
 - Documentation: `docs/archive/implementations/IMPLEMENTATION_SUMMARY_WIZARD_STARTUP_NOV_1_2025.md`
