@@ -4,6 +4,13 @@ import { Page, expect } from '@playwright/test';
  * Test Utilities for Evan's Class Tracker E2E Tests
  *
  * Provides helper functions for common test actions.
+ *
+ * IMPORTANT NOTES (Nov 4, 2025):
+ * - Login form uses ID selectors (#username, #password) NOT name attributes
+ * - App header displays "Class Tracker" not "Evan's Class Tracker"
+ * - Password change dialog may appear for test users with requirePasswordChange flag
+ * - All selectors must support bilingual UI (English + Thai)
+ * - Use these helpers instead of inline logic to maintain consistency
  */
 
 export interface TestUser {
@@ -33,6 +40,15 @@ export const TEST_USERS = {
 
 /**
  * Login helper function
+ *
+ * Handles complete login flow including:
+ * - ID-based form selectors (#username, #password)
+ * - Bilingual button text (Login / เข้าสู่ระบบ)
+ * - Automatic password change dialog dismissal
+ * - Login verification using actual app header text
+ *
+ * @param page - Playwright Page object
+ * @param user - Test user credentials
  */
 export async function login(page: Page, user: TestUser) {
   await page.goto('/');
@@ -84,6 +100,7 @@ export async function logout(page: Page) {
 /**
  * Switch language helper
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function switchLanguage(page: Page, language: 'en' | 'th') {
   const button = page.locator('button:has-text("EN"), button:has-text("TH"), button:has-text("🇬🇧"), button:has-text("🇹🇭")').first();
   await button.click();
@@ -95,6 +112,7 @@ export async function switchLanguage(page: Page, language: 'en' | 'th') {
 /**
  * Wait for toast notification
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function waitForToast(page: Page, message?: string, type?: 'success' | 'error') {
   const toastSelector = message
     ? `[role="alert"]:has-text("${message}")`
@@ -138,7 +156,7 @@ export async function fillBilingualInput(
   page: Page,
   labelEn: string,
   valueEn: string,
-  valueTh: string
+  _valueTh: string
 ) {
   // Find English input by placeholder or label
   const enInput = page.locator(`input[placeholder*="${labelEn}"]`).first();

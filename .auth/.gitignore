@@ -1,0 +1,3 @@
+# Playwright auth states contain session data
+# Do not commit - regenerated on each test run
+*.json

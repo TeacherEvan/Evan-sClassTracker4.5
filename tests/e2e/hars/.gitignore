@@ -1,0 +1,7 @@
+# HAR files may contain sensitive data (tokens, session IDs)
+# Only commit sanitized HAR files for specific test scenarios
+*.har
+
+# Allow specific HAR files (uncomment as needed)
+# !auth-flow.har
+# !class-operations.har

@@ -26,6 +26,16 @@ npm run test:e2e:report   # View test report from last run
 - `student-management.spec.ts` - Create students, search, edit
 - `notifications.spec.ts` - Toast notifications, real-time updates
 
+**⚠️ CRITICAL TEST INFRASTRUCTURE NOTES (Nov 4, 2025)**:
+
+1. **Login Form Uses ID Selectors**: The login form uses `id="username"` and `id="password"` attributes, NOT `name` attributes. Always use `#username` and `#password` selectors in tests.
+
+2. **Password Change Dialog**: Test users may have `requirePasswordChange: true` flag, causing a password change dialog to appear after login. The `login()` helper automatically detects and dismisses this dialog.
+
+3. **Bilingual Header Text**: App displays "Class Tracker" / "ติดตามชั้นเรียน" (NOT "Evan's Class Tracker"). Test assertions must match actual rendered text.
+
+4. **Playwright Manages Servers**: The `playwright.config.ts` webServer configuration automatically starts both Convex (`npx convex dev`) and Next.js (`npm run dev`) before tests run. Do NOT manually start these servers.
+
 ---
 
 ## 7 Best Practices for Writing Tests
@@ -51,11 +61,18 @@ Don't duplicate login/navigation logic:
 await login(page, TEST_USERS.teacher);
 await navigateToTab(page, 'Classes');
 
-// ❌ WRONG - Inline login logic
-await page.fill('input[name="username"]', 'Evan');
+// ❌ WRONG - Inline login logic with incorrect selectors
+await page.fill('input[name="username"]', 'Evan'); // WRONG: Use #username instead!
 await page.fill('input[name="password"]', 'TeacherEvan');
 // ... repeated in every test
 ```
+
+**NOTE**: Always use the `login()` helper which correctly handles:
+
+- ID-based selectors (`#username`, `#password`)
+- Bilingual button text ("Login" / "เข้าสู่ระบบ")
+- Password change dialog dismissal
+- Login verification with correct header text
 
 ### 3. Handle Optional Elements Gracefully
 
@@ -246,6 +263,55 @@ E2E tests run automatically after staging deployment via `e2e-tests.yml` workflo
 - **Reusable helpers**: `login()`, `navigateToTab()`, `waitForToast()`, `generateTestData()`
 - **Flexible selectors**: Use multiple selectors for robustness
 - **Timeout handling**: `.isVisible({ timeout: 2000 }).catch(() => false)` for optional elements
+
+---
+
+## Recent Test Infrastructure Fixes (Nov 4, 2025)
+
+### Issue #1: Login Form Selector Mismatch
+
+**Problem**: Tests were looking for `input[name="username"]` but login form uses `id="username"` without `name` attribute.
+
+**Fix**: Updated all test selectors from `input[name="username"]` to `#username` (ID-based).
+
+**Files Modified**:
+
+- `tests/e2e/helpers.ts` - Updated `login()` helper function
+- `tests/e2e/auth.spec.ts` - Updated invalid credentials test
+
+### Issue #2: Password Change Dialog Blocking
+
+**Problem**: Test users with `requirePasswordChange: true` flag show password change dialog after login, blocking access to main app and causing test failures.
+
+**Fix**: Added automatic detection and dismissal of password change dialog in `login()` helper.
+
+**Implementation**:
+
+```typescript
+// Check if password change dialog appears
+const passwordChangeDialog = page.locator('text=Change Password, text=เปลี่ยนรหัสผ่าน').first();
+const isPasswordChangeVisible = await passwordChangeDialog.isVisible({ timeout: 2000 }).catch(() => false);
+
+if (isPasswordChangeVisible) {
+  // Close the dialog
+  const closeButton = page.locator('button:has-text("Close"), button:has-text("ปิด"), button:has-text("×")').first();
+  await closeButton.click();
+  await page.waitForTimeout(500);
+}
+```
+
+### Issue #3: Header Text Mismatch
+
+**Problem**: Tests looked for "Evan's Class Tracker" but app displays "Class Tracker" (short form).
+
+**Fix**: Updated login verification to match actual header text: `text=Class Tracker, text=ติดตามชั้นเรียน`
+
+### Lessons Learned
+
+1. **Always check actual rendered HTML** - Use error context files and page snapshots to see exact element structure
+2. **ID selectors are more reliable than name attributes** - Especially for bilingual forms
+3. **Handle modal dialogs in test helpers** - Don't assume direct path to main app
+4. **Bilingual apps need dual selectors** - Every user-facing element may render in either language
 
 ---
 
