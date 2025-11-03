@@ -1,7 +1,7 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.21 (Nov 3, 2025 - Latest: T. Evan Private Classes Addition)
+**Version:** 4.5.18 (Nov 2, 2025 - Security: PBKDF2 Password Migration)
 
 ---
 
@@ -202,29 +202,31 @@ This documentation is split into focused sections for efficient knowledge discov
 - **Disaster Recovery**: 10 critical failure scenarios with step-by-step recovery
 - **Operational Guides**: 5 practical how-to procedures with copy-paste commands
 - **Refactoring Candidates**: 4 files identified (2,930 to 1,065 lines each)
-- **Recent Updates**: Nov 3, 2025 (v4.5.21) - T. Evan Private Classes Addition
+- **Recent Updates**: Nov 2, 2025 (v4.5.18) - PBKDF2 password migration deployed
 
 ---
 
 ## 🔄 Last Updated
 
-**November 3, 2025** - Version 4.5.21 - T. Evan Private Classes Addition �
+**November 2, 2025** - Version 4.5.18 - PBKDF2 Password Migration 🔐
 
-- **Feature Update**: Fourth teacher schedule added to private classes system
-  - Teacher: T. Evan (K1/6 + K1/4 students)
-  - Schedule: 5 days/week, 8 unique students, 10 weekly classes
-  - Location: PLAY ROOM B.5 (all classes)
-  - Duration: 12 weeks (Nov 4, 2025 - Jan 24, 2026)
-  - Special: GOMU GOMU (1607) attends twice weekly
-  - Implementation: Added EVAN_SCHEDULE constant, 8 student name mappings
-  - System now supports 4 teachers (T. Che, T. Cale, T. Lee, T. Evan)
-  - Files: `convex/seedPrivateClasses.ts`, `docs/Images/PvtClasses/T_Evan_1-6_Schedule.md`
+- **Security Upgrade**: Migrated from bcrypt to PBKDF2 (Web Crypto API)
+  - Problem: bcrypt incompatible with Convex runtime (requires Node.js modules)
+  - Solution: PBKDF2 using Web Crypto API (pure JavaScript, 100,000 iterations)
+  - Strategy: Soft migration - zero user disruption, auto-upgrade on login
+  - Triple hybrid verification: Supports PBKDF2, bcrypt (legacy), and btoa (legacy)
+  - Timeline: Gradual migration as users login naturally
+  - Monitoring: Admin dashboard query tracks migration progress (total/migrated/pending)
+  - Implementation: Pure JavaScript, no external dependencies
+  - Security Impact: Before A (bcrypt), After A+ (PBKDF2 100K iterations = 100x stronger)
+  - Files: `convex/users.ts` (~120 lines), removed bcryptjs package
+  - Documentation: Updated for PBKDF2 implementation
 - **Build Status**: Next.js ✅, TypeScript ✅, Convex deploy ✅
-- **Previous (v4.5.20)**: PBKDF2 Migration Completion - Fixed password creation vulnerability
-- **Previous (v4.5.18)**: PBKDF2 Password Migration - Web Crypto API implementation
 - **Previous (v4.5.17)**: Bcrypt migration (superseded due to Convex incompatibility)
 - **Previous (v4.5.16)**: Wizard-Based Startup Window - 5 guided workflows for moderators/teachers
-- **Previous (v4.5.15)**: Filter-Required Display - Eliminated scrolling hell in class bookings
+- **Previous (v4.5.15)**: Filter-Required Display - Eliminated scrolling hell in class bookings (95-98% DOM reduction)
+- **Previous (v4.5.14)**: Security Patch - Moderator authorization bypass fixed
+- **Previous (v4.5.13)**: Analytics Dashboard - Comprehensive educational performance metrics
 
 ---
 

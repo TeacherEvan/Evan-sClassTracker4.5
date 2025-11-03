@@ -32,9 +32,9 @@ test.describe('Authentication', () => {
     test('should show error for invalid credentials', async ({ page }) => {
         await page.goto('/');
 
-        // Fill invalid credentials
-        await page.locator('input[name="username"], input[type="text"]').first().fill('invalid_user');
-        await page.locator('input[name="password"], input[type="password"]').first().fill('wrong_password');
+        // Fill invalid credentials - use ID selectors as login form doesn't have name attributes
+        await page.locator('#username, input[type="text"]').first().fill('invalid_user');
+        await page.locator('#password, input[type="password"]').first().fill('wrong_password');
 
         // Click login
         await page.locator('button:has-text("Login"), button:has-text("เข้าสู่ระบบ")').first().click();

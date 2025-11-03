@@ -1,5 +1,4 @@
 import { ErrorBoundary } from "@/components/error-boundary";
-import { GlobalErrorHandler } from "@/components/global-error-handler";
 import { ConvexClientProvider } from "@/lib/convex-provider";
 import { DataProvider } from "@/lib/data-context";
 import { DeviceProvider } from "@/lib/device-context";
@@ -27,7 +26,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
-        <GlobalErrorHandler />
         <ErrorBoundary>
           <ConvexClientProvider>
             <DeviceProvider>
