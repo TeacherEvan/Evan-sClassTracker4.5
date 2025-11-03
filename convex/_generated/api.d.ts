@@ -36,6 +36,7 @@ import type * as performanceMonitoring from "../performanceMonitoring.js";
 import type * as postClassNotes from "../postClassNotes.js";
 import type * as providers from "../providers.js";
 import type * as rateLimit from "../rateLimit.js";
+import type * as restore from "../restore.js";
 import type * as schools from "../schools.js";
 import type * as search from "../search.js";
 import type * as seedAppUpdate from "../seedAppUpdate.js";
@@ -91,6 +92,7 @@ declare const fullApi: ApiFromModules<{
   postClassNotes: typeof postClassNotes;
   providers: typeof providers;
   rateLimit: typeof rateLimit;
+  restore: typeof restore;
   schools: typeof schools;
   search: typeof search;
   seedAppUpdate: typeof seedAppUpdate;

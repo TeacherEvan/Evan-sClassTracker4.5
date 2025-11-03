@@ -13,7 +13,7 @@
     "create-update": "tsx scripts/create-app-update.ts",
     "backup": "tsx scripts/backup-to-mongodb.ts backup",
     "backup:list": "tsx scripts/backup-to-mongodb.ts list",
-    "backup:restore": "tsx scripts/backup-to-mongodb.ts restore",
+    "backup:restore": "tsx scripts/restore-from-mongodb.ts",
     "backup:schedule": "tsx scripts/backup-to-mongodb.ts schedule",
     "backup:cleanup": "tsx scripts/backup-to-mongodb.ts cleanup",
     "test": "vitest",

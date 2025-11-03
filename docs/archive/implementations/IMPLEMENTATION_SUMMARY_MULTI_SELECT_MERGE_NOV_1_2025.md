@@ -9,6 +9,7 @@
 ## Problem Statement
 
 The existing merge classes modal only allowed merging ONE group of classes at a time. Users had to:
+
 1. Select a target class from one group
 2. Select source classes from the same group
 3. Merge them
@@ -21,6 +22,7 @@ This was inefficient when multiple groups of classes needed to be merged simulta
 ## Solution Overview
 
 Implemented a **multi-select merge feature** that allows users to:
+
 - Enable/disable multiple groups using checkboxes
 - Select target and source classes for each enabled group independently
 - Merge all selected groups in a single operation
@@ -31,25 +33,29 @@ Implemented a **multi-select merge feature** that allows users to:
 ## Key Features
 
 ### 1. Per-Group Selection
+
 - Each mergeable group has an enable/disable checkbox
 - When enabled, the group shows target and source selection UI
 - Groups operate independently - selections don't affect other groups
 
 ### 2. Visual Feedback
+
 - **Disabled groups**: Gray border, collapsed state
 - **Enabled groups**: Purple border, expanded with selection UI
-- **Status badges**: 
+- **Status badges**:
   - "Merging..." (blue) during operation
   - "✓ Merged" (green) on success
   - "✗ Failed" (red) on error
 
 ### 3. Batch Processing
+
 - Merges all enabled groups sequentially
 - Shows real-time progress for each group
 - Continues on error (partial success supported)
 - Summary toast shows success/failure counts
 
 ### 4. Error Handling
+
 - Per-group error messages displayed inline
 - Failed groups remain visible with error details
 - Successful groups show success indicator
@@ -62,12 +68,14 @@ Implemented a **multi-select merge feature** that allows users to:
 ### State Management
 
 **Before:**
+
 ```typescript
 const [targetClassId, setTargetClassId] = useState<Id<"classes"> | "">("");
 const [selectedSourceIds, setSelectedSourceIds] = useState<Id<"classes">[]>([]);
 ```
 
 **After:**
+
 ```typescript
 interface GroupMergeSelection {
     enabled: boolean;
@@ -89,7 +97,7 @@ const [groupSelections, setGroupSelections] = useState<Map<string, GroupMergeSel
 
 ### UI Structure (Per Group)
 
-```
+```text
 ┌─────────────────────────────────────────────────┐
 │ [ ] Group 1                      Status Badge   │  ← Enable checkbox + header
 │     Location: School A                          │
@@ -98,6 +106,7 @@ const [groupSelections, setGroupSelections] = useState<Map<string, GroupMergeSel
 └─────────────────────────────────────────────────┘
 
 If enabled:
+```text
 ┌─────────────────────────────────────────────────┐
 │ 1. Select Target Class (Keep this one):        │
 │  ( ) Student A - 1 student                      │  ← Radio buttons
@@ -114,7 +123,7 @@ If enabled:
 
 ### Merge Process Flow
 
-```
+```text
 1. User enables groups and selects target/sources
 2. Click "Merge Selected Groups"
 3. For each enabled group:
@@ -134,9 +143,11 @@ If enabled:
 ## Files Modified
 
 ### `components/merge-classes-modal.tsx`
+
 **Changes:** 297 insertions, 167 deletions
 
 **Key Changes:**
+
 - Added `GroupMergeSelection` interface
 - Replaced single-selection state with Map-based per-group state
 - Added group enable/disable functionality
@@ -146,17 +157,21 @@ If enabled:
 - Modified merge button text and logic
 
 **New Functions:**
+
 - `handleToggleGroup(groupKey: string)`: Toggle group enabled state
 - `handleSetTarget(groupKey: string, targetId: Id<"classes">)`: Set target for group
 - Updated `handleToggleSource(groupKey: string, classId: Id<"classes">)`: Per-group source toggle
 
 **Updated Functions:**
+
 - `handleMerge()`: Sequential batch processing with status updates
 
 ### `tests/e2e/merge-classes.spec.ts` (NEW)
+
 **Lines:** 285
 
 **Test Cases:**
+
 1. `merge modal displays groups with mergeable classes`
 2. `can enable and disable group checkboxes`
 3. `can select target class for enabled group`
@@ -167,7 +182,9 @@ If enabled:
 8. `shows visual feedback for enabled groups`
 
 ### `.gitignore`
+
 **Changes:** Added test artifact exclusions
+
 - `/test-results` - Playwright test results
 - `/playwright-report` - Playwright HTML reports
 
@@ -176,7 +193,8 @@ If enabled:
 ## Validation
 
 ### Build Status ✅
-```
+
+```text
 ✓ TypeScript compilation: No errors
 ✓ ESLint: No new warnings (5 pre-existing warnings in unrelated files)
 ✓ Next.js build: Success
@@ -185,6 +203,7 @@ If enabled:
 ```
 
 ### Test Coverage
+
 - 8 E2E test cases created
 - Tests cover all major user flows:
   - Group display and information
@@ -200,6 +219,7 @@ If enabled:
 ## User Experience Improvements
 
 ### Before
+
 1. Open merge modal
 2. Select target from Group 1
 3. Select sources from Group 1
@@ -213,6 +233,7 @@ If enabled:
 **Time:** ~30 seconds per group × N groups
 
 ### After
+
 1. Open merge modal
 2. Enable Group 1 → Select target + sources
 3. Enable Group 2 → Select target + sources
@@ -229,6 +250,7 @@ If enabled:
 ## Backward Compatibility
 
 ✅ **Fully backward compatible**
+
 - Single-group merge works exactly as before
 - No changes to backend API
 - Existing behavior preserved when only one group enabled
@@ -258,6 +280,7 @@ If enabled:
 ## Security
 
 ✅ No security issues introduced
+
 - Uses existing `mergeClasses` mutation (already secured)
 - Same authorization checks per merge
 - Rate limiting applies per mutation call
@@ -268,6 +291,7 @@ If enabled:
 ## Bilingual Support
 
 ✅ All new text is bilingual (English/Thai):
+
 - "Merge Selected Groups" / "รวมกลุ่มที่เลือก"
 - "Merging..." / "กำลังรวม..."
 - "✓ Merged" / "✓ รวมแล้ว"
@@ -290,12 +314,14 @@ If enabled:
 ## Migration Notes
 
 **For Developers:**
+
 - The component now uses Map-based state instead of single values
 - All handler functions accept `groupKey` parameter
 - Status tracking is built-in for each group
 - No database migrations needed
 
 **For Users:**
+
 - The UI now shows checkboxes for each group
 - Groups must be explicitly enabled before merging
 - Multiple groups can be merged in one operation
@@ -306,6 +332,7 @@ If enabled:
 ## Summary
 
 Successfully implemented multi-select merge feature that allows users to merge multiple class groups simultaneously. The implementation:
+
 - ✅ Maintains backward compatibility
 - ✅ Improves efficiency 3-5x for multiple groups
 - ✅ Provides real-time progress feedback

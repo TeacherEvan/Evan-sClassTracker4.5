@@ -2,6 +2,102 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.22] - November 3, 2025 🔧 MAINTENANCE - Class Booking Workflow Enhancements
+
+### Added
+
+#### Auto-Cleanup for Unpopulated Classes
+
+- **Backend Mutations** (`convex/classes.ts`):
+  - `markClassesAsUnpopulated` - Identifies classes with deleted/invalid students
+  - `cleanupUnpopulatedClasses` - Permanently deletes marked classes
+  - Admin authorization checks for both operations
+  - Two-step safety process prevents accidental data loss
+
+- **Admin UI Component** (`components/cleanup-unpopulated-classes-button.tsx`):
+  - NEW component for admin dashboard
+  - Shows affected class count before deletion
+  - Confirmation dialogs with bilingual support
+  - React Hooks compliant (all hooks before early returns)
+  - Toast notifications for success/error states
+
+#### Batch Selection for Recurring Class Merger
+
+- **Enhanced Modal** (`components/merge-classes-modal.tsx`):
+  - "Select All Groups" button - selects all recurring classes at once
+  - "Clear All" button - deselects everything
+  - Visual feedback showing selected count
+  - Improves UX for large recurring class merges
+
+#### Student Filter in Booking Wizard
+
+- **New Wizard Step** (`components/booking-wizard.tsx`):
+  - Added student selection step with hierarchical filtering
+  - Grade selector → Class selector → Student selector
+  - Progressive filtering (Grade filters Classes, Class filters Students)
+  - Search functionality within student list
+  - Shows student count per filter selection
+  - Navigation flow: Teacher → Grade → Class → Student → Booking Type → Calendar
+
+#### Wizard Booking Creation (Option A)
+
+- **Parent-Side Implementation** (`components/startup-window.tsx`):
+  - Complete booking creation in parent component (lines 416-505)
+  - **Once-off bookings**: Direct creation with single date
+  - **Recurring bookings**: Day-of-week calculation + multi-week generation
+  - Error handling with bilingual toasts
+  - Auto-close wizard and startup window after successful booking
+
+### Fixed
+
+#### Class Count Display Synchronization
+
+- **Query Alignment** (`components/class-payment-calculator.tsx`):
+  - Changed from `getMyClassCountDetails` to `getClassCountForPrint` (matches modal)
+  - Removed redundant client-side date filtering
+  - Simplified `formatBookedBy()` and `formatApprovedBy()` helpers (removed unused `cls` parameter)
+  - Both calculator and modal now show identical class counts
+  - Single source of truth prevents data inconsistencies
+
+#### Calculator Loading States
+
+- **Enhanced UX** (`components/class-payment-calculator.tsx`):
+  - Added loading spinner with bilingual message during data fetch
+  - Added "no teacher selected" empty state with Calculator icon
+  - Clear visual feedback for all states (loading/empty/data)
+  - Improved user experience during async operations
+
+#### Calendar Consolidation
+
+- **Standardized Component** (`components/booking-wizard.tsx`):
+  - Replaced `ThirtyDayCalendar` with `MultiDateCalendar` (lines 395-434 deleted)
+  - Changed state from `selectedDate` (single) to `selectedDates` (array)
+  - Set `maxSelections={1}` for once-off bookings
+  - Consistent calendar UI across all booking flows
+
+### Removed
+
+- ❌ **Deleted** `components/calendar-picker.tsx` (orphaned, unused)
+- ❌ **Deleted** `components/month-calendar-picker.tsx` (orphaned, unused)
+
+### Technical Details
+
+- **Files Modified**: 7 (classes.ts, cleanup-unpopulated-classes-button.tsx, merge-classes-modal.tsx, booking-wizard.tsx, startup-window.tsx, class-payment-calculator.tsx, class-booking.tsx)
+- **Files Deleted**: 2 (calendar-picker.tsx, month-calendar-picker.tsx)
+- **New Components**: 1 (cleanup-unpopulated-classes-button.tsx)
+- **New Mutations**: 2 (markClassesAsUnpopulated, cleanupUnpopulatedClasses)
+- **Build Status**: ✅ Passing (Exit Code: 0)
+- **TypeScript**: No errors
+- **Lines Changed**: ~400 added, ~250 removed (net +150)
+
+### Documentation
+
+- Created `IMPLEMENTATION_SUMMARY_NOV_3_2025.md` with full technical details
+- Moved `IMPLEMENTATION_SUMMARY_MULTI_SELECT_MERGE_NOV_1_2025.md` to archive
+- All changes follow patterns documented in `.github/copilot-instructions.md`
+
+---
+
 ## [4.5.21] - November 3, 2025 📚 FEATURE - T. Evan Private Classes Addition
 
 ### Added - T. Evan's Private Class Schedule
