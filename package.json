@@ -1,6 +1,6 @@
 {
   "name": "class-tracker",
-  "version": "4.5.11",
+  "version": "4.5.18",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 3002",
@@ -28,8 +28,6 @@
     "test:e2e:replay": "cross-env HAR_MODE=replay playwright test"
   },
   "dependencies": {
-    "@types/bcryptjs": "^2.4.6",
-    "bcryptjs": "^3.0.2",
     "convex": "^1.28.0",
     "lucide-react": "^0.545.0",
     "mongodb": "^6.20.0",

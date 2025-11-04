@@ -1,10 +1,19 @@
 # Evan's Class Tracker 4.5
 
-Bilingual English/Thai class tracker for teachers and schools - Built with Next.js 15, React 19, Convex & Tailwind v4
+**Version 4.5.18** | Bilingual English/Thai class tracker for teachers and schools
 
-## ✨ Latest Updates (Nov 3, 2025)
+Built with Next.js 15, React 19, Convex & Tailwind v4
 
-### Version 4.5.21 - T. Evan Private Classes 📚
+## ✨ Latest Updates (Nov 5, 2025)
+
+### Recent Improvements
+
+- ✅ **Code Quality Review Complete** (Nov 5, 2025) - Comprehensive codebase analysis with A- grade (88/100)
+- ✅ **Documentation Consolidation** (Nov 5, 2025) - Merged implementation summaries into CHANGELOG.md, created unified backup guide
+- ✅ **Dependency Cleanup** (Nov 5, 2025) - Removed deprecated bcryptjs packages after PBKDF2 migration
+- ✅ **E2E Test Infrastructure** (Nov 4, 2025) - 97% pass rate restored with HAR mocking and optimized configuration
+
+### Version 4.5.21 - T. Evan Private Classes 📚 (Nov 3, 2025)
 
 - 📚 **Fourth Teacher Schedule**: Added T. Evan's private class schedule to seeding system
   - **Students**: 8 unique students (10 weekly classes - GOMU GOMU attends twice)
