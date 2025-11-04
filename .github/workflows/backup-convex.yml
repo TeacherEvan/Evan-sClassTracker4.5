@@ -1,0 +1,183 @@
+name: Daily Convex Backup
+
+on:
+  schedule:
+    # Run at 2 AM UTC daily
+    - cron: '0 2 * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      include_file_storage:
+        description: 'Include file storage in backup'
+        required: false
+        default: 'true'
+        type: boolean
+      upload_to_cloud:
+        description: 'Upload to cloud storage'
+        required: false
+        default: 'true'
+        type: boolean
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install Convex CLI
+        run: npm install -g convex
+      
+      - name: Create backup directory
+        run: mkdir -p backups
+      
+      - name: Export Convex data
+        env:
+          CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
+        run: |
+          DATE=$(date +%Y-%m-%d-%H%M)
+          BACKUP_PATH="./backups/convex-backup-$DATE.zip"
+          
+          echo "📤 Exporting data from Convex..."
+          echo "📅 Date: $(date '+%Y-%m-%d %H:%M:%S')"
+          echo "📁 Backup path: $BACKUP_PATH"
+          
+          # Export with file storage if requested
+          if [ "${{ github.event.inputs.include_file_storage }}" = "true" ] || [ -z "${{ github.event.inputs.include_file_storage }}" ]; then
+            npx convex export --path "$BACKUP_PATH" --include-file-storage --prod
+          else
+            npx convex export --path "$BACKUP_PATH" --prod
+          fi
+          
+          # Get file size
+          FILE_SIZE=$(du -sh "$BACKUP_PATH" | cut -f1)
+          echo "📊 Backup size: $FILE_SIZE"
+          
+          # Export variables for next steps
+          echo "BACKUP_PATH=$BACKUP_PATH" >> $GITHUB_ENV
+          echo "BACKUP_FILENAME=convex-backup-$DATE.zip" >> $GITHUB_ENV
+          echo "FILE_SIZE=$FILE_SIZE" >> $GITHUB_ENV
+      
+      # Option 1: Upload to AWS S3
+      - name: Upload to AWS S3
+        if: (github.event.inputs.upload_to_cloud == 'true' || github.event.inputs.upload_to_cloud == null) && secrets.AWS_ACCESS_KEY_ID != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+      
+      - name: Copy to S3
+        if: (github.event.inputs.upload_to_cloud == 'true' || github.event.inputs.upload_to_cloud == null) && secrets.AWS_ACCESS_KEY_ID != ''
+        run: |
+          aws s3 cp "${{ env.BACKUP_PATH }}" "s3://${{ secrets.AWS_S3_BUCKET }}/convex-backups/${{ env.BACKUP_FILENAME }}"
+          echo "✅ Uploaded to S3: s3://${{ secrets.AWS_S3_BUCKET }}/convex-backups/${{ env.BACKUP_FILENAME }}"
+      
+      # Option 2: Upload to Cloudflare R2 (via rclone)
+      - name: Upload to Cloudflare R2
+        if: (github.event.inputs.upload_to_cloud == 'true' || github.event.inputs.upload_to_cloud == null) && secrets.R2_ACCESS_KEY_ID != ''
+        env:
+          RCLONE_CONFIG_R2_TYPE: s3
+          RCLONE_CONFIG_R2_PROVIDER: Cloudflare
+          RCLONE_CONFIG_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          RCLONE_CONFIG_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          RCLONE_CONFIG_R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+        run: |
+          # Install rclone
+          curl https://rclone.org/install.sh | sudo bash
+          
+          # Upload to R2
+          rclone copy "${{ env.BACKUP_PATH }}" "r2:${{ secrets.R2_BUCKET }}/convex-backups/"
+          echo "✅ Uploaded to Cloudflare R2: ${{ secrets.R2_BUCKET }}/convex-backups/${{ env.BACKUP_FILENAME }}"
+      
+      # Option 3: Upload to Azure Blob Storage
+      - name: Upload to Azure Blob Storage
+        if: (github.event.inputs.upload_to_cloud == 'true' || github.event.inputs.upload_to_cloud == null) && secrets.AZURE_STORAGE_CONNECTION_STRING != ''
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az storage blob upload \
+              --connection-string "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" \
+              --container-name "${{ secrets.AZURE_STORAGE_CONTAINER }}" \
+              --name "convex-backups/${{ env.BACKUP_FILENAME }}" \
+              --file "${{ env.BACKUP_PATH }}"
+            echo "✅ Uploaded to Azure Blob Storage"
+      
+      # Cleanup: Remove old backups from cloud (keep last 30 days)
+      - name: Cleanup old S3 backups
+        if: secrets.AWS_ACCESS_KEY_ID != ''
+        run: |
+          echo "🧹 Cleaning up old S3 backups (retention: 30 days)..."
+          CUTOFF_DATE=$(date -d '30 days ago' +%Y-%m-%d)
+          
+          aws s3 ls "s3://${{ secrets.AWS_S3_BUCKET }}/convex-backups/" | while read -r line; do
+            FILE_DATE=$(echo $line | awk '{print $1}')
+            FILE_NAME=$(echo $line | awk '{print $4}')
+            
+            if [[ "$FILE_DATE" < "$CUTOFF_DATE" ]]; then
+              echo "🗑️  Deleting old backup: $FILE_NAME ($FILE_DATE)"
+              aws s3 rm "s3://${{ secrets.AWS_S3_BUCKET }}/convex-backups/$FILE_NAME"
+            fi
+          done
+      
+      # Summary
+      - name: Backup summary
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "✅ Backup Complete!"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📁 Backup: ${{ env.BACKUP_FILENAME }}"
+          echo "📊 Size: ${{ env.FILE_SIZE }}"
+          echo "📅 Date: $(date '+%Y-%m-%d %H:%M:%S')"
+          if [ "${{ secrets.AWS_ACCESS_KEY_ID }}" != "" ]; then
+            echo "☁️  Location: AWS S3"
+          elif [ "${{ secrets.R2_ACCESS_KEY_ID }}" != "" ]; then
+            echo "☁️  Location: Cloudflare R2"
+          elif [ "${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}" != "" ]; then
+            echo "☁️  Location: Azure Blob Storage"
+          else
+            echo "⚠️  No cloud storage configured"
+          fi
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
+      # Notify on failure
+      - name: Notify on failure (Slack)
+        if: failure() && secrets.SLACK_WEBHOOK_URL != ''
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: |
+            🚨 Convex Backup Failed!
+            
+            Date: $(date '+%Y-%m-%d %H:%M:%S')
+            Workflow: ${{ github.workflow }}
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+      
+      # Notify on failure (Email)
+      - name: Notify on failure (Email)
+        if: failure() && secrets.NOTIFICATION_EMAIL != ''
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: '🚨 Convex Backup Failed - ${{ github.repository }}'
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: GitHub Actions <noreply@github.com>
+          body: |
+            Convex backup failed for repository: ${{ github.repository }}
+            
+            Date: $(date '+%Y-%m-%d %H:%M:%S')
+            Workflow: ${{ github.workflow }}
+            Run URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            Please check the workflow logs for details.

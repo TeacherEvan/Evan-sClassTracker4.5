@@ -9,7 +9,8 @@
 ## Issue Summary
 
 **Error Observed**:
-```
+
+```text
 [CONVEX Q(events:listByDateRange)] [Request ID: ca8e1fccf709ab6f] Server Error Called by client
 ```
 
@@ -52,6 +53,7 @@ export const listByDateRange = query({
 ```
 
 **Validation Checklist**:
+
 - ✅ Args properly validated (userId, startDate, endDate)
 - ✅ User existence checked
 - ✅ Index exists in schema (`by_date` on `eventDate`)
@@ -63,6 +65,7 @@ export const listByDateRange = query({
 **Search Results**: No usage found in `app/` or `components/` directories
 
 **Interpretation**:
+
 1. Query created but not yet integrated into UI, OR
 2. Error is transient/intermittent from backend instability
 3. Backend error occurs even when query not called (pre-compilation check?)
@@ -137,6 +140,7 @@ function EventCalendar({ userId, startDate, endDate }: {
 ```
 
 **Key Features**:
+
 - ✅ Three states: loading, error, success
 - ✅ User-friendly error message (no technical jargon)
 - ✅ Retry mechanism (reload page)
@@ -165,6 +169,7 @@ npm run test:e2e
 ```
 
 **Benefits**:
+
 - ✅ 10x faster tests (no network latency)
 - ✅ 100% reliable (no backend instability)
 - ✅ Offline capable (works without Convex connection)
@@ -218,6 +223,7 @@ function EventCalendar({ userId, startDate, endDate }: CalendarProps) {
 ```
 
 **Benefits**:
+
 - ✅ Prevents invalid query calls
 - ✅ Better error messages (console logs)
 - ✅ Skip query when args invalid (performance)
@@ -261,6 +267,7 @@ export function ConvexErrorHandler({ children }: { children: React.ReactNode }) 
 ```
 
 **Benefits**:
+
 - ✅ Catches all Convex errors globally
 - ✅ User-friendly notifications
 - ✅ Bilingual support
@@ -298,6 +305,7 @@ Error: [Request ID: ca8e1fccf709ab6f] Server Error Called by client
 ```
 
 **Steps**:
+
 1. Copy Request ID
 2. Go to Convex Dashboard → Logs
 3. Search for Request ID
@@ -356,7 +364,8 @@ location.reload();
 **Code Status**: ✅ Correct (validated)  
 **Client Usage**: ❓ Not found (possibly not integrated yet)  
 **Backend Status**: ⚠️ Unstable (503 errors observed)  
-**Recommended Action**: 
+**Recommended Action**:
+
 1. Wait for Convex backend to stabilize, OR
 2. Use HAR mocking for reliable testing, OR
 3. Add error boundary if planning to use this query
@@ -367,11 +376,11 @@ location.reload();
 
 ## References
 
-- **Convex Error Handling Docs**: https://docs.convex.dev/client/react/error-handling
+- **Convex Error Handling Docs**: <https://docs.convex.dev/client/react/error-handling>
 - **HAR Mocking Guide**: `tests/e2e/README.md`
 - **E2E Optimization Summary**: `IMPLEMENTATION_SUMMARY_E2E_OPTIMIZATION_NOV_4_2025.md`
 - **Test Fixes Summary**: `IMPLEMENTATION_SUMMARY_TEST_FIXES_NOV_4_2025.md`
-- **Convex Status**: https://status.convex.dev
+- **Convex Status**: <https://status.convex.dev>
 
 ---
 
