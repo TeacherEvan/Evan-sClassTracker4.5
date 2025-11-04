@@ -11,6 +11,7 @@ yarn.lock
 .markdownlintignore
 
 # Large documentation/analysis files (auto-generated or investigation reports)
+
 CONVEX_*.md
 IMPLEMENTATION_*.md
 BACKUP_*.md
