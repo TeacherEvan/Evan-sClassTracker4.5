@@ -11,12 +11,12 @@ on:
             include_file_storage:
                 description: "Include file storage in backup"
                 required: false
-                default: "true"
+                default: true
                 type: boolean
             upload_to_cloud:
                 description: "Upload to cloud storage"
                 required: false
-                default: "true"
+                default: true
                 type: boolean
 
 jobs:
