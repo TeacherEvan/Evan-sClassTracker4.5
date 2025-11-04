@@ -61,7 +61,7 @@
   },
   "lint-staged": {
     "*.md": [
-      "markdownlint-cli2 --fix --ignore '**/CONVEX_RELIABILITY_AND_MIGRATION_ANALYSIS.md' --ignore '**/BACKUP_IMPLEMENTATION_GUIDE.md' --ignore '**/IMPLEMENTATION_SUMMARY_*.md' --ignore '**/IMPLEMENTATION_COMPLETE_*.md'"
+      "markdownlint-cli2 --fix"
     ],
     "*.{ts,tsx,js,jsx}": [
       "eslint --fix"

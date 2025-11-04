@@ -9,3 +9,16 @@ package-lock.json
 pnpm-lock.yaml
 yarn.lock
 .markdownlintignore
+
+# Large documentation/analysis files (auto-generated or investigation reports)
+CONVEX_*.md
+IMPLEMENTATION_*.md
+BACKUP_*.md
+AUDIT_*.md
+OPTIMIZATION_*.md
+MIGRATION_*.md
+ANALYSIS_*.md
+*_ANALYSIS.md
+*_REPORT.md
+*_SUMMARY.md
+CHANGELOG.md
