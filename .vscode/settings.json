@@ -14,5 +14,13 @@
         "oneline",
         "Playfair",
         "committerdate"
-    ]
+    ],
+
+    // Git optimization - prevent auto-stash errors
+    "git.autofetch": false,
+    "git.autoStash": false,
+    "git.fetchOnPull": false,
+    "git.pruneOnFetch": false,
+    "git.postCommitCommand": "none",
+    "git.showProgress": false
 }
