@@ -9,6 +9,7 @@
 ### Step 1: Upgrade to Convex Pro (5 minutes)
 
 1. **Go to Convex Dashboard**:
+
    ```
    https://dashboard.convex.dev/t/your-team/your-project/settings
    ```
@@ -37,6 +38,7 @@ Get-Item ./backups/test-backup.zip | Select-Object Name, Length, LastWriteTime
 ```
 
 **Expected output**:
+
 ```
 Name               Length         LastWriteTime
 ----               ------         -------------
@@ -59,6 +61,7 @@ test-backup.zip    52428800      11/4/2025 10:30:00 AM
 ```
 
 **Test**:
+
 ```powershell
 npm run backup:convex:now
 ```
@@ -68,6 +71,7 @@ npm run backup:convex:now
 ### Step 4: Configure .gitignore (1 minute)
 
 Add to `.gitignore`:
+
 ```gitignore
 # Convex backups (sensitive data)
 backups/
@@ -86,7 +90,7 @@ backups/
 
 **Pricing**: $0.015/GB/month (100GB = $1.50/month)
 
-1. **Create Cloudflare account**: https://dash.cloudflare.com
+1. **Create Cloudflare account**: <https://dash.cloudflare.com>
 
 2. **Create R2 bucket**:
    - Go to R2 → Create bucket
@@ -99,6 +103,7 @@ backups/
    - Copy Access Key ID and Secret Access Key
 
 4. **Configure environment variables**:
+
    ```powershell
    # .env.local (DO NOT COMMIT)
    R2_BUCKET=class-tracker-backups
@@ -108,6 +113,7 @@ backups/
    ```
 
 5. **Install rclone** (for uploads):
+
    ```powershell
    # Windows (via Chocolatey)
    choco install rclone
@@ -116,6 +122,7 @@ backups/
    ```
 
 6. **Test upload**:
+
    ```powershell
    npm run backup:convex:r2
    ```
@@ -126,9 +133,10 @@ backups/
 
 **Pricing**: $0.023/GB/month (100GB = $2.30/month)
 
-1. **Create AWS account**: https://aws.amazon.com
+1. **Create AWS account**: <https://aws.amazon.com>
 
 2. **Create S3 bucket**:
+
    ```bash
    aws s3 mb s3://class-tracker-backups --region us-east-1
    ```
@@ -139,6 +147,7 @@ backups/
    - Copy Access Key ID and Secret Access Key
 
 4. **Configure AWS CLI**:
+
    ```powershell
    aws configure
    # AWS Access Key ID: [paste]
@@ -148,6 +157,7 @@ backups/
    ```
 
 5. **Configure environment**:
+
    ```powershell
    # .env.local
    AWS_S3_BUCKET=class-tracker-backups
@@ -157,6 +167,7 @@ backups/
    ```
 
 6. **Test upload**:
+
    ```powershell
    npm run backup:convex:s3
    ```
@@ -189,6 +200,7 @@ npm run backup:convex
 1. **Add GitHub Secrets**:
    - Go to repo → Settings → Secrets and variables → Actions
    - Add secrets:
+
      ```
      CONVEX_DEPLOYMENT=your-deployment-url
      
@@ -270,7 +282,7 @@ rclone copy r2:class-tracker-backups/convex-backups/convex-backup-2025-11-04-020
 
 #### Step 2: Create Supabase Project (15 minutes)
 
-1. **Sign up**: https://supabase.com
+1. **Sign up**: <https://supabase.com>
 
 2. **Create project**:
    - Name: `class-tracker-emergency`
@@ -413,15 +425,15 @@ Write-Host "Latest backup: $(($backups | Sort-Object LastWriteTime -Descending |
 
 ### Convex Support
 
-- Email: support@convex.dev
-- Discord: https://discord.gg/convex
-- Status: https://status.convex.dev
+- Email: <support@convex.dev>
+- Discord: <https://discord.gg/convex>
+- Status: <https://status.convex.dev>
 
 ### Supabase Support
 
-- Email: support@supabase.io
-- Discord: https://discord.supabase.com
-- Status: https://status.supabase.com
+- Email: <support@supabase.io>
+- Discord: <https://discord.supabase.com>
+- Status: <https://status.supabase.com>
 
 ### This Project
 

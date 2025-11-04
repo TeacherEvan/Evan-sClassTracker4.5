@@ -14,6 +14,7 @@ This document analyzes Convex service reliability over the past 6 months and eva
 ### Key Findings
 
 **Objective 1 - Convex Reliability**:
+
 - ✅ **99.81-99.86% uptime** over last 60 days
 - ⚠️ **6-8 incidents** in October-November 2025
 - ⚠️ **Free tier disproportionately affected** (longer recovery times)
@@ -21,6 +22,7 @@ This document analyzes Convex service reliability over the past 6 months and eva
 - ⚠️ **No public roadmap** for infrastructure improvements
 
 **Objective 2 - Dual-Backup Feasibility**:
+
 - ❌ **NOT RECOMMENDED** - Dual-backend complexity outweighs benefits
 - ✅ **Alternative: Robust backup strategy** with Convex export + S3/R2
 - ✅ **Better solution: Upgrade to Convex Pro** ($25/month)
@@ -49,7 +51,7 @@ This document analyzes Convex service reliability over the past 6 months and eva
 
 ### Uptime Statistics (Last 60 Days)
 
-**Source**: https://status.convex.dev (accessed Nov 4, 2025)
+**Source**: <https://status.convex.dev> (accessed Nov 4, 2025)
 
 | Service | Uptime | Status |
 |---------|--------|--------|
@@ -58,6 +60,7 @@ This document analyzes Convex service reliability over the past 6 months and eva
 | **convex.dev website** | 100% | Operational |
 
 **Analysis**:
+
 - **99.81% uptime** = ~2.7 hours downtime per 60 days
 - **Comparable to industry standards** (AWS S3: 99.9%, Firebase: 99.95%)
 - **Within acceptable range** for non-critical educational apps
@@ -100,6 +103,7 @@ This document analyzes Convex service reliability over the past 6 months and eva
 **Total Incidents**: 6 incidents (8 if counting Oct 31 and Oct 21 as separate)
 
 **Pattern Analysis**:
+
 - ⚠️ **Clustering**: 6-8 incidents in 30 days (unusually high)
 - ⚠️ **Tier Discrimination**: Free tier consistently deprioritized
 - ⚠️ **Duration**: 47 minutes to 8+ hours (highly variable)
@@ -144,12 +148,14 @@ This document analyzes Convex service reliability over the past 6 months and eva
 **Current Status**: Free tier deployment
 
 **Implications**:
+
 - ⚠️ **Extended outages likely** during incidents
 - ⚠️ **No SLA guarantees** (free tier)
 - ⚠️ **Low priority for recovery** (explicit policy)
 - ⚠️ **Impact on users**: Educational app used by teachers/students (downtime during class hours unacceptable)
 
 **Upgrade Impact** (Pro tier - $25/month):
+
 - ✅ **Priority recovery** (30-90 minute SLA observed)
 - ✅ **Dedicated support** channel
 - ✅ **Higher resource allocation**
@@ -162,12 +168,14 @@ This document analyzes Convex service reliability over the past 6 months and eva
 ### Incident Response Quality
 
 **Positives**:
+
 - ✅ **Transparent communication** (detailed incident reports)
 - ✅ **Root cause analysis** shared publicly
 - ✅ **Continuous monitoring** after resolution
 - ✅ **Proactive updates** during incidents
 
 **Negatives**:
+
 - ⚠️ **No preventive measures announced** (recurring database cluster issues)
 - ⚠️ **Downstream dependency risks** not addressed
 - ⚠️ **No infrastructure roadmap** shared publicly
@@ -175,11 +183,13 @@ This document analyzes Convex service reliability over the past 6 months and eva
 ### Future Plans (Research Findings)
 
 **Sources Checked**:
-- Convex Docs (https://docs.convex.dev)
-- Convex News (https://news.convex.dev)
-- Convex Status Page (https://status.convex.dev)
+
+- Convex Docs (<https://docs.convex.dev>)
+- Convex News (<https://news.convex.dev>)
+- Convex Status Page (<https://status.convex.dev>)
 
 **Public Roadmap Items** (as of Nov 4, 2025):
+
 1. ✅ **Async Index Backfills** (Sep 2025 - delivered)
 2. ✅ **WorkOS Auth Integration** (Sep 2025 - delivered)
 3. ✅ **Convex Chef Open Source** (Sep 2025 - delivered)
@@ -190,6 +200,7 @@ This document analyzes Convex service reliability over the past 6 months and eva
 **Analysis**: Convex is focused on **feature development**, not **infrastructure stability**
 
 **Red Flags**:
+
 - ❌ No public acknowledgment of October incident frequency
 - ❌ No announced measures to prevent database cluster issues
 - ❌ No redundancy strategy for downstream providers
@@ -260,6 +271,7 @@ const db: DatabaseProvider = process.env.USE_SUPABASE
    - Example: Convex allows `{ tags: ["math", "science"] }`, Supabase needs junction table
 
 2. **API Differences**:
+
    ```typescript
    // Convex (type-safe, reactive)
    const classes = useQuery(api.classes.list, { schoolId });
@@ -456,8 +468,10 @@ jobs:
 2. Note connection string and anon key
 3. Create `.env.local`:
    ```
-   NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+
+   NEXT_PUBLIC_SUPABASE_URL=<https://xxx.supabase.co>
    NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+
    ```
 
 ### Step 3: Convert & Import Data (1-2 hours)
@@ -469,18 +483,22 @@ jobs:
    ```
 
 ### Step 4: Deploy Emergency Frontend (30 minutes)
+
 1. Checkout `emergency-supabase` branch (pre-prepared)
 2. Update environment variables
 3. Deploy to Vercel:
+
    ```bash
    vercel --prod
    ```
 
 ### Step 5: Notify Users (10 minutes)
+
 - Send email/SMS: "Service restored on backup infrastructure"
 - Update status page
 
 ### Total Recovery Time: 2-4 hours
+
 ```
 
 **Cost Analysis**:
@@ -510,6 +528,7 @@ jobs:
 **Key Files Requiring Migration**:
 
 ```
+
 convex/
 ├── users.ts          (auth, sessions, password hashing)
 ├── classes.ts        (class booking, state machine)
@@ -521,6 +540,7 @@ convex/
 ├── auditLogs.ts      (audit trail)
 ├── files.ts          (file uploads)
 └── [40 more files]
+
 ```
 
 ### Migration Effort Estimation
@@ -579,6 +599,7 @@ CREATE POLICY "Admins can read all" ON users
    - Solution: Maintain ID mapping table during migration
 
 2. **Nested Objects**:
+
    ```typescript
    // Convex (flexible)
    preferences: {
@@ -600,6 +621,7 @@ CREATE POLICY "Admins can read all" ON users
    ```
 
 3. **Union Types**:
+
    ```typescript
    // Convex
    status: v.union(
@@ -670,6 +692,7 @@ export async function listBySchool(schoolId: string) {
 ```
 
 **Rewrite Scope**:
+
 - **~200 queries** across 45 files
 - **~150 mutations** (insert/update/delete)
 - **~30 real-time subscriptions**
@@ -749,6 +772,7 @@ function ClassList({ schoolId }: { schoolId: string }) {
 | **TOTAL** | **7-11 weeks** | **🔴 Very Hard** |
 
 **Cost in Developer Time**:
+
 - **Full-time equivalent**: 2-3 months
 - **Part-time (20h/week)**: 4-6 months
 - **Estimated cost** (freelancer): $15,000 - $30,000 USD
@@ -764,6 +788,7 @@ function ClassList({ schoolId }: { schoolId: string }) {
 **Impact**: High
 
 **Benefits**:
+
 - ✅ **Priority incident recovery** (30-90 min vs 4-8+ hours)
 - ✅ **Dedicated support** channel
 - ✅ **Higher resource limits**
@@ -771,6 +796,7 @@ function ClassList({ schoolId }: { schoolId: string }) {
 - ✅ **Production SLA** (informal, but observed)
 
 **Implementation**:
+
 ```bash
 # 1. Go to Convex Dashboard
 https://dashboard.convex.dev/t/your-team/your-project/settings
@@ -781,6 +807,7 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
 ```
 
 **ROI Analysis**:
+
 - **Cost**: $25/month = $300/year
 - **Downtime savings**: 4-8 hours/incident → 30-90 min
 - **Incident frequency**: 6-8/month (recent trend)
@@ -801,6 +828,7 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
 **Implementation** (see Section 4 - Option B for full code)
 
 **Benefits**:
+
 - ✅ **Point-in-time recovery** (restore to any day in last 30 days)
 - ✅ **Disaster recovery** (can migrate to Supabase in 2-4 hours if needed)
 - ✅ **Data portability** (not locked into Convex)
@@ -808,6 +836,7 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
 - ✅ **Peace of mind**
 
 **Setup Checklist**:
+
 - [ ] Create `scripts/backup-convex.ps1`
 - [ ] Test manual export: `npm run backup:convex:now`
 - [ ] Set up cloud storage (AWS S3, Cloudflare R2, or Dropbox)
@@ -829,6 +858,7 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
 **What to Prepare**:
 
 1. **Create Supabase Project** (free tier)
+
    ```bash
    # 1. Sign up: https://supabase.com
    # 2. Create project "class-tracker-backup"
@@ -836,6 +866,7 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
    ```
 
 2. **Write Schema Conversion Script**
+
    ```typescript
    // scripts/convex-to-postgres.ts
    import { readFileSync, writeFileSync } from 'fs';
@@ -884,6 +915,7 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
    ```
 
 3. **Create Emergency Branch**
+
    ```bash
    # Create branch with Supabase integration (pre-coded)
    git checkout -b emergency-supabase
@@ -914,6 +946,7 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
 ### Solution 4: Full Supabase Migration (ONLY IF NEEDED) ❌
 
 **When to Consider**:
+
 - ⚠️ Convex incidents continue for 3+ months
 - ⚠️ Convex announces service deprecation
 - ⚠️ Business requires 99.95%+ uptime SLA
@@ -924,6 +957,7 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
 **Risk**: High (data migration, feature parity)
 
 **Prerequisites Before Migration**:
+
 1. ✅ Convex Pro subscription active (to stabilize during transition)
 2. ✅ Automated backups in place (last 30 days)
 3. ✅ Emergency Supabase infrastructure tested
@@ -963,6 +997,7 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
    - [ ] Create emergency contact list
 
 **Deliverables**:
+
 - ✅ Pro tier active (priority incident recovery)
 - ✅ Daily automated backups to cloud storage
 - ✅ Documentation for disaster recovery
@@ -1006,6 +1041,7 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
    - [ ] Share with team/stakeholders
 
 **Deliverables**:
+
 - ✅ Supabase project ready to activate
 - ✅ Conversion scripts tested
 - ✅ Emergency frontend branch deployable
@@ -1044,6 +1080,7 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
    - [ ] Evaluate if Pro tier still necessary
 
 **Deliverables**:
+
 - ✅ Incident log tracking reliability trends
 - ✅ Verified backup/restore procedures
 - ✅ Cost optimization recommendations
@@ -1057,6 +1094,7 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
 ### Phase 4: Full Migration (ONLY IF TRIGGERED) ❌
 
 **Trigger Conditions** (any 2 of 3):
+
 - ⚠️ Convex has >10 incidents in 3-month period
 - ⚠️ Average incident duration >4 hours
 - ⚠️ Convex announces service changes/deprecation
@@ -1067,6 +1105,7 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
 **Decision Point**: Review monthly (check trigger conditions)
 
 **Pre-Migration Checklist**:
+
 - [ ] Business case approved (cost vs downtime risk)
 - [ ] Dedicated developer allocated (full-time for 2-3 months)
 - [ ] Supabase Pro subscription approved ($25/month)
@@ -1086,11 +1125,13 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
 **Purpose**: Official export/import tool
 
 **Installation**:
+
 ```bash
 npm install -g convex
 ```
 
 **Commands**:
+
 ```bash
 # Export (includes file storage)
 npx convex export --path ./backup.zip --include-file-storage --prod
@@ -1106,12 +1147,14 @@ npx convex run users:list
 ```
 
 **Pros**:
+
 - ✅ Official support
 - ✅ Includes file storage
 - ✅ ZIP format (compressed)
 - ✅ Fast export/import
 
 **Cons**:
+
 - ⚠️ Requires Convex CLI installed
 - ⚠️ Manual process (need to automate)
 
@@ -1122,11 +1165,13 @@ npx convex run users:list
 **Purpose**: Manage Supabase projects locally
 
 **Installation**:
+
 ```bash
 npm install -g supabase
 ```
 
 **Commands**:
+
 ```bash
 # Initialize local Supabase
 supabase init
@@ -1148,6 +1193,7 @@ psql $DATABASE_URL < backup.sql
 ```
 
 **Pros**:
+
 - ✅ Full PostgreSQL power
 - ✅ Local development environment
 - ✅ Migration versioning
@@ -1159,9 +1205,10 @@ psql $DATABASE_URL < backup.sql
 
 **Purpose**: Visual database management
 
-**Installation**: https://www.pgadmin.org/download/
+**Installation**: <https://www.pgadmin.org/download/>
 
 **Use Cases**:
+
 - View Supabase schema visually
 - Run SQL queries with autocomplete
 - Import/export CSV data
@@ -1176,6 +1223,7 @@ psql $DATABASE_URL < backup.sql
 **Extension ID**: `convex-dev.convex`
 
 **Features**:
+
 - ✅ Syntax highlighting for Convex schema
 - ✅ IntelliSense for `ctx.db` methods
 - ✅ Real-time type checking
@@ -1183,6 +1231,7 @@ psql $DATABASE_URL < backup.sql
 - ✅ Dashboard integration
 
 **Installation**:
+
 ```bash
 code --install-extension convex-dev.convex
 ```
@@ -1194,6 +1243,7 @@ code --install-extension convex-dev.convex
 **Extension ID**: `supabase.supabase-extension`
 
 **Features**:
+
 - ✅ Database schema explorer
 - ✅ SQL autocomplete
 - ✅ Run queries from VS Code
@@ -1207,6 +1257,7 @@ code --install-extension convex-dev.convex
 **Extension ID**: `ckolkman.vscode-postgres`
 
 **Features**:
+
 - ✅ Connect to PostgreSQL databases
 - ✅ Run SQL queries
 - ✅ View table data
@@ -1219,6 +1270,7 @@ code --install-extension convex-dev.convex
 **Extension ID**: `cweijan.vscode-database-client2`
 
 **Features**:
+
 - ✅ Supports PostgreSQL, MySQL, MongoDB, SQLite
 - ✅ Visual query builder
 - ✅ ER diagram generation
@@ -1237,6 +1289,7 @@ code --install-extension convex-dev.convex
 **Example**: See Section 4 - Automated Convex Exports
 
 **Pros**:
+
 - ✅ Free (2,000 minutes/month)
 - ✅ Integrated with repo
 - ✅ Notifications on failure
@@ -1249,6 +1302,7 @@ code --install-extension convex-dev.convex
 **Purpose**: Serverless cron jobs
 
 **Example**:
+
 ```typescript
 // wrangler.toml
 [triggers]
@@ -1274,11 +1328,13 @@ export default {
 ```
 
 **Pros**:
+
 - ✅ Runs on Cloudflare edge
 - ✅ Free tier (100K requests/day)
 - ✅ Direct R2 integration
 
 **Cons**:
+
 - ⚠️ More complex setup than GitHub Actions
 
 ---
@@ -1290,6 +1346,7 @@ export default {
 **See**: Section 5 - `scripts/convex-to-postgres.ts`
 
 **Features**:
+
 - ✅ Handles Convex ID → PostgreSQL UUID conversion
 - ✅ Preserves relationships (foreign keys)
 - ✅ Converts JSONL → SQL INSERT statements
@@ -1302,6 +1359,7 @@ export default {
 **Purpose**: Type-safe database migrations
 
 **Example**:
+
 ```prisma
 // schema.prisma
 datasource db {
@@ -1335,11 +1393,13 @@ npx prisma migrate deploy
 ```
 
 **Pros**:
+
 - ✅ Type-safe schema
 - ✅ Automatic migrations
 - ✅ Works with Supabase
 
 **Cons**:
+
 - ⚠️ Adds dependency (Prisma)
 - ⚠️ Learning curve
 
@@ -1373,12 +1433,14 @@ npx prisma migrate deploy
 **ROI Calculation**:
 
 **Assumptions**:
+
 - **Downtime cost**: $50/hour (teacher productivity loss)
 - **Current downtime**: 6 incidents/month × 6 hours = 36 hours/month
 - **Pro tier downtime**: 6 incidents/month × 1 hour = 6 hours/month
 - **Downtime savings**: 30 hours/month
 
 **Annual Savings**:
+
 - **Downtime avoided**: 30 hours/month × 12 months = 360 hours/year
 - **Value**: 360 hours × $50/hour = **$18,000/year**
 - **Cost**: $318/year
@@ -1398,6 +1460,7 @@ npx prisma migrate deploy
 | **TOTAL** | **$17,500 - $36,000** | **10-15 weeks** |
 
 **Breakeven Analysis**:
+
 - **Migration cost**: $25,000 (average)
 - **Downtime savings**: $18,000/year
 - **Breakeven**: 1.4 years
@@ -1412,18 +1475,21 @@ npx prisma migrate deploy
 ### Scenario 1: Current Situation (Free Tier + Recent Incidents)
 
 **Factors**:
+
 - ⚠️ 6-8 incidents in last month
 - ⚠️ Free tier = 4-8 hour recovery times
 - ✅ Budget available: $25-50/month
 - ✅ Low developer time available (2-4 hours/week)
 
 **Recommended Action**:
+
 1. ✅ **Upgrade to Convex Pro** (immediate)
 2. ✅ **Set up automated backups** (this week)
 3. 🟡 **Prepare emergency Supabase** (this month)
 4. ❌ **Defer full migration** (monitor for 3 months)
 
 **Expected Outcome**:
+
 - Downtime reduced by 80% (6 hours → 1 hour per incident)
 - Disaster recovery capability (2-4 hour restore time)
 - Total cost: $27/month
@@ -1434,18 +1500,21 @@ npx prisma migrate deploy
 ### Scenario 2: Convex Incidents Continue for 3+ Months
 
 **Factors**:
+
 - ⚠️ 15+ incidents in 3 months (trend continues)
 - ⚠️ Average incident duration: 4+ hours
 - ✅ Business critical application
 - ✅ Budget available: $25,000 for migration
 
 **Recommended Action**:
+
 1. ✅ **Continue Convex Pro** (maintain during migration)
 2. ✅ **Begin Supabase migration** (7-11 weeks)
 3. ✅ **Gradual rollout** (feature by feature)
 4. ✅ **Keep Convex as fallback** (for 1-2 months post-migration)
 
 **Expected Outcome**:
+
 - Long-term stability with Supabase (99.95%+ uptime)
 - Independence from Convex infrastructure
 - Total cost: $25,000 migration + $25/month (Supabase Pro)
@@ -1456,17 +1525,20 @@ npx prisma migrate deploy
 ### Scenario 3: Convex Announces Service Changes/Deprecation
 
 **Factors**:
+
 - 🚨 Convex announces pricing changes, feature deprecation, or service shutdown
 - ⚠️ Migration timeline: 3-6 months notice (typical)
 - ✅ Emergency migration required
 
 **Recommended Action**:
+
 1. 🚨 **Immediate Convex export** (all data)
 2. ✅ **Activate emergency Supabase branch** (short-term)
 3. ✅ **Begin full Supabase migration** (7-11 weeks)
 4. ✅ **Evaluate alternatives** (Firebase, PlanetScale) in parallel
 
 **Expected Outcome**:
+
 - Service continuity maintained (zero data loss)
 - Migration completed within notice period
 - Reduced vendor lock-in risk going forward
@@ -1478,6 +1550,7 @@ npx prisma migrate deploy
 ### Summary of Findings
 
 **Convex Reliability (Objective 1)**:
+
 - ✅ 99.81-99.86% uptime (acceptable for most use cases)
 - ⚠️ Recent incident frequency HIGH (6-8/month in Oct-Nov 2025)
 - ⚠️ Free tier significantly impacted (4-8 hour recovery times)
@@ -1485,6 +1558,7 @@ npx prisma migrate deploy
 - ✅ Pro tier shows priority recovery (30-90 minutes observed)
 
 **Dual-Backup Strategy (Objective 2)**:
+
 - ❌ **Dual-backend Convex + Supabase: NOT RECOMMENDED** (8-13 weeks effort, high complexity, ongoing maintenance burden)
 - ✅ **Automated Convex exports + Emergency Supabase: RECOMMENDED** (2-4 hours setup, $2/month, 2-4 hour recovery time)
 - ✅ **Full Supabase migration: DEFER** (only if Convex issues persist 3+ months)
@@ -1492,28 +1566,32 @@ npx prisma migrate deploy
 ### Final Recommendations
 
 **IMMEDIATE (This Week)** ⭐:
+
 1. **Upgrade to Convex Pro** ($25/month)
    - Reduces incident recovery time by 80%
    - ROI: 5,460% (downtime savings vs cost)
-   
+
 2. **Implement Automated Daily Backups** ($2/month)
    - Protects against data loss
    - Enables disaster recovery (2-4 hours)
 
 **SHORT-TERM (This Month)** 🟡:
 3. **Prepare Emergency Supabase Infrastructure** ($0, 10-14 hours)
-   - Insurance policy against extended Convex outages
-   - Pre-code emergency branch for fast activation
+
+- Insurance policy against extended Convex outages
+- Pre-code emergency branch for fast activation
 
 **ONGOING**:
 4. **Monitor Convex Reliability** (monthly review)
-   - Track incident frequency and duration
-   - Re-evaluate migration if issues persist
+
+- Track incident frequency and duration
+- Re-evaluate migration if issues persist
 
 **DEFER** ❌:
 5. **Full Supabase Migration** (only if triggered)
-   - Cost: $25,000, Timeline: 7-11 weeks
-   - Only necessary if Convex becomes unusable long-term
+
+- Cost: $25,000, Timeline: 7-11 weeks
+- Only necessary if Convex becomes unusable long-term
 
 ### Next Steps
 

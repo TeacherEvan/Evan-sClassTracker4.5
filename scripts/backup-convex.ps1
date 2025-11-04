@@ -41,28 +41,28 @@ try {
         "--path", $FullBackupPath,
         "--prod"
     )
-    
+
     if ($IncludeFileStorage) {
         $exportArgs += "--include-file-storage"
         Write-Info "📦 Including file storage in backup"
     }
-    
+
     $startTime = Get-Date
     $exportProcess = Start-Process -FilePath "npx" -ArgumentList $exportArgs -NoNewWindow -Wait -PassThru
     $duration = (Get-Date) - $startTime
-    
+
     if ($exportProcess.ExitCode -ne 0) {
         throw "Convex export failed with exit code $($exportProcess.ExitCode)"
     }
-    
+
     # Get file size
     $fileSize = (Get-Item $FullBackupPath).Length
     $fileSizeMB = [math]::Round($fileSize / 1MB, 2)
-    
+
     Write-Success "✅ Export complete!"
     Write-Info "⏱️  Duration: $($duration.TotalSeconds) seconds"
     Write-Info "📊 File size: $fileSizeMB MB"
-    
+
 } catch {
     Write-Failure "❌ Convex export failed: $_"
     exit 1
@@ -71,7 +71,7 @@ try {
 # Upload to cloud storage (if configured)
 if ($UploadToCloud -and $CloudProvider -ne "none") {
     Write-Info "☁️  Uploading to $CloudProvider..."
-    
+
     try {
         switch ($CloudProvider.ToLower()) {
             "s3" {
@@ -79,47 +79,47 @@ if ($UploadToCloud -and $CloudProvider -ne "none") {
                 if (-not $env:AWS_S3_BUCKET) {
                     throw "AWS_S3_BUCKET environment variable not set"
                 }
-                
+
                 aws s3 cp $FullBackupPath "s3://$env:AWS_S3_BUCKET/convex-backups/$BackupFilename"
                 Write-Success "✅ Uploaded to S3: s3://$env:AWS_S3_BUCKET/convex-backups/$BackupFilename"
             }
-            
+
             "r2" {
                 # Cloudflare R2
                 if (-not $env:R2_BUCKET) {
                     throw "R2_BUCKET environment variable not set"
                 }
-                
+
                 # Requires wrangler CLI: npm install -g wrangler
                 wrangler r2 object put "$env:R2_BUCKET/convex-backups/$BackupFilename" --file=$FullBackupPath
                 Write-Success "✅ Uploaded to Cloudflare R2: $env:R2_BUCKET/convex-backups/$BackupFilename"
             }
-            
+
             "azure" {
                 # Azure Blob Storage
                 if (-not $env:AZURE_STORAGE_ACCOUNT -or -not $env:AZURE_STORAGE_CONTAINER) {
                     throw "AZURE_STORAGE_ACCOUNT or AZURE_STORAGE_CONTAINER environment variable not set"
                 }
-                
+
                 az storage blob upload `
                     --account-name $env:AZURE_STORAGE_ACCOUNT `
                     --container-name $env:AZURE_STORAGE_CONTAINER `
                     --name "convex-backups/$BackupFilename" `
                     --file $FullBackupPath
-                
+
                 Write-Success "✅ Uploaded to Azure Blob Storage: $env:AZURE_STORAGE_CONTAINER/convex-backups/$BackupFilename"
             }
-            
+
             "gcs" {
                 # Google Cloud Storage
                 if (-not $env:GCS_BUCKET) {
                     throw "GCS_BUCKET environment variable not set"
                 }
-                
+
                 gsutil cp $FullBackupPath "gs://$env:GCS_BUCKET/convex-backups/$BackupFilename"
                 Write-Success "✅ Uploaded to GCS: gs://$env:GCS_BUCKET/convex-backups/$BackupFilename"
             }
-            
+
             default {
                 Write-Warning "⚠️  Unknown cloud provider: $CloudProvider (skipping upload)"
             }
@@ -135,9 +135,9 @@ Write-Info "🧹 Cleaning up old backups (retention: $RetentionDays days)..."
 
 try {
     $cutoffDate = (Get-Date).AddDays(-$RetentionDays)
-    $oldBackups = Get-ChildItem $BackupPath -Filter "convex-backup-*.zip" | 
+    $oldBackups = Get-ChildItem $BackupPath -Filter "convex-backup-*.zip" |
         Where-Object { $_.LastWriteTime -lt $cutoffDate }
-    
+
     if ($oldBackups) {
         foreach ($backup in $oldBackups) {
             Write-Info "🗑️  Deleting old backup: $($backup.Name) ($(Get-Date $backup.LastWriteTime -Format 'yyyy-MM-dd'))"

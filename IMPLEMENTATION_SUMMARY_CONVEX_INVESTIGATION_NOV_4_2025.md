@@ -25,6 +25,7 @@ Completed comprehensive investigation of Convex service reliability and dual-bac
 ### Objective 1: Convex Reliability Analysis
 
 **Findings**:
+
 - **Uptime**: 99.81-99.86% over last 60 days (acceptable)
 - **Recent Incidents**: 6-8 incidents in Oct-Nov 2025 (HIGH)
 - **Free Tier Impact**: 4-8 hour recovery times (UNACCEPTABLE for production)
@@ -41,12 +42,14 @@ Completed comprehensive investigation of Convex service reliability and dual-bac
 ### Objective 2: Dual-Backup Strategy
 
 **Option A: Dual-Backend (Convex + Supabase simultaneously)**
+
 - ❌ **NOT RECOMMENDED**
 - Complexity: 8-13 weeks effort
 - Cost: High ongoing maintenance
 - Risk: Data sync conflicts, schema drift
 
 **Option B: Automated Backups + Emergency Hot-Swap (RECOMMENDED)**
+
 - ✅ **RECOMMENDED**
 - Complexity: 2-4 hours setup, 10-14 hours emergency prep
 - Cost: $27/month (Convex Pro $25 + R2 storage $2)
@@ -62,12 +65,14 @@ Completed comprehensive investigation of Convex service reliability and dual-bac
 ### Immediate Actions (THIS WEEK) ⭐
 
 **Priority 1: Upgrade to Convex Pro** ($25/month)
+
 - Impact: 80% reduction in downtime (6h → 1h per incident)
 - ROI: 5,460% ($17,682/year downtime savings vs $318/year cost)
 - Implementation: 5 minutes
 - **STATUS**: ⏳ PENDING USER ACTION
 
 **Priority 2: Implement Automated Backups** ($2/month)
+
 - Daily Convex exports to Cloudflare R2
 - 30-day retention policy
 - GitHub Actions automation
@@ -77,6 +82,7 @@ Completed comprehensive investigation of Convex service reliability and dual-bac
 ### Short-Term Actions (THIS MONTH) 🟡
 
 **Priority 3: Prepare Emergency Supabase Infrastructure** ($0)
+
 - Create free Supabase project
 - Write data conversion scripts
 - Create emergency frontend branch
@@ -87,6 +93,7 @@ Completed comprehensive investigation of Convex service reliability and dual-bac
 ### Long-Term Monitoring (ONGOING)
 
 **Priority 4: Track Convex Reliability**
+
 - Monthly incident log
 - Quarterly cost review
 - Re-evaluate migration if incidents persist
@@ -95,6 +102,7 @@ Completed comprehensive investigation of Convex service reliability and dual-bac
 ### Conditional Action (DEFER)
 
 **Priority 5: Full Supabase Migration** ($25,000, 7-11 weeks)
+
 - **ONLY IF**: Convex incidents continue at high frequency for 3+ months
 - **TRIGGER CONDITIONS**: >10 incidents in 3 months OR avg duration >4 hours
 - **STATUS**: ❌ DEFERRED (monitor monthly)
@@ -108,6 +116,7 @@ Completed comprehensive investigation of Convex service reliability and dual-bac
 **Purpose**: Comprehensive analysis document
 
 **Sections**:
+
 - Convex uptime statistics and incident history
 - Pattern analysis (6-8 incidents in Oct-Nov 2025)
 - Company response evaluation (no infrastructure roadmap)
@@ -120,6 +129,7 @@ Completed comprehensive investigation of Convex service reliability and dual-bac
 - Decision matrix (scenario-based)
 
 **Key Insights**:
+
 - Convex Pro prioritizes recovery (30-90 min vs 4-8h)
 - Dual-backend adds complexity without benefit
 - Automated exports + emergency Supabase = best approach
@@ -132,28 +142,30 @@ Completed comprehensive investigation of Convex service reliability and dual-bac
 **Purpose**: Step-by-step quick start guide
 
 **Sections**:
+
 - Quick setup (15 minutes)
-  * Upgrade to Convex Pro
-  * Test manual backup
-  * Add package.json scripts
-  * Configure .gitignore
+  - Upgrade to Convex Pro
+  - Test manual backup
+  - Add package.json scripts
+  - Configure .gitignore
 - Cloud storage setup (3 options)
-  * Cloudflare R2 (recommended - $1.50/month)
-  * AWS S3 ($2.30/month)
-  * Local only (free)
+  - Cloudflare R2 (recommended - $1.50/month)
+  - AWS S3 ($2.30/month)
+  - Local only (free)
 - Automation options
-  * GitHub Actions (recommended)
-  * Windows Task Scheduler
-  * Cron (macOS/Linux)
+  - GitHub Actions (recommended)
+  - Windows Task Scheduler
+  - Cron (macOS/Linux)
 - Disaster recovery procedure
-  * 2-4 hour recovery timeline
-  * Step-by-step Supabase activation
+  - 2-4 hour recovery timeline
+  - Step-by-step Supabase activation
 - Monitoring & verification
-  * Daily checks
-  * Weekly reports
+  - Daily checks
+  - Weekly reports
 - Implementation checklist
 
 **Key Features**:
+
 - Copy-paste ready commands
 - Platform-specific instructions (Windows/macOS/Linux)
 - Cost comparison ($27/month total)
@@ -166,6 +178,7 @@ Completed comprehensive investigation of Convex service reliability and dual-bac
 **Purpose**: PowerShell script for automated backups
 
 **Features**:
+
 - ✅ Automated Convex export
 - ✅ File storage inclusion
 - ✅ Cloud upload (S3, R2, Azure, GCS)
@@ -175,6 +188,7 @@ Completed comprehensive investigation of Convex service reliability and dual-bac
 - ✅ Summary reporting
 
 **Usage**:
+
 ```powershell
 # Local backup only
 pwsh -File scripts/backup-convex.ps1
@@ -187,6 +201,7 @@ pwsh -File scripts/backup-convex.ps1 -RetentionDays 60
 ```
 
 **Parameters**:
+
 - `BackupPath`: Default `./backups`
 - `IncludeFileStorage`: Default `$true`
 - `UploadToCloud`: Default `$false`
@@ -200,6 +215,7 @@ pwsh -File scripts/backup-convex.ps1 -RetentionDays 60
 **Purpose**: GitHub Actions workflow for automated daily backups
 
 **Features**:
+
 - ✅ Scheduled execution (2 AM UTC daily)
 - ✅ Manual trigger support
 - ✅ Multi-cloud support (S3, R2, Azure)
@@ -208,6 +224,7 @@ pwsh -File scripts/backup-convex.ps1 -RetentionDays 60
 - ✅ Detailed logging
 
 **Configuration Required** (GitHub Secrets):
+
 ```
 CONVEX_DEPLOYMENT=your-deployment-url
 
@@ -228,6 +245,7 @@ NOTIFICATION_EMAIL=admin@yourdomain.com
 ```
 
 **Workflow Steps**:
+
 1. Checkout repository
 2. Setup Node.js
 3. Install Convex CLI
@@ -243,6 +261,7 @@ NOTIFICATION_EMAIL=admin@yourdomain.com
 ### Backup Format
 
 **Convex Export Output**:
+
 ```
 convex-backup-2025-11-04-0200.zip
 ├── users.jsonl              # Table data (one JSON object per line)
@@ -297,6 +316,7 @@ convex-backup-2025-11-04-0200.zip
 ### Convex to Supabase Migration Complexity
 
 **Scope**:
+
 - **45 Convex files** (571KB)
 - **148 tables + indexes**
 - **~200 queries**
@@ -317,6 +337,7 @@ convex-backup-2025-11-04-0200.zip
 **Cost Estimate**: $15,000 - $30,000 (developer time)
 
 **Key Challenges**:
+
 1. **Schema Mismatch**: Document model → Relational model
 2. **API Differences**: Convex queries → SQL queries
 3. **Real-time Parity**: Automatic reactivity → Manual subscriptions
@@ -425,9 +446,9 @@ convex-backup-2025-11-04-0200.zip
 
 8. **Re-evaluate Migration** (Monthly Decision)
    - [ ] Check trigger conditions
-     * >10 incidents in 3 months?
-     * Average duration >4 hours?
-     * Service deprecation announced?
+     - >10 incidents in 3 months?
+     - Average duration >4 hours?
+     - Service deprecation announced?
    - [ ] If YES to any 2: Begin migration planning
    - [ ] If NO: Continue with current setup
 
@@ -438,21 +459,25 @@ convex-backup-2025-11-04-0200.zip
 ### Key Performance Indicators (KPIs)
 
 **Backup Reliability**:
+
 - ✅ **Target**: 100% backup success rate
 - 📊 **Measure**: Daily backup completion logs
 - 🎯 **Goal**: Zero failed backups in 30 days
 
 **Downtime Reduction**:
+
 - ✅ **Target**: <2 hours total downtime/month
 - 📊 **Measure**: Incident duration tracking
 - 🎯 **Goal**: 95% reduction from current (36h → 2h)
 
 **Recovery Capability**:
+
 - ✅ **Target**: <4 hours recovery time
 - 📊 **Measure**: Disaster recovery drill (quarterly)
 - 🎯 **Goal**: Restore service within 4 hours of Convex outage
 
 **Cost Efficiency**:
+
 - ✅ **Target**: <$30/month total cost
 - 📊 **Measure**: Monthly billing review
 - 🎯 **Goal**: Maintain $27/month budget
@@ -472,6 +497,7 @@ convex-backup-2025-11-04-0200.zip
 ### Recommended Path Forward
 
 **Immediate** (This Week):
+
 1. ✅ Upgrade to Convex Pro ($25/month) - **HIGHEST PRIORITY**
 2. ✅ Deploy automated backups ($2/month) - **SCRIPTS READY**
 
@@ -523,9 +549,9 @@ convex-backup-2025-11-04-0200.zip
 
 ### References
 
-- **Convex Status**: https://status.convex.dev
-- **Convex Docs**: https://docs.convex.dev
-- **Supabase Docs**: https://supabase.com/docs
+- **Convex Status**: <https://status.convex.dev>
+- **Convex Docs**: <https://docs.convex.dev>
+- **Supabase Docs**: <https://supabase.com/docs>
 - **Stack Alternatives**: `.github/copilot-docs/13-stack-alternatives.md`
 - **Disaster Recovery**: `.github/copilot-docs/11-disaster-recovery.md`
 
