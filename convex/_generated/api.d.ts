@@ -22,6 +22,7 @@ import type * as errorReports from "../errorReports.js";
 import type * as events from "../events.js";
 import type * as exports from "../exports.js";
 import type * as groups from "../groups.js";
+import type * as guardianToProviderMigration from "../guardianToProviderMigration.js";
 import type * as importSangsomStudents from "../importSangsomStudents.js";
 import type * as importSangsomStudentsExtra from "../importSangsomStudentsExtra.js";
 import type * as init from "../init.js";
@@ -78,6 +79,7 @@ declare const fullApi: ApiFromModules<{
   events: typeof events;
   exports: typeof exports;
   groups: typeof groups;
+  guardianToProviderMigration: typeof guardianToProviderMigration;
   importSangsomStudents: typeof importSangsomStudents;
   importSangsomStudentsExtra: typeof importSangsomStudentsExtra;
   init: typeof init;

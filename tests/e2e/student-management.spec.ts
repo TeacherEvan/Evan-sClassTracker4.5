@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { fillBilingualInput, generateTestData, login, navigateToTab, TEST_USERS, waitForToast } from './helpers';
 
+test.describe.configure({ mode: 'serial' });
+
 test.describe('Student Management', () => {
     test('moderator can create new student', async ({ page }) => {
         // Login as moderator
@@ -18,14 +20,26 @@ test.describe('Student Management', () => {
         // Generate test data
         const testData = generateTestData('student');
 
+        // Fill nickname (required field)
+        const nicknameInput = page.locator('input[type="text"]').first();
+        await nicknameInput.fill(testData.firstName);
+
         // Fill bilingual name fields
         await fillBilingualInput(page, 'First Name', testData.firstName, testData.firstNameTh);
         await fillBilingualInput(page, 'Last Name', testData.lastName, testData.lastNameTh);
 
+        // Select grade (required field)
+        const gradeSelect = page.locator('select').filter({ hasText: 'Grade' }).or(page.locator('select').filter({ hasText: 'ระดับชั้น' })).first();
+        await gradeSelect.selectOption('K1');
+
         // Select school (if dropdown)
-        const schoolSelect = page.locator('select:has-option, [role="combobox"]').first();
+        const schoolSelect = page.locator('select').filter({ hasText: 'School' }).or(page.locator('select').filter({ hasText: 'โรงเรียน' })).first();
         if (await schoolSelect.isVisible({ timeout: 2000 }).catch(() => false)) {
             await schoolSelect.selectOption({ index: 1 });
+
+            // Select class (required when school is selected)
+            const classSelect = page.locator('select').filter({ hasText: 'Class' }).or(page.locator('select').filter({ hasText: 'คลาส' })).first();
+            await classSelect.selectOption('/1');
         }
 
         // Submit form
@@ -34,8 +48,22 @@ test.describe('Student Management', () => {
         // Wait for success
         await waitForToast(page, undefined, 'success');
 
-        // Verify student appears in list
-        await expect(page.locator(`text=${testData.firstName}`).first()).toBeVisible({ timeout: 5000 });
+        // Close the form modal
+        const closeButton = page.locator('button[aria-label*="Close"], button[aria-label*="ปิด"], button:has(svg.lucide-x)').first();
+        if (await closeButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+            await closeButton.click();
+        }
+
+        // Wait for form to fully close
+        await page.waitForTimeout(2000);
+
+        // Wait for page to stabilize after form close
+        await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+            console.log('[TEST] Network did not become idle, continuing anyway');
+        });
+
+        // Verify student appears in list (increased timeout for Convex query)
+        await expect(page.locator(`text=${testData.firstName}`).first()).toBeVisible({ timeout: 15000 });
     });
 
     test('student creation handles Thai characters correctly', async ({ page }) => {

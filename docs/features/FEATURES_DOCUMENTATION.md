@@ -1,8 +1,562 @@
-# User Authentication & Class Booking Features
+# Evan's Class Tracker 4.5 - User Features Overview
 
-This document describes the new features added to Evan's Class Tracker 4.5.
+**Interactive Feature Checklist** - Organized from Most Practical to Least Practical
 
-## Features Overview
+This document lists all user-interactive features in Evan's Class Tracker 4.5. Use checkboxes to track feature exploration, testing, or implementation priorities.
+
+---
+
+## 🎯 Core Daily Operations (Highest Priority)
+
+### Class Management & Booking
+
+- [ ] **Class Booking Wizard** - Step-by-step guided workflow for creating class bookings
+  - Teacher → Grade → Class → Student → Booking Type → Multi-date Calendar
+  - Auto-completion after success, bilingual throughout
+  - Supports once-off and recurring bookings
+  - Component: `booking-wizard.tsx`
+
+- [ ] **Class Booking Dashboard** - Comprehensive class management interface
+  - Filter by teacher, school, student, grade, class, status, date range
+  - Material Design 3 filter chips (horizontal, collapsible)
+  - Quick actions: Edit, Delete, Merge, View Details, Add Notes
+  - Real-time status updates (Pending/Acknowledged/Approved/Rejected/Postponed/Cancelled)
+  - Pagination with 10/25/50 items per page
+  - Component: `class-booking.tsx`
+
+- [ ] **Multi-Date Calendar** - Calendar for selecting class dates
+  - Single or multiple date selection
+  - Color-coded date indicators (selected, today, has classes)
+  - Month navigation, week view
+  - Recurring weekly bookings support
+  - Component: `multi-date-calendar.tsx`
+
+- [ ] **Weekly Calendar View** - Week-at-a-glance schedule display
+  - Shows all classes for selected week
+  - Color-coded by status
+  - Quick navigation between weeks
+  - Mobile-responsive grid layout
+  - Component: `weekly-calendar.tsx`
+
+- [ ] **Class Detail Modal** - Expandable class information viewer
+  - Shows full bilingual title, description, notes
+  - Student info, school, location, date/time
+  - Status history, approval/rejection reasons
+  - Edit and delete actions
+  - Component: `class-detail-modal.tsx`
+
+- [ ] **Edit Class Modal** - Modify existing class details
+  - Update title, description (bilingual)
+  - Change scheduled date, location
+  - Reschedule or postpone classes
+  - Component: `edit-class-modal.tsx`
+
+- [ ] **Post-Class Notes Modal** - Add feedback after class completion
+  - Text area for bilingual notes
+  - Mark class as complete
+  - Teacher performance tracking
+  - Component: `post-class-notes-modal.tsx`
+
+- [ ] **Class Conflict Detection** - Prevent double-booking conflicts
+  - Checks teacher availability by date/time
+  - Shows conflicting classes with details
+  - Block creation or allow override
+  - Component: `class-conflict-modal.tsx`
+
+- [ ] **Merge Classes Modal** - Combine duplicate/recurring classes
+  - Batch select recurring classes by group
+  - "Select All Groups" and "Clear All" buttons
+  - Preview merged class before confirming
+  - Component: `merge-classes-modal.tsx`
+
+- [ ] **Auto-Cleanup Unpopulated Classes** - Remove classes with deleted students
+  - Admin button to identify affected classes
+  - Shows count before deletion
+  - Two-step confirmation process
+  - Component: `cleanup-unpopulated-classes-button.tsx`
+
+### Student Management
+
+- [ ] **Student Management Dashboard** - Full CRUD for student records
+  - Create, edit, delete, duplicate students
+  - Hierarchical selector (Grade → Class → Student)
+  - Search and filter by school or guardian
+  - Unique student ID auto-generation
+  - Component: `student-management.tsx`
+
+- [ ] **Hierarchical Student Selector** - Progressive filtering system
+  - Grade selector → Class selector → Student selector
+  - Dynamic filtering with search
+  - Shows student count per selection
+  - Used in booking wizard and filters
+  - Component: `hierarchical-student-selector.tsx`
+
+- [ ] **Guardian Dashboard** - Manage guardian-linked students
+  - View all students under guardian
+  - Book classes for guardian students (auto-approved)
+  - Track attendance and performance
+  - Component: `guardian-dashboard.tsx`
+
+- [ ] **Admin Deleted Students Dashboard** - Soft-delete recovery system
+  - View all soft-deleted students
+  - Restore deleted students
+  - Permanent deletion after review
+  - Audit trail tracking
+  - Component: `admin-deleted-students-dashboard.tsx`
+
+### User Authentication & Sessions
+
+- [ ] **Login Form** - Secure authentication interface
+  - Username/password input
+  - Account lockout after 5 failed attempts (15min cooldown)
+  - PBKDF2 password hashing (100,000 iterations)
+  - Session management (24hr expiry)
+  - Component: `login-form.tsx`
+
+- [ ] **Password Change Dialog** - Force/voluntary password updates
+  - Forced on first login
+  - Current password verification
+  - New password confirmation
+  - No minimum requirements (user choice)
+  - Component: `password-change-dialog.tsx`
+
+- [ ] **User Management** - Admin interface for user accounts
+  - Create users with auto-generated default passwords
+  - Reset passwords (format: `Teacher{username}`)
+  - Delete users with bulk selection
+  - View login history and device types
+  - Component: `user-management.tsx`
+
+---
+
+## 📊 Analytics & Reporting (High Priority)
+
+### Performance Tracking
+
+- [ ] **Class Analytics Dashboard** - Educational performance insights
+  - 4 summary cards: Total Classes, Attendance Rate, Active Students, Avg Class Size
+  - Student performance table with color-coded ratings
+  - Date range filtering for custom periods
+  - CSV export for data portability
+  - Role-based views (teacher/moderator/admin)
+  - Component: `class-analytics.tsx`
+
+- [ ] **Simple Analytics** - Quick stats overview
+  - Total classes by status
+  - Teacher activity summaries
+  - School participation rates
+  - Visual charts and graphs
+  - Component: `simple-analytics.tsx`
+
+- [ ] **Teacher Activity Dashboard** - Monitor teacher engagement
+  - Classes taught per teacher
+  - Average class size
+  - Approval/rejection rates
+  - Time-based activity graphs
+  - Component: `teacher-activity-dashboard.tsx`
+
+- [ ] **Class Count Modal** - Detailed class counting reports
+  - Filter by teacher, date range
+  - Expandable class cards with lazy-loaded notes
+  - Sortable by date, student, status
+  - Export to PDF/print
+  - Component: `class-count-modal.tsx`
+
+- [ ] **Class Count Report Wizard** - Guided reporting workflow
+  - Teacher selection → Date range → Analytics view
+  - Step-by-step report generation
+  - Bilingual export formats
+  - Component: `class-count-report-wizard.tsx`
+
+- [ ] **Class Payment Calculator** - Ephemeral payment estimator
+  - Security-first read-only calculator
+  - Disclaimer required before use
+  - Print-to-PDF for records
+  - No data modification capabilities
+  - Component: `class-payment-calculator.tsx`
+
+---
+
+## 💬 Communication & Notifications (High Priority)
+
+### Messaging System
+
+- [ ] **Messaging Hub** - Internal communication center
+  - Send messages between users
+  - Thread-based conversations
+  - Unread message badges
+  - Filter by sender/recipient
+  - Real-time message updates
+  - Component: `messaging-hub.tsx`
+
+- [ ] **Message Wizard** - Guided message composition
+  - Recipient selection → Message composition → Send
+  - Template support for common messages
+  - Bilingual message input
+  - Component: `message-wizard.tsx`
+
+### Notification System
+
+- [ ] **Notification Window** - Gold tablet notification display
+  - School-specific and broadcast notifications
+  - Dismiss functionality
+  - Bilingual notification support
+  - Auto-show for important updates
+  - Component: `notification-window.tsx`
+
+- [ ] **Desktop Notification Window** - Desktop-optimized alerts
+  - Larger format for desktop screens
+  - Rich text content support
+  - Action buttons (Acknowledge, Dismiss)
+  - Component: `desktop-notification-window.tsx`
+
+- [ ] **Desktop Notification Toast** - Temporary alert popups
+  - Auto-dismiss after timeout
+  - Success/error/warning/info types
+  - Bilingual message support
+  - Stack multiple toasts
+  - Component: `desktop-notification-toast.tsx`
+
+- [ ] **Notification Form** - Admin notification creator
+  - School-specific or broadcast options
+  - Rich text editor for content
+  - Schedule notification delivery
+  - Bilingual title and content
+  - Component: `notification-form.tsx`
+
+- [ ] **Notification List** - View all notifications history
+  - Filter by school, date, status
+  - Mark as read/unread
+  - Delete old notifications
+  - Component: `notification-list.tsx`
+
+- [ ] **Admin Notification Windows** - Manage notification templates
+  - Create/edit notification window templates
+  - Preview before publishing
+  - Schedule auto-display
+  - Component: `admin-notification-windows.tsx`
+
+---
+
+## 🎓 Onboarding & Help (Medium Priority)
+
+### User Guidance
+
+- [ ] **Startup Window** - Role-based guided onboarding
+  - Different workflows for moderators vs teachers
+  - Direct navigation buttons to key features
+  - Wizard launchers for common tasks
+  - Collapsible, dismissible interface
+  - Component: `startup-window.tsx`
+
+- [ ] **Help Window** - Interactive help system
+  - Feature documentation with screenshots
+  - Step-by-step tutorials
+  - FAQ section
+  - Search functionality
+  - Bilingual help content
+  - Component: `help-window.tsx`
+
+- [ ] **Help Detail Modal** - Detailed help articles viewer
+  - Full article display with images
+  - Navigation between help topics
+  - Print-friendly format
+  - Component: `help-detail-modal.tsx`
+
+### Admin Communication
+
+- [ ] **Contact Admin Feature** - User-to-admin messaging
+  - Submit questions/issues to administrators
+  - Attach context (current page, user info)
+  - Bilingual support
+  - Component: `admin-contact-button.tsx`
+
+- [ ] **Admin Contact Requests** - Manage user inquiries
+  - View all contact requests
+  - Mark as resolved
+  - Reply directly to users
+  - Filter by status, date
+  - Component: `admin-contact-requests.tsx`
+
+---
+
+## 🏫 School & Location Management (Medium Priority)
+
+### Organizational Setup
+
+- [ ] **School Management** - School CRUD operations
+  - Create/edit/delete schools
+  - Assign moderators to schools
+  - View school statistics
+  - Bilingual school names
+  - Component: `school-management.tsx`
+
+- [ ] **Location Management** - Classroom/venue management
+  - Create/edit/delete locations
+  - Associate with schools
+  - Track location availability
+  - Bilingual location names
+  - Component: `location-management.tsx`
+
+- [ ] **Location Proposal Form** - Request new locations
+  - Teachers can propose new venues
+  - Admin approval workflow
+  - Bilingual descriptions
+  - Component: `location-proposal-form.tsx`
+
+- [ ] **Moderator List View** - School moderator assignment
+  - View moderators by school
+  - Assign/unassign moderators
+  - Contact information display
+  - Component: `moderator-list-view.tsx`
+
+- [ ] **Create Provider Modal** - External provider setup
+  - Add external teaching providers
+  - XOR validation (school OR provider, not both)
+  - Provider contact details
+  - Component: `create-provider-modal.tsx`
+
+---
+
+## 📅 Event & Resource Management (Medium Priority)
+
+### Calendar Events
+
+- [ ] **Event Management** - School events and holidays
+  - Create/edit/delete events
+  - Recurring event support
+  - Event types (holiday, meeting, etc.)
+  - Calendar integration
+  - Component: `event-management.tsx`
+
+### Teacher Resources
+
+- [ ] **Teacher Helper** - Teacher resource library (Teacher View)
+  - Browse teaching materials
+  - Upload new resources
+  - Download files
+  - Search and filter resources
+  - Component: `teacher-helper.tsx`
+
+- [ ] **Teacher Helper Admin** - Admin resource management
+  - Approve/reject uploaded resources
+  - Organize resource categories
+  - Bulk upload materials
+  - Component: `teacher-helper-admin.tsx`
+
+- [ ] **Teacher Logs Manager** - Activity logging system
+  - View teacher action logs
+  - Filter by date, teacher, action type
+  - Export logs for auditing
+  - Component: `teacher-logs-manager.tsx`
+
+- [ ] **Teacher Cycle Editor** - Teaching cycle scheduler
+  - Define recurring teaching schedules
+  - Multi-week cycle planning
+  - Auto-generate classes from cycles
+  - Component: `teacher-cycle-editor.tsx`
+
+- [ ] **Teacher Class Count Modal** - Teacher-specific class counts
+  - Personal class count view
+  - Date range selection
+  - Performance metrics
+  - Component: `teacher-class-count-modal.tsx`
+
+---
+
+## 🔧 Admin & System Tools (Lower Priority)
+
+### App Updates & Announcements
+
+- [ ] **Admin App Updates** - Release notes management
+  - Create/edit update announcements
+  - Version tracking
+  - Feature highlights
+  - Mark updates as viewed
+  - Component: `admin-app-updates.tsx`
+
+- [ ] **Update Announcement Modal** - Version update notifications
+  - Display new features to users
+  - Changelog viewing
+  - Dismiss and mark as read
+  - Component: `update-announcement-modal.tsx`
+
+### Audit & Security
+
+- [ ] **Audit Logs** - System activity tracking
+  - View all user actions
+  - Filter by user, date, action type
+  - Export logs for compliance
+  - Component: `audit-logs.tsx`
+
+- [ ] **Admin Error Reports** - Error monitoring dashboard
+  - View client-side errors
+  - Stack traces and context
+  - Mark errors as resolved
+  - Component: `admin-error-reports.tsx`
+
+---
+
+## 🧪 Testing & Development (Lowest Priority)
+
+### Data Seeding & Migration
+
+- [ ] **Database Init** - Initial database setup
+  - Create default admin user
+  - Seed basic data structures
+  - One-time initialization
+  - Component: `database-init.tsx`
+
+- [ ] **Sangsom Seed Button** - Test data generator
+  - Generate sample classes
+  - Populate test students
+  - Development/testing only
+  - Component: `sangsom-seed-button.tsx`
+
+- [ ] **Private Classes Seed Button** - Private class data seeding
+  - Auto-create private class schedules
+  - 4 teacher schedules supported
+  - Test mode for validation
+  - Component: `private-classes-seed-button.tsx`
+
+- [ ] **Sangsom Student Import Button** - Bulk student import
+  - CSV/JSON student data import
+  - Validation and deduplication
+  - Error reporting
+  - Component: `sangsom-student-import-button.tsx`
+
+- [ ] **Sangsom Migration Button** - Data migration utilities
+  - Migrate data between schemas
+  - Batch update operations
+  - Rollback support
+  - Component: `sangsom-migration-button.tsx`
+
+- [ ] **Sangsom Delete Button** - Bulk data deletion
+  - Admin-only destructive operations
+  - Confirmation dialogs
+  - Audit trail logging
+  - Component: `sangsom-delete-button.tsx`
+
+### Device & Quality Assurance
+
+- [ ] **Device Testing Dashboard** - Multi-device testing interface
+  - Test responsive layouts
+  - Device detection verification
+  - Touch/mouse event testing
+  - Component: `device-testing-dashboard.tsx`
+
+---
+
+## 🎨 UI Components & Utilities
+
+### Reusable Components
+
+- [ ] **Bilingual Input** - Dual-language input component
+  - English + Thai parallel inputs
+  - 300ms debouncing (performance)
+  - Consistent dark mode styling
+  - Used across all forms
+  - Component: `bilingual-input.tsx`
+
+- [ ] **Filter Chip** - Material Design 3 filter chips
+  - Horizontal, collapsible filter panel
+  - Color-coded chips (Teacher: Blue, School: Green, etc.)
+  - 48x48dp touch targets (accessibility)
+  - Clear All functionality
+  - Component: `filter-chip.tsx`
+
+- [ ] **Paginated List** - Reusable pagination component
+  - Configurable items per page (10/25/50)
+  - Page navigation controls
+  - Total count display
+  - Component: `paginated-list.tsx`
+
+- [ ] **Collapsible Section** - Expandable content panels
+  - Smooth animations
+  - Persistent state
+  - Nested collapsible support
+  - Component: `collapsible-section.tsx`
+
+- [ ] **Class Detail Card** - Compact class information card
+  - Shows key class details
+  - Status badge
+  - Quick action buttons
+  - Component: `class-detail-card.tsx`
+
+- [ ] **Class Quick Actions** - Action button group
+  - Edit, Delete, Merge, View Details
+  - Context-sensitive actions
+  - Confirmation dialogs
+  - Component: `class-quick-actions.tsx`
+
+- [ ] **Wizard Form** - Generic wizard/stepper component
+  - Multi-step form navigation
+  - Progress indicator
+  - Validation per step
+  - Component: `wizard-form.tsx`
+
+### Visual Design Elements
+
+- [ ] **Language Switcher** - Toggle between English/Thai
+  - Globe icon button
+  - Smooth language transition
+  - Persistent preference
+  - Component: `language-switcher.tsx`
+
+- [ ] **Logo** - Application logo component
+  - Responsive sizing
+  - SVG-based for quality
+  - Click to return home
+  - Component: `logo.tsx`
+
+- [ ] **Fish School Background** - Animated background
+  - Swimming fish animation
+  - Performance-optimized
+  - Subtle visual interest
+  - Component: `fish-school-background.tsx`
+
+- [ ] **Rolling Vitruvian Men** - Loading animation
+  - Rotating SVG animation
+  - Used during data loading
+  - Engaging visual feedback
+  - Component: `rolling-vitruvian-men.tsx`
+
+- [ ] **Geometric Border** - Decorative UI element
+  - CSS-based geometric patterns
+  - Customizable colors
+  - Component: `geometric-border.tsx`
+
+---
+
+## 📱 System Features (Backend/Infrastructure)
+
+### Session & Security
+
+- [ ] **24-Hour Session Management** - Auto-logout after 24 hours
+- [ ] **Account Lockout** - 5 failed attempts → 15min cooldown
+- [ ] **PBKDF2 Password Hashing** - 100,000 iterations, Web Crypto API
+- [ ] **Soft Migration** - Auto-upgrade legacy passwords on login
+- [ ] **Role-Based Access Control** - Admin/Moderator/Teacher permissions
+- [ ] **School-Scoped Moderators** - Moderators ONLY access assigned school
+
+### Real-Time Updates
+
+- [ ] **Convex Real-Time Queries** - Instant UI updates on data changes
+- [ ] **Toast Notification System** - Success/error feedback throughout app
+- [ ] **Pull-to-Refresh** - Mobile-friendly refresh gesture
+- [ ] **Loading States** - Spinners and skeletons during async operations
+
+### Performance Optimizations
+
+- [ ] **Lazy Loading** - Code splitting for 40-50% faster initial load
+- [ ] **Index-First Queries** - Convex indexes prevent table scans
+- [ ] **Batch Fetch Pattern** - Prevent N+1 query problems
+- [ ] **300ms Input Debouncing** - Reduce re-renders by 50%
+- [ ] **Filter-Required Display** - 95-98% DOM reduction (500+ → 20-30 nodes)
+
+---
+
+## 📝 Features Overview
 
 ### 1. User Authentication System
 
@@ -421,9 +975,116 @@ The School Management interface allows administrators to create, edit, and delet
 3. Consider transferring or removing students
 4. Moderator assignment is removed
 
-### 6. Database Initialization
+---
 
-On first run, the system will show a database initialization screen that creates:
+## 📊 Feature Statistics
+
+**Total User-Interactive Features**: 89 checkable items
+
+### By Category
+
+1. **Core Daily Operations**: 19 features (21%)
+   - Class Management & Booking: 11
+   - Student Management: 4
+   - User Authentication & Sessions: 3
+
+2. **Analytics & Reporting**: 7 features (8%)
+   - Performance Tracking: 6
+   - Payment Calculator: 1
+
+3. **Communication & Notifications**: 10 features (11%)
+   - Messaging System: 2
+   - Notification System: 8
+
+4. **Onboarding & Help**: 5 features (6%)
+   - User Guidance: 3
+   - Admin Communication: 2
+
+5. **School & Location Management**: 5 features (6%)
+   - Organizational Setup: 5
+
+6. **Event & Resource Management**: 7 features (8%)
+   - Calendar Events: 1
+   - Teacher Resources: 6
+
+7. **Admin & System Tools**: 3 features (3%)
+   - App Updates: 2
+   - Audit & Security: 2
+
+8. **Testing & Development**: 6 features (7%)
+   - Data Seeding: 6
+   - Device Testing: 1
+
+9. **UI Components & Utilities**: 12 features (13%)
+   - Reusable Components: 7
+   - Visual Design Elements: 5
+
+10. **System Features**: 15 features (17%)
+    - Backend/Infrastructure capabilities
+
+### Priority Distribution
+
+- 🔴 **Highest Priority** (Core Daily Operations): 19 features
+- 🟠 **High Priority** (Analytics + Communication): 17 features
+- 🟡 **Medium Priority** (Onboarding + School/Event Management): 17 features
+- 🟢 **Lower Priority** (Admin Tools): 3 features
+- 🔵 **Lowest Priority** (Testing/Development): 7 features
+- ⚪ **Infrastructure** (System Features): 15 features
+
+---
+
+## 🎯 Quick Reference
+
+### Most Practical Features (Top 10)
+
+1. ✅ **Class Booking Wizard** - Primary workflow for creating classes
+2. ✅ **Class Booking Dashboard** - Main class management interface
+3. ✅ **Student Management Dashboard** - Student CRUD operations
+4. ✅ **Login Form** - Secure authentication
+5. ✅ **Messaging Hub** - Internal communication
+6. ✅ **Class Analytics Dashboard** - Performance insights
+7. ✅ **Notification Window** - Important alerts
+8. ✅ **Weekly Calendar View** - Schedule overview
+9. ✅ **Help Window** - User guidance system
+10. ✅ **School Management** - Organizational setup
+
+### Key User Workflows
+
+**For Teachers**:
+
+- Login → Startup Window → Booking Wizard → Multi-Date Calendar → Confirm
+- View Classes → Class Booking Dashboard → Filter by Teacher
+- Check Messages → Messaging Hub → Respond
+- View Performance → Class Analytics Dashboard
+
+**For Moderators**:
+
+- Login → View Pending Classes → Class Booking Dashboard → Filter by School
+- Acknowledge/Approve Classes → Edit Class Modal
+- Send Notifications → Notification Form
+- View School Stats → Simple Analytics
+
+**For Admins**:
+
+- Login → User Management → Create/Reset Users
+- Manage Schools → School Management → Assign Moderators
+- Review Logs → Audit Logs
+- Monitor System → Admin Error Reports
+
+---
+
+## 📖 Related Documentation
+
+- **Setup**: `docs/guides/setup/ENVIRONMENT_SETUP_GUIDE.md`
+- **Testing**: `docs/guides/testing/E2E_TESTING_GUIDE.md`
+- **Architecture**: `docs/architecture/ARCHITECTURE.md`
+- **Patterns**: `.github/copilot-docs/03-patterns.md`
+- **Security**: `docs/security/SECURITY_REVIEWS.md`
+
+---
+
+**Last Updated**: November 5, 2025 - Version 4.5.22  
+**Total Features**: 89 interactive user features documented
 
 - Admin account (username: `admin`, password: `TeacherAdmin`)
 - Sample moderator (username: `moderator1`, password: `TeacherModerator1`)

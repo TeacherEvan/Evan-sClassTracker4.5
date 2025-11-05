@@ -3,7 +3,7 @@
   "version": "4.5.18",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 3002",
+    "dev": "next dev --turbopack -p 3001",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
@@ -20,6 +20,7 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:staging": "cross-env NEXT_PUBLIC_CONVEX_URL_STAGING=https://greedy-partridge-29.convex.cloud playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",

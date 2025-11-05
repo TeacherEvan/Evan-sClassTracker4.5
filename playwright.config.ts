@@ -37,7 +37,7 @@ export default defineConfig({
   /* Shared settings for all the projects below */
   use: {
     /* Base URL - will be overridden by STAGING_URL env var in CI */
-    baseURL: process.env.STAGING_URL || 'http://localhost:3002',
+    baseURL: process.env.STAGING_URL || 'http://localhost:3001',
 
     /* OPTIMIZED: Disable trace locally (25-30% faster), enable on CI retry */
     trace: process.env.CI ? 'on-first-retry' : 'off',
@@ -77,20 +77,16 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: [
-    // 1. Start Convex dev server first (required dependency)
-    {
-      command: 'npx convex dev',
-      url: process.env.NEXT_PUBLIC_CONVEX_URL || 'https://greedy-partridge-29.convex.cloud',
-      timeout: 60 * 1000,
-      reuseExistingServer: true, // Usually already running
+  webServer: process.env.NEXT_PUBLIC_CONVEX_URL_STAGING ? undefined : {
+    // Only start Next.js dev server for local testing
+    // Skip webServer when running against staging (NEXT_PUBLIC_CONVEX_URL_STAGING is set)
+    command: 'next dev --turbopack -p 3001',
+    url: 'http://localhost:3001',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000, // 2 minutes for Next.js to start
+    env: {
+      // Ensure Convex URL is set for tests (reads from .env.local)
+      NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL || 'https://greedy-partridge-29.convex.cloud',
     },
-    // 2. Then start Next.js dev server
-    {
-      command: 'npm run dev',
-      url: 'http://localhost:3002',
-      reuseExistingServer: !process.env.CI,
-      timeout: 120 * 1000, // 2 minutes for Next.js to start
-    },
-  ],
+  },
 });

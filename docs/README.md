@@ -88,7 +88,23 @@
 
 ---
 
-### 📁 Additional Resources
+### � Migrations (Database & Architecture Changes)
+
+- **[migrations/GUARDIAN_TO_PROVIDER_MIGRATION_PLAN.md](migrations/GUARDIAN_TO_PROVIDER_MIGRATION_PLAN.md)** - Guardian to provider consolidation (archived)
+- **[migrations/IMPLEMENTATION_REVIEW_NOV_6_2025.md](migrations/IMPLEMENTATION_REVIEW_NOV_6_2025.md)** - Migration review (archived)
+
+**Active Migration**: See root level `GUARDIAN_PROVIDER_IMPLEMENTATION_PLAN.md` for current migration plan
+
+---
+
+### ⚙️ Convex Backend (Best Practices & Analysis)
+
+- **[convex/ERROR_HANDLING_BEST_PRACTICES.md](convex/ERROR_HANDLING_BEST_PRACTICES.md)** - Error handling patterns
+- **[convex/RELIABILITY_AND_MIGRATION_ANALYSIS.md](convex/RELIABILITY_AND_MIGRATION_ANALYSIS.md)** - Reliability & migration strategies
+
+---
+
+### �📁 Additional Resources
 
 #### 📦 Archive
 Historical documentation and implementation summaries → **[archive/](archive/)**
