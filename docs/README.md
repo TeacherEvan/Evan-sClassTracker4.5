@@ -1,6 +1,6 @@
 # Documentation Index - Evan's Class Tracker 4.5
 
-**Version:** 4.5.17 | **Last Updated:** November 2, 2025
+**Version:** 4.5.18 | **Last Updated:** November 5, 2025
 
 ---
 
@@ -9,14 +9,122 @@
 **New to the project?** Start here:
 
 1. **[.github/copilot-docs/01-quick-start.md](../.github/copilot-docs/01-quick-start.md)** - 7 critical rules + dev setup
-2. **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System overview & data flows
-3. **[FEATURES_DOCUMENTATION.md](./FEATURES_DOCUMENTATION.md)** - What the app does
+2. **[architecture/ARCHITECTURE.md](./architecture/ARCHITECTURE.md)** - System overview & data flows
+3. **[features/FEATURES_DOCUMENTATION.md](./features/FEATURES_DOCUMENTATION.md)** - What the app does
 
 ---
 
-## 📚 Primary Documentation (Active Reference)
+## 📚 Documentation Structure
 
-### For AI Agents & Developers
+### 📖 Guides (Step-by-Step Instructions)
+
+#### 🔧 Setup & Configuration
+- **[ENVIRONMENT_SETUP_GUIDE.md](guides/setup/ENVIRONMENT_SETUP_GUIDE.md)** - Development environment
+- **[CI_CD_SETUP_GUIDE.md](guides/setup/CI_CD_SETUP_GUIDE.md)** - GitHub Actions pipeline
+- **[MONGODB_PASSWORD_RESET_GUIDE.md](guides/setup/MONGODB_PASSWORD_RESET_GUIDE.md)** - Database credentials
+
+#### 💻 Development
+- **[fix-startup-wizard-language-error.md](guides/development/fix-startup-wizard-language-error.md)** - Common dev issues
+
+#### 🧪 Testing
+- **[TESTING_GUIDE.md](guides/testing/TESTING_GUIDE.md)** - Running and writing tests
+- **[E2E_TESTING_GUIDE.md](guides/testing/E2E_TESTING_GUIDE.md)** - Playwright E2E testing
+- **[BCRYPT_TESTING_GUIDE.md](guides/testing/BCRYPT_TESTING_GUIDE.md)** - Password hashing tests
+
+#### 🚢 Deployment
+- **[DEPLOYMENT_GUIDE.md](guides/deployment/DEPLOYMENT_GUIDE.md)** - Production deployment
+- **[TROUBLESHOOTING_CI_CD.md](guides/deployment/TROUBLESHOOTING_CI_CD.md)** - Pipeline debugging
+
+#### 💾 Backup & Recovery
+- **[BACKUP_SYSTEM_GUIDE.md](guides/backup-recovery/BACKUP_SYSTEM_GUIDE.md)** - Automated backups
+- **[BACKUP_GUIDE.md](guides/backup-recovery/BACKUP_GUIDE.md)** - Manual backup procedures
+- **[BACKUP_OPTIMIZATION_REVIEW_NOV_2_2025.md](guides/backup-recovery/BACKUP_OPTIMIZATION_REVIEW_NOV_2_2025.md)** - Performance improvements
+
+---
+
+### 🏗️ Architecture (System Design)
+
+- **[ARCHITECTURE.md](architecture/ARCHITECTURE.md)** - 3-tier architecture, real-time flows, indexes
+- **[SYSTEM_OVERVIEW.md](architecture/SYSTEM_OVERVIEW.md)** - High-level system description
+
+#### 📊 Diagrams
+- **[SYSTEM_ARCHITECTURE_DIAGRAM.md](architecture/diagrams/SYSTEM_ARCHITECTURE_DIAGRAM.md)** - Visual system diagrams
+
+#### 🔬 Analysis
+- **[COMPOSITIONAL_ARCHITECTURE_ANALYSIS.md](architecture/analysis/COMPOSITIONAL_ARCHITECTURE_ANALYSIS.md)** - Deep architectural analysis
+- **[COST_ANALYSIS_CONVEX_VS_VERCEL.md](architecture/analysis/COST_ANALYSIS_CONVEX_VS_VERCEL.md)** - Infrastructure costs
+
+---
+
+### ✨ Features (User-Facing Functionality)
+
+- **[FEATURES_DOCUMENTATION.md](features/FEATURES_DOCUMENTATION.md)** - Complete feature list
+- **[GOLD_TABLET_NOTIFICATION_WINDOW.md](features/GOLD_TABLET_NOTIFICATION_WINDOW.md)** - Notification system
+- **[HELP_WINDOW_FEATURE.md](features/HELP_WINDOW_FEATURE.md)** - In-app help system
+- **[CONTACT_ADMIN_FEATURE.md](features/CONTACT_ADMIN_FEATURE.md)** - Admin communication
+
+---
+
+### 🔒 Security (Security & Compliance)
+
+- **[SECURITY_REVIEWS.md](security/SECURITY_REVIEWS.md)** - Security audits & recommendations
+- **[AUDIT_LOGGING_IMPLEMENTATION.md](security/AUDIT_LOGGING_IMPLEMENTATION.md)** - Audit trail system
+
+---
+
+### 🎨 UI/UX Design (Design Standards)
+
+- **[STYLE_GUIDE.md](ui-design/STYLE_GUIDE.md)** - UI/UX design standards
+- **[UI_COMPONENTS_GUIDE.md](ui-design/UI_COMPONENTS_GUIDE.md)** - Component library reference
+- **[UI_DESIGN_GUIDE.md](ui-design/UI_DESIGN_GUIDE.md)** - Design principles
+- **[MOBILE_UI_GUIDE.md](ui-design/MOBILE_UI_GUIDE.md)** - Mobile-specific guidelines
+
+---
+
+### 📊 Audits & Reviews (Quality Assurance)
+
+- **[DOCUMENTATION_AUDIT_NOV_2_2025.md](audits-reviews/DOCUMENTATION_AUDIT_NOV_2_2025.md)** - Documentation quality
+- **[LINTING_INFRASTRUCTURE_IMPLEMENTATION_NOV_2_2025.md](audits-reviews/LINTING_INFRASTRUCTURE_IMPLEMENTATION_NOV_2_2025.md)** - Code quality tools
+
+---
+
+### 📁 Additional Resources
+
+#### 📦 Archive
+Historical documentation and implementation summaries → **[archive/](archive/)**
+
+#### 🔍 Deep Dive
+In-depth research, implementation plans → **[Deep/](Deep/)**
+
+#### 📚 Class Registry
+Student roster data → **[class-registry/](class-registry/)**
+
+#### 🖼️ Visual Assets
+Screenshots, diagrams → **[Images/](Images/)**, **[screenshots/](screenshots/)**
+
+#### ⚠️ Important
+Critical documentation → **[Important/](Important/)**
+
+---
+
+## 🗺️ Navigation by Task
+
+| I need to... | Go to... |
+|--------------|----------|
+| Set up development environment | `guides/setup/ENVIRONMENT_SETUP_GUIDE.md` |
+| Run tests | `guides/testing/TESTING_GUIDE.md` |
+| Deploy to production | `guides/deployment/DEPLOYMENT_GUIDE.md` |
+| Understand architecture | `architecture/ARCHITECTURE.md` |
+| Learn about features | `features/FEATURES_DOCUMENTATION.md` |
+| Review security | `security/SECURITY_REVIEWS.md` |
+| Design UI components | `ui-design/STYLE_GUIDE.md` |
+| Configure backups | `guides/backup-recovery/BACKUP_SYSTEM_GUIDE.md` |
+| Troubleshoot CI/CD | `guides/deployment/TROUBLESHOOTING_CI_CD.md` |
+| Find historical docs | `archive/` |
+
+---
+
+## 📖 For AI Agents & Advanced Reference
 
 📁 **[.github/copilot-docs/](../.github/copilot-docs/)** - Comprehensive AI agent documentation (15 files)
 
@@ -36,150 +144,62 @@
 - `14-how-to-guides.md` - Operational procedures
 - `15-refactoring-guide.md` - Code splitting strategies
 
-### Core Technical Docs
-
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - 3-tier architecture, real-time flows, indexes
-- **[SYSTEM_OVERVIEW.md](./SYSTEM_OVERVIEW.md)** - High-level system description
-- **[FEATURES_DOCUMENTATION.md](./FEATURES_DOCUMENTATION.md)** - User-facing features
-- **[SECURITY_REVIEWS.md](./SECURITY_REVIEWS.md)** - Security audits & compliance
-
-### Setup & Configuration
-
-- **[ENVIRONMENT_SETUP_GUIDE.md](./ENVIRONMENT_SETUP_GUIDE.md)** - Local environment setup
-- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** - Production deployment steps
-- **[CI_CD_SETUP_GUIDE.md](./CI_CD_SETUP_GUIDE.md)** - GitHub Actions configuration
-- **[BACKUP_SYSTEM_GUIDE.md](./BACKUP_SYSTEM_GUIDE.md)** - MongoDB backup automation
-- **[MONGODB_PASSWORD_RESET_GUIDE.md](./MONGODB_PASSWORD_RESET_GUIDE.md)** - Database recovery
-
-### Testing & Quality
-
-- **[E2E_TESTING_GUIDE.md](./E2E_TESTING_GUIDE.md)** - Playwright E2E tests (comprehensive)
-- **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Manual testing workflows
-- **[BCRYPT_TESTING_GUIDE.md](./BCRYPT_TESTING_GUIDE.md)** - Password migration testing
-- **[TROUBLESHOOTING_CI_CD.md](./TROUBLESHOOTING_CI_CD.md)** - CI/CD debugging
-
-### UI/UX Development
-
-- **[UI_COMPONENTS_GUIDE.md](./UI_COMPONENTS_GUIDE.md)** - Reusable components
-- **[UI_DESIGN_GUIDE.md](./UI_DESIGN_GUIDE.md)** - Design patterns & Tailwind
-- **[MOBILE_UI_GUIDE.md](./MOBILE_UI_GUIDE.md)** - Mobile responsiveness
-
-### Feature-Specific Docs
-
-- **[AUDIT_LOGGING_IMPLEMENTATION.md](./AUDIT_LOGGING_IMPLEMENTATION.md)** - Audit trail system
-- **[CONTACT_ADMIN_FEATURE.md](./CONTACT_ADMIN_FEATURE.md)** - Error reporting to admin
-- **[GOLD_TABLET_NOTIFICATION_WINDOW.md](./GOLD_TABLET_NOTIFICATION_WINDOW.md)** - Notification system
-- **[HELP_WINDOW_FEATURE.md](./HELP_WINDOW_FEATURE.md)** - In-app help system
-
-### Quick References
-
-- **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Developer quick ref (toast, rate limiting, etc.)
-- **[BACKUP_QUICK_REFERENCE.md](../BACKUP_QUICK_REFERENCE.md)** - Backup commands cheat sheet
-- **[.github/WORKFLOWS_QUICKREF.md](../.github/WORKFLOWS_QUICKREF.md)** - GitHub Actions quick ref
-
-### Business Analysis
-
-- **[COST_ANALYSIS_CONVEX_VS_VERCEL.md](./COST_ANALYSIS_CONVEX_VS_VERCEL.md)** - Hosting cost comparison
-
----
-
-## 📦 Historical Documentation (Archives)
-
-### Implementation Summaries (Completed Features)
-
-📁 **[archive/implementations/](./archive/implementations/)** - 26 completed feature implementations
-
-- Bcrypt migration (Nov 1, 2025)
-- Wizard-based onboarding (Nov 1, 2025)
-- Analytics dashboard (Nov 1, 2025)
-- Provider system (Oct 30, 2025)
-- Guardian booking (Oct 28, 2025)
-- Recurring bookings (Oct 27, 2025)
-- Error reporting (Oct 27, 2025)
-- ...and 19 more
-
-See `archive/implementations/README.md` for complete index.
-
-### Deep Archive (Historical Planning & Audits)
-
-📁 **[Deep/](./Deep/)** - Long-term storage
-
-- Implementation plans (not yet built)
-- Research findings
-- Audit reports (>30 days old)
-- Documentation consolidation reports
-
-See `Deep/README.md` for complete index.
-
-### Legacy Archive
-
-📁 **[archive/](./archive/)** - Older documentation from Oct 2025
-
-- Cleanup summaries
-- Deployment fixes
-- Codebase reviews
-- Security implementations
-
-See `archive/README.md` for complete index.
-
----
-
-## 📊 Documentation Stats
-
-- **Total Active Docs:** 28 files (docs/ folder)
-- **AI Agent Docs:** 15 files (.github/copilot-docs/)
-- **Implementation Archives:** 26 files (archive/implementations/)
-- **Deep Archive:** 8 files (Deep/)
-- **Legacy Archive:** 30+ files (archive/)
-
----
-
-## 🔍 Finding What You Need
-
-### "How do I...?"
-
-- **Deploy to production?** → `.github/copilot-docs/14-how-to-guides.md` (Section: Deploy)
-- **Write E2E tests?** → `E2E_TESTING_GUIDE.md` or `.github/copilot-docs/07-testing.md`
-- **Debug production issues?** → `.github/copilot-docs/12-logging-monitoring.md`
-- **Backup/restore data?** → `BACKUP_SYSTEM_GUIDE.md` or `14-how-to-guides.md` (Section: Backup)
-- **Understand the architecture?** → `ARCHITECTURE.md` or `.github/copilot-docs/02-architecture.md`
-
-### "What is...?"
-
-- **A specific pattern?** → `.github/copilot-docs/03-patterns.md`
-- **The provider hierarchy?** → `.github/copilot-docs/02-architecture.md`
-- **Security status?** → `SECURITY_REVIEWS.md` or `.github/copilot-docs/05-security.md`
-
-### "When was X implemented?"
-
-- **Check:** `archive/implementations/` folder
-- **Search:** `IMPLEMENTATION_SUMMARY_{FEATURE}_{DATE}.md`
-- **Also see:** `CHANGELOG.md` in project root
-
 ---
 
 ## 📝 Documentation Standards
 
-### File Naming Conventions
+When adding new documentation:
 
-- **Guides:** `{TOPIC}_GUIDE.md` (e.g., `TESTING_GUIDE.md`)
-- **Implementation Summaries:** `IMPLEMENTATION_SUMMARY_{FEATURE}_{DATE}.md`
-- **Plans:** `IMPLEMENTATION_PLAN_{FEATURE}_{DATE}.md`
-- **Quick Refs:** `{TOPIC}_QUICK_REFERENCE.md` or `QUICK_REFERENCE.md`
+1. **Choose the right folder:**
+   - How-to guides → `guides/[category]/`
+   - Architecture docs → `architecture/`
+   - Feature specs → `features/`
+   - Security docs → `security/`
+   - UI/UX → `ui-design/`
+   - Historical → `archive/implementations/`
 
-### When to Archive
+2. **Use clear naming:**
+   - Guides: `VERB_NOUN_GUIDE.md` (e.g., `DEPLOYMENT_GUIDE.md`)
+   - Features: `FEATURE_NAME_FEATURE.md`
+   - Dated docs: `TOPIC_MMM_DD_YYYY.md`
 
-- ✅ **Move to archive/implementations/:** Completed feature summaries (>7 days old)
-- ✅ **Move to Deep/:** Plans not yet built, audits >30 days, research findings
-- ✅ **Keep in docs/:** Active guides, architecture, system overview, security
+3. **Include sections:**
+   - Purpose/Overview
+   - Prerequisites (if applicable)
+   - Step-by-step instructions
+   - Examples
+   - Troubleshooting
+   - Related documentation links
 
-### Updating This Index
-
-- Update this file when adding/removing major documentation
-- Update version number and last updated date
-- Keep stats accurate (run: `Get-ChildItem docs/*.md | Measure-Object`)
+4. **Bilingual support:**
+   - Include EN/TH translations where user-facing
+   - Use consistent terminology with codebase
 
 ---
 
-**Maintained by:** AI Agents + Human Developer  
-**Next Review:** December 2, 2025
+## 🔍 Search Tips
+
+- Use your editor's search functionality (Ctrl/Cmd + Shift + F) to search across all documentation
+- Check **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** for common commands
+- Browse by category above for specific needs
+- Check folder READMEs for category-specific navigation
+
+---
+
+## 🗂️ Recent Updates
+
+**November 5, 2025** - Documentation reorganization
+- ✅ Created logical folder structure (guides, architecture, features, security, ui-design, audits-reviews)
+- ✅ Moved files to appropriate categories using `git mv` (preserves history)
+- ✅ Updated README with clear navigation and task-based index
+- ✅ Improved discoverability and maintainability
+
+**November 2, 2025** - v4.5.18
+- Updated backup guides
+- Added linting infrastructure docs
+- Security documentation improvements
+
+---
+
+**Quick Reference:** [QUICK_REFERENCE.md](QUICK_REFERENCE.md)  
+**Main Documentation Hub:** [.github/copilot-docs/](../.github/copilot-docs/)
