@@ -15,6 +15,7 @@ export type User = {
   schoolId?: Id<"schools">;
   requirePasswordChange: boolean;
   createdAt: number;
+  preferredLanguage?: "en" | "th";
 };
 
 export type UserWithSchool = User & {
