@@ -256,6 +256,7 @@ export const login = mutation({
     username: v.string(),
     password: v.string(),
     userAgent: v.optional(v.string()), // Pass from client: navigator.userAgent
+    browserLanguage: v.optional(v.string()), // Pass from client: navigator.language
   },
   handler: async (ctx, args) => {
     // Rate limit login attempts: 5 attempts per 5 minutes per username
@@ -338,12 +339,21 @@ export const login = mutation({
     const existingHistory = user.loginHistory || [];
     const newHistory = [loginEntry, ...existingHistory].slice(0, 10);
 
+    // Auto-detect language preference on first login (if not set)
+    let languageUpdate = {};
+    if (!user.preferredLanguage && args.browserLanguage) {
+      const detectedLang = args.browserLanguage.toLowerCase().startsWith('th') ? 'th' : 'en';
+      languageUpdate = { preferredLanguage: detectedLang };
+      console.log(`🌍 Auto-detected language for ${user.username}: ${detectedLang} (from browser: ${args.browserLanguage})`);
+    }
+
     await ctx.db.patch(user._id, {
       passwordHash: updatedPasswordHash, // Apply PBKDF2 upgrade if needed
       failedLoginAttempts: 0,
       accountLockedUntil: undefined,
       lastSuccessfulLogin: now,
       loginHistory: newHistory,
+      ...languageUpdate, // Save detected language on first login
     });
 
     // Return user without password hash
@@ -703,6 +713,32 @@ export const getMigrationStats = query({
       pending: legacyUsers.length,
       percentage,
       legacyUsernames: legacyUsers.map(u => u.username), // For admin tracking
+    };
+  },
+});
+
+// ✅ NEW: Update user's preferred language
+export const updateLanguagePreference = mutation({
+  args: {
+    userId: v.id("users"),
+    preferredLanguage: v.union(v.literal("en"), v.literal("th")),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    await ctx.db.patch(args.userId, {
+      preferredLanguage: args.preferredLanguage,
+    });
+
+    console.log(`🌍 Updated language preference for ${user.username}: ${args.preferredLanguage}`);
+
+    return {
+      success: true,
+      preferredLanguage: args.preferredLanguage,
     };
   },
 });

@@ -22,6 +22,11 @@ export default defineSchema({
     )),
     lastDeviceUpdate: v.optional(v.number()),
     pushSubscription: v.optional(v.string()), // JSON stringified PushSubscription
+    // Language preference
+    preferredLanguage: v.optional(v.union(
+      v.literal("en"),
+      v.literal("th")
+    )),
     // Login security fields
     failedLoginAttempts: v.optional(v.number()), // Track failed login attempts
     accountLockedUntil: v.optional(v.number()), // Timestamp when account unlocks (24hr lockout)

@@ -29,9 +29,10 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     setLoading(true);
 
     try {
-      // Pass user agent for login tracking
+      // Pass user agent and browser language for login tracking and auto-detection
       const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : "Unknown";
-      const user = await login({ username, password, userAgent });
+      const browserLanguage = typeof navigator !== "undefined" ? navigator.language : "en";
+      const user = await login({ username, password, userAgent, browserLanguage });
       onLoginSuccess(user);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
