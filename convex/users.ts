@@ -137,7 +137,7 @@ export const getByUsername = query({
     if (!user) return null;
 
     // Don't return password hash to client
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
     return userWithoutPassword;
   },
@@ -154,7 +154,7 @@ export const getById = query({
     if (!user) return null;
 
     // Don't return password hash to client
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
     return userWithoutPassword;
   },
@@ -178,7 +178,7 @@ export const list = query({
       : await ctx.db.query("users").collect();
 
     // Don't return password hashes
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     return users.map(({ passwordHash: _passwordHash, ...user }) => user);
   },
 });
@@ -361,7 +361,7 @@ export const login = mutation({
     });
 
     // Return user without password hash
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
     return {
       ...userWithoutPassword,
@@ -729,7 +729,7 @@ export const updateLanguagePreference = mutation({
   },
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.userId);
-    
+
     if (!user) {
       throw new Error("User not found");
     }
