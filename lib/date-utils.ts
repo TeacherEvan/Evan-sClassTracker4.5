@@ -55,3 +55,64 @@ export function isToday(date: Date): boolean {
     date.getFullYear() === today.getFullYear()
   );
 }
+
+/**
+ * Get the start of the month (1st day) for a given date
+ */
+export function getMonthStart(date: Date): Date {
+  const d = new Date(date);
+  d.setDate(1);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/**
+ * Get the end of the month (last day) for a given date
+ */
+export function getMonthEnd(date: Date): Date {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + 1);
+  d.setDate(0); // Set to last day of previous month
+  d.setHours(23, 59, 59, 999);
+  return d;
+}
+
+/**
+ * Get all days to display in month grid (includes padding from prev/next month)
+ * Returns exactly 35 or 42 days (5 or 6 weeks) for consistent grid layout
+ */
+export function getMonthGridDays(date: Date): Date[] {
+  const monthStart = getMonthStart(date);
+  const monthEnd = getMonthEnd(date);
+
+  // Start from Monday of the week containing the 1st
+  const gridStart = getWeekStart(monthStart);
+
+  // Calculate if we need 5 or 6 weeks
+  // Need 6 weeks if month spans more than 5 weeks when starting from Monday
+  const firstDayOfWeek = monthStart.getDay();
+  const offset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+  const totalDaysNeeded = monthEnd.getDate() + offset;
+  const needsSixWeeks = totalDaysNeeded > 35;
+
+  const totalDays = needsSixWeeks ? 42 : 35; // 6 or 5 weeks
+  const days: Date[] = [];
+
+  for (let i = 0; i < totalDays; i++) {
+    const day = new Date(gridStart);
+    day.setDate(gridStart.getDate() + i);
+    days.push(day);
+  }
+
+  return days;
+}
+
+/**
+ * Check if a date is in the specified month (same month and year)
+ */
+export function isInMonth(date: Date, referenceMonth: Date): boolean {
+  return (
+    date.getMonth() === referenceMonth.getMonth() &&
+    date.getFullYear() === referenceMonth.getFullYear()
+  );
+}

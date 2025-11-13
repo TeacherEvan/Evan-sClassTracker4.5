@@ -1,6 +1,11 @@
 /**
  * Help content for the Class Tracker application
  * Provides bilingual (English/Thai) feature descriptions and guides
+ *
+ * MIGRATION NOTE (Nov 2025):
+ * Guardian role is being migrated to the provider system.
+ * Guardian-specific help content marked as DEPRECATED will be removed in Phase 3.
+ * See: docs/migrations/GUARDIAN_ROLE_REMOVAL_REPORT_NOV_9_2025.md
  */
 
 export interface HelpFeature {
@@ -13,7 +18,7 @@ export interface HelpFeature {
   detailedDescription: string;
   detailedDescriptionTh: string;
   steps?: HelpStep[];
-  roles: ("teacher" | "moderator" | "admin" | "guardian")[];
+  roles: ("teacher" | "moderator" | "admin" | "guardian")[]; // guardian DEPRECATED - use provider system
 }
 
 export interface HelpStep {

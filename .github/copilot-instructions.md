@@ -1,7 +1,8 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.18 (Nov 2, 2025 - Security: PBKDF2 Password Migration)
+**Version:** 4.5.18 (Nov 2, 2025 - Security: PBKDF2 Password Migration)  
+**🔴 CRITICAL**: Bcrypt migration required - see Security Considerations
 
 ---
 
@@ -69,11 +70,11 @@ This documentation is split into focused sections for efficient knowledge discov
 - Cross-cutting concerns
 - Audit logging integration
 
-**[Security Considerations](./copilot-docs/05-security.md)** ⚠️
+**[Security Considerations](./copilot-docs/05-security.md)** ⚠️ 🔴 **CRITICAL**
 
 - Security context & environment (private repo)
-- Known limitations (NOT production-ready)
-- Password hashing issues
+- **EMERGENCY**: Bcrypt users can login with ANY password - migration required immediately
+- Password migration tools and procedures
 - Rate limiting gaps
 - localStorage risks
 
@@ -198,18 +199,27 @@ This documentation is split into focused sections for efficient knowledge discov
 - **Code Patterns**: 25 non-negotiable patterns documented
 - **Architecture Diagrams**: 12 ASCII diagrams across integration docs
 - **Test Best Practices**: 7 E2E testing patterns + 4 performance optimizations
-- **Security Warnings**: 0 known limitations (4 resolved as of Nov 2, 2025)
+- **Security Warnings**: 1 CRITICAL - Bcrypt migration required immediately (Nov 9, 2025)
 - **Disaster Recovery**: 10 critical failure scenarios with step-by-step recovery
 - **Operational Guides**: 5 practical how-to procedures with copy-paste commands
 - **Refactoring Candidates**: 4 files identified (2,930 to 1,065 lines each)
-- **Recent Updates**: Nov 2, 2025 (v4.5.18) - PBKDF2 password migration deployed
+- **Recent Updates**: Nov 9, 2025 (v4.5.18) - EMERGENCY: Bcrypt password migration tools added
 
 ---
 
 ## 🔄 Last Updated
 
-**November 2, 2025** - Version 4.5.18 - PBKDF2 Password Migration 🔐
+**November 9, 2025** - Version 4.5.18 - PBKDF2 Password Migration 🔐
 
+- **🚨 CRITICAL SECURITY ISSUE DISCOVERED** (Nov 9, 2025):
+  - Problem: Bcrypt hashes cannot be verified in Convex runtime (no Node.js)
+  - Current state: Bcrypt users can login with ANY password (temporary bypass)
+  - Emergency fix: Migration tools created (`convex/migrateBcryptPasswords.ts`, `scripts/migrate-bcrypt-passwords.ps1`)
+  - Required action: Run migration script IMMEDIATELY after deployment
+  - Migration resets all bcrypt passwords to `Teacher{username}` pattern
+  - Users forced to change password on first login
+  - Files: `convex/migrateBcryptPasswords.ts` (207 lines), `scripts/migrate-bcrypt-passwords.ps1` (115 lines)
+  - Documentation: Updated security warnings across all docs
 - **Security Upgrade**: Migrated from bcrypt to PBKDF2 (Web Crypto API)
   - Problem: bcrypt incompatible with Convex runtime (requires Node.js modules)
   - Solution: PBKDF2 using Web Crypto API (pure JavaScript, 100,000 iterations)
@@ -244,7 +254,7 @@ This documentation is split into focused sections for efficient knowledge discov
 
 3. **Always use `.withIndex()`** for Convex queries - check `convex/schema.ts` for indexes. NEVER query inside loops - use batch fetch + Map pattern. This is critical for performance.
 
-4. **Custom auth with PBKDF2** - Uses localStorage sessions (24hr expiry), PBKDF2 password hashing (Web Crypto API, 100,000 iterations), and explicit userId passing. See `lib/session-utils.ts` and `convex/users.ts`. ⚠️ Note: Hybrid verification during migration supports legacy bcrypt and btoa hashes.
+4. **Custom auth with PBKDF2** - Uses localStorage sessions (24hr expiry), PBKDF2 password hashing (Web Crypto API, 100,000 iterations), and explicit userId passing. See `lib/session-utils.ts` and `convex/users.ts`. ⚠️ **CRITICAL**: Bcrypt users can login with ANY password until migration completes - run `.\scripts\migrate-bcrypt-passwords.ps1` immediately!
 
 5. **All components need `"use client"`** - Next.js App Router requires this directive for client-side hooks (`useQuery`, `useMutation`, `useState`).
 

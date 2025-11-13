@@ -12,7 +12,7 @@ on:
 jobs:
     e2e-local:
         name: E2E Tests with Local Server
-        runs-on: ubuntu-latest
+        runs-on: self-hosted
         timeout-minutes: 20
 
         steps:

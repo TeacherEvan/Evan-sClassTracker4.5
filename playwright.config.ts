@@ -77,16 +77,27 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: process.env.NEXT_PUBLIC_CONVEX_URL_STAGING ? undefined : {
+  webServer: {
     // Only start Next.js dev server for local testing
     // Skip webServer when running against staging (NEXT_PUBLIC_CONVEX_URL_STAGING is set)
-    command: 'next dev --turbopack -p 3001',
+    //
+    // ⚠️ IMPORTANT: You must start Convex separately before running tests:
+    //    1. Run: npx convex dev
+    //    2. Then run: npm run test:e2e
+    //
+    // Or use the helper script: .\\scripts\\start-test-servers.ps1
+    command: 'npm run dev',
     url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000, // 2 minutes for Next.js to start
     env: {
       // Ensure Convex URL is set for tests (reads from .env.local)
       NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL || 'https://greedy-partridge-29.convex.cloud',
+      // Disable Next.js telemetry and dev overlays during tests
+      NEXT_TELEMETRY_DISABLED: '1',
+      // This tells Next.js we're in a "production-like" testing environment
+      // which disables dev overlays while still using dev mode
+      __NEXT_TEST_MODE: 'true',
     },
   },
 });

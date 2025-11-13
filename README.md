@@ -4,7 +4,19 @@
 
 Built with Next.js 15, React 19, Convex & Tailwind v4
 
-## ✨ Latest Updates (Nov 5, 2025)
+## ✨ Latest Updates (Nov 9, 2025)
+
+### 🚨 Version 4.5.23 - Emergency Bcrypt Migration Tools (Nov 9, 2025)
+
+**Critical Security Discovery**: Bcrypt password hashes cannot be verified in Convex runtime (no Node.js modules)
+
+- 🔴 **Issue Discovered**: Users with bcrypt hashes could login with ANY password (temporary bypass in place)
+- ✅ **Emergency Tools Created**: Migration script + PowerShell helper for password reset
+- ✅ **Migration Verification**: Zero bcrypt users in current deployment - **system is secure**
+- 📋 **Migration Tools**: `convex/migrateBcryptPasswords.ts`, `scripts/migrate-bcrypt-passwords.ps1`
+- 📖 **Documentation Updated**: Security warnings, quick start guide, and emergency procedures
+
+**Status**: ✅ **No immediate action required** - current deployment has 0 bcrypt users (verified Nov 9, 2025)
 
 ### Recent Improvements
 
@@ -34,7 +46,8 @@ Built with Next.js 15, React 19, Convex & Tailwind v4
   - **Implementation**: Triple hybrid verification supports PBKDF2, bcrypt (legacy), and btoa (legacy)
   - **Monitoring**: Admin dashboard query tracks migration progress (total/migrated/pending)
   - **Technical**: Pure JavaScript, no external dependencies, Convex-compatible
-  - Documentation: See `CHANGELOG.md` v4.5.18 entry
+  - **Emergency Tools**: Migration tools created (Nov 9) for bcrypt users (none found in production)
+  - Documentation: See `CHANGELOG.md` v4.5.18 and v4.5.23 entries
 
 ### Version 4.5.17 - SUPERSEDED by 4.5.18 (Bcrypt Migration)
 

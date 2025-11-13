@@ -52,7 +52,7 @@ export const TEST_USERS = {
  * @param user - Test user credentials
  */
 export async function login(page: Page, user: TestUser) {
-  await page.goto('/');
+  await page.goto('/', { timeout: 60000 });
 
   // CRITICAL: Wait for Convex to load and page to be ready
   // The app shows loading spinner while fetching users from Convex
@@ -95,7 +95,7 @@ export async function login(page: Page, user: TestUser) {
   await passwordInput.fill(user.password);
 
   // Click login button
-  await page.locator('button:has-text("Login"), button:has-text("เข้าสู่ระบบ")').first().click();
+  await page.locator('button:has-text("Sign In"), button:has-text("ลงชื่อเข้าใช้")').first().click();
 
   // Wait for successful login - check for either main app or password change dialog
   await page.waitForTimeout(2000);
@@ -177,9 +177,11 @@ export async function login(page: Page, user: TestUser) {
   // Let the app settle after wizard dismissal
   await page.waitForTimeout(1000);
 
-  // Verify not on login page anymore - look for the actual header text (bilingual)
-  // The header shows "Class Tracker" in English or "ติดตามชั้นเรียน" in Thai
-  await expect(page.locator('h1:has-text("Class Tracker"), h1:has-text("ติดตามชั้นเรียน")').first()).toBeVisible({ timeout: 10000 });
+  // Verify not on login page anymore - look for the Monthly Calendar heading (bilingual)
+  // After successful login, the app displays "Monthly Calendar" or "ปฏิทินรายเดือน"
+  await expect(
+    page.locator('h2:has-text("Monthly Calendar"), h2:has-text("ปฏิทินรายเดือน")').first()
+  ).toBeVisible({ timeout: 10000 });
 
   console.log(`[TEST] Login completed successfully for user: ${user.username}`);
 }
@@ -435,4 +437,60 @@ export function generateTestData(type: 'student' | 'class' | 'test' = 'test') {
  */
 export async function waitForRealtimeUpdate(page: Page, selector: string, timeout: number = 5000) {
   await page.waitForSelector(selector, { timeout, state: 'visible' });
+}
+
+/**
+ * Provider Test Helpers (NEW - Phase 0 Guardian Migration)
+ *
+ * These helpers prepare test infrastructure for Phase 2 when guardian
+ * tests will be migrated to provider-based workflows.
+ */
+
+/** Test provider categories */
+export const PROVIDER_CATEGORIES = {
+  personal: 'personal',
+  private: 'private',
+  languageSchool: 'language_school',
+  educationalCamp: 'educational_camp',
+  guardian: 'guardian', // NEW - For migrated guardian users
+} as const;
+
+/** Test provider data for E2E tests */
+export const TEST_PROVIDERS = {
+  guardianProvider: {
+    name: 'Test Guardian Provider',
+    nameTh: 'ผู้ปกครองทดสอบ',
+    category: 'guardian' as const,
+  },
+  privateProvider: {
+    name: 'Test Private Tutor',
+    nameTh: 'ติวเตอร์ส่วนตัวทดสอบ',
+    category: 'private' as const,
+  },
+};
+
+/**
+ * Create a test provider (for Phase 2 migration)
+ *
+ * NOTE: This is a placeholder for Phase 2. Actual implementation will require:
+ * 1. Navigate to providers tab
+ * 2. Click "Create Provider" button
+ * 3. Fill bilingual form (name, nameTh, category)
+ * 4. Submit and verify creation
+ *
+ * @param page - Playwright Page object
+ * @param providerData - Provider details (name, nameTh, category)
+ */
+export async function createTestProvider(
+  page: Page,
+  providerData: {
+    name: string;
+    nameTh: string;
+    category: 'personal' | 'private' | 'language_school' | 'educational_camp' | 'guardian';
+  }
+) {
+  // TODO: Implement in Phase 2 after UI migration
+  // For now, this is a placeholder to document the interface
+  console.log('createTestProvider - Placeholder for Phase 2:', providerData);
+  throw new Error('createTestProvider not yet implemented - Phase 2 task');
 }

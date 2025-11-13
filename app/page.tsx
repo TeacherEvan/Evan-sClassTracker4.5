@@ -27,7 +27,7 @@ import type { User } from "@/lib/types";
 import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
 
 // Lazy-loaded components (loaded on demand)
-const WeeklyCalendar = lazy(() => import("@/components/weekly-calendar").then(m => ({ default: m.WeeklyCalendar })));
+const MonthlyCalendar = lazy(() => import("@/components/monthly-calendar").then(m => ({ default: m.MonthlyCalendar })));
 const ClassBooking = lazy(() => import("@/components/class-booking").then(m => ({ default: m.ClassBooking })));
 const MessagingHub = lazy(() => import("@/components/messaging-hub").then(m => ({ default: m.MessagingHub })));
 const NotificationForm = lazy(() => import("@/components/notification-form").then(m => ({ default: m.NotificationForm })));
@@ -767,7 +767,7 @@ export default function Home() {
       <div className="relative z-10 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-lg shadow-lg p-4 md:p-6 max-w-7xl mx-auto">
         {activeTab === "calendar" && (
           <Suspense fallback={<LoadingFallback />}>
-            <WeeklyCalendar currentUser={user} />
+            <MonthlyCalendar currentUser={user} />
           </Suspense>
         )}
 

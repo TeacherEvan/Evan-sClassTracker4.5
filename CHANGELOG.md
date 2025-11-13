@@ -2,6 +2,107 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.23] - November 9, 2025 🚨 EMERGENCY - Bcrypt Password Migration Tools
+
+### 🔴 CRITICAL SECURITY ISSUE
+
+**Problem Discovered**: Bcrypt password hashes cannot be verified in Convex runtime (no Node.js `crypto` module available)
+
+**Current State**: Users with bcrypt password hashes can login with **ANY password** due to temporary bypass in `convex/users.ts` (line 128: `return true`)
+
+**Security Impact**: CRITICAL - Immediate security vulnerability for all bcrypt users
+
+### Added
+
+#### Emergency Migration Tools
+
+- **Backend Migration Module** (`convex/migrateBcryptPasswords.ts`) - 207 lines:
+  - `countBcryptUsers` query - Counts users with bcrypt/PBKDF2/btoa hashes
+  - `resetAllBcryptPasswords` mutation - Resets all bcrypt passwords with dry-run support
+  - `resetSingleUserPassword` mutation - Individual user password reset
+  - Admin-only authorization (requires admin userId)
+  - Preserves user preferences (language, login history)
+  - Comprehensive logging and error handling
+  - Dry-run capability for safe testing
+
+- **PowerShell Helper Script** (`scripts/migrate-bcrypt-passwords.ps1`) - 115 lines:
+  - Guided migration workflow with interactive prompts
+  - Convex connection verification
+  - Automatic dashboard opening to Functions tab
+  - Step-by-step instructions with examples
+  - Admin ID lookup instructions
+  - Bilingual output formatting (colored console)
+
+#### Migration Process
+
+1. **Detection**: `migrateBcryptPasswords:countBcryptUsers` - Shows bcrypt/PBKDF2/btoa counts
+2. **Dry Run**: `resetAllBcryptPasswords({ adminId, dryRun: true })` - Preview changes
+3. **Execute**: `resetAllBcryptPasswords({ adminId, dryRun: false })` - Reset passwords
+4. **Result**: All bcrypt users get `Teacher{username}` password with forced password change
+
+### Modified
+
+- **Password Verification** (`convex/users.ts`):
+  - Updated bcrypt verification logic (lines 115-128)
+  - Changed from soft migration to emergency bypass mode
+  - Added warning comments explaining temporary `return true`
+  - Documented removal requirement after migration completes
+
+- **Documentation Updates**:
+  - `.github/copilot-instructions.md` - Added CRITICAL security warning in header
+  - `.github/copilot-docs/01-quick-start.md` - Updated rule #4 with migration warning
+  - `.github/copilot-docs/05-security.md` - Complete emergency section rewrite
+  - Added migration timeline and resolution steps
+
+### Required Actions (IMMEDIATE)
+
+**⚠️ MUST RUN MIGRATION SCRIPT AFTER DEPLOYMENT**:
+
+```powershell
+.\scripts\migrate-bcrypt-passwords.ps1
+```
+
+**OR manually via Convex Dashboard**:
+
+1. Go to <https://dashboard.convex.dev> → Functions
+2. Run `migrateBcryptPasswords:countBcryptUsers` (check affected users)
+3. Run `migrateBcryptPasswords:resetAllBcryptPasswords` with admin ID
+4. Verify all users migrated (bcrypt count = 0)
+
+**After Migration**:
+
+- Remove `return true` bypass in `convex/users.ts` line 128
+- Test logins with default `Teacher{username}` passwords
+- Verify users can change passwords on first login
+
+### Technical Details
+
+- **Files Added**: 2 (migrateBcryptPasswords.ts, migrate-bcrypt-passwords.ps1)
+- **Files Modified**: 5 (users.ts, api.d.ts, copilot-instructions.md, 01-quick-start.md, 05-security.md)
+- **Migration Strategy**: Password reset to default pattern with forced change
+- **Affected Users**: All users with bcrypt password hashes (typically test/seed users)
+- **Timeline**: Nov 2 (PBKDF2 deployed) → Nov 9 (Issue discovered + Migration tools)
+
+### Security Context
+
+**Why This Happened**:
+
+- PBKDF2 upgrade (v4.5.18, Nov 2) eliminated bcrypt dependency for Convex compatibility
+- Bcrypt verification requires Node.js modules (unavailable in Convex runtime)
+- Auto-upgrade strategy works for btoa users but fails for bcrypt users
+- Temporary bypass added to prevent complete login lockout
+
+**Resolution Path**:
+
+1. ✅ PBKDF2 implementation deployed (Nov 2, 2025)
+2. ✅ Auto-upgrade for btoa users working
+3. 🔴 Bcrypt verification failure discovered (Nov 9, 2025)
+4. ✅ Emergency migration tools created (Nov 9, 2025)
+5. ⏳ **PENDING**: Run migration to reset bcrypt passwords
+6. ⏳ **TODO**: Remove temporary bypass after migration complete
+
+---
+
 ## [4.5.22] - November 3, 2025 🔧 MAINTENANCE - Class Booking Workflow Enhancements
 
 ### Added

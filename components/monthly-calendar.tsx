@@ -3,13 +3,13 @@
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { getClassStatusColor } from "@/lib/constants";
-import { getWeekStart, isToday } from "@/lib/date-utils";
+import { getMonthEnd, getMonthGridDays, getMonthStart, isInMonth, isToday } from "@/lib/date-utils";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { User } from "@/lib/types";
 import { useSwipeGesture } from "@/lib/use-swipe-gesture";
 import { useMutation, useQuery } from "convex/react";
-import { Bell, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Globe, MapPin, Plus, Users, X } from "lucide-react";
+import { Bell, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Globe, Plus, Users, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ClassDetailModal } from "./class-detail-modal";
 import { ClassQuickActions } from "./class-quick-actions";
@@ -17,11 +17,11 @@ import { EditClassModal } from "./edit-class-modal";
 import { HierarchicalStudentSelector } from "./hierarchical-student-selector";
 import { PostClassNotesModal } from "./post-class-notes-modal";
 
-type WeeklyCalendarProps = {
+type MonthlyCalendarProps = {
     currentUser: User;
 };
 
-export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
+export function MonthlyCalendar({ currentUser }: MonthlyCalendarProps) {
     const { t, language } = useLanguage();
     const schools = useQuery(api.schools.list, {});
     // Only load teachers since we only display teacher names in calendar
@@ -104,22 +104,14 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     const formLocations = useQuery(
         api.locations.list,
         schoolId ? { schoolId, activeOnly: true } : "skip"
-    );    // Memoize week range calculations
-    const weekStart = useMemo(() => getWeekStart(currentDate), [currentDate]);
-    const weekEnd = useMemo(() => {
-        const end = new Date(weekStart);
-        end.setDate(weekStart.getDate() + 6);
-        end.setHours(23, 59, 59, 999);
-        return end;
-    }, [weekStart]);
+    );
 
-    // Memoize week days array
-    const weekDays = useMemo(() =>
-        Array.from({ length: 7 }, (_, i) => {
-            const day = new Date(weekStart);
-            day.setDate(weekStart.getDate() + i);
-            return day;
-        }), [weekStart]);
+    // Memoize month range calculations
+    const monthStart = useMemo(() => getMonthStart(currentDate), [currentDate]);
+    const monthEnd = useMemo(() => getMonthEnd(currentDate), [currentDate]);
+
+    // Memoize month grid days array (35 or 42 days)
+    const monthGridDays = useMemo(() => getMonthGridDays(currentDate), [currentDate]);
 
     // Create lookup maps for better performance (O(1) instead of O(n))
     const usersMap = useMemo(() => {
@@ -144,41 +136,41 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                     : {}
     );
 
-    // Get events for current week
+    // Get events for current month
     const events = useQuery(
         api.events.listByDateRange,
         {
             userId: currentUser._id,
-            startDate: weekStart.getTime(),
-            endDate: weekEnd.getTime()
+            startDate: monthStart.getTime(),
+            endDate: monthEnd.getTime()
         }
     );
 
-    // Filter classes by date range on client side (since we're using listWithDetails)
-    const weekClasses = useMemo(() => {
+    // Filter classes by month date range on client side (since we're using listWithDetails)
+    const monthClasses = useMemo(() => {
         if (!classes) return [];
         return classes.filter(c =>
-            c.scheduledDate >= weekStart.getTime() &&
-            c.scheduledDate <= weekEnd.getTime()
+            c.scheduledDate >= monthStart.getTime() &&
+            c.scheduledDate <= monthEnd.getTime()
         );
-    }, [classes, weekStart, weekEnd]);
+    }, [classes, monthStart, monthEnd]);
 
-    const goToPreviousWeek = () => {
+    const goToPreviousMonth = () => {
         const newDate = new Date(currentDate);
-        newDate.setDate(newDate.getDate() - 7);
+        newDate.setMonth(newDate.getMonth() - 1);
         setCurrentDate(newDate);
     };
 
-    const goToNextWeek = () => {
+    const goToNextMonth = () => {
         const newDate = new Date(currentDate);
-        newDate.setDate(newDate.getDate() + 7);
+        newDate.setMonth(newDate.getMonth() + 1);
         setCurrentDate(newDate);
     };
 
-    // Swipe gestures for week navigation
+    // Swipe gestures for month navigation
     useSwipeGesture({
-        onSwipeLeft: goToNextWeek,
-        onSwipeRight: goToPreviousWeek,
+        onSwipeLeft: goToNextMonth,
+        onSwipeRight: goToPreviousMonth,
     });
 
     const goToToday = () => {
@@ -253,13 +245,13 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
     };
 
     const getClassesForDay = (day: Date) => {
-        if (!weekClasses) return [];
+        if (!monthClasses) return [];
         const dayStart = new Date(day);
         dayStart.setHours(0, 0, 0, 0);
         const dayEnd = new Date(day);
         dayEnd.setHours(23, 59, 59, 999);
 
-        return weekClasses.filter(
+        return monthClasses.filter(
             (c) => c.scheduledDate >= dayStart.getTime() && c.scheduledDate <= dayEnd.getTime()
         );
     };
@@ -320,8 +312,8 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
             {/* Header */}
             <div className="mb-4 md:mb-6">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 md:mb-4 gap-3">
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-                        {t("Weekly Calendar", "ปฏิทินรายสัปดาห์")}
+                    <h2 id="calendar-heading" className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                        {t("Monthly Calendar", "ปฏิทินรายเดือน")}
                     </h2>
                     <button
                         onClick={goToToday}
@@ -334,26 +326,22 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                 <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
                     <div className="flex items-center gap-2 justify-between md:justify-start">
                         <button
-                            onClick={goToPreviousWeek}
+                            onClick={goToPreviousMonth}
                             className="p-2.5 md:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg active:scale-95 transition-all touch-manipulation"
+                            aria-label={t("Previous month", "เดือนก่อนหน้า")}
                         >
                             <ChevronLeft className="w-6 h-6 md:w-5 md:h-5" />
                         </button>
                         <span className="text-base md:text-lg font-medium flex-1 md:min-w-[200px] text-center">
-                            {weekStart.toLocaleDateString(language === "en" ? "en-US" : "th-TH", {
-                                month: "short",
-                                day: "numeric",
-                            })}{" "}
-                            -{" "}
-                            {weekEnd.toLocaleDateString(language === "en" ? "en-US" : "th-TH", {
-                                month: "short",
-                                day: "numeric",
+                            {currentDate.toLocaleDateString(language === "en" ? "en-US" : "th-TH", {
+                                month: "long",
                                 year: "numeric",
                             })}
                         </span>
                         <button
-                            onClick={goToNextWeek}
+                            onClick={goToNextMonth}
                             className="p-2.5 md:p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg active:scale-95 transition-all touch-manipulation"
+                            aria-label={t("Next month", "เดือนถัดไป")}
                         >
                             <ChevronRight className="w-6 h-6 md:w-5 md:h-5" />
                         </button>
@@ -378,9 +366,13 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
             </div>
 
             {/* Calendar Grid */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg overflow-hidden">
+            <div
+                className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg overflow-hidden"
+                role="grid"
+                aria-labelledby="calendar-heading"
+            >
                 {/* Day headers - abbreviated on mobile */}
-                <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
+                <div role="rowgroup" className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
                     {[
                         { full: t("Monday", "จันทร์"), short: t("Mon", "จ.") },
                         { full: t("Tuesday", "อังคาร"), short: t("Tue", "อ.") },
@@ -392,6 +384,8 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                     ].map((day, i) => (
                         <div
                             key={i}
+                            role="columnheader"
+                            aria-label={day.full}
                             className="px-1 md:px-4 py-2 md:py-3 text-center font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 text-xs md:text-base"
                         >
                             <span className="hidden md:inline">{day.full}</span>
@@ -400,108 +394,96 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                     ))}
                 </div>
 
-                <div className="grid grid-cols-7 divide-x divide-gray-200 dark:divide-gray-700">
-                    {weekDays.map((day, i) => {
+                {/* Month Grid - 5 or 6 rows */}
+                <div role="rowgroup" className="grid grid-cols-7">
+                    {monthGridDays.map((day, i) => {
                         const dayClasses = getClassesForDay(day);
                         const dayEvents = getEventsForDay(day);
                         const today = isToday(day);
+                        const inMonth = isInMonth(day, currentDate);
+                        const totalItems = dayEvents.length + dayClasses.length;
+                        const maxVisibleItems = 3;
+                        const hiddenCount = Math.max(0, totalItems - maxVisibleItems);
 
                         return (
                             <div
                                 key={i}
-                                className={`min-h-[120px] md:min-h-[150px] p-1 md:p-2 ${today ? "bg-blue-50 dark:bg-blue-900/10" : ""}`}
+                                role="gridcell"
+                                tabIndex={today ? 0 : -1}
+                                aria-label={`${day.toLocaleDateString(language === "en" ? "en-US" : "th-TH")} ${totalItems} ${t("items", "รายการ")}`}
+                                className={`
+                                    min-h-[80px] md:min-h-[120px] p-1 md:p-2 border-r border-b
+                                    ${today ? "bg-blue-50 dark:bg-blue-900/10 ring-2 ring-inset ring-blue-500" : ""}
+                                    ${!inMonth ? "bg-gray-50 dark:bg-gray-900/50 opacity-60" : ""}
+                                    ${i % 7 === 6 ? "border-r-0" : ""}
+                                    hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors
+                                    focus:outline-none focus:ring-2 focus:ring-blue-500
+                                `}
                             >
                                 <div className="flex justify-between items-start mb-1 md:mb-2">
                                     <span
-                                        className={`text-sm md:text-sm font-medium ${today
-                                            ? "text-blue-600 dark:text-blue-400 font-bold"
-                                            : "text-gray-700 dark:text-gray-300"
+                                        className={`text-xs md:text-sm font-medium ${today
+                                                ? "text-blue-600 dark:text-blue-400 font-bold"
+                                                : !inMonth
+                                                    ? "text-gray-400 dark:text-gray-600"
+                                                    : "text-gray-700 dark:text-gray-300"
                                             }`}
                                     >
                                         {day.getDate()}
                                     </span>
-                                    <button
-                                        onClick={() => handleAddClass(day)}
-                                        className="p-1 md:p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded active:scale-95 transition-all touch-manipulation"
-                                        title={
-                                            currentUser.role === "moderator" || currentUser.role === "admin"
-                                                ? t("Book class", "จองคลาส")
-                                                : t("Request class", "ขอจองคลาส")
-                                        }
-                                    >
-                                        <Plus className="w-4 h-4 md:w-4 md:h-4" />
-                                    </button>
+                                    {/* Add Class Button - Only for current month days */}
+                                    {inMonth && (
+                                        <button
+                                            onClick={() => handleAddClass(day)}
+                                            className="p-0.5 md:p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded active:scale-95 transition-all touch-manipulation"
+                                            aria-label={
+                                                currentUser.role === "moderator" || currentUser.role === "admin"
+                                                    ? t("Book class", "จองคลาส")
+                                                    : t("Request class", "ขอจองคลาส")
+                                            }
+                                        >
+                                            <Plus className="w-3 h-3 md:w-4 md:h-4" />
+                                        </button>
+                                    )}
                                 </div>
 
-                                <div className="space-y-1">
-                                    {/* Render Events First */}
-                                    {dayEvents.map((event) => {
-                                        return (
-                                            <div
-                                                key={event._id}
-                                                className="w-full text-left text-xs p-1.5 md:p-2 rounded-lg md:rounded border-2 border-purple-300 dark:border-purple-600 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors"
-                                                title={language === "en" ? event.description : event.descriptionTh}
-                                            >
-                                                <div className="flex items-center gap-1 mb-0.5">
-                                                    {getEventIcon(event.eventType)}
-                                                    <div className="font-semibold truncate text-[11px] md:text-xs text-purple-700 dark:text-purple-300">
-                                                        {language === "en" ? event.title : event.titleTh}
-                                                    </div>
+                                {/* Events & Classes - Compact View */}
+                                <div className="space-y-0.5 overflow-y-auto max-h-[60px] md:max-h-[90px]">
+                                    {/* Render Events First (max visible) */}
+                                    {dayEvents.slice(0, maxVisibleItems).map((event) => (
+                                        <div
+                                            key={event._id}
+                                            className="w-full text-left text-xs p-1 rounded border border-purple-300 dark:border-purple-600 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-colors cursor-pointer"
+                                            title={language === "en" ? event.description : event.descriptionTh}
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                {getEventIcon(event.eventType)}
+                                                <div className="font-semibold truncate text-[9px] md:text-[10px] text-purple-700 dark:text-purple-300">
+                                                    {language === "en" ? event.title : event.titleTh}
                                                 </div>
-                                                {!event.allDay && (
-                                                    <div className="text-purple-600 dark:text-purple-400 text-[9px] md:text-[10px] flex items-center gap-1">
-                                                        <Clock className="w-3 h-3" />
-                                                        {new Date(event.eventDate).toLocaleTimeString(
-                                                            language === "en" ? "en-US" : "th-TH",
-                                                            { hour: "2-digit", minute: "2-digit" }
-                                                        )}
-                                                    </div>
-                                                )}
-                                                {event.location && (
-                                                    <div className="text-purple-500 dark:text-purple-400 text-[9px] md:text-[10px] truncate flex items-center gap-1 mt-0.5">
-                                                        <MapPin className="w-2.5 h-2.5" />
-                                                        {language === "en" ? event.location : event.locationTh}
-                                                    </div>
-                                                )}
                                             </div>
-                                        );
-                                    })}
+                                        </div>
+                                    ))}
 
-                                    {/* Render Classes */}
-                                    {dayClasses.map((classItem) => {
+                                    {/* Render Classes (remaining slots) */}
+                                    {dayClasses.slice(0, Math.max(0, maxVisibleItems - dayEvents.length)).map((classItem) => {
                                         const teacher = usersMap.get(classItem.teacherId);
-                                        const school = schoolsMap.get(classItem.schoolId);
                                         const student = classItem.student;
 
                                         return (
                                             <div
                                                 key={classItem._id}
-                                                className={`group relative w-full text-left text-xs p-1.5 md:p-2 rounded-lg md:rounded border ${getClassStatusColor(classItem.status)} hover:shadow-md transition-all ${!student ? 'opacity-60' : ''}`}
+                                                className={`group relative w-full text-left text-xs p-1 rounded border ${getClassStatusColor(classItem.status)} hover:shadow-md transition-all cursor-pointer ${!student ? 'opacity-60' : ''}`}
+                                                onClick={() => handleClassClick(classItem)}
                                             >
-                                                <div
-                                                    onClick={() => handleClassClick(classItem)}
-                                                    className="cursor-pointer"
-                                                >
-                                                    <div className={`font-semibold truncate text-[11px] md:text-xs ${!student ? 'text-red-600 dark:text-red-400' : ''}`}>
-                                                        {student ? `${student.firstName} ${student.lastName}` : t("⚠️ Deleted Student", "⚠️ นักเรียนถูกลบ")}
-                                                    </div>
-                                                    <div className="text-gray-600 dark:text-gray-300 truncate text-[10px] md:text-xs">
-                                                        {teacher?.username}
-                                                    </div>
-                                                    {school && (
-                                                        <div className="text-gray-500 dark:text-gray-400 text-[9px] md:text-[10px] truncate hidden md:block">
-                                                            {language === "en" ? school.name : school.nameTh}
-                                                        </div>
-                                                    )}
-                                                    <div className="text-gray-500 dark:text-gray-400 text-[9px] md:text-[10px] mt-0.5">
-                                                        {new Date(classItem.scheduledDate).toLocaleTimeString(
-                                                            language === "en" ? "en-US" : "th-TH",
-                                                            { hour: "2-digit", minute: "2-digit" }
-                                                        )}
-                                                    </div>
+                                                <div className={`font-semibold truncate text-[9px] md:text-[10px] ${!student ? 'text-red-600 dark:text-red-400' : ''}`}>
+                                                    {student ? `${student.firstName} ${student.lastName}` : t("⚠️ Deleted", "⚠️ ลบแล้ว")}
                                                 </div>
-                                                {/* Quick actions dropdown - always visible on mobile, hover on desktop */}
-                                                <div className="absolute top-1 right-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                                <div className="text-gray-600 dark:text-gray-300 truncate text-[8px] md:text-[9px]">
+                                                    {teacher?.username}
+                                                </div>
+                                                {/* Quick actions - mobile visible, desktop hover */}
+                                                <div className="absolute top-0.5 right-0.5 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                                                     <ClassQuickActions
                                                         classItem={classItem as unknown as Doc<"classes">}
                                                         currentUser={currentUser as unknown as Doc<"users">}
@@ -514,6 +496,13 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                                             </div>
                                         );
                                     })}
+
+                                    {/* "+X more" indicator */}
+                                    {hiddenCount > 0 && (
+                                        <div className="text-[8px] md:text-[9px] text-gray-500 dark:text-gray-400 text-center py-0.5">
+                                            +{hiddenCount} {t("more", "เพิ่มเติม")}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );
@@ -552,7 +541,7 @@ export function WeeklyCalendar({ currentUser }: WeeklyCalendarProps) {
                     additionalStudents={selectedClass.additionalStudents}
                     currentUserId={currentUser._id}
                     currentUserRole={currentUser.role}
-                    allClasses={weekClasses}
+                    allClasses={monthClasses}
                     onClose={() => setSelectedClass(null)}
                 />
             )}

@@ -31,6 +31,7 @@ import type * as locations from "../locations.js";
 import type * as messages from "../messages.js";
 import type * as migrateBcryptPasswords from "../migrateBcryptPasswords.js";
 import type * as migrateSangsomStudentsToEvents from "../migrateSangsomStudentsToEvents.js";
+import type * as migrations_migrateGuardianToProvider from "../migrations/migrateGuardianToProvider.js";
 import type * as notificationWindows from "../notificationWindows.js";
 import type * as notifications from "../notifications.js";
 import type * as pagination from "../pagination.js";
@@ -89,6 +90,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   migrateBcryptPasswords: typeof migrateBcryptPasswords;
   migrateSangsomStudentsToEvents: typeof migrateSangsomStudentsToEvents;
+  "migrations/migrateGuardianToProvider": typeof migrations_migrateGuardianToProvider;
   notificationWindows: typeof notificationWindows;
   notifications: typeof notifications;
   pagination: typeof pagination;
