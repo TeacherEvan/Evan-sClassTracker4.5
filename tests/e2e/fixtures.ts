@@ -36,7 +36,7 @@ type TestFixtures = {
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
     // Worker-scoped: Login once per worker, save state
-    workerAuthState: [async ({ browser }, use, workerInfo) => {
+    workerAuthState: [async ({ browser }, run, workerInfo) => {
         const context = await browser.newContext();
         const page = await context.newPage();
 
@@ -54,11 +54,11 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
         await page.close();
         await context.close();
 
-        await use();
+        await run();
     }, { scope: 'worker' }],
 
     // Test-scoped: Use saved auth state for each test
-    authenticatedPage: async ({ browser, workerAuthState }, use, workerInfo) => {
+    authenticatedPage: async ({ browser, workerAuthState }, run, workerInfo) => {
         const authFile = `.auth/worker-${workerInfo.workerIndex}.json`;
 
         // Create context with saved auth state
@@ -67,35 +67,35 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
         });
 
         const page = await context.newPage();
-        await use(page);
+        await run(page);
 
         await page.close();
         await context.close();
     },
 
     // Test-scoped: Page with HAR mocking
-    harMockedPage: async ({ page }, use) => {
-        const harMode = process.env.HAR_MODE || 'replay'; // 'record' or 'replay'
+    harMockedPage: async ({ page }, run) => {
+        const harMode = process.env.HAR_MODE || 'replay';
         const harPath = './tests/e2e/hars/convex-backend.har';
 
         if (harMode === 'record') {
             console.log('[HAR] Recording Convex traffic...');
             await page.routeFromHAR(harPath, {
                 url: '**/greedy-partridge-29.convex.cloud/**',
-                update: true, // Record new traffic
-                updateContent: 'embed', // Embed responses in HAR file
-                updateMode: 'full' // Update all entries
+                update: true,
+                updateContent: 'embed',
+                updateMode: 'full'
             });
         } else {
             console.log('[HAR] Replaying Convex traffic from HAR file...');
             await page.routeFromHAR(harPath, {
                 url: '**/greedy-partridge-29.convex.cloud/**',
-                update: false, // Replay from HAR
-                notFound: 'abort' // Abort if route not in HAR (helps find missing recordings)
+                update: false,
+                notFound: 'abort'
             });
         }
 
-        await use(page);
+        await run(page);
     }
 });
 
