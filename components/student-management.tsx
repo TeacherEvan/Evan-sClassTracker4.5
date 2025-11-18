@@ -65,6 +65,26 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             callback: () => showForm && setShowForm(false),
             disabled: !showForm,
         },
+        {
+            key: 'a',
+            ctrlKey: true,
+            description: { en: "Select all students", th: "เลือกนักเรียนทั้งหมด" },
+            callback: () => filteredStudents && setSelectedStudents(new Set(filteredStudents.map(s => s._id))),
+            disabled: !filteredStudents || filteredStudents.length === 0,
+        },
+        {
+            key: 'Escape',
+            description: { en: "Clear selection", th: "ล้างการเลือก" },
+            callback: () => setSelectedStudents(new Set()),
+            disabled: selectedStudents.size === 0,
+        },
+        {
+            key: 'e',
+            ctrlKey: true,
+            description: { en: "Edit selected students", th: "แก้ไขนักเรียนที่เลือก" },
+            callback: () => setShowBulkEditModal(true),
+            disabled: selectedStudents.size === 0,
+        },
     ]);
     const [editingStudent, setEditingStudent] = useState<Id<"students"> | null>(null);
 
@@ -536,13 +556,20 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <GraduationCap className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                            {t("Student Management", "จัดการนักเรียน")}
-                        </h2>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {t("Add and manage students", "เพิ่มและจัดการนักเรียน")}
-                        </p>
+                    <div className="flex items-center gap-2">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                {t("Student Management", "จัดการนักเรียน")}
+                            </h2>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                {t("Add and manage students", "เพิ่มและจัดการนักเรียน")}
+                            </p>
+                        </div>
+                        {selectedStudents.size > 0 && (
+                            <span className="px-3 py-1 text-sm font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
+                                {selectedStudents.size} {t("selected", "เลือกแล้ว")}
+                            </span>
+                        )}
                     </div>
                 </div>
                 <button
@@ -1100,6 +1127,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                             checked={filteredStudents.length > 0 && selectedStudents.size === filteredStudents.length}
                                             onChange={toggleSelectAll}
                                             className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                                            aria-label={language === "en" ? "Select all students" : "เลือกนักเรียนทั้งหมด"}
                                         />
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -1148,6 +1176,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                                                         checked={isSelected}
                                                                         onChange={() => toggleStudentSelection(student._id)}
                                                                         className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                                                                        aria-label={language === "en" ? `Select student ${student.firstName} ${student.lastName}` : `เลือกนักเรียน ${student.firstName} ${student.lastName}`}
                                                                     />
                                                                 </td>
                                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-white" style={{ width: "180px" }}>

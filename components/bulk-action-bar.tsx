@@ -1,10 +1,10 @@
 "use client";
 
-import { useLanguage } from "@/lib/language-context";
+import type { Id } from "@/convex/_generated/dataModel";
 import { ACCESSIBLE_BUTTON } from "@/lib/accessibility-utils";
+import { useLanguage } from "@/lib/language-context";
 import { Check, X } from "lucide-react";
 import { useState } from "react";
-import type { Id } from "@/convex/_generated/dataModel";
 
 interface BulkActionBarProps {
   selectedIds: Set<Id<"classes">>;
@@ -12,6 +12,7 @@ interface BulkActionBarProps {
   onReject: (ids: Id<"classes">[]) => Promise<void>;
   onClearSelection: () => void;
   entityType?: "class" | "student";
+  onEdit?: (ids: Id<"students">[]) => void;
 }
 
 export function BulkActionBar({
@@ -20,6 +21,7 @@ export function BulkActionBar({
   onReject,
   onClearSelection,
   entityType = "class",
+  onEdit,
 }: BulkActionBarProps) {
   const { language } = useLanguage();
   const [isProcessing, setIsProcessing] = useState(false);
