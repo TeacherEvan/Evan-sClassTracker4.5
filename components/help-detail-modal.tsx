@@ -1,8 +1,8 @@
 "use client";
 
 import type { HelpFeature } from "@/lib/help-content";
+import { getHelpIcon } from "@/lib/help-icons";
 import { useLanguage } from "@/lib/language-context";
-import * as LucideIcons from "lucide-react";
 import {
   ArrowLeft,
   CheckCircle,
@@ -22,14 +22,7 @@ export function HelpDetailModal({ feature, onClose, onBack }: HelpDetailModalPro
   const title = language === "th" ? feature.titleTh : feature.title;
   const description = language === "th" ? feature.detailedDescriptionTh : feature.detailedDescription;
 
-  // Get icon component from lucide-react
-  const getIcon = (iconName: string) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const Icon = (LucideIcons as any)[iconName] || LucideIcons.Sparkles;
-    return Icon;
-  };
-
-  const FeatureIcon = getIcon(feature.icon);
+  const FeatureIcon = getHelpIcon(feature.icon);
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-in fade-in duration-300">

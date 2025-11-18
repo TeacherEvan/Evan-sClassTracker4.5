@@ -2,8 +2,8 @@
 
 import { HelpDetailModal } from "@/components/help-detail-modal";
 import { getHelpForRole, type HelpFeature } from "@/lib/help-content";
+import { getHelpIcon } from "@/lib/help-icons";
 import { useLanguage } from "@/lib/language-context";
-import * as LucideIcons from "lucide-react";
 import { BookOpen, ChevronRight, HelpCircle, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -19,15 +19,6 @@ export function HelpWindow({ userRole, onClose }: HelpWindowProps) {
 
   // Get help content filtered by user role (memoized to prevent recalculation)
   const helpCategories = useMemo(() => getHelpForRole(userRole), [userRole]);
-
-  // Get icon component from lucide-react (memoized)
-  const getIcon = useMemo(() => {
-    return (iconName: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const Icon = (LucideIcons as any)[iconName] || LucideIcons.Sparkles;
-      return Icon;
-    };
-  }, []);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => {
@@ -119,7 +110,7 @@ export function HelpWindow({ userRole, onClose }: HelpWindowProps) {
           <div className="space-y-4">
             {helpCategories.map((category) => {
               const isExpanded = expandedCategories.has(category.id);
-              const CategoryIcon = getIcon(category.icon);
+              const CategoryIcon = getHelpIcon(category.icon);
               const categoryTitle = language === "th" ? category.titleTh : category.title;
 
               return (
@@ -153,7 +144,7 @@ export function HelpWindow({ userRole, onClose }: HelpWindowProps) {
                   {isExpanded && (
                     <div className="p-5 pt-0 space-y-3 animate-in slide-in-from-top duration-300">
                       {category.features.map((feature) => {
-                        const FeatureIcon = getIcon(feature.icon);
+                        const FeatureIcon = getHelpIcon(feature.icon);
                         const featureTitle = language === "th" ? feature.titleTh : feature.title;
                         const featureDesc = language === "th" ? feature.shortDescriptionTh : feature.shortDescription;
 
