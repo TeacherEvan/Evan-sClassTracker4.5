@@ -6,8 +6,11 @@ import { useDataContext } from "@/lib/data-context";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { UserRole } from "@/lib/types";
+import { logger } from "@/lib/logger";
+import { getStatusAriaLabel, getStatusBadgeClasses, MIN_TOUCH_TARGET, FOCUS_RING } from "@/lib/accessibility-utils";
+import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-shortcuts";
 import { useMutation, useQuery } from "convex/react";
-import { AlertTriangle, BarChart3, Calendar, Check, Edit2, MapPin, Plus, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
+import { AlertTriangle, BarChart3, Calendar, Check, Clock, Edit2, Info, MapPin, Plus, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
 import { useState } from "react";
 import { ClassAnalytics } from "./class-analytics";
 import { ClassConflictModal } from "./class-conflict-modal";
@@ -77,6 +80,20 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
   // Provider modal state
   const [showCreateProvider, setShowCreateProvider] = useState(false);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      ...COMMON_SHORTCUTS.NEW,
+      callback: () => !showForm && setShowForm(true),
+      disabled: showForm,
+    },
+    {
+      ...COMMON_SHORTCUTS.CLOSE,
+      callback: () => showForm && setShowForm(false),
+      disabled: !showForm,
+    },
+  ]);
 
   // Load providers for teachers/admins
   const myProviders = useQuery(
@@ -2578,23 +2595,12 @@ function ClassItemDisplay({
   const [pendingRemoveStudentId, setPendingRemoveStudentId] = useState<Id<"students"> | null>(null);
 
   const getStatusBadge = (status: string) => {
-    const badges = {
-      pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
-      acknowledged: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
-      approved: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
-      rejected: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400",
-    };
-    return badges[status as keyof typeof badges] || badges.pending;
+    const { bg, text } = getStatusBadgeClasses(status);
+    return `${bg} ${text}`;
   };
 
   const getStatusText = (status: string) => {
-    const texts = {
-      pending: t("Pending", "รอดำเนินการ"),
-      acknowledged: t("Acknowledged", "รับทราบแล้ว"),
-      approved: t("Approved", "อนุมัติแล้ว"),
-      rejected: t("Rejected", "ปฏิเสธแล้ว"),
-    };
-    return texts[status as keyof typeof texts] || status;
+    return getStatusAriaLabel(status, language);
   };
 
   // Use joined data from query instead of loading indicator
@@ -2726,8 +2732,16 @@ function ClassItemDisplay({
                 {totalStudents}
               </span>
             )}
-            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(classItem.status)}`}>
-              {getStatusText(classItem.status)}
+            <span 
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${MIN_TOUCH_TARGET} ${getStatusBadge(classItem.status)}`}
+              role="status"
+              aria-label={getStatusText(classItem.status)}
+            >
+              {classItem.status === "approved" && <Check className="w-3 h-3" aria-hidden="true" />}
+              {classItem.status === "pending" && <Clock className="w-3 h-3" aria-hidden="true" />}
+              {classItem.status === "acknowledged" && <Info className="w-3 h-3" aria-hidden="true" />}
+              {classItem.status === "rejected" && <X className="w-3 h-3" aria-hidden="true" />}
+              <span>{getStatusText(classItem.status)}</span>
             </span>
           </div>
 

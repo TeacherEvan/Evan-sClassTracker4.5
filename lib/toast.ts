@@ -10,6 +10,12 @@ export interface ErrorContext {
     componentState?: string; // JSON string of relevant state
 }
 
+export interface ToastAction {
+    label: string;
+    labelTh: string;
+    onClick: () => void;
+}
+
 export interface Toast {
     id: string;
     title: string;
@@ -20,6 +26,7 @@ export interface Toast {
     duration?: number; // milliseconds
     errorContext?: ErrorContext; // Additional context for error reporting
     showReportButton?: boolean; // Show "Send to Admin" button
+    action?: ToastAction; // Optional action button (for undo, etc.)
 }
 
 type ToastListener = (toast: Toast) => void;

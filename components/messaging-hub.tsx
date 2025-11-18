@@ -5,6 +5,8 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { User, UserWithSchool } from "@/lib/types";
+import { logger } from "@/lib/logger";
+import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-shortcuts";
 import { useMutation, useQuery } from "convex/react";
 import {
   Building2,
@@ -41,6 +43,15 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
   const [messageContent, setMessageContent] = useState("");
   const [messageContentTh, setMessageContentTh] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      ...COMMON_SHORTCUTS.CLOSE,
+      callback: () => viewMode === "chat" && setViewMode("inbox"),
+      disabled: viewMode !== "chat",
+    },
+  ]);
 
   // Queries
   const availableUsers = useQuery(api.messages.getAvailableUsers, {
@@ -113,7 +124,11 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
       setMessageContent("");
       setMessageContentTh("");
     } catch (error) {
-      console.error("Failed to send message:", error);
+      logger.error("Failed to send message", error, { 
+        component: "MessagingHub",
+        action: "sendMessage",
+        userId: currentUser._id 
+      });
     }
   };
 
@@ -121,7 +136,11 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
     try {
       await markAsRead({ messageId });
     } catch (error) {
-      console.error("Failed to mark message as read:", error);
+      logger.error("Failed to mark message as read", error, { 
+        component: "MessagingHub",
+        action: "markAsRead",
+        userId: currentUser._id 
+      });
     }
   };
 
@@ -129,7 +148,11 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
     try {
       await acknowledge({ messageId });
     } catch (error) {
-      console.error("Failed to acknowledge message:", error);
+      logger.error("Failed to acknowledge message", error, { 
+        component: "MessagingHub",
+        action: "acknowledge",
+        userId: currentUser._id 
+      });
     }
   };
 
@@ -144,7 +167,11 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
     try {
       await deleteMessage({ userId: currentUser._id, id: messageId });
     } catch (error) {
-      console.error("Failed to delete message:", error);
+      logger.error("Failed to delete message", error, { 
+        component: "MessagingHub",
+        action: "delete",
+        userId: currentUser._id 
+      });
       toast.error("Failed to delete message", "ลบข้อความล้มเหลว");
     }
   };

@@ -11,6 +11,12 @@ import { useEffect, useState } from "react";
 
 export type ToastType = "info" | "success" | "warning" | "error";
 
+export interface ToastAction {
+  label: string;
+  labelTh: string;
+  onClick: () => void;
+}
+
 export interface ToastNotification {
   id: string;
   title: string;
@@ -20,6 +26,7 @@ export interface ToastNotification {
   type: ToastType;
   errorContext?: ErrorContext;
   showReportButton?: boolean;
+  action?: ToastAction; // Optional action button (e.g., undo)
 }
 
 interface DesktopNotificationToastProps {
@@ -192,6 +199,19 @@ export function DesktopNotificationToast({
               {isReporting
                 ? t("Sending...", "กำลังส่ง...")
                 : t("Send to Admin", "ส่งให้ผู้ดูแล")}
+            </button>
+          )}
+
+          {/* Action Button (for undo, etc.) */}
+          {notification.action && (
+            <button
+              onClick={() => {
+                notification.action?.onClick();
+                onDismiss(notification.id);
+              }}
+              className="mt-2 flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+            >
+              {language === "en" ? notification.action.label : notification.action.labelTh}
             </button>
           )}
 

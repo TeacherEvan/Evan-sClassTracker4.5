@@ -4,6 +4,9 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
+import { logger } from "@/lib/logger";
+import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-shortcuts";
+import { MIN_TOUCH_TARGET, FOCUS_RING } from "@/lib/accessibility-utils";
 import { useMutation, useQuery } from "convex/react";
 import { Copy, GraduationCap, Mail, Pencil, Phone, Plus, Trash2, User as UserIcon, X } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -48,6 +51,20 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const [selectedGrade, setSelectedGrade] = useState<string>("all");
     const [selectedClass, setSelectedClass] = useState<string>("all");
     const [showForm, setShowForm] = useState(false);
+
+    // Keyboard shortcuts
+    useKeyboardShortcuts([
+        {
+            ...COMMON_SHORTCUTS.NEW,
+            callback: () => !showForm && setShowForm(true),
+            disabled: showForm,
+        },
+        {
+            ...COMMON_SHORTCUTS.CLOSE,
+            callback: () => showForm && setShowForm(false),
+            disabled: !showForm,
+        },
+    ]);
     const [editingStudent, setEditingStudent] = useState<Id<"students"> | null>(null);
 
     // Form fields
@@ -391,7 +408,11 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                         `ไม่สามารถลบนักเรียนได้ ${result.failed} คน:\n${errorDetails}${moreErrors}`
                     )
                 );
-                console.error("Bulk delete errors:", result.errors);
+                logger.error("Bulk delete errors", result.errors, { 
+                    component: "StudentManagement",
+                    action: "bulkDelete",
+                    count: result.errors.length 
+                });
             }
 
             setSelectedStudents(new Set());
