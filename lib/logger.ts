@@ -4,8 +4,6 @@
  * Production-safe with environment checks
  */
 
-type LogLevel = "debug" | "info" | "warn" | "error";
-
 interface LogContext {
   component?: string;
   userId?: string;

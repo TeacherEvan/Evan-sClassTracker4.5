@@ -402,3 +402,170 @@ export const bulkUpdateClassStatus = mutation({
         };
     },
 });
+
+// Bulk update students (admin feature)
+export const bulkUpdateStudents = mutation({
+    args: {
+        studentIds: v.array(v.id("students")),
+        userId: v.id("users"), // Required: User performing the update
+        updates: v.object({
+            // Editable fields (firstName and lastName explicitly EXCLUDED)
+            nickname: v.optional(v.string()),
+            grade: v.optional(v.string()),
+            class: v.optional(v.string()),
+            schoolId: v.optional(v.id("schools")),
+            providerId: v.optional(v.id("providers")),
+            guardianId: v.optional(v.id("users")),
+            guardianTitle: v.optional(v.string()),
+            guardianName: v.optional(v.string()),
+            guardianPhone: v.optional(v.string()),
+            guardianEmail: v.optional(v.string()),
+            dateOfBirth: v.optional(v.number()),
+            area: v.optional(v.string()),
+            parentName: v.optional(v.string()),
+            parentPhone: v.optional(v.string()),
+            parentEmail: v.optional(v.string()),
+            secondaryParentName: v.optional(v.string()),
+            secondaryParentPhone: v.optional(v.string()),
+            allergies: v.optional(v.string()),
+            specialNeeds: v.optional(v.string()),
+            medicalNotes: v.optional(v.string()),
+            notes: v.optional(v.string()),
+        }),
+        reason: v.string(), // Required: Reason for bulk update (audit trail)
+    },
+    handler: async (ctx, args) => {
+        // ✅ SECURITY: Verify user exists and has appropriate privileges
+        const user = await ctx.db.get(args.userId);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        // ✅ SECURITY: Role-based authorization
+        // - Admins: Can update any students
+        // - Moderators/Teachers: Can update students from their school only
+        // - Guardians: Cannot bulk update
+        if (user.role === "guardian") {
+            throw new Error("Unauthorized: Guardians cannot bulk update students");
+        }
+
+        if (user.role !== "admin" && user.role !== "moderator" && user.role !== "teacher") {
+            throw new Error("Unauthorized: Insufficient permissions for bulk update");
+        }
+
+        // ✅ SECURITY: Validate batch size to prevent DoS
+        if (args.studentIds.length > 100) {
+            throw new Error("Maximum 100 students per bulk update");
+        }
+
+        // ✅ SECURITY: Validate reason (minimum 3 characters)
+        validateLength(args.reason, "Update reason", 500, 3);
+
+        // ✅ SECURITY: Validate update fields
+        if (args.updates.nickname) validateLength(args.updates.nickname, "Nickname", 100, 0);
+        if (args.updates.notes) validateLength(args.updates.notes, "Notes", 2000, 0);
+        if (args.updates.area) validateLength(args.updates.area, "Area", 100, 0);
+
+        // ✅ SECURITY: Rate limiting (5 operations per minute)
+        await checkRateLimit(ctx, {
+            key: `bulk-update-students-${args.userId}`,
+            limit: 5,
+            windowMs: 60000,
+        });
+
+        // Filter out undefined values from updates
+        const filteredUpdates = Object.fromEntries(
+            Object.entries(args.updates).filter(([, v]) => v !== undefined)
+        );
+
+        // Ensure no updates if all fields are undefined
+        if (Object.keys(filteredUpdates).length === 0) {
+            throw new Error("No update fields provided");
+        }
+
+        const results = [];
+        const errors = [];
+
+        for (let i = 0; i < args.studentIds.length; i++) {
+            const studentId = args.studentIds[i];
+            try {
+                // Check if student exists
+                const student = await ctx.db.get(studentId);
+                if (!student) {
+                    errors.push({
+                        index: i,
+                        studentId,
+                        studentName: "Unknown",
+                        error: "Student not found",
+                    });
+                    continue;
+                }
+
+                // ✅ SECURITY: School-based access control for non-admins
+                if (user.role !== "admin") {
+                    if (student.schoolId !== user.schoolId) {
+                        errors.push({
+                            index: i,
+                            studentId,
+                            studentName: `${student.firstName} ${student.lastName}`,
+                            error: "Cannot update students from other schools",
+                        });
+                        continue;
+                    }
+                }
+
+                // ✅ BUSINESS RULE: Validate class requirement for school-linked students
+                if (student.schoolId && filteredUpdates.class === "") {
+                    errors.push({
+                        index: i,
+                        studentId,
+                        studentName: `${student.firstName} ${student.lastName}`,
+                        error: "Class is required for school-linked students",
+                    });
+                    continue;
+                }
+
+                // Apply updates
+                await ctx.db.patch(studentId, filteredUpdates);
+
+                // ✅ AUDIT: Log bulk update action
+                await logAudit(ctx, {
+                    userId: args.userId,
+                    action: AuditActions.UPDATE_STUDENT,
+                    targetType: AuditTargetTypes.STUDENTS,
+                    targetId: studentId,
+                    targetName: `${student.firstName} ${student.lastName}`,
+                    reason: args.reason,
+                    schoolId: student.schoolId,
+                    metadata: {
+                        bulkOperation: true,
+                        updatedFields: Object.keys(filteredUpdates),
+                    },
+                });
+
+                results.push({
+                    index: i,
+                    studentId,
+                    studentName: `${student.firstName} ${student.lastName}`,
+                    success: true,
+                });
+            } catch (error) {
+                errors.push({
+                    index: i,
+                    studentId,
+                    studentName: "Unknown",
+                    error: error instanceof Error ? error.message : "Unknown error",
+                });
+            }
+        }
+
+        return {
+            total: args.studentIds.length,
+            successful: results.length,
+            failed: errors.length,
+            results,
+            errors,
+            message: `Updated ${results.length} of ${args.studentIds.length} students. ${errors.length} failed.`,
+        };
+    },
+});

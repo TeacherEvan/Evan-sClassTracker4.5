@@ -5,9 +5,7 @@ import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { UserRole } from "@/lib/types";
-import { logger } from "@/lib/logger";
 import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-shortcuts";
-import { MIN_TOUCH_TARGET, FOCUS_RING } from "@/lib/accessibility-utils";
 import { useMutation, useQuery } from "convex/react";
 import {
     AlertTriangle,

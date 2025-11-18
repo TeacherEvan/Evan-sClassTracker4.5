@@ -3,13 +3,13 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
-import type { User } from "@/lib/types";
 import { logger } from "@/lib/logger";
-import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-shortcuts";
-import { MIN_TOUCH_TARGET, FOCUS_RING } from "@/lib/accessibility-utils";
+import type { User } from "@/lib/types";
+import { COMMON_SHORTCUTS, useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
 import { useMutation, useQuery } from "convex/react";
 import { Copy, GraduationCap, Mail, Pencil, Phone, Plus, Trash2, User as UserIcon, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { BulkEditStudentsModal } from "./bulk-edit-students-modal";
 import { CollapsibleSection } from "./collapsible-section";
 import { CreateProviderModal } from "./create-provider-modal";
 import { PaginatedList } from "./paginated-list";
@@ -46,6 +46,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const removeStudent = useMutation(api.students.remove);
     const duplicateStudent = useMutation(api.students.duplicate);
     const bulkDeleteStudents = useMutation(api.bulkOperations.bulkDeleteStudents);
+    const bulkUpdateStudents = useMutation(api.bulkOperations.bulkUpdateStudents);
 
     const [selectedSchoolId, setSelectedSchoolId] = useState<Id<"schools"> | "guardian" | "all">("all");
     const [selectedGrade, setSelectedGrade] = useState<string>("all");
@@ -103,6 +104,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     // Bulk deletion state
     const [selectedStudents, setSelectedStudents] = useState<Set<Id<"students">>>(new Set());
     const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+    const [showBulkEditModal, setShowBulkEditModal] = useState(false);
 
     // Query students based on filter
     const students = useQuery(
@@ -115,7 +117,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     // ✅ PERFORMANCE: Memoize filtered students (avoid re-filtering on every render)
     const filteredStudents = useMemo(() => {
         if (!students) return undefined;
-        
+
         return students.filter((student) => {
             if (selectedSchoolId === "guardian") {
                 return !student.schoolId && student.guardianName;
@@ -412,10 +414,10 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                         `ไม่สามารถลบนักเรียนได้ ${result.failed} คน:\n${errorDetails}${moreErrors}`
                     )
                 );
-                logger.error("Bulk delete errors", result.errors, { 
+                logger.error("Bulk delete errors", result.errors, {
                     component: "StudentManagement",
                     action: "bulkDelete",
-                    count: result.errors.length 
+                    count: result.errors.length
                 });
             }
 
@@ -424,6 +426,48 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to bulk delete students");
             setShowBulkDeleteConfirm(false);
+        }
+    };
+
+    const handleBulkEditSubmit = async (updates: any, reason: string) => {
+        try {
+            const result = await bulkUpdateStudents({
+                studentIds: Array.from(selectedStudents),
+                userId: currentUser._id,
+                updates,
+                reason,
+            });
+
+            if (result.successful > 0) {
+                setSuccess(
+                    t(
+                        `Successfully updated ${result.successful} student(s)`,
+                        `อัปเดตนักเรียนสำเร็จ ${result.successful} คน`
+                    )
+                );
+                setSelectedStudents(new Set()); // Clear selection
+            }
+
+            if (result.failed > 0) {
+                const errorDetails = result.errors
+                    .slice(0, 5)
+                    .map((err) => `• ${err.studentName || 'Unknown'}: ${err.error}`)
+                    .join('\n');
+                const moreErrors = result.errors.length > 5
+                    ? `\n...and ${result.errors.length - 5} more`
+                    : '';
+                setError(
+                    t(
+                        `Failed to update ${result.failed} student(s):\n${errorDetails}${moreErrors}`,
+                        `ไม่สามารถอัปเดตนักเรียนได้ ${result.failed} คน:\n${errorDetails}${moreErrors}`
+                    )
+                );
+            }
+
+            setShowBulkEditModal(false);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to bulk update students");
+            setShowBulkEditModal(false);
         }
     };
 
@@ -571,6 +615,13 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                 <span className="text-sm text-gray-600 dark:text-gray-400">
                                     {t(`${selectedStudents.size} selected`, `เลือก ${selectedStudents.size} คน`)}
                                 </span>
+                                <button
+                                    onClick={() => setShowBulkEditModal(true)}
+                                    className="flex items-center gap-2 px-3 py-1.5 text-sm bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                                >
+                                    <Pencil className="w-4 h-4" />
+                                    {t("Edit Selected", "แก้ไขที่เลือก")}
+                                </button>
                                 <button
                                     onClick={() => setShowBulkDeleteConfirm(true)}
                                     className="flex items-center gap-2 px-3 py-1.5 text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
@@ -1303,6 +1354,20 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                         setProviderId(newProviderId); // Auto-select new provider
                         setSchoolId(""); // Clear school
                         setShowCreateProvider(false);
+                    }}
+                />
+            )}
+
+            {/* Bulk Edit Students Modal */}
+            {showBulkEditModal && (
+                <BulkEditStudentsModal
+                    selectedStudentIds={Array.from(selectedStudents)}
+                    currentUserId={currentUser._id}
+                    onClose={() => setShowBulkEditModal(false)}
+                    onSuccess={() => {
+                        setSelectedStudents(new Set());
+                        setShowBulkEditModal(false);
+                        setSuccess(t("Students updated successfully!", "อัปเดตนักเรียนสำเร็จ!"));
                     }}
                 />
             )}
