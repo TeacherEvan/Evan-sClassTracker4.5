@@ -63,16 +63,16 @@ export async function login(page: Page, user: TestUser) {
   // 2. Database init button (if no users exist)
   // 3. Loading spinner to disappear
 
-  // First, wait for the page to finish loading (max 30 seconds for Convex connection)
-  await page.waitForLoadState('networkidle', { timeout: 30000 });
+  // First, wait for the page to finish loading (max 15 seconds for Convex connection)
+  await page.waitForLoadState('networkidle', { timeout: 15000 });
 
-  // Wait for either login form or database init (with longer timeout)
+  // Wait for either login form or database init (optimized timeout)
   const loginFormSelector = '#username, input[type="text"]';
   const initButtonSelector = 'button:has-text("Initialize Database"), button:has-text("เริ่มต้นฐานข้อมูล")';
 
   try {
-    // Wait for login form to appear (might take time for Convex to connect)
-    await page.waitForSelector(`${loginFormSelector}, ${initButtonSelector}`, { timeout: 30000 });
+    // Wait for login form to appear (optimized timeout)
+    await page.waitForSelector(`${loginFormSelector}, ${initButtonSelector}`, { timeout: 15000 });
   } catch (error) {
     // If timeout, take a screenshot for debugging
     await page.screenshot({ path: 'test-results/login-timeout-debug.png', fullPage: true });
@@ -123,7 +123,7 @@ export async function login(page: Page, user: TestUser) {
     await changePasswordButton.click();
 
     // Wait for password change to complete and app to load
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(1500);
 
     console.log(`[TEST] Password changed successfully for user: ${user.username}`);
   }
@@ -152,22 +152,22 @@ export async function login(page: Page, user: TestUser) {
     console.log(`[TEST] Startup wizard detected for user: ${user.username}, dismissing...`);
 
     // Wait a moment for the wizard to fully render
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(500);
 
     // Look for close button with improved selectors (matches closeAllOverlays logic)
     const wizardCloseButton = page.locator('button[aria-label*="Close"], button[aria-label*="ปิด"], button:has(svg.lucide-x)').first();
-    if (await wizardCloseButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+    if (await wizardCloseButton.isVisible({ timeout: 2000 }).catch(() => false)) {
       console.log(`[TEST] Clicking wizard close button`);
       // Wait for button to be stable and clickable
-      await wizardCloseButton.waitFor({ state: 'visible', timeout: 3000 });
-      await wizardCloseButton.click({ timeout: 5000 });
-      await page.waitForTimeout(1000);
+      await wizardCloseButton.waitFor({ state: 'visible', timeout: 2000 });
+      await wizardCloseButton.click({ timeout: 3000 });
+      await page.waitForTimeout(500);
       console.log(`[TEST] Wizard close button clicked`);
     } else {
       // If no close button found, press Escape key
       console.log(`[TEST] No close button found, pressing Escape`);
       await page.keyboard.press('Escape');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(300);
     }
 
     console.log(`[TEST] Startup wizard dismissed for user: ${user.username}`);
@@ -175,13 +175,13 @@ export async function login(page: Page, user: TestUser) {
 
   // DON'T call closeAllOverlays here - we just closed the wizard manually
   // Let the app settle after wizard dismissal
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(500);
 
   // Verify not on login page anymore - look for the Monthly Calendar heading (bilingual)
   // After successful login, the app displays "Monthly Calendar" or "ปฏิทินรายเดือน"
   await expect(
     page.locator('h2:has-text("Monthly Calendar"), h2:has-text("ปฏิทินรายเดือน")').first()
-  ).toBeVisible({ timeout: 10000 });
+  ).toBeVisible({ timeout: 5000 });
 
   console.log(`[TEST] Login completed successfully for user: ${user.username}`);
 }
@@ -343,29 +343,29 @@ export async function navigateToTab(page: Page, tabName: string) {
   ).first();
 
   // Wait for tab button to be clickable
-  await tabButton.waitFor({ state: 'visible', timeout: 10000 });
+  await tabButton.waitFor({ state: 'visible', timeout: 5000 });
 
   // Click with retry logic
   let clicked = false;
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      await tabButton.click({ timeout: 5000 });
+      await tabButton.click({ timeout: 3000 });
       clicked = true;
       break;
     } catch (error) {
-      if (attempt === 2) throw error;
+      if (attempt === 1) throw error;
       // Try closing overlays again and retry
       await closeAllOverlays(page);
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(300);
     }
   }
 
   if (!clicked) {
-    throw new Error(`Failed to click tab "${tabName}" after 3 attempts`);
+    throw new Error(`Failed to click tab "${tabName}" after 2 attempts`);
   }
 
   // Wait for content to load
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(500);
 }
 
 /**

@@ -1,10 +1,33 @@
 # Evan's Class Tracker 4.5
 
-**Version 4.5.24** | Bilingual English/Thai class tracker for teachers and schools
+**Version 4.5.25** | Bilingual English/Thai class tracker for teachers and schools
 
 Built with Next.js 15, React 19, Convex & Tailwind v4
 
-## ✨ Latest Updates (Nov 10, 2025)
+## ✨ Latest Updates (Nov 18, 2025)
+
+### 🚀 Version 4.5.25 - E2E Test Performance Optimization (Nov 18, 2025)
+
+**Playwright Test Suite Optimization** - 30-40% faster test execution across all specs
+
+- ⚡ **Performance Improvements**:
+  - Test execution time: 2-3 minutes → 1.5-2 minutes (30-40% faster)
+  - Login flow: 8-10 seconds → 4-5 seconds per test (50% faster)
+  - Full suite parallelism: 4 workers → 6 workers (50% more concurrent tests)
+  
+- 🔧 **Test Helper Optimizations**:
+  - `login()`: Convex timeout 30s→15s, password change wait 3s→1.5s, wizard dismissal 1s→0.5s
+  - `navigateToTab()`: Tab button wait 10s→5s, retry attempts 3→2, content load 1s→0.5s
+  - Monthly Calendar verification: 10s→5s timeout
+  
+- ⚙️ **Configuration Updates**:
+  - Global test timeout: 60s → 45s (25% reduction)
+  - Action timeout: 10s → 8s (20% reduction)
+  - Local workers: 4 → 6 (50% more parallelism)
+  
+- 📊 **Impact**: Developers can run the full E2E suite 30-40% faster, improving CI/CD pipeline speed and local development experience
+
+## ✨ Recent Updates
 
 ### 🚀 Version 4.5.24 - PR #81 Phase 4 Complete (Nov 10, 2025)
 

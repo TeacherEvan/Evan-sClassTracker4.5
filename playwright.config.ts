@@ -9,8 +9,8 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/e2e',
 
-  /* Maximum time one test can run */
-  timeout: 60 * 1000,
+  /* Maximum time one test can run - OPTIMIZED: Reduced from 60s to 45s */
+  timeout: 45 * 1000,
 
   /* Run tests in files in parallel AND within files (OPTIMIZED) */
   fullyParallel: true,
@@ -21,8 +21,8 @@ export default defineConfig({
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
 
-  /* OPTIMIZED: Limit workers for stability and speed */
-  workers: process.env.CI ? 2 : 4,
+  /* OPTIMIZED: Limit workers for stability and speed - Increased local workers from 4 to 6 */
+  workers: process.env.CI ? 2 : 6,
 
   /* OPTIMIZED: Fail fast on CI to save time */
   maxFailures: process.env.CI ? 10 : undefined,
@@ -48,8 +48,8 @@ export default defineConfig({
     /* OPTIMIZED: Disable video locally (saves overhead), enable on CI failures */
     video: process.env.CI ? 'retain-on-failure' : 'off',
 
-    /* Default timeout for each action (click, fill, etc.) */
-    actionTimeout: 10 * 1000,
+    /* Default timeout for each action (click, fill, etc.) - OPTIMIZED: Reduced from 10s to 8s */
+    actionTimeout: 8 * 1000,
   },
 
   /* Configure projects for different browsers */
