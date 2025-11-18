@@ -1,10 +1,43 @@
 "use client";
 
+import BottomPanel from "@/components/bottom-panel";
 import RightPanel from "@/components/right-panel";
 import SidebarNav from "@/components/sidebar-nav";
 import { Id } from "@/convex/_generated/dataModel";
-import { useState } from "react";
+import { useLanguage } from "@/lib/language-context";
+import type { User } from "@/lib/types";
+import { lazy, Suspense, useMemo, useState } from "react";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
+// Lazy-loaded components (same as page.tsx)
+const MonthlyCalendar = lazy(() => import("@/components/monthly-calendar").then(m => ({ default: m.MonthlyCalendar })));
+const ClassBooking = lazy(() => import("@/components/class-booking").then(m => ({ default: m.ClassBooking })));
+const MessagingHub = lazy(() => import("@/components/messaging-hub").then(m => ({ default: m.MessagingHub })));
+const NotificationForm = lazy(() => import("@/components/notification-form").then(m => ({ default: m.NotificationForm })));
+const NotificationList = lazy(() => import("@/components/notification-list").then(m => ({ default: m.NotificationList })));
+const SchoolManagement = lazy(() => import("@/components/school-management").then(m => ({ default: m.SchoolManagement })));
+const LocationManagement = lazy(() => import("@/components/location-management").then(m => ({ default: m.LocationManagement })));
+const StudentManagement = lazy(() => import("@/components/student-management").then(m => ({ default: m.StudentManagement })));
+const ModeratorListView = lazy(() => import("@/components/moderator-list-view").then(m => ({ default: m.ModeratorListView })));
+const UserManagement = lazy(() => import("@/components/user-management").then(m => ({ default: m.UserManagement })));
+const SimpleAnalytics = lazy(() => import("@/components/simple-analytics").then(m => ({ default: m.SimpleAnalytics })));
+const TeacherActivityDashboard = lazy(() => import("@/components/teacher-activity-dashboard").then(m => ({ default: m.TeacherActivityDashboard })));
+const TeacherHelper = lazy(() => import("@/components/teacher-helper").then(m => ({ default: m.TeacherHelper })));
+const TeacherHelperAdmin = lazy(() => import("@/components/teacher-helper-admin").then(m => ({ default: m.TeacherHelperAdmin })));
+const GuardianDashboard = lazy(() => import("@/components/guardian-dashboard").then(m => ({ default: m.GuardianDashboard })));
+const DeviceTestingDashboard = lazy(() => import("@/components/device-testing-dashboard"));
+const AdminContactRequests = lazy(() => import("@/components/admin-contact-requests").then(m => ({ default: m.AdminContactRequests })));
+const AdminNotificationWindows = lazy(() => import("@/components/admin-notification-windows").then(m => ({ default: m.AdminNotificationWindows })));
+const AdminAppUpdates = lazy(() => import("@/components/admin-app-updates").then(m => ({ default: m.AdminAppUpdates })));
+const AdminDeletedStudentsDashboard = lazy(() => import("@/components/admin-deleted-students-dashboard").then(m => ({ default: m.AdminDeletedStudentsDashboard })));
+const EventManagement = lazy(() => import("@/components/event-management").then(m => ({ default: m.EventManagement })));
+const SangsomSeedButton = lazy(() => import("@/components/sangsom-seed-button").then(m => ({ default: m.SangsomSeedButton })));
+const PrivateClassesSeedButton = lazy(() => import("@/components/private-classes-seed-button").then(m => ({ default: m.PrivateClassesSeedButton })));
+const SangsomStudentImportButton = lazy(() => import("@/components/sangsom-student-import-button").then(m => ({ default: m.SangsomStudentImportButton })));
+const SangsomMigrationButton = lazy(() => import("@/components/sangsom-migration-button").then(m => ({ default: m.SangsomMigrationButton })));
+const SangsomDeleteButton = lazy(() => import("@/components/sangsom-delete-button").then(m => ({ default: m.SangsomDeleteButton })));
+
+// Extended ViewType to include all tabs from page.tsx
 export type ViewType =
     | "calendar"
     | "classes"
@@ -16,65 +49,382 @@ export type ViewType =
     | "locations"
     | "resources"
     | "analytics"
-    | "providers";
+    | "providers"
+    | "notifications"
+    | "users"
+    | "activity"
+    | "testing"
+    | "contact_requests"
+    | "notification_windows"
+    | "app_updates"
+    | "deleted_students"
+    | "data_import";
+
+export type UserRole = "admin" | "moderator" | "teacher" | "guardian";
 
 interface WorkspaceLayoutProps {
     userId: Id<"users">;
-    userRole: string;
+    userRole: UserRole;
+    userSchoolId?: Id<"schools">;
     children?: React.ReactNode;
 }
 
-export default function WorkspaceLayout({ userId, userRole, children }: WorkspaceLayoutProps) {
+// Loading fallback component (outside component to prevent recreation on every render)
+const LoadingFallback = () => (
+    <div className="flex items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+);
+
+export default function WorkspaceLayout({ userId, userRole, userSchoolId, children }: WorkspaceLayoutProps) {
+    const { t } = useLanguage();
     const [activeView, setActiveView] = useState<ViewType>("calendar");
     const [rightPanelVisible, setRightPanelVisible] = useState(true);
-    // const [bottomPanelVisible, setBottomPanelVisible] = useState(false); // TODO: Restore when bottom-panel component exists
+    const [bottomPanelVisible, setBottomPanelVisible] = useState(false);
 
-    return (
-        <div className="grid h-screen overflow-hidden">
-            {/* CSS Grid Layout - Desktop (>1024px) */}
-            <div className="hidden lg:grid lg:grid-cols-[240px_1fr_320px] lg:grid-rows-[1fr_240px] h-full">
-                {/* Left Sidebar - spans both rows */}
-                <aside className="row-span-2 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                    <SidebarNav
-                        activeView={activeView}
-                        onViewChange={setActiveView}
-                        userRole={userRole}
-                    />
-                </aside>
+    // Memoize currentUser object to prevent recreation on every render
+    const currentUser: User = useMemo(() => ({
+        _id: userId,
+        role: userRole,
+        schoolId: userSchoolId,
+        username: "user", // Placeholder - components load full user if needed
+        requirePasswordChange: false,
+        createdAt: Date.now()
+    }), [userId, userRole, userSchoolId]);
 
-                {/* Main Content - top row only */}
-                <main className="row-span-1 overflow-y-auto bg-white dark:bg-gray-800">
-                    {children}
-                </main>
+    // Memoize renderContent to prevent recreation on unrelated state changes
+    const renderContent = useMemo(() => {
+        switch (activeView) {
+            case "calendar":
+                return (
+                    <Suspense fallback={<LoadingFallback />}>
+                        <MonthlyCalendar currentUser={currentUser} />
+                    </Suspense>
+                );
 
-                {/* Right Panel - spans both rows, conditionally rendered */}
-                {rightPanelVisible && (
-                    <aside className="row-span-2 border-l border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                        <RightPanel
-                            userId={userId}
-                            onClose={() => setRightPanelVisible(false)}
-                        />
-                    </aside>
-                )}
+            case "classes":
+                return (
+                    <Suspense fallback={<LoadingFallback />}>
+                        <ClassBooking userId={userId} userRole={userRole} userSchoolId={userSchoolId} />
+                    </Suspense>
+                );
 
-                {/* Bottom Panel - spans left nav + main content, conditionally rendered */}
-                {/* TODO: Restore when bottom-panel component exists
-                {bottomPanelVisible && (
-                    <footer className="col-span-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                        <BottomPanel
-                            userId={userId}
+            case "events":
+                return (
+                    <Suspense fallback={<LoadingFallback />}>
+                        <EventManagement userId={userId} userRole={userRole} schoolId={userSchoolId} />
+                    </Suspense>
+                );
+
+            case "messages":
+                return (
+                    <Suspense fallback={<LoadingFallback />}>
+                        <MessagingHub currentUser={currentUser} />
+                    </Suspense>
+                );
+
+            case "analytics":
+                if (userRole === "moderator" && userSchoolId) {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <SimpleAnalytics
+                                schoolId={userSchoolId}
+                                currentUserId={userId}
+                                currentUserRole={userRole}
+                                currentUser={currentUser}
+                            />
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            case "activity":
+                if (userRole === "moderator" && userSchoolId) {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <TeacherActivityDashboard schoolId={userSchoolId} moderatorId={userId} />
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            case "resources":
+                if (userRole === "admin" || userRole === "teacher") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            {userRole === "admin" ? (
+                                <TeacherHelperAdmin currentUser={currentUser} />
+                            ) : (
+                                <TeacherHelper currentUser={currentUser} />
+                            )}
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            case "notifications":
+                return (
+                    <Suspense fallback={<LoadingFallback />}>
+                        {userRole === "admin" && <NotificationForm />}
+                        <NotificationList userId={userId} currentUser={currentUser} />
+                    </Suspense>
+                );
+
+            case "schools":
+                if (userRole === "admin") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <SchoolManagement currentUser={currentUser} />
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            case "locations":
+                if (userRole === "admin" || userRole === "moderator") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <LocationManagement
+                                userId={userId}
+                                schoolId={userRole === "moderator" ? userSchoolId : undefined}
+                            />
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            case "students":
+                if (userRole === "admin" || userRole === "moderator") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <StudentManagement currentUser={currentUser} />
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            case "moderators":
+                if (userRole === "admin") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <ModeratorListView />
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            case "users":
+                if (userRole === "admin") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <UserManagement currentUserId={userId} />
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            case "testing":
+                if (userRole === "admin") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <DeviceTestingDashboard />
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            case "contact_requests":
+                if (userRole === "admin") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <AdminContactRequests currentUserId={userId} />
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            case "deleted_students":
+                if (userRole === "admin" || userRole === "moderator") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <AdminDeletedStudentsDashboard
+                                userId={userId}
+                                onClose={() => setActiveView("calendar")}
+                            />
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            case "notification_windows":
+                if (userRole === "admin") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <AdminNotificationWindows currentUserId={userId} />
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            case "app_updates":
+                if (userRole === "admin") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <AdminAppUpdates currentUserId={userId} />
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            case "data_import":
+                if (userRole === "admin") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <div className="max-w-4xl mx-auto p-4">
+                                <div className="space-y-6">
+                                    <div>
+                                        <h2 className="text-2xl font-bold mb-2">
+                                            {t("Data Import & Seeding", "นำเข้าและเพิ่มข้อมูล")}
+                                        </h2>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            {t(
+                                                "Import bulk data from external sources or seed test data",
+                                                "นำเข้าข้อมูลจำนวนมากจากแหล่งภายนอกหรือเพิ่มข้อมูลทดสอบ"
+                                            )}
+                                        </p>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <SangsomSeedButton />
+                                        <PrivateClassesSeedButton />
+                                        <SangsomStudentImportButton />
+                                        <SangsomMigrationButton userId={userId} />
+                                        <SangsomDeleteButton userId={userId} />
+                                    </div>
+                                </div>
+                            </div>
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            default:
+                // Guardian dashboard as default for guardians
+                if (userRole === "guardian") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <GuardianDashboard currentUser={currentUser} />
+                        </Suspense>
+                    );
+                }
+                return children;
+        }
+    }, [activeView, currentUser, userId, userRole, userSchoolId, t, children]); return (
+        <div className="h-screen w-screen overflow-hidden">
+            {/* Desktop Layout: Resizable Panels (>1024px) */}
+            <div className="hidden lg:block h-full">
+                <PanelGroup direction="horizontal" autoSaveId="workspace-layout-desktop">
+                    {/* Left Sidebar Panel */}
+                    <Panel
+                        defaultSize={18}
+                        minSize={15}
+                        maxSize={30}
+                        className="bg-gray-50 dark:bg-gray-900"
+                        id="sidebar"
+                        order={1}
+                    >
+                        <SidebarNav
+                            activeView={activeView}
+                            onViewChange={setActiveView}
                             userRole={userRole}
-                            onClose={() => setBottomPanelVisible(false)}
                         />
-                    </footer>
-                )}
-                */}
+                    </Panel>
+
+                    <PanelResizeHandle className="w-1 bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 dark:hover:bg-blue-600 transition-colors" />
+
+                    {/* Main Content Area with Optional Bottom Panel */}
+                    <Panel minSize={30} order={2}>
+                        <PanelGroup direction="vertical" autoSaveId="workspace-layout-vertical">
+                            {/* Main Content Panel */}
+                            <Panel
+                                defaultSize={bottomPanelVisible ? 70 : 100}
+                                minSize={40}
+                                className="bg-white dark:bg-gray-800 overflow-y-auto"
+                                id="main-content"
+                                order={1}
+                            >
+                                <div className="h-full p-4 md:p-6">
+                                    {renderContent}
+                                </div>
+                            </Panel>                            {/* Bottom Panel (Collapsible) */}
+                            {bottomPanelVisible && (
+                                <>
+                                    <PanelResizeHandle className="h-1 bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 dark:hover:bg-blue-600 transition-colors" />
+                                    <Panel
+                                        defaultSize={30}
+                                        minSize={15}
+                                        maxSize={50}
+                                        className="border-t border-gray-200 dark:border-gray-700"
+                                        id="bottom-panel"
+                                        order={2}
+                                    >
+                                        <BottomPanel
+                                            userId={userId}
+                                            userRole={userRole}
+                                            onClose={() => setBottomPanelVisible(false)}
+                                        />
+                                    </Panel>
+                                </>
+                            )}
+                        </PanelGroup>
+                    </Panel>
+
+                    {/* Right Panel (Collapsible) */}
+                    {rightPanelVisible && (
+                        <>
+                            <PanelResizeHandle className="w-1 bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 dark:hover:bg-blue-600 transition-colors" />
+                            <Panel
+                                defaultSize={22}
+                                minSize={18}
+                                maxSize={35}
+                                className="bg-gray-50 dark:bg-gray-900"
+                                id="right-panel"
+                                order={3}
+                            >
+                                <RightPanel
+                                    userId={userId}
+                                    onClose={() => setRightPanelVisible(false)}
+                                />
+                            </Panel>
+                        </>
+                    )}
+                </PanelGroup>
+
+                {/* Toggle Buttons for Panels */}
+                <div className="fixed bottom-4 right-4 flex flex-col gap-2 z-50">
+                    {!bottomPanelVisible && (
+                        <button
+                            onClick={() => setBottomPanelVisible(true)}
+                            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg shadow-lg transition-colors"
+                            title="Show Activity Panel"
+                        >
+                            ▲ Activity
+                        </button>
+                    )}
+                    {!rightPanelVisible && (
+                        <button
+                            onClick={() => setRightPanelVisible(true)}
+                            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg shadow-lg transition-colors"
+                            title="Show Right Panel"
+                        >
+                            ◀ Panel
+                        </button>
+                    )}
+                </div>
             </div>
 
-            {/* Tablet Layout (768px - 1024px) */}
-            <div className="hidden md:grid lg:hidden md:grid-cols-[60px_1fr] md:grid-rows-[1fr_40px] h-full">
-                {/* Left Sidebar (icons only) */}
-                <aside className="row-span-2 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+            {/* Tablet Layout (768px - 1024px) - Static Grid */}
+            <div className="hidden md:grid lg:hidden md:grid-cols-[60px_1fr] h-full">
+                <aside className="border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                     <SidebarNav
                         activeView={activeView}
                         onViewChange={setActiveView}
@@ -83,61 +433,17 @@ export default function WorkspaceLayout({ userId, userRole, children }: Workspac
                     />
                 </aside>
 
-                {/* Main Content */}
-                <main className="row-span-1 overflow-y-auto bg-white dark:bg-gray-800">
-                    {children}
+                <main className="overflow-y-auto bg-white dark:bg-gray-800">
+                    <div className="p-4 md:p-6">
+                        {renderContent}
+                    </div>
                 </main>
-
-                {/* Bottom Panel (collapsed by default) */}
-                {/* TODO: Restore when bottom-panel component exists
-                <footer className="col-span-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                    <button
-                        onClick={() => setBottomPanelVisible(!bottomPanelVisible)}
-                        className="w-full py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-                    >
-                        {bottomPanelVisible ? "▼ Collapse" : "▲ Expand"}
-                    </button>
-                    {bottomPanelVisible && (
-                        <BottomPanel
-                            userId={userId}
-                            userRole={userRole}
-                            onClose={() => setBottomPanelVisible(false)}
-                        />
-                    )}
-                </footer>
-                */}
+            </div>            {/* Mobile Layout (<768px) - Full Width */}
+            <div className="md:hidden h-full overflow-y-auto bg-white dark:bg-gray-800">
+                <div className="p-4">
+                    {renderContent}
+                </div>
             </div>
-
-            {/* Mobile Layout (<768px) */}
-            <div className="md:hidden flex flex-col h-full">
-                {/* Main Content (full width) */}
-                <main className="flex-1 overflow-y-auto bg-white dark:bg-gray-800">
-                    {children}
-                </main>
-            </div>
-
-            {/* Toggle buttons for collapsed panels (desktop) */}
-            {!rightPanelVisible && (
-                <button
-                    onClick={() => setRightPanelVisible(true)}
-                    className="hidden lg:block fixed right-0 top-1/2 -translate-y-1/2 bg-gray-200 dark:bg-gray-700 p-2 rounded-l-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-                    aria-label="Show right panel"
-                >
-                    ◀
-                </button>
-            )}
-
-            {/* TODO: Restore when bottom-panel component exists
-            {!bottomPanelVisible && (
-                <button
-                    onClick={() => setBottomPanelVisible(true)}
-                    className="hidden lg:block fixed bottom-0 left-1/2 -translate-x-1/2 bg-gray-200 dark:bg-gray-700 px-4 py-1 rounded-t-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-                    aria-label="Show bottom panel"
-                >
-                    ▲
-                </button>
-            )}
-            */}
         </div>
     );
 }

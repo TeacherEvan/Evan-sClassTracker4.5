@@ -336,9 +336,10 @@ export async function navigateToTab(page: Page, tabName: string) {
   // Close any overlays that might block navigation
   await closeAllOverlays(page);
 
-  // Try to find and click the tab button with bilingual support
+  // Target sidebar navigation buttons specifically (inside <ul> > <li> structure)
+  // This avoids matching other buttons on the page (modals, forms, etc.)
   const tabButton = page.locator(
-    `button:has-text("${tabName}"), button:has-text("${thaiName}"), a:has-text("${tabName}"), a:has-text("${thaiName}")`
+    `nav ul li button:has-text("${tabName}"), nav ul li button:has-text("${thaiName}")`
   ).first();
 
   // Wait for tab button to be clickable

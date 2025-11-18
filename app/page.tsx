@@ -2,7 +2,7 @@
 
 // ✅ PERFORMANCE: Lazy load heavy components for code splitting (40-50% faster initial load)
 import { useMutation, useQuery } from "convex/react";
-import { AlertTriangle, BarChart3, Bell, BookOpen, Building2, Calendar, CalendarDays, FlaskConical, GraduationCap, HelpCircle, LogOut, MapPin, MessageSquare, RefreshCw, Shield, Users } from "lucide-react";
+import { GraduationCap, HelpCircle, LogOut, RefreshCw } from "lucide-react";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 // Core components (always loaded)
@@ -17,6 +17,7 @@ import { NotificationWindow } from "@/components/notification-window";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
 import { RollingVitruvianMen } from "@/components/rolling-vitruvian-men";
 import { StartupWindow } from "@/components/startup-window";
+import WorkspaceLayout, { type UserRole } from "@/app/workspace-layout";
 import { api } from "@/convex/_generated/api";
 import { isDesktopDevice } from "@/lib/device-detection";
 // import { initServiceWorker } from "@/lib/init-sw"; // DISABLED: Service worker not implemented
@@ -26,36 +27,10 @@ import { toast as toastManager } from "@/lib/toast";
 import type { User } from "@/lib/types";
 import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
 
-// Lazy-loaded components (loaded on demand)
-const MonthlyCalendar = lazy(() => import("@/components/monthly-calendar").then(m => ({ default: m.MonthlyCalendar })));
-const ClassBooking = lazy(() => import("@/components/class-booking").then(m => ({ default: m.ClassBooking })));
-const MessagingHub = lazy(() => import("@/components/messaging-hub").then(m => ({ default: m.MessagingHub })));
-const NotificationForm = lazy(() => import("@/components/notification-form").then(m => ({ default: m.NotificationForm })));
-const NotificationList = lazy(() => import("@/components/notification-list").then(m => ({ default: m.NotificationList })));
-const SchoolManagement = lazy(() => import("@/components/school-management").then(m => ({ default: m.SchoolManagement })));
-const LocationManagement = lazy(() => import("@/components/location-management").then(m => ({ default: m.LocationManagement })));
-const StudentManagement = lazy(() => import("@/components/student-management").then(m => ({ default: m.StudentManagement })));
-const ModeratorListView = lazy(() => import("@/components/moderator-list-view").then(m => ({ default: m.ModeratorListView })));
-const UserManagement = lazy(() => import("@/components/user-management").then(m => ({ default: m.UserManagement })));
-const SimpleAnalytics = lazy(() => import("@/components/simple-analytics").then(m => ({ default: m.SimpleAnalytics })));
-const TeacherActivityDashboard = lazy(() => import("@/components/teacher-activity-dashboard").then(m => ({ default: m.TeacherActivityDashboard })));
-const TeacherHelper = lazy(() => import("@/components/teacher-helper").then(m => ({ default: m.TeacherHelper })));
-const TeacherHelperAdmin = lazy(() => import("@/components/teacher-helper-admin").then(m => ({ default: m.TeacherHelperAdmin })));
-const GuardianDashboard = lazy(() => import("@/components/guardian-dashboard").then(m => ({ default: m.GuardianDashboard })));
-const DeviceTestingDashboard = lazy(() => import("@/components/device-testing-dashboard"));
+// Lazy-loaded modals and overlays (loaded on demand - these stay in page.tsx)
 const PostClassNotesModal = lazy(() => import("@/components/post-class-notes-modal").then(m => ({ default: m.PostClassNotesModal })));
 const UpdateAnnouncementModal = lazy(() => import("@/components/update-announcement-modal").then(m => ({ default: m.UpdateAnnouncementModal })));
-const AdminContactRequests = lazy(() => import("@/components/admin-contact-requests").then(m => ({ default: m.AdminContactRequests })));
-const AdminNotificationWindows = lazy(() => import("@/components/admin-notification-windows").then(m => ({ default: m.AdminNotificationWindows })));
-const AdminAppUpdates = lazy(() => import("@/components/admin-app-updates").then(m => ({ default: m.AdminAppUpdates })));
-const AdminDeletedStudentsDashboard = lazy(() => import("@/components/admin-deleted-students-dashboard").then(m => ({ default: m.AdminDeletedStudentsDashboard })));
 const ClassCountModal = lazy(() => import("@/components/class-count-modal").then(m => ({ default: m.ClassCountModal })));
-const SangsomSeedButton = lazy(() => import("@/components/sangsom-seed-button").then(m => ({ default: m.SangsomSeedButton })));
-const PrivateClassesSeedButton = lazy(() => import("@/components/private-classes-seed-button").then(m => ({ default: m.PrivateClassesSeedButton })));
-const SangsomStudentImportButton = lazy(() => import("@/components/sangsom-student-import-button").then(m => ({ default: m.SangsomStudentImportButton })));
-const SangsomMigrationButton = lazy(() => import("@/components/sangsom-migration-button").then(m => ({ default: m.SangsomMigrationButton })));
-const SangsomDeleteButton = lazy(() => import("@/components/sangsom-delete-button").then(m => ({ default: m.SangsomDeleteButton })));
-const EventManagement = lazy(() => import("@/components/event-management").then(m => ({ default: m.EventManagement })));
 const HelpWindow = lazy(() => import("@/components/help-window").then(m => ({ default: m.HelpWindow })));
 
 export default function Home() {
@@ -63,7 +38,6 @@ export default function Home() {
   const users = useQuery(api.users.list, {});
   const [user, setUser] = useState<User | null>(null);
   const [showPasswordChange, setShowPasswordChange] = useState(false);
-  const [activeTab, setActiveTab] = useState<"notifications" | "users" | "classes" | "calendar" | "schools" | "students" | "messages" | "moderators" | "analytics" | "resources" | "locations" | "activity" | "testing" | "contact_requests" | "notification_windows" | "app_updates" | "data_import" | "events" | "deleted_students">("calendar");
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
   const [isDesktop, setIsDesktop] = useState(false);
   const [showPostClassNotes, setShowPostClassNotes] = useState(false);
@@ -72,12 +46,6 @@ export default function Home() {
   const [showStartupWindow, setShowStartupWindow] = useState(false);
   const [showHelpWindow, setShowHelpWindow] = useState(false);
   const hasCheckedStartupWindow = useRef(false);
-
-  // Query unread message count for current user
-  const unreadCount = useQuery(
-    api.messages.unreadCount,
-    user ? { userId: user._id } : "skip"
-  );
 
   // Query classes needing feedback for teachers
   const classesNeedingFeedback = useQuery(
@@ -102,13 +70,6 @@ export default function Home() {
 
   // Mark update as viewed mutation
   const markUpdateAsViewed = useMutation(api.appUpdates.markAsViewed);
-
-  // Loading fallback component for lazy-loaded components
-  const LoadingFallback = () => (
-    <div className="flex items-center justify-center p-8">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-    </div>
-  );
 
   // Subscribe to toast manager
   useEffect(() => {
@@ -246,7 +207,6 @@ export default function Home() {
   const handleLogout = () => {
     setUser(null);
     setShowPasswordChange(false);
-    setActiveTab("calendar");
     // Clear localStorage
     clearUserSession();
   };
@@ -255,9 +215,8 @@ export default function Home() {
     // Special case: "help" triggers the help window modal instead of changing tabs
     if (tab === "help") {
       setShowHelpWindow(true);
-    } else {
-      setActiveTab(tab as typeof activeTab);
     }
+    // Note: Navigation is now handled by WorkspaceLayout internally
   };
 
   const handleStartupWindowClose = () => {
@@ -468,517 +427,64 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Mobile Bottom Navigation - Hidden on desktop */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 z-50 md:hidden safe-area-inset-bottom shadow-lg">
-        <div className="flex justify-around items-center h-16 px-2">
-          <button
-            onClick={() => setActiveTab("calendar")}
-            className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95 ${activeTab === "calendar"
-              ? "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 shadow-md"
-              : "text-gray-700 dark:text-gray-300 bg-gray-100/50 dark:bg-gray-700/50"
-              }`}
-          >
-            <CalendarDays className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("Calendar", "ปฏิทิน")}</span>
-          </button>
+      {/* WorkspaceLayout - VS Code-style resizable panels */}
+      <WorkspaceLayout
+        userId={user._id}
+        userRole={user.role as UserRole}
+        userSchoolId={user.schoolId}
+      />
 
-          <button
-            onClick={() => setActiveTab("classes")}
-            className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95 ${activeTab === "classes"
-              ? "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 shadow-md"
-              : "text-gray-700 dark:text-gray-300 bg-gray-100/50 dark:bg-gray-700/50"
-              }`}
-          >
-            <Calendar className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("Classes", "ชั้นเรียน")}</span>
-          </button>
+      {/* Startup Window - All users on first login */}
+      {showStartupWindow && user && (
+        <StartupWindow
+          user={user}
+          onNavigate={handleStartupWindowNavigate}
+          onClose={handleStartupWindowClose}
+        />
+      )}
 
-          <button
-            onClick={() => setActiveTab("messages")}
-            className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95 ${activeTab === "messages"
-              ? "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 shadow-md"
-              : unreadCount && unreadCount > 0
-                ? "text-red-600 dark:text-red-400 pulse-red bg-red-100/50 dark:bg-red-900/30"
-                : "text-gray-700 dark:text-gray-300 bg-gray-100/50 dark:bg-gray-700/50"
-              }`}
-          >
-            <MessageSquare className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("Messages", "ข้อความ")}</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab("notifications")}
-            className={`flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-all touch-manipulation active:scale-95 ${activeTab === "notifications"
-              ? "text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/40 shadow-md"
-              : "text-gray-700 dark:text-gray-300 bg-gray-100/50 dark:bg-gray-700/50"
-              }`}
-          >
-            <Bell className="w-6 h-6" />
-            <span className="text-xs font-medium">{t("Alerts", "แจ้งเตือน")}</span>
-          </button>
-        </div>
-      </nav>
-
-      {/* Desktop Tab Navigation - Hidden on mobile */}
-      <div className="max-w-7xl mx-auto mb-4 md:mb-6 hidden md:block relative z-10">
-        <div className="flex gap-1 md:gap-2 border-b-2 border-gray-300 dark:border-gray-600 overflow-x-auto bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-t-lg shadow-lg p-2">
-          <button
-            onClick={() => setActiveTab("calendar")}
-            className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "calendar"
-              ? "bg-blue-500 text-white shadow-md"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-              }`}
-          >
-            <CalendarDays className="w-4 h-4 md:w-5 md:h-5" />
-            {t("Calendar", "ปฏิทิน")}
-          </button>
-
-          <button
-            onClick={() => setActiveTab("events")}
-            className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "events"
-              ? "bg-blue-500 text-white shadow-md"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-              }`}
-          >
-            <Bell className="w-4 h-4 md:w-5 md:h-5" />
-            {t("School Events", "กิจกรรมโรงเรียน")}
-          </button>
-
-          <button
-            onClick={() => setActiveTab("classes")}
-            className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "classes"
-              ? "bg-blue-500 text-white shadow-md"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-              }`}
-          >
-            <Calendar className="w-4 h-4 md:w-5 md:h-5" />
-            {user.role === "teacher"
-              ? t("Class Requests", "คำขอชั้นเรียน")
-              : t("Class Bookings", "การจองชั้นเรียน")}
-          </button>
-
-          <button
-            onClick={() => setActiveTab("messages")}
-            className={`relative flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "messages"
-              ? "bg-blue-500 text-white shadow-md"
-              : unreadCount && unreadCount > 0
-                ? "bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 pulse-red hover:bg-red-200 dark:hover:bg-red-900/60"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-              }`}
-          >
-            <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
-            {t("Messages", "ข้อความ")}
-          </button>
-
-          {/* Teacher's Helper tab - hide from moderators */}
-          {user.role !== "moderator" && (
-            <button
-              onClick={() => setActiveTab("resources")}
-              className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "resources"
-                ? "bg-blue-500 text-white shadow-md"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                }`}
-            >
-              <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
-              {t("Teacher's Helper", "ผู้ช่วยครู")}
-            </button>
-          )}
-
-          {/* Analytics tab for moderators */}
-          {user.role === "moderator" && user.schoolId && (
-            <>
-              <button
-                onClick={() => setActiveTab("analytics")}
-                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "analytics"
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-              >
-                <BarChart3 className="w-4 h-4 md:w-5 md:h-5" />
-                {t("Analytics", "การวิเคราะห์")}
-              </button>
-
-              <button
-                onClick={() => setActiveTab("activity")}
-                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "activity"
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-              >
-                <Shield className="w-4 h-4 md:w-5 md:h-5" />
-                {t("Activity", "กิจกรรม")}
-              </button>
-
-              <button
-                onClick={() => setActiveTab("locations")}
-                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "locations"
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-              >
-                <MapPin className="w-4 h-4 md:w-5 md:h-5" />
-                {t("Locations", "สถานที่")}
-              </button>
-            </>
-          )}
-
-          <button
-            onClick={() => setActiveTab("notifications")}
-            className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "notifications"
-              ? "bg-blue-500 text-white shadow-md"
-              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-              }`}
-          >
-            <Bell className="w-4 h-4 md:w-5 md:h-5" />
-            {t("Notifications", "การแจ้งเตือน")}
-          </button>
-
-          {user.role === "admin" && (
-            <>
-              <button
-                onClick={() => setActiveTab("schools")}
-                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "schools"
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-              >
-                <Building2 className="w-4 h-4 md:w-5 md:h-5" />
-                {t("Schools", "โรงเรียน")}
-              </button>
-
-              <button
-                onClick={() => setActiveTab("locations")}
-                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "locations"
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-              >
-                <MapPin className="w-4 h-4 md:w-5 md:h-5" />
-                {t("Locations", "สถานที่")}
-              </button>
-
-              <button
-                onClick={() => setActiveTab("moderators")}
-                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "moderators"
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-              >
-                <Shield className="w-4 h-4 md:w-5 md:h-5" />
-                {t("Moderators", "ผู้ดูแล")}
-              </button>
-
-              <button
-                onClick={() => setActiveTab("users")}
-                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "users"
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-              >
-                <Users className="w-4 h-4 md:w-5 md:h-5" />
-                {t("Users", "ผู้ใช้")}
-              </button>
-
-              <button
-                onClick={() => setActiveTab("testing")}
-                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "testing"
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-              >
-                <FlaskConical className="w-4 h-4 md:w-5 md:h-5" />
-                {t("Testing", "ทดสอบ")}
-              </button>
-
-              <button
-                onClick={() => setActiveTab("contact_requests")}
-                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "contact_requests"
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-              >
-                <MessageSquare className="w-4 h-4 md:w-5 md:h-5" />
-                {t("Contact Requests", "คำขอติดต่อ")}
-              </button>
-
-              <button
-                onClick={() => setActiveTab("deleted_students")}
-                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "deleted_students"
-                  ? "bg-red-600 text-white shadow-md"
-                  : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50"
-                  }`}
-              >
-                <AlertTriangle className="w-4 h-4 md:w-5 md:h-5" />
-                {t("🚨 Deleted Students", "🚨 นักเรียนที่ถูกลบ")}
-              </button>
-
-              <button
-                onClick={() => setActiveTab("notification_windows")}
-                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "notification_windows"
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-              >
-                <Bell className="w-4 h-4 md:w-5 md:h-5" />
-                {t("Notification Windows", "หน้าต่างประกาศ")}
-              </button>
-
-              <button
-                onClick={() => setActiveTab("app_updates")}
-                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "app_updates"
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-              >
-                <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
-                {t("App Updates", "ประกาศอัปเดต")}
-              </button>
-
-              <button
-                onClick={() => setActiveTab("data_import")}
-                className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "data_import"
-                  ? "bg-blue-500 text-white shadow-md"
-                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                  }`}
-              >
-                <Calendar className="w-4 h-4 md:w-5 md:h-5" />
-                {t("Data Import", "นำเข้าข้อมูล")}
-              </button>
-            </>
-          )}
-
-          {/* Students tab - Available to Admin and Moderator */}
-          {(user.role === "admin" || user.role === "moderator") && (
-            <button
-              onClick={() => setActiveTab("students")}
-              className={`flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 rounded-lg transition-all whitespace-nowrap text-sm md:text-base font-medium ${activeTab === "students"
-                ? "bg-blue-500 text-white shadow-md"
-                : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600"
-                }`}
-            >
-              <GraduationCap className="w-4 h-4 md:w-5 md:h-5" />
-              {t("Students", "นักเรียน")}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Tab Content - Wrapped with Suspense for lazy loading */}
-      <div className="relative z-10 bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm rounded-lg shadow-lg p-4 md:p-6 max-w-7xl mx-auto">
-        {activeTab === "calendar" && (
-          <Suspense fallback={<LoadingFallback />}>
-            <MonthlyCalendar currentUser={user} />
-          </Suspense>
-        )}
-
-        {activeTab === "classes" && (
-          <Suspense fallback={<LoadingFallback />}>
-            <ClassBooking userId={user._id} userRole={user.role} userSchoolId={user.schoolId} />
-          </Suspense>
-        )}
-
-        {activeTab === "events" && user && (
-          <Suspense fallback={<LoadingFallback />}>
-            <EventManagement
-              userId={user._id}
-              userRole={user.role}
-              schoolId={user.schoolId}
-            />
-          </Suspense>
-        )}
-
-        {activeTab === "messages" && user && (
-          <Suspense fallback={<LoadingFallback />}>
-            <MessagingHub currentUser={user} />
-          </Suspense>
-        )}
-
-        {activeTab === "analytics" && user.role === "moderator" && user.schoolId && (
-          <Suspense fallback={<LoadingFallback />}>
-            <SimpleAnalytics
-              schoolId={user.schoolId}
-              currentUserId={user._id}
-              currentUserRole={user.role}
-              currentUser={user}
-            />
-          </Suspense>
-        )}
-
-        {activeTab === "activity" && user.role === "moderator" && user.schoolId && (
-          <Suspense fallback={<LoadingFallback />}>
-            <TeacherActivityDashboard schoolId={user.schoolId} moderatorId={user._id} />
-          </Suspense>
-        )}
-
-        {activeTab === "resources" && user && (user.role === "admin" || user.role === "teacher") && (
-          <Suspense fallback={<LoadingFallback />}>
-            {user.role === "admin" ? (
-              <TeacherHelperAdmin currentUser={user} />
-            ) : (
-              <TeacherHelper currentUser={user} />
-            )}
-          </Suspense>
-        )}
-
-        {/* Guardian Dashboard - Only for guardians */}
-        {user.role === "guardian" && (
-          <Suspense fallback={<LoadingFallback />}>
-            <GuardianDashboard currentUser={user} />
-          </Suspense>
-        )}
-
-        {activeTab === "notifications" && (
-          <Suspense fallback={<LoadingFallback />}>
-            {user.role === "admin" && <NotificationForm />}
-            <NotificationList userId={user._id} currentUser={user} />
-          </Suspense>
-        )}
-
-        {activeTab === "schools" && user.role === "admin" && (
-          <Suspense fallback={<LoadingFallback />}>
-            <SchoolManagement currentUser={user} />
-          </Suspense>
-        )}
-
-        {activeTab === "locations" && (user.role === "admin" || user.role === "moderator") && (
-          <Suspense fallback={<LoadingFallback />}>
-            <LocationManagement
-              userId={user._id}
-              schoolId={user.role === "moderator" ? user.schoolId : undefined}
-            />
-          </Suspense>
-        )}
-
-        {activeTab === "students" && (user.role === "admin" || user.role === "moderator") && (
-          <Suspense fallback={<LoadingFallback />}>
-            <StudentManagement currentUser={user} />
-          </Suspense>
-        )}
-
-        {activeTab === "moderators" && user.role === "admin" && (
-          <Suspense fallback={<LoadingFallback />}>
-            <ModeratorListView />
-          </Suspense>
-        )}
-
-        {activeTab === "users" && user.role === "admin" && (
-          <Suspense fallback={<LoadingFallback />}>
-            <UserManagement currentUserId={user._id} />
-          </Suspense>
-        )}
-
-        {activeTab === "testing" && user.role === "admin" && (
-          <Suspense fallback={<LoadingFallback />}>
-            <DeviceTestingDashboard />
-          </Suspense>
-        )}
-
-        {activeTab === "contact_requests" && user.role === "admin" && (
-          <Suspense fallback={<LoadingFallback />}>
-            <AdminContactRequests currentUserId={user._id} />
-          </Suspense>
-        )}
-
-        {activeTab === "deleted_students" && (user.role === "admin" || user.role === "moderator") && (
-          <Suspense fallback={<LoadingFallback />}>
-            <AdminDeletedStudentsDashboard
-              userId={user._id}
-              onClose={() => setActiveTab("calendar")}
-            />
-          </Suspense>
-        )}
-
-        {activeTab === "notification_windows" && user.role === "admin" && (
-          <Suspense fallback={<LoadingFallback />}>
-            <AdminNotificationWindows currentUserId={user._id} />
-          </Suspense>
-        )}
-
-        {activeTab === "app_updates" && user.role === "admin" && (
-          <Suspense fallback={<LoadingFallback />}>
-            <AdminAppUpdates currentUserId={user._id} />
-          </Suspense>
-        )}
-
-        {activeTab === "data_import" && user.role === "admin" && (
-          <Suspense fallback={<LoadingFallback />}>
-            <div className="max-w-4xl mx-auto p-4">
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">
-                    {t("Data Import & Seeding", "นำเข้าและเพิ่มข้อมูล")}
-                  </h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {t(
-                      "Import bulk data from external sources or seed test data",
-                      "นำเข้าข้อมูลจำนวนมากจากแหล่งภายนอกหรือเพิ่มข้อมูลทดสอบ"
-                    )}
-                  </p>
-                </div>
-                <div className="space-y-4">
-                  <SangsomSeedButton />
-                  <PrivateClassesSeedButton />
-                  <SangsomStudentImportButton />
-                  <SangsomMigrationButton userId={user._id} />
-                  <SangsomDeleteButton userId={user._id} />
-                </div>
-              </div>
-            </div>
-          </Suspense>
-        )}
-
-        {/* Startup Window - All users on first login */}
-        {showStartupWindow && user && (
-          <StartupWindow
-            user={user}
-            onNavigate={handleStartupWindowNavigate}
-            onClose={handleStartupWindowClose}
+      {/* Post-Class Notes Modal - Teachers only */}
+      {showPostClassNotes && classesNeedingFeedback && classesNeedingFeedback.length > 0 && user && (
+        <Suspense fallback={null}>
+          <PostClassNotesModal
+            classes={classesNeedingFeedback}
+            currentUserId={user._id}
+            onClose={() => setShowPostClassNotes(false)}
+            onComplete={handlePostClassNotesComplete}
           />
-        )}
+        </Suspense>
+      )}
 
-        {/* Post-Class Notes Modal - Teachers only */}
-        {showPostClassNotes && classesNeedingFeedback && classesNeedingFeedback.length > 0 && user && (
-          <Suspense fallback={null}>
-            <PostClassNotesModal
-              classes={classesNeedingFeedback}
-              currentUserId={user._id}
-              onClose={() => setShowPostClassNotes(false)}
-              onComplete={handlePostClassNotesComplete}
-            />
-          </Suspense>
-        )}
+      {/* Update Announcement Modal - All users */}
+      {showUpdateAnnouncement && activeUpdate && user && (
+        <Suspense fallback={null}>
+          <UpdateAnnouncementModal
+            update={activeUpdate}
+            onClose={handleUpdateAnnouncementClose}
+          />
+        </Suspense>
+      )}
 
-        {/* Update Announcement Modal - All users */}
-        {showUpdateAnnouncement && activeUpdate && user && (
-          <Suspense fallback={null}>
-            <UpdateAnnouncementModal
-              update={activeUpdate}
-              onClose={handleUpdateAnnouncementClose}
-            />
-          </Suspense>
-        )}
+      {/* ClassCount Details Modal - Teachers only */}
+      {showClassCountModal && user && user.role === "teacher" && (
+        <Suspense fallback={null}>
+          <ClassCountModal
+            teacherId={user._id}
+            userRole={user.role}
+            onClose={() => setShowClassCountModal(false)}
+          />
+        </Suspense>
+      )}
 
-        {/* ClassCount Details Modal - Teachers only */}
-        {showClassCountModal && user && user.role === "teacher" && (
-          <Suspense fallback={null}>
-            <ClassCountModal
-              teacherId={user._id}
-              userRole={user.role}
-              onClose={() => setShowClassCountModal(false)}
-            />
-          </Suspense>
-        )}
-
-        {/* Help Window - All users */}
-        {showHelpWindow && user && (
-          <Suspense fallback={null}>
-            <HelpWindow
-              userRole={user.role}
-              onClose={() => setShowHelpWindow(false)}
-            />
-          </Suspense>
-        )}
-      </div>
+      {/* Help Window - All users */}
+      {showHelpWindow && user && (
+        <Suspense fallback={null}>
+          <HelpWindow
+            userRole={user.role}
+            onClose={() => setShowHelpWindow(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

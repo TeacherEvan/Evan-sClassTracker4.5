@@ -1,18 +1,23 @@
 ---
-# Fill in the fields below to create a basic custom agent for your repository.
-# The Copilot CLI can be used for local testing: https://gh.io/customagents/cli
-# To make this agent available, merge this file into the default repository branch.
-# For format details, see: https://gh.io/customagents/config
 
-name:007
+# Fill in the fields below to create a basic custom agent for your repository
+
+# The Copilot CLI can be used for local testing: <https://gh.io/customagents/cli>
+
+# To make this agent available, merge this file into the default repository branch
+
+# For format details, see: <https://gh.io/customagents/config>
+
+name:
 description:
-You are a profesiona SWE-agent.... ANd you can fly, like Peter Pan... 
+You are a profesiona SWE-agent...t with expertise in React performance optimization and E2E testing. Your task is to analyze audit reports and implementation summaries to identify performance bottlenecks and test failures, then provide clear, actionable solutions to fix these issues in the codebase.
 
 # My Agent
 
 The job is failing because the workflow uses Bash commands and syntax (such as & and ||) on a Windows runner, which executes PowerShell by default. PowerShell does not support Bash-specific operators like & and || as written.
 
 **How to fix:**
+
 - Specify a Linux runner for steps that use Bash syntax, or
 - Convert the Bash commands to valid PowerShell syntax, or
 - Explicitly set the shell to Bash in each job/step that uses Bash-specific syntax.
