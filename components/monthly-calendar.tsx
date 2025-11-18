@@ -8,9 +8,12 @@ import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { User } from "@/lib/types";
 import { useSwipeGesture } from "@/lib/use-swipe-gesture";
+import { logger } from "@/lib/logger";
+import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-shortcuts";
+import { getStatusAriaLabel, getStatusBadgeClasses, MIN_TOUCH_TARGET } from "@/lib/accessibility-utils";
 import { useMutation, useQuery } from "convex/react";
-import { Bell, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Globe, Plus, Users, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Bell, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Globe, Plus, Users, X, Check, AlertCircle } from "lucide-react";
+import { useMemo, useState, useCallback } from "react";
 import { ClassDetailModal } from "./class-detail-modal";
 import { ClassQuickActions } from "./class-quick-actions";
 import { EditClassModal } from "./edit-class-modal";
@@ -95,6 +98,51 @@ export function MonthlyCalendar({ currentUser }: MonthlyCalendarProps) {
     const [newStudentClass, setNewStudentClass] = useState("");
     const createStudent = useMutation(api.students.create);
 
+    // Keyboard shortcuts
+    const goToPreviousMonth = useCallback(() => {
+        const newDate = new Date(currentDate);
+        newDate.setMonth(newDate.getMonth() - 1);
+        setCurrentDate(newDate);
+    }, [currentDate]);
+
+    const goToNextMonth = useCallback(() => {
+        const newDate = new Date(currentDate);
+        newDate.setMonth(newDate.getMonth() + 1);
+        setCurrentDate(newDate);
+    }, [currentDate]);
+
+    const goToToday = useCallback(() => {
+        setCurrentDate(new Date());
+    }, []);
+
+    useKeyboardShortcuts([
+        {
+            ...COMMON_SHORTCUTS.NEW,
+            callback: () => !showAddDialog && handleAddClass(new Date()),
+            disabled: showAddDialog,
+        },
+        {
+            ...COMMON_SHORTCUTS.CLOSE,
+            callback: () => showAddDialog && setShowAddDialog(false),
+            disabled: !showAddDialog,
+        },
+        {
+            key: "ArrowLeft",
+            callback: goToPreviousMonth,
+            description: "Previous month / เดือนก่อนหน้า",
+        },
+        {
+            key: "ArrowRight",
+            callback: goToNextMonth,
+            description: "Next month / เดือนถัดไป",
+        },
+        {
+            key: "t",
+            callback: goToToday,
+            description: "Go to today / ไปวันนี้",
+        },
+    ]);
+
     // Get students and locations filtered by school (server-side)
     // For the Add Class form, use the form's selected schoolId
     const formStudents = useQuery(
@@ -155,27 +203,11 @@ export function MonthlyCalendar({ currentUser }: MonthlyCalendarProps) {
         );
     }, [classes, monthStart, monthEnd]);
 
-    const goToPreviousMonth = () => {
-        const newDate = new Date(currentDate);
-        newDate.setMonth(newDate.getMonth() - 1);
-        setCurrentDate(newDate);
-    };
-
-    const goToNextMonth = () => {
-        const newDate = new Date(currentDate);
-        newDate.setMonth(newDate.getMonth() + 1);
-        setCurrentDate(newDate);
-    };
-
     // Swipe gestures for month navigation
     useSwipeGesture({
         onSwipeLeft: goToNextMonth,
         onSwipeRight: goToPreviousMonth,
     });
-
-    const goToToday = () => {
-        setCurrentDate(new Date());
-    };
 
     const handleAddClass = (date: Date) => {
         setSelectedDate(date);
@@ -744,7 +776,11 @@ export function MonthlyCalendar({ currentUser }: MonthlyCalendarProps) {
                                                     } catch (err) {
                                                         const errorMessage = err instanceof Error ? err.message : t("Failed to create student", "ไม่สามารถสร้างนักเรียนได้");
                                                         setError(errorMessage);
-                                                        console.error("Student creation error:", err);
+                                                        logger.error("Student creation error", err, {
+                                                            component: "MonthlyCalendar",
+                                                            action: "createStudent",
+                                                            userId: currentUser._id
+                                                        });
                                                     }
                                                 }}
                                                 className="w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"

@@ -5,6 +5,9 @@ import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { UserRole } from "@/lib/types";
+import { logger } from "@/lib/logger";
+import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-shortcuts";
+import { MIN_TOUCH_TARGET, FOCUS_RING } from "@/lib/accessibility-utils";
 import { useMutation, useQuery } from "convex/react";
 import {
     AlertTriangle,
@@ -115,6 +118,14 @@ export function ClassDetailModal({
     const createCancellationRequest = useMutation(api.cancellationRequests.create);
     const deleteClass = useMutation(api.classes.deleteClass);
     const deleteRecurringSeries = useMutation(api.classes.deleteRecurringSeries);
+
+    // Keyboard shortcuts
+    useKeyboardShortcuts([
+        {
+            ...COMMON_SHORTCUTS.CLOSE,
+            callback: onClose,
+        },
+    ]);
 
     // Query for recurring series
     const recurringSeries = useQuery(
