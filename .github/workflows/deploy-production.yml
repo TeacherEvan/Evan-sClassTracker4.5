@@ -10,8 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  Deploy-Convex:
-    runs-on: local
+  deploy-convex:
+    runs-on: self-hosted
     environment: production
 
     steps:
@@ -40,7 +40,7 @@ jobs:
           NEXT_TELEMETRY_DISABLED: 1
 
   Deploy-Vercel:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     # This job will now run in parallel with Deploy-Convex
     steps:
       - uses: actions/checkout@v4
