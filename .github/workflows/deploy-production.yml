@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy-convex:
-    runs-on: local
+    runs-on: self-hosted
     environment: production
 
     steps:
