@@ -6,6 +6,7 @@ import { GraduationCap, HelpCircle, LogOut, RefreshCw } from "lucide-react";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 // Core components (always loaded)
+import WorkspaceLayout, { type UserRole } from "@/app/workspace-layout";
 import { AdminContactButton } from "@/components/admin-contact-button";
 import { DatabaseInit } from "@/components/database-init";
 import { ToastContainer, type ToastNotification } from "@/components/desktop-notification-toast";
@@ -17,10 +18,10 @@ import { NotificationWindow } from "@/components/notification-window";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
 import { RollingVitruvianMen } from "@/components/rolling-vitruvian-men";
 import { StartupWindow } from "@/components/startup-window";
-import WorkspaceLayout, { type UserRole } from "@/app/workspace-layout";
 import { api } from "@/convex/_generated/api";
 import { isDesktopDevice } from "@/lib/device-detection";
 // import { initServiceWorker } from "@/lib/init-sw"; // DISABLED: Service worker not implemented
+import { ImageUploader } from '@/components/image-upload';
 import { useLanguage } from "@/lib/language-context";
 import { clearUserSession, loadUserSession, saveUserSession } from "@/lib/session-utils";
 import { toast as toastManager } from "@/lib/toast";
@@ -485,6 +486,10 @@ export default function Home() {
           />
         </Suspense>
       )}
+
+      <div className="mt-8">
+        <ImageUploader />
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 # Evan's Class Tracker 4.5
 
-**Version 4.5.26** | Bilingual English/Thai class tracker for teachers and schools
+**Version 4.5.27** | Bilingual English/Thai class tracker for teachers and schools
 
 Built with Next.js 15, React 19, Convex & Tailwind v4
 
@@ -496,3 +496,17 @@ MIT
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+### 🖼️ Version 4.5.27 - Image Processing & Seeding (Nov 18, 2025)
+
+**Robust Image Handling & Test Data Generation**
+
+- 📸 **Image Processing Pipeline**:
+  - Secure client-side uploads via `generateUploadUrl`
+  - Direct-to-storage architecture (bypassing function limits)
+  - Metadata tracking in `images` table
+  
+- 🌱 **Database Seeding**:
+  - Automated test data population (`seedDatabase`)
+  - Configurable volume and cleanup options
+  - Consistent development environment setup

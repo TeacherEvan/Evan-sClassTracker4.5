@@ -73,6 +73,10 @@ export default defineSchema({
     .index("by_category", ["category"])
     .index("by_active", ["isActive"]),
 
+  images: defineTable({
+    storageId: v.id("_storage"),
+  }),
+
   classes: defineTable({
     teacherId: v.id("users"),
     schoolId: v.optional(v.id("schools")), // Optional - null if using providerId

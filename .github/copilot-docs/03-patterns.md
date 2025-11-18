@@ -234,7 +234,36 @@ ctx.db.query("teacherResources")
 await ctx.db.patch(resourceId, { isActive: false });
 ```
 
-### 10. File Upload Pattern (Convex Storage)
+### 10. Image Upload Pattern (Convex Storage)
+
+**For image uploads**, use the `useMutation` hook with `api.files.generateUploadUrl` to get a short-lived upload URL.
+
+```tsx
+// 1. Get the upload URL from Convex
+const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+const uploadUrl = await generateUploadUrl();
+
+// 2. Upload the file to the URL
+const result = await fetch(uploadUrl, {
+  method: "POST",
+  headers: { "Content-Type": file.type },
+  body: file,
+});
+
+// 3. Get the storage ID from the response
+const { storageId } = await result.json();
+
+// 4. Store the storageId in the database
+await storeImage({ storageId, ... });
+```
+
+**Key points**:
+
+- The upload URL is valid for a short period.
+- The `storageId` is the reference to the uploaded file in Convex's `_storage` table.
+- This pattern is used in `components/image-upload/index.tsx`.
+
+### 11. File Upload Pattern (Convex Storage)
 
 **For file attachments** (messages, contact requests), use Convex `_storage`:
 
@@ -261,7 +290,7 @@ const url = await ctx.storage.getUrl(storageId);
 
 **Pattern location**: See `convex/messages.ts` and `convex/adminContactRequests.ts`
 
-### 11. Login Security Pattern (Account Lockout)
+### 12. Login Security Pattern (Account Lockout)
 
 **Automatic 24-hour lockout** after 5 failed login attempts:
 
@@ -292,7 +321,7 @@ await ctx.db.patch(user._id, {
 
 **Admin bypass**: Reset password to `Teacher{username}` to unlock account early
 
-### 12. Bulk Deletion Pattern (Security-Critical)
+### 13. Bulk Deletion Pattern (Security-Critical)
 
 **Admin-only bulk operations** require strict authorization checks:
 
@@ -337,7 +366,7 @@ export const bulkDelete = mutation({
 
 **Example**: See `convex/classes.ts` `bulkDelete` mutation and `components/sangsom-delete-button.tsx`
 
-### 13. Audit Logging Pattern
+### 14. Audit Logging Pattern
 
 **All significant administrative actions** should be logged for compliance:
 
@@ -378,7 +407,7 @@ export const deleteUser = mutation({
 
 **Admin UI**: `components/audit-logs.tsx` provides full audit log viewer with filters, statistics, and CSV export.
 
-### 14. Teacher Cycle Editor Pattern (NEW Oct 2025)
+### 15. Teacher Cycle Editor Pattern (NEW Oct 2025)
 
 **Nested modal with confirmation flow** for moderators/admins to edit teacher ClassCount cycles:
 
@@ -462,7 +491,7 @@ export const setTeacherCycle = mutation({
 
 **Example**: See `components/teacher-cycle-editor.tsx` and `IMPLEMENTATION_SUMMARY_CYCLE_EDITOR.md`
 
-### 15. Guardian Student Booking Pattern (NEW Oct 2025)
+### 16. Guardian Student Booking Pattern (NEW Oct 2025)
 
 **Guardian-linked students bypass moderator approval** - auto-approved bookings for private tutoring.
 
@@ -521,7 +550,7 @@ await ctx.db.insert("classes", {
 
 **Example**: See `IMPLEMENTATION_SUMMARY_GUARDIAN_BOOKING_OCT_28_2025.md` for full implementation
 
-### 16. Recurring Weekly Bookings Pattern (NEW Oct 2025)
+### 17. Recurring Weekly Bookings Pattern (NEW Oct 2025)
 
 **Teachers can book the same class weekly** for up to 52 weeks (full school year).
 
@@ -529,7 +558,48 @@ await ctx.db.insert("classes", {
 // Component state (components/class-booking.tsx)
 const [isRecurringWeekly, setIsRecurringWeekly] = useState(false);
 
-### 17. Modal Accordion Pattern (NEW Oct 2025)
+<Checkbox
+  labelEn="Repeat weekly"
+  labelTh="ทำซ้ำรายสัปดาห์"
+  checked={isRecurringWeekly}
+  onCheckedChange={setIsRecurringWeekly}
+/>
+
+{isRecurringWeekly && (
+  <div className="space-y-4">
+    <Input
+      labelEn="Number of weeks"
+      labelTh="จำนวนสัปดาห์"
+      type="number"
+      min={1}
+      max={52}
+      {...register("weekCount", { valueAsNumber: true })}
+    />
+    <Select
+      labelEn="Select day(s)"
+      labelTh="เลือกวัน"
+      multiple
+      options={[
+        { value: "mon", labelEn: "Monday", labelTh: "วันจันทร์" },
+        { value: "tue", labelEn: "Tuesday", labelTh: "วันอังคาร" },
+        // ... other days
+      ]}
+      {...register("repeatDays")}
+    />
+  </div>
+)}
+```
+
+**Key features**:
+
+- **Repeat toggle**: Checkbox to enable/disable weekly repetition
+- **Week count input**: Number input for total weeks (1-52)
+- **Day selector**: Multi-select for choosing days of the week
+- **Validation**: Ensure at least one day is selected, week count > 0
+
+**Example**: See `components/class-booking.tsx` for implementation
+
+### 18. Modal Accordion Pattern (NEW Oct 2025)
 
 **Use accordions for optional form sections** to prevent UI bloat and scrolling issues.
 
@@ -576,7 +646,7 @@ const [showSection, setShowSection] = useState(false);
 
 **Example**: `components/post-class-notes-modal.tsx` - Notes and Homework sections
 
-### 18. Modal Flex Layout Pattern (NEW Oct 2025)
+### 19. Modal Flex Layout Pattern (NEW Oct 2025)
 
 **Avoid nested scrolling and fixed heights** in modals using flex layout with sticky sections.
 
@@ -629,7 +699,7 @@ const [showSection, setShowSection] = useState(false);
 
 **Related**: See `UI_SCROLL_FIX_VISUAL_GUIDE.md` for before/after visual comparisons
 
-### 19. Pagination Pattern (NEW Oct 2025)
+### 20. Pagination Pattern (NEW Oct 2025)
 
 **Replace vertical scrolling with horizontal pagination** for large datasets to dramatically reduce DOM complexity.
 
@@ -682,7 +752,7 @@ import { PaginatedList } from "@/components/paginated-list";
 
 **Component**: `components/paginated-list.tsx` (228 lines, fully reusable)
 
-### 20. Collapsible Section Pattern (NEW Oct 2025)
+### 21. Collapsible Section Pattern (NEW Oct 2025)
 
 **Reduce form height and cognitive load** by collapsing optional fields into expandable sections.
 
@@ -743,7 +813,7 @@ import { CollapsibleSection } from "@/components/collapsible-section";
 
 **Component**: `components/collapsible-section.tsx` (109 lines, fully reusable)
 
-### 21. Visual Bloat Fix Pattern (NEW Oct 2025)
+### 22. Visual Bloat Fix Pattern (NEW Oct 2025)
 
 **Critical UX fix: Prevent Windows taskbar from hiding modal buttons**
 
@@ -841,7 +911,7 @@ import { CollapsibleSection } from "@/components/collapsible-section";
 
 **User Impact**: Resolved critical UX complaint - "taskbar cuts off buttons and features and I can't complete tasks" ✅ **FIXED**
 
-### 22. Provider System Pattern (NEW Oct 2025)
+### 23. Provider System Pattern (NEW Oct 2025)
 
 **Multi-Provider Architecture** replaces school-only model with flexible entity management.
 
@@ -983,7 +1053,7 @@ classes.forEach(c => {
 
 **Example**: See `IMPLEMENTATION_SUMMARY_PROVIDER_SYSTEM_OCT_30_2025.md` for full implementation
 
-### 23. Ephemeral Calculator Pattern (NEW Oct 2025)
+### 24. Ephemeral Calculator Pattern (NEW Oct 2025)
 
 Security-first pattern for temporary calculations in the UI with zero database persistence. Used by the Class Payment Calculator.
 
@@ -1023,7 +1093,7 @@ Related files:
 - `components/class-payment-calculator.tsx` – Payment calculator modal implementation
 - `convex/teacherClassCount.ts` – Read-only query used for class data (no persistence)
 
-### 24. Analytics Dashboard Pattern (NEW Nov 2025)
+### 25. Analytics Dashboard Pattern (NEW Nov 2025)
 
 Performance metrics and reporting system with role-based access, optimized queries, and data export capabilities. Used by the Class Analytics Dashboard.
 
@@ -1195,20 +1265,20 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
 9. **Loading States**: Show loading indicators during data fetch
 10. **Responsive Design**: Mobile-friendly cards and tables
 
-**Performance Optimizations:**
+**Performance Optimizations**:
 
 - Index-based queries reduce query time from seconds to milliseconds
 - Batch fetching prevents N+1 problems (1 query instead of N queries)
 - Map lookups provide O(1) access instead of O(n) array `.find()`
 - Duration-based calculations (minutes / 60) computed server-side
 
-**Related Files:**
+**Related Files**:
 
 - `components/class-analytics.tsx` – Analytics modal with summary cards and table
 - `convex/analytics.ts` – Backend queries with role-based access control
 - `components/class-booking.tsx` – Integration point (Analytics button)
 
-**Integration Example:**
+**Integration Example**:
 
 ```tsx
 // In class-booking.tsx
@@ -1227,7 +1297,7 @@ const [showAnalytics, setShowAnalytics] = useState(false);
 )}
 ```
 
-**User Impact:**
+**User Benefits**:
 
 - Teachers: Track individual student performance and attendance
 - Moderators: Monitor school-wide trends and teacher effectiveness
@@ -1392,3 +1462,39 @@ if (tab === "wizard-trigger") {
 - `components/startup-window.tsx` - Wizard integration point
 
 **Example**: See `IMPLEMENTATION_SUMMARY_WIZARD_STARTUP_NOV_1_2025.md` for full implementation details
+
+### 26. Database Seeding Pattern (NEW Nov 2025)
+
+**Automated data population** for development and testing environments.
+
+```typescript
+// convex/seed.ts
+export const seedDatabase = mutation({
+  args: { 
+    clearExisting: v.optional(v.boolean()),
+    count: v.optional(v.number()) 
+  },
+  handler: async (ctx, args) => {
+    // 1. Optional cleanup
+    if (args.clearExisting) {
+      const existing = await ctx.db.query("images").collect();
+      await Promise.all(existing.map(doc => ctx.db.delete(doc._id)));
+    }
+
+    // 2. Generate and insert data
+    const images = generateTestImages(args.count || 10);
+    await Promise.all(images.map(img => ctx.db.insert("images", img)));
+    
+    return { success: true, count: images.length };
+  }
+});
+```
+
+**Key features**:
+
+- **Idempotent**: Can be run multiple times safely
+- **Cleanup option**: `clearExisting` flag to reset state
+- **Configurable**: `count` parameter to control data volume
+- **Development only**: Should be restricted or careful in production
+
+**Example**: `convex/seed.ts`

@@ -134,6 +134,18 @@
 - Role-based access (teachers/admins only; moderators blocked)
 - Validations for categories and ownership
 
+**`convex/seed.ts`**
+
+- Database seeding mutation
+- Automated test data generation
+- Image seeding logic
+
+**`convex/files.ts`**
+
+- File management utilities
+- Upload URL generation (`generateUploadUrl`)
+- Secure file handling
+
 ---
 
 ## UI Components
@@ -254,6 +266,13 @@
 - 5 wizard-triggering buttons (Book, Report, Message, Notification, Dashboard)
 - Wizard integration and state management
 - Role-based menu options
+
+**`components/image-upload/index.tsx`**
+
+- Image upload component
+- Drag-and-drop interface
+- Preview functionality
+- Integration with Convex Storage
 
 ---
 

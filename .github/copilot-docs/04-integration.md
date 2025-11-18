@@ -204,6 +204,33 @@ checkRateLimit() → Generate key → Check window → Allow/Deny request
 
 ---
 
+## Image Processing Pipeline
+
+**Secure Upload & Storage Flow**:
+
+```
+Frontend (ImageUploader) → Generate URL (Convex) → Direct Upload (Storage) → Save Metadata (DB)
+```
+
+**4-Step Process**:
+
+1. **Request URL**: Frontend calls `api.files.generateUploadUrl`
+2. **Direct Upload**: Frontend POSTs file to the generated URL (bypassing backend function limits)
+3. **Get Storage ID**: Response contains the `storageId` reference
+4. **Save Metadata**: Frontend calls mutation to save `storageId` and metadata to `images` table
+
+**Database Schema (`images`)**:
+
+- `storageId`: Reference to Convex Storage file
+- `url`: Publicly accessible URL (optional/derived)
+- `mimeType`: File type (e.g., "image/jpeg")
+- `size`: File size in bytes
+- `uploadedBy`: User ID of uploader
+
+**Integration**: Used in `components/image-upload/index.tsx` and `convex/seed.ts`.
+
+---
+
 ## Next Steps
 
 - **Learn patterns** → [Non-Negotiable Patterns](./03-patterns.md)

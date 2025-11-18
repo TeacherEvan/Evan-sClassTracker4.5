@@ -2,6 +2,32 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.27] - November 18, 2025 🖼️ Image Processing and Seeding
+
+### 🌟 New Feature: Image Processing Pipeline
+
+**Summary**: Implemented a robust image processing and database seeding system. This allows for efficient handling of image uploads, storage in Convex, and automated database seeding for testing and development.
+
+### Added
+
+#### Backend (`convex/`)
+
+- **`convex/seed.ts`**: New mutation `seedDatabase` to populate the database with initial data, including images.
+- **`convex/files.ts`**: Enhanced file handling with `generateUploadUrl` for secure client-side uploads.
+- **`convex/schema.ts`**: Added `images` table to track uploaded image metadata (storageId, url, etc.).
+
+#### Frontend (`components/`)
+
+- **`components/image-upload/index.tsx`**: New `ImageUploader` component providing a user-friendly interface for selecting and uploading images.
+- **`components/image-upload/image-preview.tsx`**: Component to preview images before upload.
+
+### Technical Details
+
+- **Convex Storage Integration**: Utilizes `generateUploadUrl` and `_storage` system for secure and scalable file hosting.
+- **Seeding Logic**: Automated script to clear existing data (optional) and inject consistent test data, ensuring reliable development environments.
+
+---
+
 ## [4.5.26] - November 18, 2025 🔍 Database Query Optimization - Composite Indexes
 
 ### 🎯 Performance Enhancement: 6 New Composite Indexes
