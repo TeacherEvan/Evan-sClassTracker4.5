@@ -183,7 +183,8 @@ export default defineSchema({
     .index("by_guardian", ["guardianName"])
     .index("by_guardian_id", ["guardianId"]) // DEPRECATED - will be removed
     .index("by_created_by", ["createdBy"])
-    .index("by_area", ["area"]), // Area-based queries for auto-guardian students
+    .index("by_area", ["area"]) // Area-based queries for auto-guardian students
+    .index("by_grade_and_class", ["grade", "class"]), // NEW
 
   notifications: defineTable({
     title: v.string(),
@@ -290,7 +291,9 @@ export default defineSchema({
     .index("by_requested_by", ["requestedBy"])
     .index("by_pending_approval", ["pendingApproval"])
     .index("by_proposed_by", ["proposedBy"])
-    .index("by_created_at", ["createdAt"]),
+    .index("by_created_at", ["createdAt"])
+    .index("by_name_and_active", ["name", "isActive"]) // NEW
+    .index("by_school_and_active", ["schoolId", "isActive"]), // NEW
 
   cancellationRequests: defineTable({
     classId: v.id("classes"),

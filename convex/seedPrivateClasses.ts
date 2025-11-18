@@ -179,20 +179,45 @@ export const seedPrivateClasses = mutation({
         teacherSchoolId = firstSchool._id;
       }
 
-      // 2. ✅ BATCH FETCH ALL STUDENTS ONCE (instead of per-lookup)
-      console.log("📚 Batch fetching all students...");
-      const allStudents = await ctx.db.query("students").collect();
-      console.log(`✅ Fetched ${allStudents.length} students`);
+      // 2. ✅ BATCH FETCH STUDENTS EFFICIENTLY (using new index)
+      console.log("📚 Batch fetching required students using indexes...");
 
-      // Group students by grade/class for O(1) lookup
+      // Get all unique student codes from all schedules
+      const allStudentCodes = [
+        ...CHE_SCHEDULE,
+        ...CALE_SCHEDULE,
+        ...LEE_SCHEDULE,
+        ...EVAN_SCHEDULE,
+      ].flatMap(s => [
+        ...s.students,
+        ...(s.oneTimeStudents || []),
+        ...(s.dateRangeStudents?.map(dr => dr.code) || [])
+      ]);
+      const uniqueStudentCodes = [...new Set(allStudentCodes)];
+
+      // Get unique grade/class combinations from codes
+      const uniqueGradeClasses = [...new Set(uniqueStudentCodes.map(code => {
+        const gradeDigit = code[0];
+        const classDigit = code[1];
+        const gradeStr = gradeDigit === "1" ? "K1" : "K2";
+        const classStr = `${gradeStr}/${classDigit}`;
+        return classStr;
+      }))];
+
+      // Fetch students for only the required grade/class combinations
       const studentsByGradeClass = new Map<string, Doc<"students">[]>();
-      for (const student of allStudents) {
-        const key = `${student.grade}/${student.class?.replace("/", "")}`;
-        if (!studentsByGradeClass.has(key)) {
-          studentsByGradeClass.set(key, []);
-        }
-        studentsByGradeClass.get(key)!.push(student);
+      for (const gradeClass of uniqueGradeClasses) {
+        const [grade] = gradeClass.split('/');
+        const students = await ctx.db
+          .query("students")
+          .withIndex("by_grade_and_class", (q) =>
+            q.eq("grade", grade).eq("class", gradeClass)
+          )
+          .collect();
+        studentsByGradeClass.set(gradeClass, students);
       }
+      console.log(`✅ Fetched students for ${uniqueGradeClasses.length} grade/class groups`);
+
 
       // Name mapping for student codes (code → English name)
       const STUDENT_NAME_MAP: { [code: string]: string } = {
@@ -297,27 +322,22 @@ export const seedPrivateClasses = mutation({
         return student || null;
       };
 
-      // 3. ✅ BATCH FETCH ALL LOCATIONS ONCE (instead of per-iteration)
-      console.log("📍 Batch fetching all locations...");
-      const allLocations = await ctx.db.query("locations").collect();
-      console.log(`✅ Fetched ${allLocations.length} locations`);
-
-      // Build location Map for O(1) lookup
-      const locationMap = new Map(
-        allLocations
-          .filter(loc => loc.isActive === true)
-          .map(loc => [loc.name, loc])
-      );
-
-      // Get or create locations
+      // 3. ✅ FETCH LOCATIONS EFFICIENTLY (using new index)
+      console.log("📍 Fetching required locations using indexes...");
       const locationNames = [...new Set(schedule.map(s => s.location))];
       const locations = new Map<string, Id<"locations">>();
 
       for (const locationName of locationNames) {
-        const location = locationMap.get(locationName);
+        const location = await ctx.db
+          .query("locations")
+          .withIndex("by_name_and_active", (q) =>
+            q.eq("name", locationName).eq("isActive", true)
+          )
+          .first();
 
         if (!location) {
           // Create location if it doesn't exist
+          console.log(`➕ Creating new location: ${locationName}`);
           const locationId = await ctx.db.insert("locations", {
             name: locationName,
             nameTh: locationName, // Use same for Thai (can update later)
@@ -332,6 +352,8 @@ export const seedPrivateClasses = mutation({
           locations.set(locationName, location._id);
         }
       }
+      console.log(`✅ Fetched or created ${locations.size} locations`);
+
 
       // 4. Fetch existing classes for this teacher to avoid duplicates
       console.log("📅 Checking existing classes...");
