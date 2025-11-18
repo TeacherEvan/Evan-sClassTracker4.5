@@ -9,6 +9,7 @@ import type { UserRole } from "@/lib/types";
 import { logger } from "@/lib/logger";
 import { getStatusAriaLabel, getStatusBadgeClasses, MIN_TOUCH_TARGET, FOCUS_RING } from "@/lib/accessibility-utils";
 import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-shortcuts";
+import { undoManager } from "@/lib/undo-manager";
 import { useMutation, useQuery } from "convex/react";
 import { AlertTriangle, BarChart3, Calendar, Check, Clock, Edit2, Info, MapPin, Plus, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
 import { useState } from "react";
@@ -673,9 +674,43 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const confirmDelete = async () => {
     if (!pendingDeleteId) return;
 
+    const classId = pendingDeleteId;
+    const classData = allClasses?.find(c => c._id === classId);
+
     try {
-      await deleteClass({ classId: pendingDeleteId, userId });
-      toast.success("Class deleted successfully", "ลบคลาสสำเร็จแล้ว");
+      // Schedule deletion with undo capability
+      undoManager.scheduleDelete({
+        id: classId,
+        type: "class",
+        onExecute: async () => {
+          await deleteClass({ classId, userId });
+        },
+        onCancel: () => {
+          logger.debug("Class deletion cancelled", { classId });
+        },
+        data: classData,
+        description: "Delete class",
+        descriptionTh: "ลบคลาส",
+      });
+
+      // Show undo toast
+      toast.show({
+        title: "Class deleted",
+        titleTh: "ลบคลาสแล้ว",
+        message: "Class will be permanently deleted in 10 seconds",
+        messageTh: "คลาสจะถูกลบอย่างถาวรใน 10 วินาที",
+        type: "info",
+        duration: 10000,
+        action: {
+          label: "Undo",
+          labelTh: "เลิกทำ",
+          onClick: () => {
+            undoManager.cancel(classId);
+            toast.success("Deletion cancelled", "ยกเลิกการลบแล้ว");
+          },
+        },
+      });
+
       setShowDeleteConfirm(false);
       setPendingDeleteId(null);
     } catch (err) {
