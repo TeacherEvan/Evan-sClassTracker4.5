@@ -37,7 +37,7 @@ jobs:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY_PROD }}
 
   Deploy-Vercel:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: deploy-convex
     steps:
       - uses: actions/checkout@v4

@@ -41,7 +41,7 @@ jobs:
 
   deploy-vercel-staging:
     needs: deploy-convex-staging
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: staging
 
     steps:
