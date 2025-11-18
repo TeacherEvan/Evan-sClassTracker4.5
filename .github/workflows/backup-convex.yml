@@ -21,7 +21,7 @@ on:
 
 jobs:
   backup:
-    runs-on: local
+    runs-on: self-hosted
 
     steps:
       - name: Checkout repository
