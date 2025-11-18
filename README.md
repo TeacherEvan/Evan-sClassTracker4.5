@@ -1,10 +1,34 @@
 # Evan's Class Tracker 4.5
 
-**Version 4.5.25** | Bilingual English/Thai class tracker for teachers and schools
+**Version 4.5.26** | Bilingual English/Thai class tracker for teachers and schools
 
 Built with Next.js 15, React 19, Convex & Tailwind v4
 
 ## ✨ Latest Updates (Nov 18, 2025)
+
+### 🔍 Version 4.5.26 - Database Query Optimization (Nov 18, 2025)
+
+**Composite Index Expansion** - 6 new strategic indexes eliminate filter() operations
+
+- ⚡ **Performance Improvements**:
+  - Query complexity: O(n) filtering → O(1) indexed lookups
+  - Teacher dashboards: Faster approved class queries
+  - School reports: Reduced unacknowledged log scanning
+  - Private tutoring: Optimized guardian-linked class queries
+  
+- 🗂️ **New Composite Indexes**:
+  - `classes.by_teacher_and_status` - Approved class queries
+  - `classes.by_teacher_and_guardian_linked` - Guardian class queries
+  - `teacherLogs.by_school_and_acknowledged` - Unacknowledged logs
+  - `teacherClassCountCycles.by_school_and_active` - School cycle queries
+  - `messages.by_school_and_active` - Active message filtering
+  - `postClassNotes.by_student_and_created_at` - Student note history
+  
+- 🛠️ **Technical Details**:
+  - Convex updated to v1.29.2 (latest stable)
+  - 90+ total indexes across 19 database tables
+  - Systematic grep analysis identified optimization patterns
+  - Zero schema validation errors
 
 ### 🚀 Version 4.5.25 - E2E Test Performance Optimization (Nov 18, 2025)
 

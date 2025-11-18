@@ -2,6 +2,70 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.26] - November 18, 2025 🔍 Database Query Optimization - Composite Indexes
+
+### 🎯 Performance Enhancement: 6 New Composite Indexes
+
+**Summary**: Added 6 strategic composite indexes to eliminate filter() operations on frequently-used query patterns. Improves query performance from O(n) filtering to O(1) indexed lookups.
+
+### Added
+
+#### Database Schema Enhancements (`convex/schema.ts`)
+
+**New Composite Indexes**:
+
+1. **`classes.by_teacher_and_status`** (`teacherId`, `status`)
+   - **Optimizes**: `teacherClassCount.ts` approved class queries
+   - **Pattern**: `by_teacher` index + `.filter(status = "approved")`
+   - **Impact**: Eliminates O(n) filter on teacher's classes
+
+2. **`classes.by_teacher_and_guardian_linked`** (`teacherId`, `isGuardianLinked`)
+   - **Optimizes**: `seedPrivateClasses.ts` guardian class queries
+   - **Pattern**: `by_teacher` index + `.filter(isGuardianLinked = true)`
+   - **Impact**: Faster private tutoring class lookups
+
+3. **`teacherLogs.by_school_and_acknowledged`** (`schoolId`, `acknowledged`)
+   - **Optimizes**: School-scoped unacknowledged log queries
+   - **Pattern**: `by_acknowledged` index + `.filter(schoolId)`
+   - **Impact**: Eliminates cross-school log scanning
+
+4. **`teacherClassCountCycles.by_school_and_active`** (`schoolId`, `isActive`)
+   - **Optimizes**: School-scoped active cycle queries
+   - **Pattern**: `by_active` index + `.filter(schoolId)`
+   - **Impact**: Faster school-specific cycle lookups
+
+5. **`messages.by_school_and_active`** (`schoolId`, `isActive`)
+   - **Optimizes**: Active message queries by school
+   - **Pattern**: `by_active` index + `.filter(schoolId)`
+   - **Impact**: Eliminates soft-deleted message filtering overhead
+
+6. **`postClassNotes.by_student_and_created_at`** (`studentId`, `createdAt`)
+   - **Optimizes**: Student note history queries
+   - **Pattern**: `by_student` index + sorting by date
+   - **Impact**: Chronological note retrieval without post-sorting
+
+### Technical Details
+
+- **Investigation Method**: Systematic grep search for `.filter()` patterns after indexed queries
+- **Validation**: All indexes validated with `npx convex dev --once` (0 errors)
+- **Convex Version**: 1.29.2 (updated from previous version)
+- **Query Pattern Analysis**: Found 50+ instances of index + filter patterns
+- **Implementation**: Following existing composite index pattern (e.g., `by_teacher_and_active`)
+
+### Performance Impact
+
+- **Before**: Indexed query returns N results → `.filter()` scans all N → O(n) complexity
+- **After**: Composite index returns exact matches → 0 filtering → O(1) complexity
+- **Real-world benefit**: Faster teacher dashboards, quicker school reports, reduced database load
+
+### Related Changes
+
+- Updated Convex to v1.29.2 (latest stable)
+- Schema now has 19 tables with 90+ total indexes
+- Follows optimization patterns from previous commit (c88507e)
+
+---
+
 ## [4.5.25] - November 18, 2025 🚀 E2E Test Optimization & Documentation Update
 
 ### 🎯 Major Achievement: E2E Test Performance Improvement

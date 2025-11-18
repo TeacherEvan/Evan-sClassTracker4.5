@@ -144,6 +144,8 @@ export default defineSchema({
     .index("by_scheduled_date", ["scheduledDate"])
     .index("by_school_and_date", ["schoolId", "scheduledDate"])
     .index("by_teacher_and_date", ["teacherId", "scheduledDate"])
+    .index("by_teacher_and_status", ["teacherId", "status"]) // NEW - Optimize approved class queries
+    .index("by_teacher_and_guardian_linked", ["teacherId", "isGuardianLinked"]) // NEW - Guardian class queries
     .index("by_edited", ["isEdited"])
     .index("by_last_edited", ["lastEditedAt"]),
 
@@ -231,7 +233,8 @@ export default defineSchema({
     .index("by_created_at", ["createdAt"])
     .index("by_conversation", ["senderId", "recipientId"])
     .index("by_school_and_date", ["schoolId", "createdAt"])
-    .index("by_active", ["isActive"]), // For filtering soft-deleted messages
+    .index("by_active", ["isActive"]) // For filtering soft-deleted messages
+    .index("by_school_and_active", ["schoolId", "isActive"]), // NEW - Active messages by school
 
   groups: defineTable({
     name: v.string(),
@@ -344,7 +347,8 @@ export default defineSchema({
     .index("by_created_at", ["createdAt"])
     .index("by_teacher_and_date", ["teacherId", "createdAt"])
     .index("by_school_and_date", ["schoolId", "createdAt"])
-    .index("by_acknowledged", ["acknowledged"]),
+    .index("by_acknowledged", ["acknowledged"])
+    .index("by_school_and_acknowledged", ["schoolId", "acknowledged"]), // NEW - School-scoped unacknowledged logs
 
   postClassNotes: defineTable({
     classId: v.id("classes"),
@@ -378,7 +382,8 @@ export default defineSchema({
     .index("by_student", ["studentId"])
     .index("by_school", ["schoolId"])
     .index("by_created_at", ["createdAt"])
-    .index("by_class_and_student", ["classId", "studentId"]), // Composite index for duplicate detection
+    .index("by_class_and_student", ["classId", "studentId"]) // Composite index for duplicate detection
+    .index("by_student_and_created_at", ["studentId", "createdAt"]), // NEW - Student note history
 
   appUpdates: defineTable({
     version: v.string(), // "2.0.0"
@@ -510,6 +515,7 @@ export default defineSchema({
     .index("by_school", ["schoolId"])
     .index("by_active", ["isActive"])
     .index("by_teacher_and_active", ["teacherId", "isActive"])
+    .index("by_school_and_active", ["schoolId", "isActive"]) // NEW - School-scoped cycle queries
     .index("by_created_at", ["createdAt"]),
 
   events: defineTable({
