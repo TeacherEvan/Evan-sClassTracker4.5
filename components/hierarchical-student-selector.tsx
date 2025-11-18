@@ -2,7 +2,7 @@
 
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 interface HierarchicalStudentSelectorProps {
     students: Doc<"students">[] | undefined;
@@ -30,27 +30,36 @@ export function HierarchicalStudentSelector({
     const [selectedGrade, setSelectedGrade] = useState<string>("");
     const [selectedClass, setSelectedClass] = useState<string>("");
 
-    // Extract unique grades from students
-    const availableGrades = students
-        ? Array.from(new Set(students.map(s => s.grade).filter(Boolean))).sort()
-        : [];
+    // ✅ PERFORMANCE: Memoize unique grades extraction
+    const availableGrades = useMemo(() => {
+        if (!students) return [];
+        return Array.from(new Set(students.map(s => s.grade).filter(Boolean))).sort();
+    }, [students]);
 
-    // Extract unique classes for selected grade
-    const availableClasses = students && selectedGrade
-        ? Array.from(
+    // ✅ PERFORMANCE: Memoize unique classes for selected grade
+    const availableClasses = useMemo(() => {
+        if (!students || !selectedGrade) return [];
+        return Array.from(
             new Set(
                 students
                     .filter(s => s.grade === selectedGrade)
                     .map(s => s.class)
                     .filter(Boolean)
             )
-        ).sort()
-        : [];
+        ).sort();
+    }, [students, selectedGrade]);
 
-    // Filter students by grade and class
-    const filteredStudents = students && selectedGrade && selectedClass
-        ? students.filter(s => s.grade === selectedGrade && s.class === selectedClass)
-        : [];
+    // ✅ PERFORMANCE: Memoize filtered students by grade and class
+    const filteredStudents = useMemo(() => {
+        if (!students || !selectedGrade || !selectedClass) return [];
+        return students.filter(s => s.grade === selectedGrade && s.class === selectedClass);
+    }, [students, selectedGrade, selectedClass]);
+
+    // ✅ PERFORMANCE: Memoize guardian students list
+    const guardianStudents = useMemo(() => {
+        if (!students) return [];
+        return students.filter(s => s.guardianName);
+    }, [students]);
 
     // Reset selections when students change or when school changes
     useEffect(() => {
@@ -195,18 +204,18 @@ export function HierarchicalStudentSelector({
                         <option value="">
                             {t("Select guardian student", "เลือกนักเรียนของผู้ปกครอง")}
                         </option>
-                        {students.filter(s => s.guardianName).map((student) => (
+                        {guardianStudents.map((student) => (
                             <option key={student._id} value={student._id}>
                                 👤 {student.firstName} {student.lastName}
                                 {student.area ? ` [${student.area}]` : ""}
                             </option>
                         ))}
                     </select>
-                    {students.filter(s => s.guardianName).length > 0 && (
+                    {guardianStudents.length > 0 && (
                         <p className="mt-1 text-xs text-purple-600 dark:text-purple-400">
                             {t(
-                                `${students.filter(s => s.guardianName).length} guardian student${students.filter(s => s.guardianName).length !== 1 ? 's' : ''} available`,
-                                `มีนักเรียนของผู้ปกครอง ${students.filter(s => s.guardianName).length} คน`
+                                `${guardianStudents.length} guardian student${guardianStudents.length !== 1 ? 's' : ''} available`,
+                                `มีนักเรียนของผู้ปกครอง ${guardianStudents.length} คน`
                             )}
                         </p>
                     )}

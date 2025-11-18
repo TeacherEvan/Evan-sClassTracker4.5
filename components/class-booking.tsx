@@ -12,7 +12,7 @@ import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-short
 import { undoManager } from "@/lib/undo-manager";
 import { useMutation, useQuery } from "convex/react";
 import { AlertTriangle, BarChart3, Calendar, Check, Clock, Edit2, Info, MapPin, Plus, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { ClassAnalytics } from "./class-analytics";
 import { ClassConflictModal } from "./class-conflict-modal";
 import { CleanupUnpopulatedClassesButton } from "./cleanup-unpopulated-classes-button";
@@ -245,6 +245,33 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const [filterStudentId, setFilterStudentId] = useState<Id<"students"> | "all">("all");
   const [filterGrade, setFilterGrade] = useState<string>("all");
   const [filterClass, setFilterClass] = useState<string>("all");
+
+  // ✅ PERFORMANCE: Memoize conflict detection map (O(n²) → O(n) lookup)
+  // Pre-compute conflicts for all classes once, then look up by ID in render
+  const conflictMap = useMemo(() => {
+    if (!classes) return new Map<string, { ids: string[]; count: number }>();
+    
+    const map = new Map<string, { ids: string[]; count: number }>();
+    classes.forEach((classItem) => {
+      const conflictIds = detectConflicts(classes, classItem);
+      map.set(classItem._id, { ids: conflictIds, count: conflictIds.length });
+    });
+    return map;
+  }, [classes]);
+
+  // ✅ PERFORMANCE: Memoize filtered classes (avoid re-filtering on every render)
+  const filteredClasses = useMemo(() => {
+    if (!classes) return [];
+    
+    return classes.filter((classItem) => {
+      if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
+      if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
+      if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
+      if (filterGrade !== "all" && classItem.student?.grade !== filterGrade) return false;
+      if (filterClass !== "all" && classItem.student?.class !== filterClass) return false;
+      return true;
+    });
+  }, [classes, filterTeacherId, filterSchoolId, filterStudentId, filterGrade, filterClass]);
 
   // Filter panel collapse state
   const [isFilterPanelExpanded, setIsFilterPanelExpanded] = useState(false);
@@ -675,7 +702,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     if (!pendingDeleteId) return;
 
     const classId = pendingDeleteId;
-    const classData = allClasses?.find(c => c._id === classId);
+    const classData = classes?.find(c => c._id === classId);
 
     try {
       // Schedule deletion with undo capability
@@ -2209,16 +2236,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         {/* Classes List */}
         <div className="space-y-2">
           {(() => {
-            // Filter classes based on active filters
-            const filteredClasses = classes?.filter((classItem) => {
-              if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
-              if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
-              if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
-              if (filterGrade !== "all" && classItem.student?.grade !== filterGrade) return false;
-              if (filterClass !== "all" && classItem.student?.class !== filterClass) return false;
-              return true;
-            }) || [];
-
             // When ANY filter is active, group by student for hierarchical navigation
             const hasActiveFilters = filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all" || filterGrade !== "all" || filterClass !== "all";
 
@@ -2327,8 +2344,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     {isExpanded && (
                       <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 p-2 space-y-2">
                         {studentClasses.map((classItem) => {
-                          const conflictIds = detectConflicts(classes || [], classItem);
-                          const hasConflicts = conflictIds.length > 0;
+                          // ✅ PERFORMANCE: O(1) lookup instead of O(n²) recalculation
+                          const conflicts = conflictMap.get(classItem._id) || { ids: [], count: 0 };
+                          const hasConflicts = conflicts.count > 0;
 
                           return (
                             <ClassItemDisplay
@@ -2337,7 +2355,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                               userRole={userRole}
                               userId={userId}
                               hasConflicts={hasConflicts}
-                              conflictCount={conflictIds.length}
+                              conflictCount={conflicts.count}
                               onAcknowledge={handleAcknowledge}
                               onApprove={handleApprove}
                               onReject={handleReject}

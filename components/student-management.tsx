@@ -112,24 +112,28 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             : { schoolId: selectedSchoolId }
     ) as Student[] | undefined;
 
-    // Filter students client-side for guardian-only view
-    const filteredStudents = students?.filter((student) => {
-        if (selectedSchoolId === "guardian") {
-            return !student.schoolId && student.guardianName;
-        }
+    // ✅ PERFORMANCE: Memoize filtered students (avoid re-filtering on every render)
+    const filteredStudents = useMemo(() => {
+        if (!students) return undefined;
+        
+        return students.filter((student) => {
+            if (selectedSchoolId === "guardian") {
+                return !student.schoolId && student.guardianName;
+            }
 
-        // Apply grade filter
-        if (selectedGrade !== "all" && student.grade !== selectedGrade) {
-            return false;
-        }
+            // Apply grade filter
+            if (selectedGrade !== "all" && student.grade !== selectedGrade) {
+                return false;
+            }
 
-        // Apply class filter
-        if (selectedClass !== "all" && student.class !== selectedClass) {
-            return false;
-        }
+            // Apply class filter
+            if (selectedClass !== "all" && student.class !== selectedClass) {
+                return false;
+            }
 
-        return true;
-    });
+            return true;
+        });
+    }, [students, selectedSchoolId, selectedGrade, selectedClass]);
 
     // Get unique grades and classes from filtered students
     const uniqueGrades = useMemo(() => {

@@ -129,17 +129,20 @@ export function MonthlyCalendar({ currentUser }: MonthlyCalendarProps) {
         {
             key: "ArrowLeft",
             callback: goToPreviousMonth,
-            description: "Previous month / เดือนก่อนหน้า",
+            description: "Previous month",
+            descriptionTh: "เดือนก่อนหน้า",
         },
         {
             key: "ArrowRight",
             callback: goToNextMonth,
-            description: "Next month / เดือนถัดไป",
+            description: "Next month",
+            descriptionTh: "เดือนถัดไป",
         },
         {
             key: "t",
             callback: goToToday,
-            description: "Go to today / ไปวันนี้",
+            description: "Go to today",
+            descriptionTh: "ไปวันนี้",
         },
     ]);
 
