@@ -123,7 +123,7 @@ export default function SidebarNav({
     const visibleItems = navItems.filter((item) => item.roles.includes(userRole));
 
     return (
-        <nav className="h-full flex flex-col">
+        <nav className="h-full flex flex-col glass-panel">
             {/* Header */}
             {!compact && (
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700">

@@ -1,6 +1,6 @@
 /**
  * Audit Logging Helper Utilities
- * 
+ *
  * Simplifies adding audit logs throughout the application with enhanced tracking.
  * Import and use these helpers in mutations that need audit trails.
  */
@@ -176,6 +176,8 @@ export const AuditActions = {
     DELETE_SCHOOL: "delete_school",
 
     // Student Management
+    CREATE_STUDENT: "create_student",
+    UPDATE_STUDENT: "update_student",
     DELETE_STUDENT: "delete_student",
     BULK_DELETE_STUDENTS: "bulk_delete_students",
 
@@ -216,14 +218,14 @@ export const AuditTargetTypes = {
 
 /**
  * Example usage in a mutation:
- * 
+ *
  * import { logAudit, AuditActions, AuditTargetTypes } from "./auditHelpers";
- * 
+ *
  * export const deleteUser = mutation({
  *   handler: async (ctx, args) => {
  *     // ... perform deletion
  *     await ctx.db.delete(userId);
- *     
+ *
  *     // Log the action
  *     await logAudit(ctx, {
  *       userId: args.adminId,

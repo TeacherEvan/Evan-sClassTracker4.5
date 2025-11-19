@@ -348,11 +348,11 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
                             <Panel
                                 defaultSize={bottomPanelVisible ? 70 : 100}
                                 minSize={40}
-                                className="bg-white dark:bg-gray-800 overflow-y-auto"
+                                className="glass-panel overflow-y-auto"
                                 id="main-content"
                                 order={1}
                             >
-                                <div className="h-full p-4 md:p-6">
+                                <div className="h-full p-4 md:p-6 animate-pulse-blue">
                                     {renderContent}
                                 </div>
                             </Panel>                            {/* Bottom Panel (Collapsible) */}

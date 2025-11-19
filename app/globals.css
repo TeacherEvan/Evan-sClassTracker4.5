@@ -98,6 +98,28 @@ body {
   }
 }
 
+/* Pulsating blue animation for UI visibility */
+@keyframes pulse-blue {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0);
+  }
+}
+
+.animate-pulse-blue {
+  animation: pulse-blue 2s infinite;
+}
+
+/* Less transparent glass effect */
+.glass-panel {
+  @apply bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border border-gray-200/50 dark:border-gray-700/50 shadow-xl;
+}
+
 .pulse-red {
   animation: pulse-red 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   background-color: #ef4444;
