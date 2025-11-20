@@ -19,23 +19,28 @@
 ### 📖 Guides (Step-by-Step Instructions)
 
 #### 🔧 Setup & Configuration
+
 - **[ENVIRONMENT_SETUP_GUIDE.md](guides/setup/ENVIRONMENT_SETUP_GUIDE.md)** - Development environment
 - **[CI_CD_SETUP_GUIDE.md](guides/setup/CI_CD_SETUP_GUIDE.md)** - GitHub Actions pipeline
 - **[MONGODB_PASSWORD_RESET_GUIDE.md](guides/setup/MONGODB_PASSWORD_RESET_GUIDE.md)** - Database credentials
 
 #### 💻 Development
+
 - **[fix-startup-wizard-language-error.md](guides/development/fix-startup-wizard-language-error.md)** - Common dev issues
 
 #### 🧪 Testing
+
 - **[TESTING_GUIDE.md](guides/testing/TESTING_GUIDE.md)** - Running and writing tests
 - **[E2E_TESTING_GUIDE.md](guides/testing/E2E_TESTING_GUIDE.md)** - Playwright E2E testing
 - **[BCRYPT_TESTING_GUIDE.md](guides/testing/BCRYPT_TESTING_GUIDE.md)** - Password hashing tests
 
 #### 🚢 Deployment
+
 - **[DEPLOYMENT_GUIDE.md](guides/deployment/DEPLOYMENT_GUIDE.md)** - Production deployment
 - **[TROUBLESHOOTING_CI_CD.md](guides/deployment/TROUBLESHOOTING_CI_CD.md)** - Pipeline debugging
 
 #### 💾 Backup & Recovery
+
 - **[BACKUP_SYSTEM_GUIDE.md](guides/backup-recovery/BACKUP_SYSTEM_GUIDE.md)** - Automated backups
 - **[BACKUP_GUIDE.md](guides/backup-recovery/BACKUP_GUIDE.md)** - Manual backup procedures
 - **[BACKUP_OPTIMIZATION_REVIEW_NOV_2_2025.md](guides/backup-recovery/BACKUP_OPTIMIZATION_REVIEW_NOV_2_2025.md)** - Performance improvements
@@ -48,9 +53,12 @@
 - **[SYSTEM_OVERVIEW.md](architecture/SYSTEM_OVERVIEW.md)** - High-level system description
 
 #### 📊 Diagrams
+
 - **[SYSTEM_ARCHITECTURE_DIAGRAM.md](architecture/diagrams/SYSTEM_ARCHITECTURE_DIAGRAM.md)** - Visual system diagrams
 
 #### 🔬 Analysis
+
+- **[BOTTLENECK_ANALYSIS.md](BOTTLENECK_ANALYSIS.md)** - System performance & backup bottlenecks
 - **[COMPOSITIONAL_ARCHITECTURE_ANALYSIS.md](architecture/analysis/COMPOSITIONAL_ARCHITECTURE_ANALYSIS.md)** - Deep architectural analysis
 - **[COST_ANALYSIS_CONVEX_VS_VERCEL.md](architecture/analysis/COST_ANALYSIS_CONVEX_VS_VERCEL.md)** - Infrastructure costs
 
@@ -107,18 +115,23 @@
 ### �📁 Additional Resources
 
 #### 📦 Archive
+
 Historical documentation and implementation summaries → **[archive/](archive/)**
 
 #### 🔍 Deep Dive
+
 In-depth research, implementation plans → **[Deep/](Deep/)**
 
 #### 📚 Class Registry
+
 Student roster data → **[class-registry/](class-registry/)**
 
 #### 🖼️ Visual Assets
+
 Screenshots, diagrams → **[Images/](Images/)**, **[screenshots/](screenshots/)**
 
 #### ⚠️ Important
+
 Critical documentation → **[Important/](Important/)**
 
 ---
@@ -126,7 +139,7 @@ Critical documentation → **[Important/](Important/)**
 ## 🗺️ Navigation by Task
 
 | I need to... | Go to... |
-|--------------|----------|
+| :--- | :--- |
 | Set up development environment | `guides/setup/ENVIRONMENT_SETUP_GUIDE.md` |
 | Run tests | `guides/testing/TESTING_GUIDE.md` |
 | Deploy to production | `guides/deployment/DEPLOYMENT_GUIDE.md` |
@@ -205,12 +218,14 @@ When adding new documentation:
 ## 🗂️ Recent Updates
 
 **November 5, 2025** - Documentation reorganization
+
 - ✅ Created logical folder structure (guides, architecture, features, security, ui-design, audits-reviews)
 - ✅ Moved files to appropriate categories using `git mv` (preserves history)
 - ✅ Updated README with clear navigation and task-based index
 - ✅ Improved discoverability and maintainability
 
 **November 2, 2025** - v4.5.18
+
 - Updated backup guides
 - Added linting infrastructure docs
 - Security documentation improvements

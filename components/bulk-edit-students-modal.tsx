@@ -77,7 +77,7 @@ export function BulkEditStudentsModal({
         }
 
         // Build updates object with only enabled fields
-        const updates: Record<string, any> = {};
+        const updates: Record<string, string | undefined | null> = {};
 
         if (updateNickname) updates.nickname = nickname;
         if (updateGrade) updates.grade = grade;
@@ -112,16 +112,17 @@ export function BulkEditStudentsModal({
             });
 
             if (result.successful > 0) {
+                const failedMsgEn = result.failed > 0 ? ` (${result.failed} failed)` : "";
+                const failedMsgTh = result.failed > 0 ? ` (${result.failed} ล้มเหลว)` : "";
+
                 toast.success(
-                    `${t("Successfully updated", "อัปเดตสำเร็จ")} ${result.successful} ${t("students", "นักเรียน")}`,
-                    result.failed > 0
-                        ? `${result.failed} ${t("failed", "ล้มเหลว")}`
-                        : undefined
+                    `Successfully updated ${result.successful} students${failedMsgEn}`,
+                    `อัปเดตสำเร็จ ${result.successful} นักเรียน${failedMsgTh}`
                 );
             }
 
             if (result.failed > 0) {
-                const errorMessages = result.errors.map((e: any) => `${e.studentName}: ${e.error}`).join("\n");
+                const errorMessages = result.errors.map((e: { studentName: string; error: string }) => `${e.studentName}: ${e.error}`).join("\n");
                 toast.error(
                     t("Some updates failed", "การอัปเดตบางรายการล้มเหลว"),
                     errorMessages.substring(0, 200)
@@ -185,11 +186,11 @@ export function BulkEditStudentsModal({
                 </div>
 
                 {/* Content - Scrollable */}
-                <div className="overflow-y-auto flex-grow p-4 md:p-6 space-y-4 md:space-y-6">
+                <div className="overflow-y-auto grow p-4 md:p-6 space-y-4 md:space-y-6">
                     {/* Warning */}
                     <div className="rounded-lg border-2 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 p-4">
                         <div className="flex items-start gap-2">
-                            <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                            <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 shrink-0" />
                             <div className="text-sm text-yellow-800 dark:text-yellow-200">
                                 <p className="font-semibold mb-1">
                                     {t("Important: Selective Field Updates", "สำคัญ: การอัปเดตฟิลด์แบบเลือก")}
@@ -234,7 +235,7 @@ export function BulkEditStudentsModal({
                                 onChange={(e) => setUpdateNickname(e.target.checked)}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-nickname" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("Nickname", "ชื่อเล่น")}
                                 </label>
@@ -257,7 +258,7 @@ export function BulkEditStudentsModal({
                                 onChange={(e) => setUpdateGrade(e.target.checked)}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-grade" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("Grade", "ชั้น")}
                                 </label>
@@ -286,7 +287,7 @@ export function BulkEditStudentsModal({
                                 onChange={(e) => setUpdateClass(e.target.checked)}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-class" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("Class", "ห้อง")}
                                 </label>
@@ -325,7 +326,7 @@ export function BulkEditStudentsModal({
                                 }}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-school" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("School", "โรงเรียน")}
                                 </label>
@@ -357,7 +358,7 @@ export function BulkEditStudentsModal({
                                 }}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-provider" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("Provider", "ผู้ให้บริการ")}
                                 </label>
@@ -392,7 +393,7 @@ export function BulkEditStudentsModal({
                                 onChange={(e) => setUpdateGuardianName(e.target.checked)}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-guardian-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("Guardian Name", "ชื่อผู้ปกครอง")}
                                 </label>
@@ -414,7 +415,7 @@ export function BulkEditStudentsModal({
                                 onChange={(e) => setUpdateGuardianPhone(e.target.checked)}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-guardian-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("Guardian Phone", "เบอร์ผู้ปกครอง")}
                                 </label>
@@ -436,7 +437,7 @@ export function BulkEditStudentsModal({
                                 onChange={(e) => setUpdateGuardianEmail(e.target.checked)}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-guardian-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("Guardian Email", "อีเมลผู้ปกครอง")}
                                 </label>
@@ -465,7 +466,7 @@ export function BulkEditStudentsModal({
                                 onChange={(e) => setUpdateParentName(e.target.checked)}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-parent-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("Parent Name", "ชื่อผู้ปกครอง")}
                                 </label>
@@ -487,7 +488,7 @@ export function BulkEditStudentsModal({
                                 onChange={(e) => setUpdateParentPhone(e.target.checked)}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-parent-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("Parent Phone", "เบอร์ผู้ปกครอง")}
                                 </label>
@@ -509,7 +510,7 @@ export function BulkEditStudentsModal({
                                 onChange={(e) => setUpdateParentEmail(e.target.checked)}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-parent-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("Parent Email", "อีเมลผู้ปกครอง")}
                                 </label>
@@ -538,7 +539,7 @@ export function BulkEditStudentsModal({
                                 onChange={(e) => setUpdateAllergies(e.target.checked)}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-allergies" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("Allergies", "อาการแพ้")}
                                 </label>
@@ -560,7 +561,7 @@ export function BulkEditStudentsModal({
                                 onChange={(e) => setUpdateSpecialNeeds(e.target.checked)}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-special-needs" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("Special Needs", "ความต้องการพิเศษ")}
                                 </label>
@@ -582,7 +583,7 @@ export function BulkEditStudentsModal({
                                 onChange={(e) => setUpdateMedicalNotes(e.target.checked)}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-medical-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("Medical Notes", "บันทึกทางการแพทย์")}
                                 </label>
@@ -611,7 +612,7 @@ export function BulkEditStudentsModal({
                                 onChange={(e) => setUpdateNotes(e.target.checked)}
                                 className="mt-1"
                             />
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <label htmlFor="update-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     {t("Notes", "บันทึก")}
                                 </label>

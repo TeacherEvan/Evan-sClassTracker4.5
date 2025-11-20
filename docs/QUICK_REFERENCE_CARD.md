@@ -69,6 +69,7 @@ const [showHelp, setShowHelp] = useState(false);
 ```
 
 **Available Shortcuts**:
+
 - `Ctrl+N` - Create new item
 - `Ctrl+S` - Save  
 - `Ctrl+K` - Search/Filter
@@ -203,11 +204,13 @@ const handleBulkReject = async (ids: Id<"classes">[]) => {
 ## 🎨 Status Badge Pattern
 
 **Before** (Color-only, not accessible):
+
 ```typescript
 <div className={status === "approved" ? "bg-green-500" : "bg-red-500"} />
 ```
 
 **After** (Accessible):
+
 ```typescript
 import { Check, X } from "lucide-react";
 import { getStatusAriaLabel, getStatusBadgeClasses } from "@/lib/accessibility-utils";
@@ -226,6 +229,7 @@ const label = getStatusAriaLabel(status, language);
 ## 🔍 Migration Checklist
 
 ### Replace Console Logs
+
 ```typescript
 // Before
 console.log("User action:", action);
@@ -235,6 +239,7 @@ logger.debug("User action", { action, userId, component: "ClassBooking" });
 ```
 
 ### Add Keyboard Shortcuts
+
 ```typescript
 // Before
 {/* No shortcuts */}
@@ -247,6 +252,7 @@ useKeyboardShortcuts([
 ```
 
 ### Make Status Accessible
+
 ```typescript
 // Before
 <div className="bg-green-500" />
@@ -260,6 +266,7 @@ const { combined } = getStatusBadgeClasses("approved");
 ```
 
 ### Add Undo to Deletions
+
 ```typescript
 // Before
 const handleDelete = async (id) => {
@@ -324,6 +331,7 @@ import { BulkActionBar } from "@/components/bulk-action-bar";
 ## 🎯 Common Patterns
 
 ### Modal with Keyboard Support
+
 ```typescript
 const [showModal, setShowModal] = useState(false);
 
@@ -339,6 +347,7 @@ useKeyboardShortcuts([
 ```
 
 ### Form with Keyboard Support
+
 ```typescript
 const [isDirty, setIsDirty] = useState(false);
 
@@ -352,6 +361,7 @@ useKeyboardShortcuts([
 ```
 
 ### List with Keyboard Navigation
+
 ```typescript
 const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -381,7 +391,7 @@ useKeyboardShortcuts([
 - [ ] ARIA labels present on all status elements
 - [ ] Keyboard shortcuts don't conflict with browser
 - [ ] Escape key closes all modals
-- [ ] Console.* replaced with logger.* in components
+- [ ] Console.*replaced with logger.* in components
 - [ ] Undo available for all destructive actions
 - [ ] Bulk actions have confirmation modals
 - [ ] Screen reader announces dynamic changes

@@ -46,46 +46,13 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const removeStudent = useMutation(api.students.remove);
     const duplicateStudent = useMutation(api.students.duplicate);
     const bulkDeleteStudents = useMutation(api.bulkOperations.bulkDeleteStudents);
-    const bulkUpdateStudents = useMutation(api.bulkOperations.bulkUpdateStudents);
 
     const [selectedSchoolId, setSelectedSchoolId] = useState<Id<"schools"> | "guardian" | "all">("all");
     const [selectedGrade, setSelectedGrade] = useState<string>("all");
     const [selectedClass, setSelectedClass] = useState<string>("all");
     const [showForm, setShowForm] = useState(false);
 
-    // Keyboard shortcuts
-    useKeyboardShortcuts([
-        {
-            ...COMMON_SHORTCUTS.NEW,
-            callback: () => !showForm && setShowForm(true),
-            disabled: showForm,
-        },
-        {
-            ...COMMON_SHORTCUTS.CLOSE,
-            callback: () => showForm && setShowForm(false),
-            disabled: !showForm,
-        },
-        {
-            key: 'a',
-            ctrlKey: true,
-            description: { en: "Select all students", th: "เลือกนักเรียนทั้งหมด" },
-            callback: () => filteredStudents && setSelectedStudents(new Set(filteredStudents.map(s => s._id))),
-            disabled: !filteredStudents || filteredStudents.length === 0,
-        },
-        {
-            key: 'Escape',
-            description: { en: "Clear selection", th: "ล้างการเลือก" },
-            callback: () => setSelectedStudents(new Set()),
-            disabled: selectedStudents.size === 0,
-        },
-        {
-            key: 'e',
-            ctrlKey: true,
-            description: { en: "Edit selected students", th: "แก้ไขนักเรียนที่เลือก" },
-            callback: () => setShowBulkEditModal(true),
-            disabled: selectedStudents.size === 0,
-        },
-    ]);
+
     const [editingStudent, setEditingStudent] = useState<Id<"students"> | null>(null);
 
     // Form fields
@@ -156,6 +123,43 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             return true;
         });
     }, [students, selectedSchoolId, selectedGrade, selectedClass]);
+
+    // Keyboard shortcuts
+    useKeyboardShortcuts([
+        {
+            ...COMMON_SHORTCUTS.NEW,
+            callback: () => !showForm && setShowForm(true),
+            disabled: showForm,
+        },
+        {
+            ...COMMON_SHORTCUTS.CLOSE,
+            callback: () => showForm && setShowForm(false),
+            disabled: !showForm,
+        },
+        {
+            key: 'a',
+            ctrl: true,
+            description: "Select all students",
+            descriptionTh: "เลือกนักเรียนทั้งหมด",
+            callback: () => filteredStudents && setSelectedStudents(new Set(filteredStudents.map(s => s._id))),
+            disabled: !filteredStudents || filteredStudents.length === 0,
+        },
+        {
+            key: 'Escape',
+            description: "Clear selection",
+            descriptionTh: "ล้างการเลือก",
+            callback: () => setSelectedStudents(new Set()),
+            disabled: selectedStudents.size === 0,
+        },
+        {
+            key: 'e',
+            ctrl: true,
+            description: "Edit selected students",
+            descriptionTh: "แก้ไขนักเรียนที่เลือก",
+            callback: () => setShowBulkEditModal(true),
+            disabled: selectedStudents.size === 0,
+        },
+    ]);
 
     // Get unique grades and classes from filtered students
     const uniqueGrades = useMemo(() => {
@@ -449,47 +453,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         }
     };
 
-    const handleBulkEditSubmit = async (updates: any, reason: string) => {
-        try {
-            const result = await bulkUpdateStudents({
-                studentIds: Array.from(selectedStudents),
-                userId: currentUser._id,
-                updates,
-                reason,
-            });
 
-            if (result.successful > 0) {
-                setSuccess(
-                    t(
-                        `Successfully updated ${result.successful} student(s)`,
-                        `อัปเดตนักเรียนสำเร็จ ${result.successful} คน`
-                    )
-                );
-                setSelectedStudents(new Set()); // Clear selection
-            }
-
-            if (result.failed > 0) {
-                const errorDetails = result.errors
-                    .slice(0, 5)
-                    .map((err) => `• ${err.studentName || 'Unknown'}: ${err.error}`)
-                    .join('\n');
-                const moreErrors = result.errors.length > 5
-                    ? `\n...and ${result.errors.length - 5} more`
-                    : '';
-                setError(
-                    t(
-                        `Failed to update ${result.failed} student(s):\n${errorDetails}${moreErrors}`,
-                        `ไม่สามารถอัปเดตนักเรียนได้ ${result.failed} คน:\n${errorDetails}${moreErrors}`
-                    )
-                );
-            }
-
-            setShowBulkEditModal(false);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to bulk update students");
-            setShowBulkEditModal(false);
-        }
-    };
 
     const toggleStudentSelection = (studentId: Id<"students">) => {
         const newSelection = new Set(selectedStudents);

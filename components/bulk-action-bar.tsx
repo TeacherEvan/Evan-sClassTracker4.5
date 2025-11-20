@@ -21,7 +21,7 @@ export function BulkActionBar({
   onReject,
   onClearSelection,
   entityType = "class",
-  onEdit,
+  onEdit: _onEdit,
 }: BulkActionBarProps) {
   const { language } = useLanguage();
   const [isProcessing, setIsProcessing] = useState(false);

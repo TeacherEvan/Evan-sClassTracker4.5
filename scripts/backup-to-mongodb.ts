@@ -1,24 +1,24 @@
 /**
  * Automated Convex to MongoDB Backup Script
- * 
+ *
  * This script:
  * 1. Exports all data from Convex tables
  * 2. Stores complete snapshots in MongoDB
  * 3. Runs daily at midnight (00:00)
  * 4. Enables disaster recovery if Convex crashes
- * 
+ *
  * Usage:
  *   npm run backup           - Run backup manually
  *   npm run backup:schedule  - Start automated daily backups
  *   npm run backup:restore   - Restore from latest backup
- * 
+ *
  * @version 4.5.12
  * @date October 31, 2025
  */
 
 import { ConvexHttpClient } from "convex/browser";
 import * as dotenv from "dotenv";
-import { Collection, Db, MongoClient, ObjectId } from "mongodb";
+import { Db, MongoClient, ObjectId } from "mongodb";
 import { api } from "../convex/_generated/api";
 
 dotenv.config({ path: ".env.local" });
@@ -60,6 +60,7 @@ const TABLES_TO_BACKUP = [
 // ============================================================================
 
 interface BackupMetadata {
+    _id?: ObjectId;
     backupId: string;
     timestamp: number;
     date: string;
@@ -69,19 +70,18 @@ interface BackupMetadata {
     status: "in_progress" | "completed" | "failed";
     error?: string;
     duration?: number; // milliseconds
+    totalSizeBytes: number;
     tables: {
         name: string;
         recordCount: number;
-        sizeBytes?: number;
+        sizeBytes: number;
     }[];
 }
 
-interface BackupDocument {
-    _id?: ObjectId;
-    metadata: BackupMetadata;
-    data: {
-        [tableName: string]: unknown[];
-    };
+interface BackupRecordDocument {
+    backupId: string;
+    tableName: string;
+    data: unknown;
 }
 
 // ============================================================================
@@ -102,9 +102,12 @@ async function connectMongoDB(): Promise<Db> {
     console.log(`✅ Connected to MongoDB database: ${MONGODB_DATABASE}`);
 
     // Create indexes for faster queries
-    await db.collection("backups").createIndex({ "metadata.timestamp": -1 });
-    await db.collection("backups").createIndex({ "metadata.status": 1 });
-    await db.collection("backups").createIndex({ "metadata.date": 1 });
+    await db.collection("backups").createIndex({ "timestamp": -1 });
+    await db.collection("backups").createIndex({ "status": 1 });
+    await db.collection("backups").createIndex({ "backupId": 1 }, { unique: true });
+
+    // Create indexes for backup records
+    await db.collection("backup_records").createIndex({ "backupId": 1, "tableName": 1 });
 
     return db;
 }
@@ -116,41 +119,6 @@ async function disconnectMongoDB(): Promise<void> {
         db = null;
         console.log("🔌 Disconnected from MongoDB");
     }
-}
-
-// ============================================================================
-// CONVEX DATA EXPORT
-// ============================================================================
-
-async function exportConvexData(): Promise<{ [tableName: string]: unknown[] }> {
-    if (!CONVEX_URL) {
-        throw new Error("NEXT_PUBLIC_CONVEX_URL not found in .env.local");
-    }
-
-    console.log(`📡 Connecting to Convex at ${CONVEX_URL}...`);
-    const client = new ConvexHttpClient(CONVEX_URL);
-
-    const allData: { [tableName: string]: unknown[] } = {};
-
-    for (const tableName of TABLES_TO_BACKUP) {
-        try {
-            console.log(`📥 Exporting table: ${tableName}...`);
-
-            // Query all records from the table using our custom export function
-            const records = await client.query(api.exports.exportTable, {
-                tableName,
-            });
-
-            allData[tableName] = records || [];
-            console.log(`   ✅ Exported ${records?.length || 0} records from ${tableName}`);
-        } catch (error) {
-            console.error(`   ❌ Failed to export ${tableName}:`, error);
-            // Continue with other tables even if one fails
-            allData[tableName] = [];
-        }
-    }
-
-    return allData;
 }
 
 // ============================================================================
@@ -168,53 +136,94 @@ async function createBackup(): Promise<string> {
     console.log(`📅 Timestamp: ${date}`);
     console.log("=".repeat(60) + "\n");
 
+    if (!CONVEX_URL) {
+        throw new Error("NEXT_PUBLIC_CONVEX_URL not found in .env.local");
+    }
+
+    const client = new ConvexHttpClient(CONVEX_URL);
+    const database = await connectMongoDB();
+    const backupsCollection = database.collection<BackupMetadata>("backups");
+    const recordsCollection = database.collection<BackupRecordDocument>("backup_records");
+
+    // 1. Initialize metadata
+    const metadata: BackupMetadata = {
+        backupId,
+        timestamp,
+        date,
+        convexDeploymentUrl: CONVEX_URL,
+        tableCount: 0,
+        totalRecords: 0,
+        totalSizeBytes: 0,
+        status: "in_progress",
+        tables: [],
+    };
+
+    await backupsCollection.insertOne(metadata);
+
     try {
-        // 1. Export data from Convex
-        const data = await exportConvexData();
+        let totalRecords = 0;
+        let totalSizeBytes = 0;
+        const tableStats: BackupMetadata["tables"] = [];
 
-        // 2. Calculate metadata
-        const tables = Object.entries(data).map(([name, records]) => ({
-            name,
-            recordCount: records.length,
-            sizeBytes: JSON.stringify(records).length,
-        }));
+        // 2. Process each table
+        for (const tableName of TABLES_TO_BACKUP) {
+            console.log(`📥 Processing table: ${tableName}...`);
 
-        const totalRecords = tables.reduce((sum, t) => sum + t.recordCount, 0);
-        const tableCount = tables.length;
+            try {
+                // Fetch data from Convex
+                const records = await client.query(api.exports.exportTable, { tableName }) as unknown[];
 
-        const metadata: BackupMetadata = {
-            backupId,
-            timestamp,
-            date,
-            convexDeploymentUrl: CONVEX_URL || "",
-            tableCount,
-            totalRecords,
-            status: "in_progress",
-            tables,
-        };
+                if (!records || records.length === 0) {
+                    console.log(`   ⚠️  No records found for ${tableName}`);
+                    tableStats.push({ name: tableName, recordCount: 0, sizeBytes: 0 });
+                    continue;
+                }
 
-        // 3. Connect to MongoDB
-        const database = await connectMongoDB();
-        const backupsCollection: Collection<BackupDocument> = database.collection("backups");
+                const recordCount = records.length;
+                const sizeBytes = JSON.stringify(records).length; // Approximate size
 
-        // 4. Store backup in MongoDB
-        console.log("\n💾 Storing backup in MongoDB...");
+                // Prepare documents for bulk insert
+                const backupDocs: BackupRecordDocument[] = records.map(record => ({
+                    backupId,
+                    tableName,
+                    data: record
+                }));
 
-        const backupDocument: BackupDocument = {
-            metadata,
-            data,
-        };
+                // Insert into MongoDB in batches to avoid memory issues with huge arrays
+                const BATCH_SIZE = 1000;
+                for (let i = 0; i < backupDocs.length; i += BATCH_SIZE) {
+                    const batch = backupDocs.slice(i, i + BATCH_SIZE);
+                    await recordsCollection.insertMany(batch);
+                }
 
-        await backupsCollection.insertOne(backupDocument);
+                console.log(`   ✅ Backed up ${recordCount} records (${(sizeBytes / 1024).toFixed(2)} KB)`);
 
-        // 5. Update status to completed
+                totalRecords += recordCount;
+                totalSizeBytes += sizeBytes;
+                tableStats.push({ name: tableName, recordCount, sizeBytes });
+
+                // Optional: Force garbage collection if exposed (usually not in standard Node)
+                // global.gc && global.gc();
+
+            } catch (error) {
+                console.error(`   ❌ Failed to backup table ${tableName}:`, error);
+                // We continue with other tables, but mark this one as empty/failed in stats
+                tableStats.push({ name: tableName, recordCount: 0, sizeBytes: 0 });
+            }
+        }
+
+        // 3. Update metadata with final stats
         const duration = Date.now() - startTime;
         await backupsCollection.updateOne(
-            { "metadata.backupId": backupId },
+            { backupId },
             {
                 $set: {
-                    "metadata.status": "completed",
-                    "metadata.duration": duration,
+                    status: "completed",
+                    duration,
+                    tableCount: tableStats.length,
+                    totalRecords,
+                    totalSizeBytes,
+                    tables: tableStats
                 },
             }
         );
@@ -223,25 +232,25 @@ async function createBackup(): Promise<string> {
         console.log(`✅ Backup completed successfully!`);
         console.log(`📊 Statistics:`);
         console.log(`   - Backup ID: ${backupId}`);
-        console.log(`   - Total Tables: ${tableCount}`);
+        console.log(`   - Total Tables: ${tableStats.length}`);
         console.log(`   - Total Records: ${totalRecords.toLocaleString()}`);
         console.log(`   - Duration: ${(duration / 1000).toFixed(2)}s`);
-        console.log(`   - Size: ${(JSON.stringify(data).length / 1024 / 1024).toFixed(2)} MB`);
+        console.log(`   - Size: ${(totalSizeBytes / 1024 / 1024).toFixed(2)} MB`);
         console.log("=".repeat(60) + "\n");
 
         return backupId;
+
     } catch (error) {
         console.error("\n❌ Backup failed:", error);
 
         // Update status to failed
-        const database = await connectMongoDB();
-        await database.collection("backups").updateOne(
-            { "metadata.backupId": backupId },
+        await backupsCollection.updateOne(
+            { backupId },
             {
                 $set: {
-                    "metadata.status": "failed",
-                    "metadata.error": error instanceof Error ? error.message : String(error),
-                    "metadata.duration": Date.now() - startTime,
+                    status: "failed",
+                    error: error instanceof Error ? error.message : String(error),
+                    duration: Date.now() - startTime,
                 },
             }
         );
@@ -260,19 +269,19 @@ async function restoreFromBackup(backupId?: string): Promise<void> {
     console.log("=".repeat(60) + "\n");
 
     const database = await connectMongoDB();
-    const backupsCollection: Collection<BackupDocument> = database.collection("backups");
+    const backupsCollection = database.collection<BackupMetadata>("backups");
 
     // 1. Find backup to restore
-    let backup: BackupDocument | null;
+    let backup: BackupMetadata | null;
 
     if (backupId) {
         console.log(`🔍 Looking for backup: ${backupId}...`);
-        backup = await backupsCollection.findOne({ "metadata.backupId": backupId });
+        backup = await backupsCollection.findOne({ backupId });
     } else {
         console.log(`🔍 Looking for latest successful backup...`);
         backup = await backupsCollection.findOne(
-            { "metadata.status": "completed" },
-            { sort: { "metadata.timestamp": -1 } }
+            { status: "completed" },
+            { sort: { timestamp: -1 } }
         );
     }
 
@@ -280,22 +289,18 @@ async function restoreFromBackup(backupId?: string): Promise<void> {
         throw new Error(backupId ? `Backup ${backupId} not found` : "No successful backups found");
     }
 
-    console.log(`✅ Found backup: ${backup.metadata.backupId}`);
-    console.log(`📅 Created: ${backup.metadata.date}`);
-    console.log(`📊 Contains ${backup.metadata.totalRecords.toLocaleString()} records across ${backup.metadata.tableCount} tables\n`);
+    console.log(`✅ Found backup: ${backup.backupId}`);
+    console.log(`📅 Created: ${backup.date}`);
+    console.log(`📊 Contains ${backup.totalRecords.toLocaleString()} records across ${backup.tableCount} tables\n`);
 
     // 2. WARNING: Confirm restore
     console.warn("⚠️  WARNING: This will OVERWRITE all current Convex data!");
     console.warn("⚠️  Make sure you understand the implications before proceeding.\n");
     console.log("❌ RESTORE ABORTED: Manual implementation required for safety");
     console.log("📋 To restore manually:");
-    console.log("   1. Review backup data in MongoDB");
+    console.log("   1. Query 'backup_records' collection by backupId");
     console.log("   2. Use Convex dashboard to import data");
     console.log("   3. Or implement custom restore mutations in Convex\n");
-
-    // Note: Automatic restore is intentionally not implemented for safety.
-    // Restoring requires careful planning and should be done manually or with
-    // explicit confirmation to prevent accidental data loss.
 }
 
 // ============================================================================
@@ -306,15 +311,37 @@ async function cleanupOldBackups(): Promise<void> {
     console.log("\n🧹 Cleaning up old backups...");
 
     const database = await connectMongoDB();
-    const backupsCollection = database.collection("backups");
+    const backupsCollection = database.collection<BackupMetadata>("backups");
+    const recordsCollection = database.collection<BackupRecordDocument>("backup_records");
 
     const cutoffDate = Date.now() - (BACKUP_RETENTION_DAYS * 24 * 60 * 60 * 1000);
 
-    const result = await backupsCollection.deleteMany({
-        "metadata.timestamp": { $lt: cutoffDate },
+    // 1. Find backups to delete
+    const oldBackups = await backupsCollection
+        .find({ timestamp: { $lt: cutoffDate } })
+        .project({ backupId: 1 })
+        .toArray();
+
+    if (oldBackups.length === 0) {
+        console.log("   ✅ No old backups found to delete");
+        return;
+    }
+
+    const backupIds = oldBackups.map(b => b.backupId);
+    console.log(`   Found ${backupIds.length} backups to delete: ${backupIds.join(", ")}`);
+
+    // 2. Delete metadata
+    const metaResult = await backupsCollection.deleteMany({
+        backupId: { $in: backupIds }
     });
 
-    console.log(`   ✅ Deleted ${result.deletedCount} backups older than ${BACKUP_RETENTION_DAYS} days`);
+    // 3. Delete records
+    const recordsResult = await recordsCollection.deleteMany({
+        backupId: { $in: backupIds }
+    });
+
+    console.log(`   ✅ Deleted ${metaResult.deletedCount} backup metadata entries`);
+    console.log(`   ✅ Deleted ${recordsResult.deletedCount} backup records`);
 }
 
 // ============================================================================
@@ -327,11 +354,11 @@ async function listBackups(): Promise<void> {
     console.log("=".repeat(60) + "\n");
 
     const database = await connectMongoDB();
-    const backupsCollection: Collection<BackupDocument> = database.collection("backups");
+    const backupsCollection = database.collection<BackupMetadata>("backups");
 
     const backups = await backupsCollection
-        .find({}, { projection: { metadata: 1 } })
-        .sort({ "metadata.timestamp": -1 })
+        .find({})
+        .sort({ timestamp: -1 })
         .limit(20)
         .toArray();
 
@@ -341,17 +368,16 @@ async function listBackups(): Promise<void> {
     }
 
     for (const backup of backups) {
-        const meta = backup.metadata;
-        const statusIcon = meta.status === "completed" ? "✅" : meta.status === "failed" ? "❌" : "⏳";
-        const size = meta.tables.reduce((sum, t) => sum + (t.sizeBytes || 0), 0) / 1024 / 1024;
+        const statusIcon = backup.status === "completed" ? "✅" : backup.status === "failed" ? "❌" : "⏳";
+        const size = (backup.totalSizeBytes || 0) / 1024 / 1024;
 
-        console.log(`${statusIcon} ${meta.backupId}`);
-        console.log(`   Date: ${meta.date}`);
-        console.log(`   Status: ${meta.status}`);
-        console.log(`   Records: ${meta.totalRecords.toLocaleString()}`);
+        console.log(`${statusIcon} ${backup.backupId}`);
+        console.log(`   Date: ${backup.date}`);
+        console.log(`   Status: ${backup.status}`);
+        console.log(`   Records: ${backup.totalRecords.toLocaleString()}`);
         console.log(`   Size: ${size.toFixed(2)} MB`);
-        if (meta.duration) {
-            console.log(`   Duration: ${(meta.duration / 1000).toFixed(2)}s`);
+        if (backup.duration) {
+            console.log(`   Duration: ${(backup.duration / 1000).toFixed(2)}s`);
         }
         console.log("");
     }

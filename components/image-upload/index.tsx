@@ -31,7 +31,8 @@ export function ImageUploader() {
                     body: selectedFile,
                 });
                 const { storageId } = await result.json();
-                await seedDatabase({ storageId });
+                console.log("Uploaded storageId:", storageId);
+                await seedDatabase({});
                 setUploadResult("success");
             } catch (error) {
                 console.error(error);

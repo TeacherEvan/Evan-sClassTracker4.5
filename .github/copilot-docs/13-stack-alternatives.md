@@ -15,7 +15,7 @@ Document alternative providers for each stack component with migration paths, en
 ## Current Stack Overview
 
 | Component | Current | Purpose | Lock-in Risk |
-|-----------|---------|---------|--------------|
+| :--- | :--- | :--- | :--- |
 | **Hosting** | Vercel | Next.js deployment, CDN, edge functions | Medium |
 | **Backend** | Convex | Real-time database, serverless functions | High |
 | **Database Backup** | MongoDB Atlas | Secondary backup storage | Low |
@@ -477,7 +477,7 @@ npx convex import --path ./backup-2025-11-02.zip
 - ✅ Free (included with Convex)
 - ✅ Fast restore
 
-**Recommended**: Use this INSTEAD of MongoDB for backups!
+**Recommendation**: Use as a **complement** to MongoDB backups. MongoDB provides off-platform redundancy (critical for disaster recovery), while Convex snapshots offer quick platform-native restores.
 
 ---
 
@@ -541,7 +541,7 @@ git push gitlab --tags
 
 - Hosting: Vercel → **Netlify** (Easy migration, similar DX)
 - Backend: Keep Convex (no good alternative without major rewrite)
-- Backup: MongoDB → **Convex Snapshots** (Native, simpler)
+- Backup: Keep MongoDB + Add **Convex Snapshots** (Redundancy)
 - Repository: Keep GitHub
 
 **Migration Time**: 1-2 days  
@@ -659,7 +659,7 @@ vercel --prod
 ## 8. Cost Comparison (100 Active Users)
 
 | Provider Combo | Monthly Cost | Free Tier | Lock-in Risk |
-|----------------|--------------|-----------|--------------|
+| :--- | :--- | :--- | :--- |
 | **Current** (Vercel + Convex + MongoDB) | $0-20 | Yes | Medium |
 | **Netlify + Convex** | $0-20 | Yes | Medium |
 | **Cloudflare + Supabase** | $0 | Yes | Low |
@@ -667,7 +667,9 @@ vercel --prod
 | **AWS (Amplify + AppSync)** | $30-50 | Limited | High |
 | **Self-Hosted (VPS + Supabase)** | $15-25 | No | None |
 
-*Assumes: 1M pageviews/month, 10M database operations/month, 100GB bandwidth*
+### Assumptions
+
+Assumes: 1M pageviews/month, 10M database operations/month, 100GB bandwidth
 
 ---
 

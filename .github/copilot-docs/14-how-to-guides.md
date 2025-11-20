@@ -277,7 +277,7 @@ vercel ls  # Check new deployment
 
 #### Via Admin UI (Recommended)
 
-```
+```text
 1. Login as admin
 2. Navigate to school management (if moderator) or user list (if teacher)
 3. Click "Add User" or "Create User"
@@ -294,7 +294,7 @@ vercel ls  # Check new deployment
 
 #### Via Convex Dashboard (Direct)
 
-```
+```text
 1. Visit https://dashboard.convex.dev
 2. Select your deployment
 3. Click "Data" in sidebar
@@ -329,7 +329,7 @@ node -e "const bcrypt = require('bcrypt'); bcrypt.hash('TeacherTeacher1', 10, (e
 
 #### Method 1: Via Admin UI
 
-```
+```text
 1. Login as admin
 2. Find user in list
 3. Click "Reset Password"
@@ -340,7 +340,7 @@ node -e "const bcrypt = require('bcrypt'); bcrypt.hash('TeacherTeacher1', 10, (e
 
 #### Method 2: Via Convex Dashboard
 
-```
+```text
 1. Dashboard → Data → users
 2. Find user by username
 3. Click Edit
@@ -621,7 +621,23 @@ export const update = mutation({
 
 ### Daily Backup (Automated)
 
-#### Setup Automated Backups
+#### Setup Automated Backups (Recommended)
+
+Use the provided PowerShell script to automatically configure Windows Task Scheduler:
+
+```powershell
+# Run the setup script (requires Administrator privileges)
+.\scripts\setup-windows-backup-task.ps1
+```
+
+This script will:
+
+1. Create a task named "ClassTrackerBackup"
+2. Schedule it to run daily at 02:00 AM
+3. Configure it to run hidden (no popup window)
+4. Ensure it runs whether user is logged in or not
+
+#### Manual Setup (Alternative)
 
 ```powershell
 # Windows Task Scheduler
@@ -632,11 +648,6 @@ export const update = mutation({
 # 5. Action: Start a program
 #    Program: powershell.exe
 #    Arguments: -File "C:\path\to\backup-script.ps1"
-
-# backup-script.ps1 content:
-cd "C:\path\to\class-tracker"
-npm run backup
-# Logs to backup-log.txt
 ```
 
 #### Manual Backup

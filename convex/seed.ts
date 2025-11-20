@@ -11,6 +11,7 @@ export const seedDatabase = mutation({
     if (args.clearExisting) {
       const tables = ["schools", "users", "students", "classes", "notifications", "messages"];
       for (const table of tables) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const docs = await ctx.db.query(table as any).collect();
         for (const doc of docs) {
           await ctx.db.delete(doc._id);
@@ -87,7 +88,7 @@ export const seedDatabase = mutation({
     // 5. Create Classes
     const now = Date.now();
     const day = 24 * 60 * 60 * 1000;
-    
+
     for (let i = 0; i < 5; i++) {
       // Set time to 9:00 AM
       const date = new Date(now + (i * day));

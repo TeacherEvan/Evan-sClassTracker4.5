@@ -788,7 +788,7 @@ test.describe('Provider Booking', () => {
 
 #### 6.2 Remove Deprecated Schema Fields
 
-**⚠️ ONLY AFTER migration is fully complete and tested**
+⚠️ ONLY AFTER migration is fully complete and tested
 
 ```typescript
 // convex/schema.ts
@@ -837,7 +837,7 @@ role: v.union(
 - Easier to add new provider types
 ```
 
-2. **.github/copilot-instructions.md**:
+1. **.github/copilot-instructions.md**:
 
 ```markdown
 ## Pattern #X: Provider System (Replaces Guardian)
@@ -858,12 +858,11 @@ await createStudent({
 });
 ```
 
-```
+1. **docs/ARCHITECTURE.md**:
+   Update architecture diagrams to remove guardian role and show provider system.
 
-3. **docs/ARCHITECTURE.md**:
-Update architecture diagrams to remove guardian role and show provider system.
+2. **TODO.md**:
 
-4. **TODO.md**:
 ```markdown
 ## Completed
 - [x] Guardian to Provider migration
@@ -1074,25 +1073,25 @@ npx convex deploy
 
 ### Estimated Timeline (3-4 days)
 
-**Day 1: Infrastructure**
+#### Day 1: Infrastructure
 
 - Morning: Deploy schema changes (30 min)
 - Afternoon: Execute data migration (1 hour)
 - Evening: Verify migration success (30 min)
 
-**Day 2: Backend Updates**
+#### Day 2: Backend Updates
 
 - Morning: Update convex/students.ts (2 hours)
 - Afternoon: Update convex/classes.ts (2 hours)
 - Evening: Update convex/providers.ts (1 hour)
 
-**Day 3: Frontend Updates**
+#### Day 3: Frontend Updates
 
 - Morning: Update class-booking.tsx (2 hours)
 - Afternoon: Update student-management.tsx (2 hours)
 - Evening: Update hierarchical-student-selector.tsx (1 hour)
 
-**Day 4: Testing & Cleanup**
+#### Day 4: Testing & Cleanup
 
 - Morning: Update E2E tests (2 hours)
 - Afternoon: Run full test suite (1 hour)

@@ -154,7 +154,7 @@ export default function SidebarNav({
                 `}
                                 title={compact ? label : undefined}
                             >
-                                <Icon className={`${compact ? "w-6 h-6" : "w-5 h-5"} flex-shrink-0`} />
+                                <Icon className={`${compact ? "w-6 h-6" : "w-5 h-5"} shrink-0`} />
                                 {!compact && (
                                     <span className="text-sm font-medium">{label}</span>
                                 )}
