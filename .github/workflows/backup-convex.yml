@@ -74,7 +74,7 @@ jobs:
 
       # Option 1: Upload to GitHub Releases (FREE & EASIEST)
       - name: Create GitHub Release for Backup
-        if: ${{ github.event.inputs.upload_to_cloud != 'false' || github.event_name == 'schedule' }}
+        if: github.event.inputs.upload_to_cloud != 'false' || github.event_name == 'schedule'
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -95,7 +95,7 @@ jobs:
 
       # Cleanup: Remove old backups from GitHub Releases (keep last 30 backups)
       - name: Cleanup old GitHub Release backups
-        if: ${{ github.event.inputs.upload_to_cloud != 'false' || github.event_name == 'schedule' }}
+        if: github.event.inputs.upload_to_cloud != 'false' || github.event_name == 'schedule'
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -115,20 +115,3 @@ jobs:
           } else {
             Write-Host "No old backups to clean up."
           }
-
-      # Option 2: Upload to AWS S3 (Optional)
-      - name: Upload to S3
-        if: ${{ (github.event.inputs.upload_to_cloud != 'false' || github.event_name == 'schedule') }}
-        continue-on-error: true
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
-        run: |
-          if (-not $env:AWS_ACCESS_KEY_ID) {
-            Write-Host "⚠️ S3 credentials not configured, skipping S3 upload"
-            exit 0
-          }
-
-          aws s3 cp "${{ env.BACKUP_PATH }}" "s3://${{ secrets.AWS_S3_BUCKET }}/convex-backups/${{ env.BACKUP_FILENAME }}"
-          Write-Host "✅ Uploaded to S3: s3://${{ secrets.AWS_S3_BUCKET }}/convex-backups/${{ env.BACKUP_FILENAME }}"

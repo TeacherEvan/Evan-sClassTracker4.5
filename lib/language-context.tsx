@@ -16,34 +16,38 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
 );
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  // Initialize with smart detection: user profile > localStorage > browser language > default Thai
-  const [language, setLanguageState] = useState<Language>(() => {
+  // Initialize with default language to match server-side rendering
+  // We'll sync with client preference in useEffect to avoid hydration mismatch
+  const [language, setLanguageState] = useState<Language>("th");
+
+  // Sync language from user profile/localStorage on mount
+  useEffect(() => {
     if (typeof window !== "undefined") {
       // Priority 1: Check user profile (if logged in)
       const user = loadUserSession();
       if (user?.preferredLanguage) {
         console.log(`🌍 Loaded language from user profile: ${user.preferredLanguage}`);
+        setLanguageState(user.preferredLanguage as Language);
         localStorage.setItem("preferredLanguage", user.preferredLanguage);
-        return user.preferredLanguage as Language;
+        return;
       }
 
       // Priority 2: Check localStorage
       const saved = localStorage.getItem("preferredLanguage");
+      if (saved) {
+        setLanguageState(saved as Language);
+        return;
+      }
 
       // Priority 3: Auto-detect from browser if no preference
-      if (!saved) {
-        // Detect browser language (navigator.language returns 'en-US', 'th-TH', etc.)
-        const browserLang = navigator.language.toLowerCase();
-        const detectedLang: Language = browserLang.startsWith('th') ? 'th' : 'en';
+      const browserLang = navigator.language.toLowerCase();
+      const detectedLang: Language = browserLang.startsWith('th') ? 'th' : 'en';
 
-        console.log(`🌍 Auto-detected language: ${detectedLang} (from browser: ${navigator.language})`);
-        localStorage.setItem("preferredLanguage", detectedLang);
-        return detectedLang;
-      }
-      return (saved as Language) || "th";
+      console.log(`🌍 Auto-detected language: ${detectedLang} (from browser: ${navigator.language})`);
+      setLanguageState(detectedLang);
+      localStorage.setItem("preferredLanguage", detectedLang);
     }
-    return "th";
-  });
+  }, []);
 
   // Sync language from user profile when user logs in
   useEffect(() => {
