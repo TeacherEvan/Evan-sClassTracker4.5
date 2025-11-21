@@ -52,7 +52,7 @@ jobs:
           $BACKUP_PATH = "./backups/convex-backup-$DATE.zip"
 
           Write-Host "📤 Exporting data from Convex..."
-          Write-Host "�� Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+          Write-Host "📅 Date: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
           Write-Host "📁 Backup path: $BACKUP_PATH"
 
           # Export with file storage if requested
@@ -81,16 +81,16 @@ jobs:
         run: |
           $DATE = Get-Date -Format "yyyy-MM-dd-HHmm"
           $TAG_NAME = "backup-$DATE"
-          
+
           Write-Host "📦 Creating GitHub Release: $TAG_NAME"
-          
+
           # Create release and upload backup file
           gh release create "$TAG_NAME" `
             "${{ env.BACKUP_PATH }}" `
             --title "Convex Backup $DATE" `
             --notes "Automated Convex database backup`n`nSize: ${{ env.FILE_SIZE }} MB`nDate: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" `
             --repo "${{ github.repository }}"
-          
+
           Write-Host "✅ Uploaded to GitHub Releases: $TAG_NAME"
 
       # Cleanup: Remove old backups from GitHub Releases (keep last 30 backups)
@@ -101,10 +101,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           Write-Host "🧹 Cleaning up old backup releases (keep last 30)..."
-          
+
           # List all backup releases (sorted by date, newest first)
           $RELEASES = gh release list --repo "${{ github.repository }}" --limit 100 | Where-Object { $_ -match "backup-" }
-          
+
           if ($RELEASES.Count -gt 30) {
             $TO_DELETE = $RELEASES | Select-Object -Skip 30
             foreach ($release in $TO_DELETE) {
