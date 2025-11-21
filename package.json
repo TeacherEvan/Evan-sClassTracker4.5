@@ -30,6 +30,7 @@
     "test:e2e:replay": "cross-env HAR_MODE=replay playwright test"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.22.0",
     "convex": "^1.28.0",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.554.0",
@@ -44,7 +45,7 @@
     "@next/bundle-analyzer": "^15.5.6",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.1.17",
-    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^20.19.25",
     "@types/react": "^19.2.6",

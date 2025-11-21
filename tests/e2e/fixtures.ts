@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { test as base, expect } from '@playwright/test';
+import { ConvexHttpClient } from "convex/browser";
 import { login, TEST_USERS } from './helpers';
 
 /**
@@ -9,6 +10,7 @@ import { login, TEST_USERS } from './helpers';
  * 1. HAR Mocking: Records/replays Convex backend traffic (eliminates external dependency)
  * 2. Worker-Scoped Auth: Login once per worker, reuse across tests (saves ~54s per run)
  * 3. Automatic cleanup: Auth state persisted to .auth/ directory
+ * 4. Convex Client: Direct API access for fast data seeding
  */
 
 // Worker-scoped fixture for shared authentication state
@@ -32,6 +34,11 @@ type TestFixtures = {
      * Mode: 'record' (first run) or 'replay' (subsequent runs)
      */
     harMockedPage: Page;
+
+    /**
+     * Convex Client for direct API access (data seeding)
+     */
+    convexClient: ConvexHttpClient;
 };
 
 export const test = base.extend<TestFixtures, WorkerFixtures>({
@@ -58,7 +65,7 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
     }, { scope: 'worker' }],
 
     // Test-scoped: Use saved auth state for each test
-    authenticatedPage: async ({ browser, workerAuthState }, run, workerInfo) => {
+    authenticatedPage: async ({ browser, workerAuthState: _workerAuthState }, run, workerInfo) => {
         const authFile = `.auth/worker-${workerInfo.workerIndex}.json`;
 
         // Create context with saved auth state
@@ -96,7 +103,14 @@ export const test = base.extend<TestFixtures, WorkerFixtures>({
         }
 
         await run(page);
-    }
+    },
+
+    // Test-scoped: Convex Client
+    convexClient: async ({ }, run) => {
+        const url = process.env.NEXT_PUBLIC_CONVEX_URL || 'https://greedy-partridge-29.convex.cloud';
+        const client = new ConvexHttpClient(url);
+        await run(client);
+    },
 });
 
 export { expect };

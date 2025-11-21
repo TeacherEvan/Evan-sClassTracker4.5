@@ -1,6 +1,5 @@
 "use client";
 
-import { FishSchoolBackground } from "@/components/fish-school-background";
 import { GeometricBorder } from "@/components/geometric-border";
 import { Logo } from "@/components/logo";
 import { api } from "@/convex/_generated/api";
@@ -43,8 +42,8 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
 
   return (
     <div className="min-h-[100dvh] flex items-center justify-center p-4 bg-black relative overflow-hidden">
-      {/* Animated fish school background */}
-      <FishSchoolBackground />
+      {/* Animated fish school background - Disabled for performance testing */}
+      {/* <FishSchoolBackground /> */}
 
       <div className="w-full max-w-md relative z-10">
         <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 md:p-8 relative shadow-[0_0_40px_rgba(255,215,0,0.6)]">

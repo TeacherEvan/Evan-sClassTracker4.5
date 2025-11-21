@@ -2,18 +2,19 @@
 
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
+import { getStatusAriaLabel, getStatusBadgeClasses, MIN_TOUCH_TARGET } from "@/lib/accessibility-utils";
 import { useDataContext } from "@/lib/data-context";
 import { useLanguage } from "@/lib/language-context";
+import { logger } from "@/lib/logger";
 import { toast } from "@/lib/toast";
 import type { UserRole } from "@/lib/types";
-import { logger } from "@/lib/logger";
-import { getStatusAriaLabel, getStatusBadgeClasses, MIN_TOUCH_TARGET } from "@/lib/accessibility-utils";
-import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-shortcuts";
 import { undoManager } from "@/lib/undo-manager";
+import { COMMON_SHORTCUTS, useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
 import { useMutation, useQuery } from "convex/react";
 import { AlertTriangle, BarChart3, Calendar, Check, Clock, Edit2, Info, MapPin, Plus, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ClassAnalytics } from "./class-analytics";
+import { useClassBookingState } from "./class-booking/class-booking-state";
 import { ClassConflictModal } from "./class-conflict-modal";
 import { CleanupUnpopulatedClassesButton } from "./cleanup-unpopulated-classes-button";
 import { CollapsibleSection } from "./collapsible-section";
@@ -71,16 +72,90 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const { t, language } = useLanguage();
   const { schools } = useDataContext(); // Use shared context instead of individual query
 
-  const [showForm, setShowForm] = useState(false);
-  const [studentId, setStudentId] = useState<Id<"students"> | "">("");
-  const [schoolId, setSchoolId] = useState<Id<"schools"> | "">(
-    // Moderators auto-select their school, others start empty
-    userRole === "moderator" && userSchoolId ? userSchoolId : ""
-  );
-  const [providerId, setProviderId] = useState<Id<"providers"> | "">("");
+  const {
+    // Form Selection
+    studentId, setStudentId,
+    schoolId, setSchoolId,
+    providerId, setProviderId,
+    locationId, setLocationId,
+    selectedTeacherId, setSelectedTeacherId,
 
-  // Provider modal state
-  const [showCreateProvider, setShowCreateProvider] = useState(false);
+    // Date & Time
+    scheduledDate, setScheduledDate,
+    selectedDates, setSelectedDates,
+    selectedTime, setSelectedTime,
+    showCalendar, setShowCalendar,
+    isRecurringWeekly, setIsRecurringWeekly,
+    recurringWeeks, setRecurringWeeks,
+
+    // Location Request
+    pendingLocationName, setPendingLocationName,
+    pendingLocationNameTh, setPendingLocationNameTh,
+    requestingNewLocation, setRequestingNewLocation,
+    showProposalForm, setShowProposalForm,
+
+    // UI
+    showForm, setShowForm,
+    loading, setLoading,
+    error, setError,
+    showCreateProvider, setShowCreateProvider,
+
+    // Modals
+    editingClass, setEditingClass,
+    showMergeModal, setShowMergeModal,
+    showAnalytics, setShowAnalytics,
+
+    // Conflict Detection
+    conflictingClasses, setConflictingClasses,
+    showConflictModal, setShowConflictModal,
+    pendingBookingData, setPendingBookingData,
+
+    // Optional Fields
+    duration, setDuration,
+    subject, setSubject,
+    subjectTh, setSubjectTh,
+    lessonTopic, setLessonTopic,
+    lessonTopicTh, setLessonTopicTh,
+    materials, setMaterials,
+    materialsTh, setMaterialsTh,
+    preparationNotes, setPreparationNotes,
+    preparationNotesTh, setPreparationNotesTh,
+    classType, setClassType,
+
+    // Student Creation
+    creatingStudent, setCreatingStudent,
+    studentType, setStudentType,
+    newStudentNickname, setNewStudentNickname,
+    newStudentGrade, setNewStudentGrade,
+    newStudentClass, setNewStudentClass,
+    newStudentSchoolId, setNewStudentSchoolId,
+    guardianBirthDate, setGuardianBirthDate,
+    guardianArea, setGuardianArea,
+    newGuardianName, setNewGuardianName,
+    newGuardianPhone, setNewGuardianPhone,
+    guardianTitle, setGuardianTitle,
+
+    // Location Creation
+    creatingLocation, setCreatingLocation,
+    newLocationName, setNewLocationName,
+    newLocationNameTh, setNewLocationNameTh,
+
+    // Confirmation Dialogs
+    showDeleteConfirm, setShowDeleteConfirm,
+    pendingDeleteId, setPendingDeleteId,
+    showRejectDialog, setShowRejectDialog,
+    pendingRejectId, setPendingRejectId,
+    rejectionReason, setRejectionReason,
+
+    // Filters
+    filterTeacherId, setFilterTeacherId,
+    filterSchoolId, setFilterSchoolId,
+    filterStudentId, setFilterStudentId,
+    filterGrade, setFilterGrade,
+    filterClass, setFilterClass,
+    isFilterPanelExpanded, setIsFilterPanelExpanded,
+    expandedStudents, setExpandedStudents,
+  } = useClassBookingState(userId, userRole, userSchoolId);
 
   // Keyboard shortcuts
   useKeyboardShortcuts([
@@ -133,124 +208,13 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const addStudentToClass = useMutation(api.classes.addStudentToClass);
   const createLocation = useMutation(api.locations.create);
 
-  const [locationId, setLocationId] = useState<Id<"locations"> | "">("");
-  // Teacher selection for admin/moderator
-  const [selectedTeacherId, setSelectedTeacherId] = useState<Id<"users"> | "">(
-    userRole === "teacher" ? userId : ""
-  );
-  const [scheduledDate, setScheduledDate] = useState("");
-  const [selectedDates, setSelectedDates] = useState<number[]>([]); // Multi-date selection (supports 1+ dates)
-  const [selectedTime, setSelectedTime] = useState("09:00");
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [isRecurringWeekly, setIsRecurringWeekly] = useState(false); // NEW: Recurring weekly toggle
-  const [recurringWeeks, setRecurringWeeks] = useState(12); // NEW: Number of weeks to repeat (default 12 weeks ~ 3 months)
-  const [pendingLocationName, setPendingLocationName] = useState("");
-  const [pendingLocationNameTh, setPendingLocationNameTh] = useState("");
-  const [requestingNewLocation, setRequestingNewLocation] = useState(false);
-  const [showProposalForm, setShowProposalForm] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  // Edit modal state - using Doc type from classes query
-  const [editingClass, setEditingClass] = useState<Doc<"classes"> | null>(null);
-
-  // Merge classes state
-  const [showMergeModal, setShowMergeModal] = useState(false);
-
-  // Analytics modal state
-  const [showAnalytics, setShowAnalytics] = useState(false);
-
-  // Conflict detection state
-  type ConflictClass = {
-    _id: Id<"classes">;
-    studentId: Id<"students">;
-    additionalStudentIds?: Id<"students">[];
-    locationId?: Id<"locations">;
-    scheduledDate: number;
-    status: string;
-    student: Partial<Doc<"students">> & { _id: Id<"students">; firstName: string; lastName: string } | null;
-    location: Partial<Doc<"locations">> & { _id: Id<"locations">; name: string; nameTh: string } | null;
-    teacherId: Id<"users">;
-    schoolId?: Id<"schools">;
-  };
-
-  type PendingBookingData = {
-    teacherId: Id<"users">;
-    schoolId?: Id<"schools">;
-    studentId: Id<"students">;
-    locationId?: Id<"locations">;
-    pendingLocationName?: string;
-    pendingLocationNameTh?: string;
-    scheduledDate: number;
-    bookedByUserId: Id<"users">;
-    guardianTitle?: string;
-    duration?: number;
-    subject?: string;
-    subjectTh?: string;
-    lessonTopic?: string;
-    lessonTopicTh?: string;
-    materials?: string;
-    materialsTh?: string;
-    preparationNotes?: string;
-    preparationNotesTh?: string;
-    classType?: "regular" | "makeup" | "trial" | "assessment";
-  };
-
-  const [conflictingClasses, setConflictingClasses] = useState<ConflictClass[]>([]);
-  const [showConflictModal, setShowConflictModal] = useState(false);
-  const [pendingBookingData, setPendingBookingData] = useState<PendingBookingData | null>(null);
-
-  // Optional fields state
-  const [duration, setDuration] = useState("");
-  const [subject, setSubject] = useState("");
-  const [subjectTh, setSubjectTh] = useState("");
-  const [lessonTopic, setLessonTopic] = useState("");
-  const [lessonTopicTh, setLessonTopicTh] = useState("");
-  const [materials, setMaterials] = useState("");
-  const [materialsTh, setMaterialsTh] = useState("");
-  const [preparationNotes, setPreparationNotes] = useState("");
-  const [preparationNotesTh, setPreparationNotesTh] = useState("");
-  const [classType, setClassType] = useState<"regular" | "makeup" | "trial" | "assessment">("regular");
-
-  // Student creation state
-  const [creatingStudent, setCreatingStudent] = useState(false);
-  const [studentType, setStudentType] = useState<"school" | "guardian">("school");
-  const [newStudentNickname, setNewStudentNickname] = useState("");
-  const [newStudentGrade, setNewStudentGrade] = useState("");
-  const [newStudentClass, setNewStudentClass] = useState("");
-  const [newStudentSchoolId, setNewStudentSchoolId] = useState<Id<"schools"> | "">("");
-  const [guardianBirthDate, setGuardianBirthDate] = useState("");
-  const [guardianArea, setGuardianArea] = useState("");
-  const [newGuardianName, setNewGuardianName] = useState("");
-  const [newGuardianPhone, setNewGuardianPhone] = useState("");
-
-  // Guardian title state
-  const [guardianTitle, setGuardianTitle] = useState("");
-
-  // Location creation state (for moderators/admins)
-  const [creatingLocation, setCreatingLocation] = useState(false);
-  const [newLocationName, setNewLocationName] = useState("");
-  const [newLocationNameTh, setNewLocationNameTh] = useState("");
-
-  // Confirmation dialog states (for parent-level modals)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<Id<"classes"> | null>(null);
-  const [showRejectDialog, setShowRejectDialog] = useState(false);
-  const [pendingRejectId, setPendingRejectId] = useState<Id<"classes"> | null>(null);
-  const [rejectionReason, setRejectionReason] = useState("");
-
-  // Filter states for navigation
-  const [filterTeacherId, setFilterTeacherId] = useState<Id<"users"> | "all">("all");
-  const [filterSchoolId, setFilterSchoolId] = useState<Id<"schools"> | "all">("all");
-  const [filterStudentId, setFilterStudentId] = useState<Id<"students"> | "all">("all");
-  const [filterGrade, setFilterGrade] = useState<string>("all");
-  const [filterClass, setFilterClass] = useState<string>("all");
 
   // ✅ PERFORMANCE: Memoize conflict detection map (O(n²) → O(n) lookup)
   // Pre-compute conflicts for all classes once, then look up by ID in render
   const conflictMap = useMemo(() => {
     if (!classes) return new Map<string, { ids: string[]; count: number }>();
-    
+
     const map = new Map<string, { ids: string[]; count: number }>();
     classes.forEach((classItem) => {
       const conflictIds = detectConflicts(classes, classItem);
@@ -262,7 +226,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   // ✅ PERFORMANCE: Memoize filtered classes (avoid re-filtering on every render)
   const filteredClasses = useMemo(() => {
     if (!classes) return [];
-    
+
     return classes.filter((classItem) => {
       if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
       if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
@@ -273,11 +237,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     });
   }, [classes, filterTeacherId, filterSchoolId, filterStudentId, filterGrade, filterClass]);
 
-  // Filter panel collapse state
-  const [isFilterPanelExpanded, setIsFilterPanelExpanded] = useState(false);
 
-  // Hierarchical display state - track which students are expanded
-  const [expandedStudents, setExpandedStudents] = useState<Set<Id<"students">>>(new Set());
 
   // Query locations for selected school
   const locations = useQuery(
@@ -563,6 +523,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         // Reset form
         setStudentId("");
         setSchoolId("");
+        setProviderId("");
         setLocationId("");
         setScheduledDate("");
         setSelectedDates([]);
@@ -615,6 +576,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       // Reset form
       setStudentId("");
       setSchoolId("");
+      setProviderId("");
       setLocationId("");
       setScheduledDate("");
       setSelectedDates([]);
@@ -916,7 +878,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
         {/* Filter Navigation Tabs - Always visible when classes exist */}
         {classes && classes.length > 0 && (
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-750 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 mb-4 border-2 border-blue-200 dark:border-blue-900">
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 mb-4 border-2 border-blue-200 dark:border-blue-900">
             {/* Filter Header with Collapse Toggle */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -1444,7 +1406,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {t(
-                        "Select either a school OR a provider (not both). At least one is required.",
+                        "Select either a school OR a provider (not both, not neither). At least one is required.",
                         "เลือกโรงเรียนหรือผู้ให้บริการ (ไม่ใช่ทั้งสองอย่าง) ต้องเลือกอย่างน้อยหนึ่งอย่าง"
                       )}
                     </p>
@@ -2688,7 +2650,7 @@ function ClassItemDisplay({
             onClick={() => onDelete(classItem._id)}
             className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="w-4 h-4" />
             {t("Delete", "ลบ")}
           </button>
         </div>
@@ -2785,7 +2747,7 @@ function ClassItemDisplay({
                 {totalStudents}
               </span>
             )}
-            <span 
+            <span
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${MIN_TOUCH_TARGET} ${getStatusBadge(classItem.status)}`}
               role="status"
               aria-label={getStatusText(classItem.status)}
@@ -2956,7 +2918,7 @@ function ClassItemDisplay({
           </button>
           <button
             onClick={() => onReject(classItem._id)}
-            className="flex items-center justify-center gap-2 px-3 py-2 md:py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all text-sm font-medium"
+            className="flex items-center justify-center gap-2 px-3 py-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm"
           >
             <X className="w-4 h-4" />
             {t("Reject", "ปฏิเสธ")}

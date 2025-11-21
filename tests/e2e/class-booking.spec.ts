@@ -1,4 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect } from '@playwright/test';
+import { api } from '../../convex/_generated/api';
+import { test } from './fixtures';
 import { generateTestData, login, navigateToTab, TEST_USERS, waitForToast } from './helpers';
 
 test.describe('Class Booking Workflow', () => {
@@ -35,7 +37,8 @@ test.describe('Class Booking Workflow', () => {
         if (await dateInput.isVisible({ timeout: 2000 }).catch(() => false)) {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
-            await dateInput.fill(tomorrow.toISOString().split('T')[0]);
+            // Format for datetime-local: YYYY-MM-DDTHH:mm
+            await dateInput.fill(tomorrow.toISOString().slice(0, 16));
         }
 
         // Submit booking
@@ -64,7 +67,31 @@ test.describe('Class Booking Workflow', () => {
         }
     });
 
-    test('moderator can approve class booking', async ({ page }) => {
+    test('moderator can approve class booking', async ({ page, convexClient }) => {
+        // 1. Seed data: Create a pending class
+        const teachers = await convexClient.query(api.users.list, { role: 'teacher' });
+        const teacher = teachers[0];
+        const schools = await convexClient.query(api.schools.list, {});
+        const school = schools[0];
+        const students = await convexClient.query(api.students.bySchool, { schoolId: school._id });
+        const student = students[0];
+
+        if (!teacher || !school || !student) {
+            test.skip('Missing required data for test');
+            return;
+        }
+
+        // Create a pending class
+        await convexClient.mutation(api.classes.book, {
+            teacherId: teacher._id,
+            studentId: student._id,
+            schoolId: school._id,
+            scheduledDate: Date.now() + 86400000, // Tomorrow
+            bookedByUserId: teacher._id, // Book as teacher to make it pending
+            pendingLocationName: "Test Location",
+            pendingLocationNameTh: "สถานที่ทดสอบ"
+        });
+
         // Login as moderator
         await login(page, TEST_USERS.moderator);
 

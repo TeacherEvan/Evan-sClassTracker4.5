@@ -9,12 +9,6 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig: NextConfig = {
   /* config options here */
 
-  // Disable dev indicator during E2E tests
-  devIndicators: {
-    buildActivity: false, // Hide build activity indicator
-    appIsrStatus: false,  // Hide ISR status indicator
-  },
-
   turbopack: {
     // Fix: Specify correct workspace root to silence lockfile warning
     // This tells Turbopack to use this directory as the root instead of inferring from multiple lockfiles
