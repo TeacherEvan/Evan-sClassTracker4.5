@@ -46,6 +46,18 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
+    // Confirmation states
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [locationToDelete, setLocationToDelete] = useState<Id<"locations"> | null>(null);
+    const [proposalToApprove, setProposalToApprove] = useState<Id<"locations"> | null>(null);
+    const [showApproveConfirm, setShowApproveConfirm] = useState(false);
+
+    // Rejection Modal State
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [rejectReason, setRejectReason] = useState("");
+    const [rejectReasonTh, setRejectReasonTh] = useState("");
+    const [selectedProposalId, setSelectedProposalId] = useState<Id<"locations"> | null>(null);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
@@ -106,18 +118,40 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
         }
     };
 
-    const handleDelete = async (id: Id<"locations">) => {
-        if (!confirm(t("Are you sure you want to delete this location?", "คุณแน่ใจหรือไม่ว่าต้องการลบสถานที่นี้?"))) {
-            return;
-        }
+    const handleDelete = (id: Id<"locations">) => {
+        setLocationToDelete(id);
+        setShowDeleteConfirm(true);
+    };
+
+    const executeDelete = async () => {
+        if (!locationToDelete) return;
 
         try {
-            await removeLocation({ id });
+            await removeLocation({ id: locationToDelete });
+            setShowDeleteConfirm(false);
+            setLocationToDelete(null);
         } catch (err) {
             toast.error(
                 err instanceof Error ? err.message : "Failed to delete location",
                 err instanceof Error ? err.message : "ไม่สามารถลบสถานที่ได้"
             );
+        }
+    };
+
+    const handleApprove = (id: Id<"locations">) => {
+        setProposalToApprove(id);
+        setShowApproveConfirm(true);
+    };
+
+    const executeApprove = async () => {
+        if (!proposalToApprove) return;
+
+        try {
+            await approveProposal({ userId, locationId: proposalToApprove });
+            setShowApproveConfirm(false);
+            setProposalToApprove(null);
+        } catch (err) {
+            toast.error("Failed to approve proposal", "อนุมัติไม่สำเร็จ");
         }
     };
 
@@ -127,6 +161,35 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
         setNameTh("");
         setShowForm(false);
         setError("");
+    };
+
+    const handleRejectClick = (proposalId: Id<"locations">) => {
+        setSelectedProposalId(proposalId);
+        setShowRejectModal(true);
+    };
+
+    const executeReject = async () => {
+        if (!selectedProposalId) return;
+        if (!rejectReason.trim() && !rejectReasonTh.trim()) {
+            toast.error("Please provide a reason", "กรุณาระบุเหตุผล");
+            return;
+        }
+
+        try {
+            await rejectProposal({
+                userId,
+                locationId: selectedProposalId,
+                reason: rejectReason,
+                reasonTh: rejectReasonTh
+            });
+            toast.success("Proposal rejected", "ปฏิเสธข้อเสนอแล้ว");
+            setShowRejectModal(false);
+            setRejectReason("");
+            setRejectReasonTh("");
+            setSelectedProposalId(null);
+        } catch (err) {
+            toast.error("Failed to reject", "ไม่สามารถปฏิเสธได้");
+        }
     };
 
     return (
@@ -202,29 +265,14 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
                                     </div>
                                     <div className="flex gap-2">
                                         <button
-                                            onClick={async () => {
-                                                if (confirm(t("Approve this location proposal?", "อนุมัติสถานที่นี้?"))) {
-                                                    await approveProposal({ userId, locationId: proposal._id });
-                                                }
-                                            }}
+                                            onClick={() => handleApprove(proposal._id)}
                                             className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
                                         >
                                             <CheckCircle className="w-4 h-4" />
                                             {t("Approve", "อนุมัติ")}
                                         </button>
                                         <button
-                                            onClick={() => {
-                                                const reason = prompt(t("Rejection reason (English):", "เหตุผลการปฏิเสธ (อังกฤษ):"));
-                                                const reasonTh = prompt(t("Rejection reason (Thai):", "เหตุผลการปฏิเสธ (ไทย):"));
-                                                if (reason && reasonTh) {
-                                                    rejectProposal({
-                                                        userId,
-                                                        locationId: proposal._id,
-                                                        reason,
-                                                        reasonTh
-                                                    });
-                                                }
-                                            }}
+                                            onClick={() => handleRejectClick(proposal._id)}
                                             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
                                         >
                                             <XCircle className="w-4 h-4" />
@@ -367,7 +415,10 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
                                         </button>
 
                                         <button
-                                            onClick={() => handleDelete(location._id)}
+                                            onClick={() => {
+                                                setShowDeleteConfirm(true);
+                                                setLocationToDelete(location._id);
+                                            }}
                                             className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors dark:bg-red-900/20 dark:text-red-400"
                                             title={t("Delete", "ลบ")}
                                         >
@@ -385,6 +436,130 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
             {!selectedSchoolId && (
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400">
                     {t("Please select a school to manage locations", "กรุณาเลือกโรงเรียนเพื่อจัดการสถานที่")}
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl">
+                        <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+                            {t("Confirm Deletion", "ยืนยันการลบ")}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6">
+                            {t(
+                                "Are you sure you want to delete this location? This action cannot be undone.",
+                                "คุณแน่ใจหรือไม่ว่าต้องการลบสถานที่นี้? การดำเนินการนี้ไม่สามารถยกเลิกได้"
+                            )}
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={executeDelete}
+                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                            >
+                                {t("Delete", "ลบ")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Approve Confirmation Modal */}
+            {showApproveConfirm && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl">
+                        <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+                            {t("Confirm Approval", "ยืนยันการอนุมัติ")}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6">
+                            {t(
+                                "Are you sure you want to approve this location proposal?",
+                                "คุณแน่ใจหรือไม่ว่าต้องการอนุมัติข้อเสนอสถานที่นี้?"
+                            )}
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowApproveConfirm(false)}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={executeApprove}
+                                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                            >
+                                {t("Approve", "อนุมัติ")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Reject Proposal Modal */}
+            {showRejectModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl">
+                        <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+                            {t("Reject Proposal", "ปฏิเสธข้อเสนอ")}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6">
+                            {t(
+                                "Please provide a reason for rejecting this proposal.",
+                                "กรุณาระบุเหตุผลในการปฏิเสธข้อเสนอนี้"
+                            )}
+                        </p>
+
+                        <div className="space-y-4 mb-6">
+                            <div>
+                                <label htmlFor="rejectReason" className="block text-sm font-medium mb-2">
+                                    {t("Rejection Reason (English)", "เหตุผลการปฏิเสธ (อังกฤษ)")}
+                                </label>
+                                <input
+                                    type="text"
+                                    id="rejectReason"
+                                    value={rejectReason}
+                                    onChange={(e) => setRejectReason(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:border-gray-600"
+                                    placeholder={t("Enter reason in English", "กรุณาระบุเหตุผลเป็นภาษาอังกฤษ")}
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="rejectReasonTh" className="block text-sm font-medium mb-2">
+                                    {t("Rejection Reason (Thai)", "เหตุผลการปฏิเสธ (ไทย)")}
+                                </label>
+                                <input
+                                    type="text"
+                                    id="rejectReasonTh"
+                                    value={rejectReasonTh}
+                                    onChange={(e) => setRejectReasonTh(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 dark:bg-gray-700 dark:border-gray-600"
+                                    placeholder={t("กรุณาระบุเหตุผลเป็นภาษาไทย", "Enter reason in Thai")}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowRejectModal(false)}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={executeReject}
+                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                            >
+                                {t("Reject", "ปฏิเสธ")}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

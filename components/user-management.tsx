@@ -30,6 +30,8 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
   const [loading, setLoading] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<Set<Id<"users">>>(new Set());
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<{ id: Id<"users">; username: string } | null>(null);
+  const [userToReset, setUserToReset] = useState<{ id: Id<"users">; username: string } | null>(null);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,24 +61,20 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
     }
   };
 
-  const handleResetPassword = async (userId: Id<"users">, username: string) => {
-    if (
-      !confirm(
-        t(
-          `Reset password for ${username}? They will need to change it on next login.`,
-          `รีเซ็ตรหัสผ่านสำหรับ ${username}? พวกเขาจะต้องเปลี่ยนรหัสผ่านในการเข้าสู่ระบบครั้งถัดไป`
-        )
-      )
-    ) {
-      return;
-    }
+  const handleResetPassword = (userId: Id<"users">, username: string) => {
+    setUserToReset({ id: userId, username });
+  };
+
+  const executeResetPassword = async () => {
+    if (!userToReset) return;
 
     try {
-      await resetPassword({ userId });
+      await resetPassword({ userId: userToReset.id });
       toast.success(
-        `Password reset! New password: Teacher${username}`,
-        `รีเซ็ตรหัสผ่านแล้ว! รหัสผ่านใหม่: Teacher${username}`
+        `Password reset! New password: Teacher${userToReset.username}`,
+        `รีเซ็ตรหัสผ่านแล้ว! รหัสผ่านใหม่: Teacher${userToReset.username}`
       );
+      setUserToReset(null);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to reset password",
@@ -85,30 +83,12 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
     }
   };
 
-  const handleDeleteUser = async (userId: Id<"users">, username: string) => {
-    // Double confirmation for safety
-    if (
-      !confirm(
-        t(
-          `⚠️ DELETE ${username}?\n\nThis will permanently remove the user and cannot be undone!\n\nClick OK to continue.`,
-          `⚠️ ลบ ${username}?\n\nการดำเนินการนี้จะลบผู้ใช้อย่างถาวรและไม่สามารถย้อนกลับได้!\n\nคลิก OK เพื่อดำเนินการต่อ`
-        )
-      )
-    ) {
-      return;
-    }
+  const handleDeleteUser = (userId: Id<"users">, username: string) => {
+    setUserToDelete({ id: userId, username });
+  };
 
-    // Second confirmation
-    if (
-      !confirm(
-        t(
-          `Are you ABSOLUTELY SURE you want to delete ${username}?\n\nThis action is PERMANENT and IRREVERSIBLE!`,
-          `คุณแน่ใจหรือไม่ว่าต้องการลบ ${username}?\n\nการดำเนินการนี้เป็นการลบถาวรและไม่สามารถยกเลิกได้!`
-        )
-      )
-    ) {
-      return;
-    }
+  const executeDeleteUser = async () => {
+    if (!userToDelete) return;
 
     if (!currentUserId) {
       toast.error(
@@ -121,12 +101,13 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
     try {
       await deleteUser({
         adminId: currentUserId,
-        userIdToDelete: userId,
+        userIdToDelete: userToDelete.id,
       });
       toast.success(
-        `User ${username} has been deleted`,
-        `ลบผู้ใช้ ${username} แล้ว`
+        `User ${userToDelete.username} has been deleted`,
+        `ลบผู้ใช้ ${userToDelete.username} แล้ว`
       );
+      setUserToDelete(null);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to delete user",
@@ -187,7 +168,7 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
 
   const toggleSelectAll = () => {
     if (!users) return;
-    
+
     if (selectedUsers.size === selectableUsers.length) {
       // Deselect all
       setSelectedUsers(new Set());
@@ -201,17 +182,17 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
   const selectableUsers = users?.filter(user => {
     // Cannot select yourself
     if (user._id === currentUserId) return false;
-    
+
     // Moderators can only select teachers
     if (currentUser?.role === "moderator") {
       return user.role === "teacher";
     }
-    
+
     // Admins can select anyone except other admins
     if (currentUser?.role === "admin") {
       return user.role !== "admin";
     }
-    
+
     return false;
   }) || [];
 
@@ -325,7 +306,7 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
           <h3 className="text-xl font-semibold">
             {t("Users", "ผู้ใช้")}
           </h3>
-          
+
           {/* Bulk Delete Controls */}
           {canBulkDelete && selectableUsers.length > 0 && (
             <div className="flex items-center gap-2">
@@ -359,15 +340,14 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
           {users?.map((user) => {
             const isSelectable = selectableUsers.some(u => u._id === user._id);
             const isSelected = selectedUsers.has(user._id);
-            
+
             return (
               <div
                 key={user._id}
-                className={`flex items-center justify-between p-3 border rounded-lg ${
-                  isSelected
+                className={`flex items-center justify-between p-3 border rounded-lg ${isSelected
                     ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                     : "border-gray-200 dark:border-gray-700"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-3 flex-1">
                   {isSelectable && canBulkDelete && (
@@ -460,6 +440,74 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 {t("Delete All", "ลบทั้งหมด")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password Confirmation Modal */}
+      {userToReset && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              {t("Reset Password", "รีเซ็ตรหัสผ่าน")}
+            </h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-6">
+              {t(
+                `Reset password for ${userToReset.username}? They will need to change it on next login.`,
+                `รีเซ็ตรหัสผ่านสำหรับ ${userToReset.username}? พวกเขาจะต้องเปลี่ยนรหัสผ่านในการเข้าสู่ระบบครั้งถัดไป`
+              )}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setUserToReset(null)}
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                {t("Cancel", "ยกเลิก")}
+              </button>
+              <button
+                onClick={executeResetPassword}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                {t("Reset", "รีเซ็ต")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Confirmation Modal */}
+      {userToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-4">
+              {t("⚠️ Delete User", "⚠️ ลบผู้ใช้")}
+            </h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              {t(
+                `Are you ABSOLUTELY SURE you want to delete ${userToDelete.username}?`,
+                `คุณแน่ใจหรือไม่ว่าต้องการลบ ${userToDelete.username}?`
+              )}
+            </p>
+            <p className="text-sm text-red-600 dark:text-red-400 mb-6 font-medium">
+              {t(
+                "This action is PERMANENT and IRREVERSIBLE!",
+                "การดำเนินการนี้เป็นการลบถาวรและไม่สามารถยกเลิกได้!"
+              )}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setUserToDelete(null)}
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                {t("Cancel", "ยกเลิก")}
+              </button>
+              <button
+                onClick={executeDeleteUser}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                {t("Delete", "ลบ")}
               </button>
             </div>
           </div>

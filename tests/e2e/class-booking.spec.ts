@@ -73,11 +73,11 @@ test.describe('Class Booking Workflow', () => {
         const teacher = teachers[0];
         const schools = await convexClient.query(api.schools.list, {});
         const school = schools[0];
-        const students = await convexClient.query(api.students.bySchool, { schoolId: school._id });
+        const students = await convexClient.query(api.students.list, { schoolId: school._id });
         const student = students[0];
 
         if (!teacher || !school || !student) {
-            test.skip('Missing required data for test');
+            test.skip(true, 'Missing required data for test');
             return;
         }
 

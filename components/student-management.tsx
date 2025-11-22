@@ -3,7 +3,6 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
-import { logger } from "@/lib/logger";
 import type { User } from "@/lib/types";
 import { COMMON_SHORTCUTS, useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
 import { useMutation, useQuery } from "convex/react";
@@ -92,6 +91,10 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const [selectedStudents, setSelectedStudents] = useState<Set<Id<"students">>>(new Set());
     const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
     const [showBulkEditModal, setShowBulkEditModal] = useState(false);
+
+    // Delete reason state
+    const [deleteReason, setDeleteReason] = useState("");
+    const [forceDelete, setForceDelete] = useState(false);
 
     // Query students based on filter
     const students = useQuery(
@@ -331,34 +334,27 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
     const handleDelete = (studentId: Id<"students">, studentName: string) => {
         setPendingDeleteStudent({ id: studentId, name: studentName });
+        setDeleteReason("");
         setShowDeleteConfirm(true);
     };
 
-    const confirmDelete = async () => {
+    const executeDelete = async () => {
         if (!pendingDeleteStudent) return;
 
-        const reason = prompt(
-            t(
-                `Delete student "${pendingDeleteStudent.name}"? Please provide a reason:`,
-                `ลบนักเรียน "${pendingDeleteStudent.name}"? กรุณาระบุเหตุผล:`
-            )
-        );
-
-        if (!reason || reason.trim() === "") {
-            setShowDeleteConfirm(false);
-            setPendingDeleteStudent(null);
-            return; // User cancelled or provided no reason
+        if (!deleteReason || deleteReason.trim() === "") {
+            return; // Button should be disabled
         }
 
         try {
             await removeStudent({
                 id: pendingDeleteStudent.id,
                 deletedBy: currentUser._id,
-                reason: reason.trim()
+                reason: deleteReason.trim()
             });
             setSuccess(t("Student deleted!", "ลบนักเรียนแล้ว!"));
             setShowDeleteConfirm(false);
             setPendingDeleteStudent(null);
+            setDeleteReason("");
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to delete student");
         }
@@ -382,35 +378,21 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         }
     };
 
-    const handleBulkDelete = async () => {
-        const reason = prompt(
-            t(
-                `Delete ${selectedStudents.size} student(s)? Please provide a reason:`,
-                `ลบนักเรียน ${selectedStudents.size} คน? กรุณาระบุเหตุผล:`
-            )
-        );
+    const initiateBulkDelete = () => {
+        if (selectedStudents.size === 0) return;
+        setDeleteReason("");
+        setForceDelete(false);
+        setShowBulkDeleteConfirm(true);
+    };
 
-        if (!reason || reason.trim() === "") {
-            setShowBulkDeleteConfirm(false);
-            return; // User cancelled or provided no reason
-        }
-
-        // Admin-only: Ask if they want to force delete (bypass class checks)
-        let forceDelete = false;
-        if (currentUser.role === "admin") {
-            forceDelete = confirm(
-                t(
-                    "Force delete students even if they have classes? (ADMIN ONLY - Use with caution)",
-                    "บังคับลบนักเรียนแม้ว่าจะมีคลาส? (ผู้จัดการเท่านั้น - ใช้ด้วยความระมัดระวัง)"
-                )
-            );
-        }
+    const executeBulkDelete = async () => {
+        if (!deleteReason || deleteReason.trim() === "") return;
 
         try {
             const result = await bulkDeleteStudents({
                 studentIds: Array.from(selectedStudents),
                 userId: currentUser._id,
-                reason: reason.trim(),
+                reason: deleteReason.trim(),
                 force: forceDelete,
             });
 
@@ -432,26 +414,23 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     ? `\n...and ${result.errors.length - 5} more`
                     : '';
 
-                setError(
-                    t(
-                        `Failed to delete ${result.failed} student(s):\n${errorDetails}${moreErrors}`,
-                        `ไม่สามารถลบนักเรียนได้ ${result.failed} คน:\n${errorDetails}${moreErrors}`
-                    )
-                );
-                logger.error("Bulk delete errors", result.errors, {
-                    component: "StudentManagement",
-                    action: "bulkDelete",
-                    count: result.errors.length
-                });
+                setError(t(
+                    `Failed to delete ${result.failed} student(s):\n${errorDetails}${moreErrors}`,
+                    `ลบไม่สำเร็จ ${result.failed} คน:\n${errorDetails}${moreErrors}`
+                ));
             }
 
             setSelectedStudents(new Set());
             setShowBulkDeleteConfirm(false);
+            setDeleteReason("");
+            setForceDelete(false);
+
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to bulk delete students");
-            setShowBulkDeleteConfirm(false);
+            setError(err instanceof Error ? err.message : "Bulk delete failed");
         }
     };
+
+
 
 
 
@@ -1260,7 +1239,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                 {t("Cancel", "ยกเลิก")}
                             </button>
                             <button
-                                onClick={handleBulkDelete}
+                                onClick={initiateBulkDelete}
                                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                             >
                                 {t("Delete All", "ลบทั้งหมด")}
@@ -1277,27 +1256,110 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                         <h3 className="text-xl font-bold mb-4 text-red-600 dark:text-red-400">
                             {t("Confirm Delete", "ยืนยันการลบ")}
                         </h3>
-                        <p className="mb-6 text-gray-700 dark:text-gray-300">
+                        <p className="mb-4 text-gray-700 dark:text-gray-300">
                             {t(
                                 `Delete student "${pendingDeleteStudent.name}"? This cannot be undone.`,
                                 `ลบนักเรียน "${pendingDeleteStudent.name}"? การกระทำนี้ไม่สามารถย้อนกลับได้`
                             )}
                         </p>
+
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                                {t("Reason for deletion (Required)", "เหตุผลในการลบ (จำเป็น)")}
+                            </label>
+                            <input
+                                type="text"
+                                value={deleteReason}
+                                onChange={(e) => setDeleteReason(e.target.value)}
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                                placeholder={t("e.g., Moved to another school", "เช่น ย้ายโรงเรียน")}
+                                autoFocus
+                            />
+                        </div>
+
                         <div className="flex gap-3 justify-end">
                             <button
                                 onClick={() => {
                                     setShowDeleteConfirm(false);
                                     setPendingDeleteStudent(null);
+                                    setDeleteReason("");
                                 }}
                                 className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
                             >
                                 {t("Cancel", "ยกเลิก")}
                             </button>
                             <button
-                                onClick={confirmDelete}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                                onClick={executeDelete}
+                                disabled={!deleteReason.trim()}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {t("Delete", "ลบ")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Bulk Delete Confirmation Dialog */}
+            {showBulkDeleteConfirm && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 max-w-md w-full">
+                        <h3 className="text-xl font-bold mb-4 text-red-600 dark:text-red-400">
+                            {t("Confirm Bulk Delete", "ยืนยันการลบหมู่")}
+                        </h3>
+                        <p className="mb-4 text-gray-700 dark:text-gray-300">
+                            {t(
+                                `Delete ${selectedStudents.size} selected student(s)? This cannot be undone.`,
+                                `ลบนักเรียนที่เลือก ${selectedStudents.size} คน? การกระทำนี้ไม่สามารถย้อนกลับได้`
+                            )}
+                        </p>
+
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                                {t("Reason for deletion (Required)", "เหตุผลในการลบ (จำเป็น)")}
+                            </label>
+                            <input
+                                type="text"
+                                value={deleteReason}
+                                onChange={(e) => setDeleteReason(e.target.value)}
+                                className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600"
+                                placeholder={t("e.g., Graduated", "เช่น จบการศึกษา")}
+                                autoFocus
+                            />
+                        </div>
+
+                        {currentUser.role === "admin" && (
+                            <div className="mb-6 flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    id="forceDelete"
+                                    checked={forceDelete}
+                                    onChange={(e) => setForceDelete(e.target.checked)}
+                                    className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                                />
+                                <label htmlFor="forceDelete" className="text-sm text-red-600 dark:text-red-400 font-medium">
+                                    {t("Force delete (Ignore active classes)", "บังคับลบ (ไม่สนใจคลาสที่ใช้งานอยู่)")}
+                                </label>
+                            </div>
+                        )}
+
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => {
+                                    setShowBulkDeleteConfirm(false);
+                                    setDeleteReason("");
+                                    setForceDelete(false);
+                                }}
+                                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={executeBulkDelete}
+                                disabled={!deleteReason.trim()}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {t("Delete All", "ลบทั้งหมด")}
                             </button>
                         </div>
                     </div>

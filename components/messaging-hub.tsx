@@ -3,10 +3,10 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import { logger } from "@/lib/logger";
 import { toast } from "@/lib/toast";
 import type { User, UserWithSchool } from "@/lib/types";
-import { logger } from "@/lib/logger";
-import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-shortcuts";
+import { COMMON_SHORTCUTS, useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
 import { useMutation, useQuery } from "convex/react";
 import {
   Building2,
@@ -42,6 +42,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
   );
   const [messageContent, setMessageContent] = useState("");
   const [messageContentTh, setMessageContentTh] = useState("");
+  const [messageToDelete, setMessageToDelete] = useState<Id<"messages"> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Keyboard shortcuts
@@ -124,10 +125,10 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
       setMessageContent("");
       setMessageContentTh("");
     } catch (error) {
-      logger.error("Failed to send message", error, { 
+      logger.error("Failed to send message", error, {
         component: "MessagingHub",
         action: "sendMessage",
-        userId: currentUser._id 
+        userId: currentUser._id
       });
     }
   };
@@ -136,10 +137,10 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
     try {
       await markAsRead({ messageId });
     } catch (error) {
-      logger.error("Failed to mark message as read", error, { 
+      logger.error("Failed to mark message as read", error, {
         component: "MessagingHub",
         action: "markAsRead",
-        userId: currentUser._id 
+        userId: currentUser._id
       });
     }
   };
@@ -148,29 +149,29 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
     try {
       await acknowledge({ messageId });
     } catch (error) {
-      logger.error("Failed to acknowledge message", error, { 
+      logger.error("Failed to acknowledge message", error, {
         component: "MessagingHub",
         action: "acknowledge",
-        userId: currentUser._id 
+        userId: currentUser._id
       });
     }
   };
 
-  const handleDeleteMessage = async (messageId: Id<"messages">) => {
-    if (!window.confirm(t(
-      "Are you sure you want to delete this message? This action cannot be undone.",
-      "คุณแน่ใจหรือไม่ที่จะลบข้อความนี้? การกระทำนี้ไม่สามารถยกเลิกได้"
-    ))) {
-      return;
-    }
+  const handleDeleteMessage = (messageId: Id<"messages">) => {
+    setMessageToDelete(messageId);
+  };
+
+  const executeDeleteMessage = async () => {
+    if (!messageToDelete) return;
 
     try {
-      await deleteMessage({ userId: currentUser._id, id: messageId });
+      await deleteMessage({ userId: currentUser._id, id: messageToDelete });
+      setMessageToDelete(null);
     } catch (error) {
-      logger.error("Failed to delete message", error, { 
+      logger.error("Failed to delete message", error, {
         component: "MessagingHub",
         action: "delete",
-        userId: currentUser._id 
+        userId: currentUser._id
       });
       toast.error("Failed to delete message", "ลบข้อความล้มเหลว");
     }
@@ -194,8 +195,8 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
             <div>
               <h2 className={`text-xl md:text-2xl font-bold flex items-center gap-2 ${unreadCount !== undefined && unreadCount > 0
-                  ? "text-red-500 animate-pulse"
-                  : "text-white"
+                ? "text-red-500 animate-pulse"
+                : "text-white"
                 }`}>
                 <MessageSquare className="w-5 h-5 md:w-6 md:h-6" />
                 {t("Messaging Hub", "ศูนย์ข้อความ")}
@@ -394,8 +395,8 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                           key={user._id}
                           onClick={() => setSelectedUserId(user._id)}
                           className={`w-full text-left p-3 rounded-lg transition-colors ${selectedUserId === user._id
-                            ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-500"
-                            : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                              ? "bg-blue-100 dark:bg-blue-900/30 border border-blue-500"
+                              : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
                             }`}
                         >
                           <div className="font-medium text-gray-900 dark:text-white">
@@ -403,8 +404,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             {t(
-                              user.role.charAt(0).toUpperCase() +
-                              user.role.slice(1),
+                              user.role.charAt(0).toUpperCase() + user.role.slice(1),
                               user.role === "teacher"
                                 ? "ครู"
                                 : user.role === "moderator"
@@ -689,6 +689,37 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {messageToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full shadow-xl">
+            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+              {t("Confirm Delete", "ยืนยันการลบ")}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              {t(
+                "Are you sure you want to delete this message?",
+                "คุณแน่ใจหรือไม่ว่าต้องการลบข้อความนี้?"
+              )}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setMessageToDelete(null)}
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              >
+                {t("Cancel", "ยกเลิก")}
+              </button>
+              <button
+                onClick={executeDeleteMessage}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                {t("Delete", "ลบ")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

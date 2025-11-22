@@ -8,7 +8,7 @@ import { useLanguage } from "@/lib/language-context";
 import type { Notification, User } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
 import { Bell, CheckCheck, Trash2, X } from "lucide-react";
-import { memo } from "react";
+import { memo, useState } from "react";
 import { PaginatedList } from "./paginated-list";
 
 // Memoized notification item component for better performance
@@ -97,6 +97,7 @@ export function NotificationList({ userId, currentUser }: { userId?: string; cur
   const markAllAsRead = useMutation(api.notifications.markAllAsRead);
   const remove = useMutation(api.notifications.remove);
   const deleteNotification = useMutation(api.notifications.deleteNotification);
+  const [notificationToDelete, setNotificationToDelete] = useState<Id<"notifications"> | null>(null);
 
   const isAdmin = currentUser?.role === "admin";
 
@@ -109,14 +110,14 @@ export function NotificationList({ userId, currentUser }: { userId?: string; cur
   };
 
   const handleDelete = (id: Id<"notifications">) => {
-    if (!userId) return; // Guard against undefined userId
+    setNotificationToDelete(id);
+  };
 
-    if (window.confirm(t(
-      "Are you sure you want to permanently delete this notification?",
-      "คุณแน่ใจหรือไม่ว่าต้องการลบการแจ้งเตือนนี้อย่างถาวร?"
-    ))) {
-      deleteNotification({ userId: userId as Id<"users">, id });
-    }
+  const executeDelete = () => {
+    if (!userId || !notificationToDelete) return;
+
+    deleteNotification({ userId: userId as Id<"users">, id: notificationToDelete });
+    setNotificationToDelete(null);
   };
 
   return (
@@ -171,6 +172,37 @@ export function NotificationList({ userId, currentUser }: { userId?: string; cur
           )}
           className="space-y-3 md:space-y-3"
         />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {notificationToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl">
+            <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+              {t("Delete Notification?", "ลบการแจ้งเตือน?")}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              {t(
+                "Are you sure you want to permanently delete this notification? This action cannot be undone.",
+                "คุณแน่ใจหรือไม่ว่าต้องการลบการแจ้งเตือนนี้อย่างถาวร? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+              )}
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setNotificationToDelete(null)}
+                className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                {t("Cancel", "ยกเลิก")}
+              </button>
+              <button
+                onClick={executeDelete}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              >
+                {t("Delete", "ลบ")}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

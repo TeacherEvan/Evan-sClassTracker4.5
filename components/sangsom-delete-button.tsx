@@ -4,7 +4,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import { useMutation } from "convex/react";
-import { Search, Trash2 } from "lucide-react";
+import { AlertTriangle, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 // Type definitions for mutation results
@@ -48,6 +48,11 @@ export function SangsomDeleteButton({ userId }: SangsomDeleteButtonProps) {
     const [loading, setLoading] = useState(false);
     const [dataInfo, setDataInfo] = useState<CheckDataResult | null>(null);
 
+    // Delete confirmation state
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteSchoolOption, setDeleteSchoolOption] = useState(false);
+    const [confirmStep, setConfirmStep] = useState(1);
+
     const handleCheckData = async () => {
         setLoading(true);
         try {
@@ -90,40 +95,19 @@ export function SangsomDeleteButton({ userId }: SangsomDeleteButtonProps) {
         }
     };
 
-    const handleDelete = async (deleteSchool: boolean) => {
-        const confirmMessage = deleteSchool
-            ? t(
-                "⚠️ DELETE EVERYTHING including the Sangsom School?\n\nThis will remove:\n- All events\n- All students\n- All classes\n- Teacher & Moderator users\n- All locations\n- THE SCHOOL ITSELF\n\nThis CANNOT be undone!",
-                "⚠️ ลบทุกอย่างรวมทั้งโรงเรียนสังสม?\n\nจะลบ:\n- กิจกรรมทั้งหมด\n- นักเรียนทั้งหมด\n- คลาสทั้งหมด\n- ผู้ใช้ครูและผู้ดูแล\n- สถานที่ทั้งหมด\n- โรงเรียนเอง\n\nไม่สามารถยกเลิกได้!"
-            )
-            : t(
-                "⚠️ DELETE Sangsom test data?\n\nThis will remove:\n- All events\n- All students\n- All classes\n- Teacher & Moderator users\n- All locations\n\nBut KEEP the school.\n\nThis CANNOT be undone!",
-                "⚠️ ลบข้อมูลทดสอบสังสม?\n\nจะลบ:\n- กิจกรรมทั้งหมด\n- นักเรียนทั้งหมด\n- คลาสทั้งหมด\n- ผู้ใช้ครูและผู้ดูแล\n- สถานที่ทั้งหมด\n\nแต่เก็บโรงเรียนไว้\n\nไม่สามารถยกเลิกได้!"
-            );
+    const handleDelete = (deleteSchool: boolean) => {
+        setDeleteSchoolOption(deleteSchool);
+        setConfirmStep(1);
+        setShowDeleteConfirm(true);
+    };
 
-        if (!confirm(confirmMessage)) {
-            return;
-        }
-
-        // Double confirmation for complete deletion
-        if (deleteSchool) {
-            if (
-                !confirm(
-                    t(
-                        "Are you ABSOLUTELY SURE?\n\nThe entire Sangsom School will be PERMANENTLY deleted!",
-                        "คุณแน่ใจหรือไม่?\n\nโรงเรียนสังสมทั้งหมดจะถูกลบอย่างถาวร!"
-                    )
-                )
-            ) {
-                return;
-            }
-        }
-
+    const executeDelete = async () => {
         setLoading(true);
+        setShowDeleteConfirm(false);
         try {
             const result = await deleteData({
                 adminId: userId,
-                deleteSchool
+                deleteSchool: deleteSchoolOption
             });
 
             if (result.success) {
@@ -227,6 +211,64 @@ export function SangsomDeleteButton({ userId }: SangsomDeleteButtonProps) {
                     "คำเตือน: การลบเหล่านี้เป็นการถาวรและไม่สามารถยกเลิกได้!"
                 )}
             </div>
+
+            {/* Delete confirmation modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full">
+                        <h4 className="text-lg font-bold text-red-600 dark:text-red-400 mb-4 flex items-center gap-2">
+                            <AlertTriangle className="w-6 h-6" />
+                            {confirmStep === 1
+                                ? t("Confirm Deletion", "ยืนยันการลบ")
+                                : t("Final Confirmation", "ยืนยันขั้นสุดท้าย")}
+                        </h4>
+
+                        <div className="text-sm text-gray-700 dark:text-gray-300 mb-6 whitespace-pre-wrap">
+                            {confirmStep === 1 ? (
+                                deleteSchoolOption ? (
+                                    t(
+                                        "⚠️ DELETE EVERYTHING including the Sangsom School?\n\nThis will remove:\n- All events\n- All students\n- All classes\n- Teacher & Moderator users\n- All locations\n- THE SCHOOL ITSELF\n\nThis CANNOT be undone!",
+                                        "⚠️ ลบทุกอย่างรวมทั้งโรงเรียนสังสม?\n\nจะลบ:\n- กิจกรรมทั้งหมด\n- นักเรียนทั้งหมด\n- คลาสทั้งหมด\n- ผู้ใช้ครูและผู้ดูแล\n- สถานที่ทั้งหมด\n- โรงเรียนเอง\n\nไม่สามารถยกเลิกได้!"
+                                    )
+                                ) : (
+                                    t(
+                                        "⚠️ DELETE Sangsom test data?\n\nThis will remove:\n- All events\n- All students\n- All classes\n- Teacher & Moderator users\n- All locations\n\nBut KEEP the school.\n\nThis CANNOT be undone!",
+                                        "⚠️ ลบข้อมูลทดสอบสังสม?\n\nจะลบ:\n- กิจกรรมทั้งหมด\n- นักเรียนทั้งหมด\n- คลาสทั้งหมด\n- ผู้ใช้ครูและผู้ดูแล\n- สถานที่ทั้งหมด\n\nแต่เก็บโรงเรียนไว้\n\nไม่สามารถยกเลิกได้!"
+                                    )
+                                )
+                            ) : (
+                                t(
+                                    "Are you ABSOLUTELY SURE?\n\nThe entire Sangsom School will be PERMANENTLY deleted!",
+                                    "คุณแน่ใจหรือไม่?\n\nโรงเรียนสังสมทั้งหมดจะถูกลบอย่างถาวร!"
+                                )
+                            )}
+                        </div>
+
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (deleteSchoolOption && confirmStep === 1) {
+                                        setConfirmStep(2);
+                                    } else {
+                                        executeDelete();
+                                    }
+                                }}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                            >
+                                {confirmStep === 1 && deleteSchoolOption
+                                    ? t("Next", "ถัดไป")
+                                    : t("Delete Permanently", "ลบอย่างถาวร")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

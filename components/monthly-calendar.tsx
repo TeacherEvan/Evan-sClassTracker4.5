@@ -5,14 +5,14 @@ import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { getClassStatusColor } from "@/lib/constants";
 import { getMonthEnd, getMonthGridDays, getMonthStart, isInMonth, isToday } from "@/lib/date-utils";
 import { useLanguage } from "@/lib/language-context";
+import { logger } from "@/lib/logger";
 import { toast } from "@/lib/toast";
 import type { User } from "@/lib/types";
+import { COMMON_SHORTCUTS, useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
 import { useSwipeGesture } from "@/lib/use-swipe-gesture";
-import { logger } from "@/lib/logger";
-import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-shortcuts";
 import { useMutation, useQuery } from "convex/react";
 import { Bell, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Globe, Plus, Users, X } from "lucide-react";
-import { useMemo, useState, useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ClassDetailModal } from "./class-detail-modal";
 import { ClassQuickActions } from "./class-quick-actions";
 import { EditClassModal } from "./edit-class-modal";
@@ -322,22 +322,31 @@ export function MonthlyCalendar({ currentUser }: MonthlyCalendarProps) {
         setShowPostClassNotes(true);
     };
 
+    // Delete confirmation state
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [classToDelete, setClassToDelete] = useState<Doc<"classes"> | null>(null);
+
     const handleDeleteClass = (classItem: Doc<"classes">) => {
-        if (confirm(t(
-            "Are you sure you want to delete this class?",
-            "คุณแน่ใจหรือไม่ว่าต้องการลบคลาสนี้?"
-        ))) {
-            deleteClass({
+        setClassToDelete(classItem);
+        setShowDeleteConfirm(true);
+    };
+
+    const executeDeleteClass = async () => {
+        if (!classToDelete) return;
+
+        try {
+            await deleteClass({
                 userId: currentUser._id,
-                classId: classItem._id
-            }).then(() => {
-                toast.success("Class deleted", "ลบคลาสสำเร็จ");
-            }).catch((err: unknown) => {
-                toast.error(
-                    err instanceof Error ? err.message : "Failed to delete",
-                    err instanceof Error ? err.message : "ลบไม่สำเร็จ"
-                );
+                classId: classToDelete._id
             });
+            toast.success("Class deleted", "ลบคลาสสำเร็จ");
+            setShowDeleteConfirm(false);
+            setClassToDelete(null);
+        } catch (err: unknown) {
+            toast.error(
+                err instanceof Error ? err.message : "Failed to delete",
+                err instanceof Error ? err.message : "ลบไม่สำเร็จ"
+            );
         }
     };
 
@@ -457,10 +466,10 @@ export function MonthlyCalendar({ currentUser }: MonthlyCalendarProps) {
                                 <div className="flex justify-between items-start mb-1 md:mb-2">
                                     <span
                                         className={`text-xs md:text-sm font-medium ${today
-                                                ? "text-blue-600 dark:text-blue-400 font-bold"
-                                                : !inMonth
-                                                    ? "text-gray-400 dark:text-gray-600"
-                                                    : "text-gray-700 dark:text-gray-300"
+                                            ? "text-blue-600 dark:text-blue-400 font-bold"
+                                            : !inMonth
+                                                ? "text-gray-400 dark:text-gray-600"
+                                                : "text-gray-700 dark:text-gray-300"
                                             }`}
                                     >
                                         {day.getDate()}
@@ -905,6 +914,37 @@ export function MonthlyCalendar({ currentUser }: MonthlyCalendarProps) {
                         toast.success("Notes saved successfully", "บันทึกโน้ตสำเร็จ");
                     }}
                 />
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl">
+                        <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+                            {t("Confirm Deletion", "ยืนยันการลบ")}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6">
+                            {t(
+                                "Are you sure you want to delete this class? This action cannot be undone.",
+                                "คุณแน่ใจหรือไม่ว่าต้องการลบคลาสนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้"
+                            )}
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={executeDeleteClass}
+                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                            >
+                                {t("Delete", "ลบ")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

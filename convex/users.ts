@@ -120,12 +120,9 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
     // For testing/migration: If it's a default password pattern, convert and verify
     // We can't verify bcrypt, but we CAN verify if the password matches the expected default
     // by hashing it with PBKDF2 and checking if user will be able to login after auto-upgrade
-    console.warn(`⚠️ Bcrypt hash detected - attempting default password pattern verification`);
+    console.warn(`⚠️ Bcrypt hash detected - rejecting login`);
 
-    // Allow login with ANY password for bcrypt users during migration
-    // The password will be upgraded to PBKDF2 immediately after successful login
-    // This is a temporary migration path - remove after all users upgraded
-    return true; // Migration mode: allow login, upgrade happens after
+    throw new Error("Your password format is outdated. Please contact an admin to reset your password.");
   } else {
     // Legacy btoa hash
     return btoa(password) === hash;

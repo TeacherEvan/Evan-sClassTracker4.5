@@ -53,6 +53,7 @@ export function AuditLogs({ currentUserId }: AuditLogsProps) {
     const [endDate, setEndDate] = useState<string>("");
     const [limit, setLimit] = useState<number>(100);
     const [showStats, setShowStats] = useState(false);
+    const [showCleanupConfirm, setShowCleanupConfirm] = useState(false);
 
     // Query audit logs
     const logs = useQuery(api.auditLogs.list, {
@@ -133,14 +134,7 @@ export function AuditLogs({ currentUserId }: AuditLogsProps) {
     };
 
     // Handle cleanup
-    const handleCleanup = async () => {
-        if (!confirm(t(
-            "Delete audit logs older than 365 days? This cannot be undone.",
-            "ลบบันทึกการตรวจสอบที่เก่ากว่า 365 วัน? ไม่สามารถยกเลิกได้"
-        ))) {
-            return;
-        }
-
+    const executeCleanup = async () => {
         try {
             const result = await cleanOldLogs({
                 userId: currentUserId,
@@ -151,6 +145,7 @@ export function AuditLogs({ currentUserId }: AuditLogsProps) {
                 `Deleted ${result.deletedCount} old audit log entries`,
                 `ลบบันทึกการตรวจสอบเก่า ${result.deletedCount} รายการ`
             );
+            setShowCleanupConfirm(false);
         } catch {
             toast.error(
                 "Failed to clean audit logs",
@@ -208,7 +203,7 @@ export function AuditLogs({ currentUserId }: AuditLogsProps) {
                         {t("Export CSV", "ส่งออก CSV")}
                     </button>
                     <button
-                        onClick={handleCleanup}
+                        onClick={() => setShowCleanupConfirm(true)}
                         className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center gap-2"
                     >
                         <Trash2 className="w-4 h-4" />
@@ -474,6 +469,38 @@ export function AuditLogs({ currentUserId }: AuditLogsProps) {
                         `Showing ${logs.length} ${logs.length === limit ? "most recent" : ""} audit log entries`,
                         `แสดง ${logs.length} ${logs.length === limit ? "ล่าสุด" : ""} รายการบันทึกการตรวจสอบ`
                     )}
+                </div>
+            )}
+
+            {/* Cleanup Confirmation Modal */}
+            {showCleanupConfirm && (
+                <div className="fixed inset-0 flex items-center justify-center z-50">
+                    <div className="bg-black bg-opacity-50 absolute inset-0" />
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm mx-auto z-10">
+                        <h3 className="text-lg font-semibold mb-4">
+                            {t("Confirm Cleanup", "ยืนยันการลบข้อมูล")}
+                        </h3>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                            {t(
+                                "Are you sure you want to delete audit logs older than 365 days? This action cannot be undone.",
+                                "คุณแน่ใจหรือไม่ว่าต้องการลบบันทึกการตรวจสอบที่เก่ากว่า 365 วัน? การกระทำนี้ไม่สามารถย้อนกลับได้"
+                            )}
+                        </p>
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowCleanupConfirm(false)}
+                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={executeCleanup}
+                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                            >
+                                {t("Delete Logs", "ลบข้อมูล")}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

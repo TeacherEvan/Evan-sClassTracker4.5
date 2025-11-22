@@ -98,6 +98,7 @@ export function ClassDetailModal({
   const [showEditModal, setShowEditModal] = useState(false);
   const [showMergeModal, setShowMergeModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showRejectModal, setShowRejectModal] = useState(false);
   const [showPostponeModal, setShowPostponeModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteSeriesConfirm, setShowDeleteSeriesConfirm] = useState(false);
@@ -108,6 +109,8 @@ export function ClassDetailModal({
   const [postponeReasonTh, setPostponeReasonTh] = useState("");
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("09:00");
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectReasonTh, setRejectReasonTh] = useState("");
 
   // Mutations for class actions
 
@@ -150,14 +153,26 @@ export function ClassDetailModal({
     }
   };
 
-  const handleReject = async () => {
-    const reason = prompt(t("Reason for rejection:", "เหตุผลในการปฏิเสธ:"));
-    if (!reason) return;
+  const handleReject = () => {
+    setShowRejectModal(true);
+  };
+
+  const executeReject = async () => {
+    if (!rejectReason.trim() && !rejectReasonTh.trim()) {
+      toast.error("Please provide a reason", "กรุณาระบุเหตุผล");
+      return;
+    }
 
     try {
-      await rejectClass({ userId: currentUserId, classId: classData._id, reason, reasonTh: reason });
+      await rejectClass({
+        userId: currentUserId,
+        classId: classData._id,
+        reason: rejectReason,
+        reasonTh: rejectReasonTh
+      });
       toast.success("Class rejected successfully", "ปฏิเสธคลาสสำเร็จ");
-      onClose(); // Close modal after action
+      setShowRejectModal(false);
+      onClose();
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to reject class",
@@ -1101,6 +1116,72 @@ export function ClassDetailModal({
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {t(`Delete ${recurringSeries.length} Classes`, `ลบ ${recurringSeries.length} คลาส`)}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Class Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-4 md:p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                <X className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-xl font-bold">
+                {t("Reject Class", "ปฏิเสธคลาส")}
+              </h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              {t(
+                "Please provide a reason for rejecting this class.",
+                "กรุณาระบุเหตุผลในการปฏิเสธคลาสนี้"
+              )}
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {t("Reason (English)", "เหตุผล (อังกฤษ)")}
+                </label>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 min-h-20"
+                  placeholder="Enter reason in English..."
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  {t("Reason (Thai)", "เหตุผล (ไทย)")}
+                </label>
+                <textarea
+                  value={rejectReasonTh}
+                  onChange={(e) => setRejectReasonTh(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 min-h-20"
+                  placeholder="ระบุเหตุผลเป็นภาษาไทย..."
+                  required
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason("");
+                  setRejectReasonTh("");
+                }}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                {t("Cancel", "ยกเลิก")}
+              </button>
+              <button
+                onClick={executeReject}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-medium"
+              >
+                {t("Reject Class", "ปฏิเสธคลาส")}
               </button>
             </div>
           </div>

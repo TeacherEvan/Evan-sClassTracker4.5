@@ -17,19 +17,21 @@ export function SangsomMigrationButton({ userId }: SangsomMigrationButtonProps) 
     const migrateStudents = useMutation(api.migrateSangsomStudentsToEvents.migrateSangsomStudentsToEvents);
     const deleteStudents = useMutation(api.migrateSangsomStudentsToEvents.deleteSangsomStudents);
     const [loading, setLoading] = useState(false);
+    const [showMigrateConfirm, setShowMigrateConfirm] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteStep, setDeleteStep] = useState(1);
 
-    const handleMigrate = async () => {
-        if (
-            !confirm(
-                t(
-                    "Convert all Sangsom School students to events?\n\nThis will:\n- Create an event for each student\n- Delete all student records\n\nThis action cannot be undone!",
-                    "แปลงนักเรียนโรงเรียนสังสมทั้งหมดเป็นกิจกรรม?\n\nการดำเนินการนี้จะ:\n- สร้างกิจกรรมสำหรับแต่ละนักเรียน\n- ลบบันทึกนักเรียนทั้งหมด\n\nไม่สามารถยกเลิกได้!"
-                )
-            )
-        ) {
-            return;
-        }
+    const handleMigrate = () => {
+        setShowMigrateConfirm(true);
+    };
 
+    const handleDelete = () => {
+        setDeleteStep(1);
+        setShowDeleteConfirm(true);
+    };
+
+    const executeMigrate = async () => {
+        setShowMigrateConfirm(false);
         setLoading(true);
         try {
             const result = await migrateStudents({ adminId: userId });
@@ -52,30 +54,8 @@ export function SangsomMigrationButton({ userId }: SangsomMigrationButtonProps) 
         }
     };
 
-    const handleDelete = async () => {
-        if (
-            !confirm(
-                t(
-                    "⚠️ DELETE all Sangsom School students?\n\nThis will permanently remove all student records without creating events.\n\nThis action cannot be undone!",
-                    "⚠️ ลบนักเรียนโรงเรียนสังสมทั้งหมด?\n\nการดำเนินการนี้จะลบบันทึกนักเรียนทั้งหมดอย่างถาวรโดยไม่สร้างกิจกรรม\n\nไม่สามารถยกเลิกได้!"
-                )
-            )
-        ) {
-            return;
-        }
-
-        // Double confirmation
-        if (
-            !confirm(
-                t(
-                    "Are you ABSOLUTELY SURE?\n\nAll student data will be lost forever!",
-                    "คุณแน่ใจหรือไม่?\n\nข้อมูลนักเรียนทั้งหมดจะสูญหายตลอดกาล!"
-                )
-            )
-        ) {
-            return;
-        }
-
+    const executeDelete = async () => {
+        setShowDeleteConfirm(false);
         setLoading(true);
         try {
             const result = await deleteStudents({ adminId: userId });
@@ -137,6 +117,79 @@ export function SangsomMigrationButton({ userId }: SangsomMigrationButtonProps) 
             <div className="mt-4 text-xs text-orange-600 dark:text-orange-400">
                 ⚠️ {t("Warning: These actions cannot be undone!", "คำเตือน: การดำเนินการเหล่านี้ไม่สามารถยกเลิกได้!")}
             </div>
+
+            {/* Migration Confirmation Modal */}
+            {showMigrateConfirm && (
+                <div className="fixed inset-0 flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm w-full">
+                        <h4 className="text-lg font-semibold mb-4">
+                            {t("Confirm Migration", "ยืนยันการย้ายข้อมูล")}
+                        </h4>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                            {t(
+                                "Are you sure you want to convert all Sangsom School students to events?",
+                                "คุณแน่ใจหรือไม่ว่าต้องการแปลงนักเรียนโรงเรียนสังสมทั้งหมดเป็นกิจกรรม?"
+                            )}
+                        </p>
+
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowMigrateConfirm(false)}
+                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+
+                            <button
+                                onClick={executeMigrate}
+                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                            >
+                                {t("Yes, Convert", "ใช่ แปลงข้อมูล")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Deletion Confirmation Modal */}
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 flex items-center justify-center z-50">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm w-full">
+                        <h4 className="text-lg font-semibold mb-4">
+                            {t("Confirm Deletion", "ยืนยันการลบข้อมูล")}
+                        </h4>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                            {deleteStep === 1
+                                ? t(
+                                    "This will permanently remove all student records. This action cannot be undone.",
+                                    "การดำเนินการนี้จะลบบันทึกนักเรียนทั้งหมดอย่างถาวร ไม่สามารถยกเลิกได้"
+                                )
+                                : t(
+                                    "Are you ABSOLUTELY SURE? All student data will be lost forever!",
+                                    "คุณแน่ใจหรือไม่? ข้อมูลนักเรียนทั้งหมดจะสูญหายตลอดกาล!"
+                                )}
+                        </p>
+
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+
+                            <button
+                                onClick={deleteStep === 1 ? () => setDeleteStep(2) : executeDelete}
+                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                            >
+                                {deleteStep === 1
+                                    ? t("Proceed to Delete", "ดำเนินการลบ")
+                                    : t("Yes, Delete All", "ใช่ ลบทั้งหมด")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

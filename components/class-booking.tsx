@@ -3002,10 +3002,10 @@ function ClassItemDisplay({
                     <button
                       onClick={() => {
                         // Show full edit history modal (future enhancement)
-                        alert(t(
+                        toast.info(
                           `This class has been edited ${classItem.editHistory!.length} times. Full edit history coming soon!`,
                           `คลาสนี้ถูกแก้ไข ${classItem.editHistory!.length} ครั้ง ประวัติการแก้ไขทั้งหมดจะมาเร็วๆ นี้!`
-                        ));
+                        );
                       }}
                       className="text-blue-600 dark:text-blue-400 hover:underline text-xs mt-1"
                     >

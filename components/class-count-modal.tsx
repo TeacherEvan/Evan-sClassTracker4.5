@@ -3,6 +3,7 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import { toast } from "@/lib/toast";
 import { useQuery } from "convex/react";
 import {
     AlertCircle,
@@ -128,7 +129,7 @@ export function ClassCountModal({ teacherId, userRole, onClose }: ClassCountModa
 
         const printWindow = window.open('', '_blank');
         if (!printWindow) {
-            alert('Please allow popups to print');
+            toast.error("Please allow popups to print", "กรุณาอนุญาตป๊อปอัพเพื่อพิมพ์");
             return;
         }
 

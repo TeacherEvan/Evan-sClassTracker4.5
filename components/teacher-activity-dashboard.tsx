@@ -46,20 +46,21 @@ export function TeacherActivityDashboard({
         }
     };
 
-    const handleReject = async (requestId: Id<"cancellationRequests">) => {
-        if (
-            !confirm(
-                t(
-                    "Are you sure you want to reject this cancellation request?",
-                    "คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอยกเลิกนี้?"
-                )
-            )
-        ) {
-            return;
-        }
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [requestToReject, setRequestToReject] = useState<Id<"cancellationRequests"> | null>(null);
+
+    const handleReject = (requestId: Id<"cancellationRequests">) => {
+        setRequestToReject(requestId);
+        setShowRejectModal(true);
+    };
+
+    const executeReject = async () => {
+        if (!requestToReject) return;
 
         try {
-            await rejectCancellation({ requestId, moderatorId });
+            await rejectCancellation({ requestId: requestToReject, moderatorId });
+            setShowRejectModal(false);
+            setRequestToReject(null);
         } catch (err) {
             toast.error(
                 err instanceof Error ? err.message : "Failed to reject cancellation",
@@ -160,6 +161,35 @@ export function TeacherActivityDashboard({
                             {t("No activity logs found", "ไม่พบบันทึกกิจกรรม")}
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Reject Confirmation Modal */}
+            {showRejectModal && (
+                <div className="fixed inset-0 flex items-center justify-center z-50">
+                    <div className="bg-black bg-opacity-50 absolute inset-0" />
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 max-w-sm mx-auto z-10">
+                        <h3 className="text-lg font-semibold mb-4">
+                            {t("Confirm Rejection", "ยืนยันการปฏิเสธ")}
+                        </h3>
+                        <p className="text-sm text-gray-500 mb-4">
+                            {t("Are you sure you want to reject this cancellation request?", "คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธคำขอยกเลิกนี้?")}
+                        </p>
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setShowRejectModal(false)}
+                                className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={executeReject}
+                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                            >
+                                {t("Reject Request", "ปฏิเสธคำขอ")}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

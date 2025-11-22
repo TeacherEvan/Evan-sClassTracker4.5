@@ -27,6 +27,10 @@ export function SchoolManagement({ currentUser }: SchoolManagementProps) {
     const [moderatorId, setModeratorId] = useState<Id<"users"> | "">("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [schoolToDelete, setSchoolToDelete] = useState<{ id: Id<"schools">, name: string } | null>(null);
+    const [deleteReason, setDeleteReason] = useState("");
+    const [deleteReasonTh, setDeleteReasonTh] = useState("");
 
     // Filter moderators from user list
     const moderators = users?.filter((u) => u.role === "moderator") || [];
@@ -90,25 +94,33 @@ export function SchoolManagement({ currentUser }: SchoolManagementProps) {
         setSuccess("");
     };
 
-    const handleDelete = async (schoolId: Id<"schools">, schoolName: string) => {
-        const reason = prompt(
-            t(
-                `Delete school "${schoolName}"? Please provide a reason:`,
-                `ลบโรงเรียน "${schoolName}"? กรุณาระบุเหตุผล:`
-            )
-        );
+    const handleDelete = (schoolId: Id<"schools">, schoolName: string) => {
+        setSchoolToDelete({ id: schoolId, name: schoolName });
+        setDeleteReason("");
+        setDeleteReasonTh("");
+        setShowDeleteModal(true);
+    };
 
-        if (!reason || reason.trim() === "") {
-            return; // User cancelled or provided no reason
+    const executeDelete = async () => {
+        if (!schoolToDelete) return;
+
+        // Require at least one reason
+        if (!deleteReason.trim() && !deleteReasonTh.trim()) {
+            setError(t("Please provide a reason", "กรุณาระบุเหตุผล"));
+            return;
         }
+
+        const reason = deleteReason.trim() || deleteReasonTh.trim();
 
         try {
             await deleteSchool({
-                id: schoolId,
+                id: schoolToDelete.id,
                 adminId: currentUser._id,
-                reason: reason.trim()
+                reason: reason
             });
             setSuccess(t("School deleted!", "ลบโรงเรียนแล้ว!"));
+            setShowDeleteModal(false);
+            setSchoolToDelete(null);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to delete school");
         }
@@ -120,6 +132,15 @@ export function SchoolManagement({ currentUser }: SchoolManagementProps) {
         setName("");
         setNameTh("");
         setModeratorId("");
+        setError("");
+        setSuccess("");
+    };
+
+    const cancelDelete = () => {
+        setShowDeleteModal(false);
+        setSchoolToDelete(null);
+        setDeleteReason("");
+        setDeleteReasonTh("");
         setError("");
         setSuccess("");
     };
@@ -308,6 +329,69 @@ export function SchoolManagement({ currentUser }: SchoolManagementProps) {
                     </table>
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && schoolToDelete && (
+                <div className="fixed inset-0 flex items-center justify-center z-50">
+                    <div className="absolute inset-0 bg-black opacity-30" aria-hidden="true"></div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 z-10 max-w-sm w-full">
+                        <h3 className="text-lg font-semibold mb-4">
+                            {t("Confirm Deletion", "ยืนยันการลบ")}
+                        </h3>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
+                            {t(
+                                `Are you sure you want to delete the school "${schoolToDelete.name}"? This action cannot be undone.`,
+                                `คุณแน่ใจหรือว่าต้องการลบโรงเรียน "${schoolToDelete.name}"? การกระทำนี้ไม่สามารถย้อนกลับได้`
+                            )}
+                        </p>
+
+                        <div className="grid gap-4">
+                            <div>
+                                <label htmlFor="deleteReason" className="block text-sm font-medium mb-2">
+                                    {t("Reason for Deletion (Optional)", "เหตุผลในการลบ (ไม่บังคับ)")}
+                                </label>
+                                <input
+                                    type="text"
+                                    id="deleteReason"
+                                    value={deleteReason}
+                                    onChange={(e) => setDeleteReason(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700"
+                                    placeholder={t("Enter reason in English", "กรุณาระบุเหตุผลเป็นภาษาอังกฤษ")}
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="deleteReasonTh" className="block text-sm font-medium mb-2">
+                                    {t("เหตุผลในการลบ (ไม่บังคับ)", "Reason for Deletion (Optional)")}
+                                </label>
+                                <input
+                                    type="text"
+                                    id="deleteReasonTh"
+                                    value={deleteReasonTh}
+                                    onChange={(e) => setDeleteReasonTh(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700"
+                                    placeholder={t("กรุณาระบุเหตุผลเป็นภาษาอังกฤษ", "Enter reason in English")}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-4 mt-4">
+                            <button
+                                onClick={executeDelete}
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                            >
+                                {t("Delete School", "ลบโรงเรียน")}
+                            </button>
+                            <button
+                                onClick={cancelDelete}
+                                className="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -9,6 +9,7 @@
     "lint": "eslint",
     "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
     "lint:md:fix": "markdownlint-cli2 --fix \"**/*.md\" \"#node_modules\"",
+    "verify": "tsx scripts/verify-patterns.ts",
     "prepare": "husky install",
     "create-update": "tsx scripts/create-app-update.ts",
     "backup": "tsx scripts/backup-to-mongodb.ts backup",

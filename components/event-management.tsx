@@ -93,6 +93,7 @@ export function EventManagement({ userId, userRole, schoolId }: EventManagementP
     });
 
     const [loading, setLoading] = useState(false);
+    const [eventToDelete, setEventToDelete] = useState<Id<"events"> | null>(null);
 
     const resetForm = () => {
         setFormData({
@@ -191,12 +192,17 @@ export function EventManagement({ userId, userRole, schoolId }: EventManagementP
         }
     };
 
-    const handleDelete = async (eventId: Id<"events">) => {
-        if (!confirm(t("Delete this event?", "ลบกิจกรรมนี้?"))) return;
+    const handleDelete = (eventId: Id<"events">) => {
+        setEventToDelete(eventId);
+    };
+
+    const executeDelete = async () => {
+        if (!eventToDelete) return;
 
         try {
-            await removeEvent({ userId, eventId });
+            await removeEvent({ userId, eventId: eventToDelete });
             toast.success("Event deleted", "ลบกิจกรรมแล้ว");
+            setEventToDelete(null);
         } catch {
             toast.error("Failed to delete event", "ลบกิจกรรมไม่สำเร็จ");
         }
@@ -577,6 +583,36 @@ export function EventManagement({ userId, userRole, schoolId }: EventManagementP
                     </div>
                 )}
             </div>
+            {/* Delete Confirmation Modal */}
+            {eventToDelete && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full shadow-xl">
+                        <h3 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+                            {t("Delete Event?", "ลบกิจกรรม?")}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-300 mb-6">
+                            {t(
+                                "Are you sure you want to delete this event? This action cannot be undone.",
+                                "คุณแน่ใจหรือไม่ว่าต้องการลบกิจกรรมนี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+                            )}
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setEventToDelete(null)}
+                                className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                            <button
+                                onClick={executeDelete}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                            >
+                                {t("Delete", "ลบ")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
