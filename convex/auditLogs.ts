@@ -3,7 +3,7 @@ import { mutation, query } from "./_generated/server";
 
 /**
  * Audit Logging System
- * 
+ *
  * Tracks all administrative actions for compliance and accountability.
  * Logs include: user management, deletions, bulk operations, configuration changes.
  */
@@ -150,6 +150,7 @@ export const getForTarget = query({
 
 // ============================================================================
 // QUERY: Get audit log statistics
+// ✅ OPTIMIZED: Uses timestamp index with filter for time-bounded queries
 // ============================================================================
 
 export const getStatistics = query({
@@ -167,11 +168,12 @@ export const getStatistics = query({
         const days = args.days || 30;
         const startDate = Date.now() - (days * 24 * 60 * 60 * 1000);
 
-        // Get logs from last N days
+        // ✅ OPTIMIZED: Use timestamp index for efficient range query
+        // Orders by timestamp desc and filters to only recent logs
+        // This avoids collecting entire table and filtering in memory
         const logs = await ctx.db
             .query("auditLogs")
-            .withIndex("by_timestamp")
-            .filter(q => q.gte(q.field("timestamp"), startDate))
+            .withIndex("by_timestamp", q => q.gte("timestamp", startDate))
             .collect();
 
         // Calculate statistics
@@ -345,6 +347,7 @@ export const getDeletedStudents = query({
 
 // ============================================================================
 // QUERY: Get orphaned classes (classes referencing deleted students)
+// OPTIMIZED: Batch fetch students instead of N+1 queries
 // ============================================================================
 
 export const getOrphanedClasses = query({
@@ -358,46 +361,64 @@ export const getOrphanedClasses = query({
             throw new Error("Admin or moderator access required to view orphaned classes");
         }
 
-        // Get all classes
-        let classes = await ctx.db.query("classes").collect();
-
-        // For moderators, filter to their school only
+        // Get classes scoped by role (use index for moderators)
+        let classes;
         if (user.role === "moderator" && user.schoolId) {
-            classes = classes.filter(c => c.schoolId === user.schoolId);
+            classes = await ctx.db
+                .query("classes")
+                .withIndex("by_school", q => q.eq("schoolId", user.schoolId!))
+                .collect();
+        } else {
+            classes = await ctx.db.query("classes").collect();
         }
 
-        // Check which classes have deleted students
-        const orphanedClasses = [];
-        for (const classItem of classes) {
-            const student = await ctx.db.get(classItem.studentId);
-            if (!student) {
-                // Student has been deleted - this is an orphaned class
+        // ✅ OPTIMIZATION: Batch fetch all unique student IDs at once (eliminates N+1)
+        const uniqueStudentIds = [...new Set(classes.map(c => c.studentId))];
+        const students = await Promise.all(uniqueStudentIds.map(id => ctx.db.get(id)));
+        const studentMap = new Map(
+            students.map((s, idx) => [uniqueStudentIds[idx], s])
+        );
 
-                // Try to find deletion audit log for this student
-                const deletionLog = await ctx.db
-                    .query("auditLogs")
-                    .withIndex("by_action", q => q.eq("action", "delete_student"))
-                    .filter(q => q.eq(q.field("targetId"), classItem.studentId))
-                    .first();
+        // Find orphaned classes (students that no longer exist)
+        const orphanedClassItems = classes.filter(c => !studentMap.get(c.studentId));
 
-                orphanedClasses.push({
-                    classId: classItem._id,
-                    scheduledDate: classItem.scheduledDate,
-                    status: classItem.status,
-                    teacherId: classItem.teacherId,
-                    schoolId: classItem.schoolId,
-                    duration: classItem.duration,
-                    studentCount: classItem.additionalStudentIds ? classItem.additionalStudentIds.length + 1 : 1,
-                    deletedStudentId: classItem.studentId,
-                    deletionInfo: deletionLog ? {
-                        deletedBy: deletionLog.username,
-                        deletedAt: deletionLog.timestamp,
-                        reason: deletionLog.reason,
-                        studentName: deletionLog.targetName,
-                    } : null,
-                });
-            }
+        if (orphanedClassItems.length === 0) {
+            return [];
         }
+
+        // ✅ OPTIMIZATION: Batch fetch deletion logs for all orphaned student IDs
+        // Convert studentIds to strings for comparison with targetId
+        const orphanedStudentIdStrings = [...new Set(orphanedClassItems.map(c => String(c.studentId)))];
+        const deletionLogs = await ctx.db
+            .query("auditLogs")
+            .withIndex("by_action", q => q.eq("action", "delete_student"))
+            .collect();
+        const deletionLogMap = new Map(
+            deletionLogs
+                .filter(log => log.targetId && orphanedStudentIdStrings.includes(log.targetId))
+                .map(log => [log.targetId, log])
+        );
+
+        // Build result with cached deletion info
+        const orphanedClasses = orphanedClassItems.map(classItem => {
+            const deletionLog = deletionLogMap.get(String(classItem.studentId));
+            return {
+                classId: classItem._id,
+                scheduledDate: classItem.scheduledDate,
+                status: classItem.status,
+                teacherId: classItem.teacherId,
+                schoolId: classItem.schoolId,
+                duration: classItem.duration,
+                studentCount: classItem.additionalStudentIds ? classItem.additionalStudentIds.length + 1 : 1,
+                deletedStudentId: classItem.studentId,
+                deletionInfo: deletionLog ? {
+                    deletedBy: deletionLog.username,
+                    deletedAt: deletionLog.timestamp,
+                    reason: deletionLog.reason,
+                    studentName: deletionLog.targetName,
+                } : null,
+            };
+        });
 
         return orphanedClasses;
     },
