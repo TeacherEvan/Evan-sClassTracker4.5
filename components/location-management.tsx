@@ -118,7 +118,7 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
         }
     };
 
-    const handleDelete = (id: Id<"locations">) => {
+    const _handleDelete = (id: Id<"locations">) => {
         setLocationToDelete(id);
         setShowDeleteConfirm(true);
     };
@@ -130,10 +130,10 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
             await removeLocation({ id: locationToDelete });
             setShowDeleteConfirm(false);
             setLocationToDelete(null);
-        } catch (err) {
+        } catch (_err) {
             toast.error(
-                err instanceof Error ? err.message : "Failed to delete location",
-                err instanceof Error ? err.message : "ไม่สามารถลบสถานที่ได้"
+                _err instanceof Error ? _err.message : "Failed to delete location",
+                _err instanceof Error ? _err.message : "ไม่สามารถลบสถานที่ได้"
             );
         }
     };
@@ -150,7 +150,7 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
             await approveProposal({ userId, locationId: proposalToApprove });
             setShowApproveConfirm(false);
             setProposalToApprove(null);
-        } catch (err) {
+        } catch (_err) {
             toast.error("Failed to approve proposal", "อนุมัติไม่สำเร็จ");
         }
     };
@@ -187,7 +187,7 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
             setRejectReason("");
             setRejectReasonTh("");
             setSelectedProposalId(null);
-        } catch (err) {
+        } catch (_err) {
             toast.error("Failed to reject", "ไม่สามารถปฏิเสธได้");
         }
     };

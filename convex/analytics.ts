@@ -340,3 +340,167 @@ export const getStudentPerformance = query({
         return performance;
     },
 });
+
+/**
+ * Get Teacher Comparison Analytics (Moderator-Only)
+ * Returns comparative performance data for all teachers in a school
+ *
+ * ✅ NEW (Nov 2025): Enables moderators to compare teacher effectiveness
+ */
+export const getTeacherComparison = query({
+    args: {
+        userId: v.id("users"),
+        startDate: v.optional(v.number()),
+        endDate: v.optional(v.number()),
+    },
+    handler: async (ctx, args) => {
+        // Get user to determine role
+        const user = await ctx.db.get(args.userId);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        // Only moderators and admins can access teacher comparison
+        if (user.role !== "moderator" && user.role !== "admin") {
+            return null; // Teachers don't have access to this view
+        }
+
+        // Date range defaults to last 30 days if not specified
+        const now = Date.now();
+        const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+        const startDate = args.startDate || thirtyDaysAgo;
+        const endDate = args.endDate || now;
+
+        // Get school ID for moderator filtering
+        const schoolId = user.role === "moderator" ? user.schoolId : null;
+
+        // Fetch classes for the school (or all for admin)
+        let classes: Doc<"classes">[];
+        if (user.role === "moderator" && schoolId) {
+            classes = await ctx.db
+                .query("classes")
+                .withIndex("by_school_and_date", q =>
+                    q.eq("schoolId", schoolId).gte("scheduledDate", startDate)
+                )
+                .filter(q =>
+                    q.and(
+                        q.lte(q.field("scheduledDate"), endDate),
+                        q.eq(q.field("status"), "approved")
+                    )
+                )
+                .collect();
+        } else {
+            // Admin sees all
+            classes = await ctx.db
+                .query("classes")
+                .withIndex("by_scheduled_date", q => q.gte("scheduledDate", startDate))
+                .filter(q =>
+                    q.and(
+                        q.lte(q.field("scheduledDate"), endDate),
+                        q.eq(q.field("status"), "approved")
+                    )
+                )
+                .collect();
+        }
+
+        // Group classes by teacher
+        const teacherDataMap = new Map<Id<"users">, {
+            teacherId: Id<"users">;
+            totalClasses: number;
+            attendedClasses: number;
+            totalDuration: number;
+            uniqueStudents: Set<Id<"students">>;
+        }>();
+
+        // ✅ OPTIMIZED: Batch fetch post-class notes for attendance tracking
+        const classIds = classes.map(c => c._id);
+        const notePromises = classIds.map(classId =>
+            ctx.db
+                .query("postClassNotes")
+                .withIndex("by_class", q => q.eq("classId", classId))
+                .first()
+        );
+        const allNotes = await Promise.all(notePromises);
+        const notesMap = new Map(
+            allNotes
+                .map((note, index) => note ? [classIds[index], note] : null)
+                .filter(Boolean) as Array<[Id<"classes">, Doc<"postClassNotes">]>
+        );
+
+        // Aggregate by teacher
+        for (const classItem of classes) {
+            const existing = teacherDataMap.get(classItem.teacherId) || {
+                teacherId: classItem.teacherId,
+                totalClasses: 0,
+                attendedClasses: 0,
+                totalDuration: 0,
+                uniqueStudents: new Set<Id<"students">>(),
+            };
+
+            existing.totalClasses += 1;
+            existing.uniqueStudents.add(classItem.studentId);
+
+            // Count as attended if has post-class notes
+            if (notesMap.has(classItem._id)) {
+                existing.attendedClasses += 1;
+                existing.totalDuration += (classItem.duration || 60);
+            }
+
+            teacherDataMap.set(classItem.teacherId, existing);
+        }
+
+        // Fetch teacher details
+        const teacherIds = Array.from(teacherDataMap.keys());
+        const teachers = await Promise.all(teacherIds.map(id => ctx.db.get(id)));
+
+        // Build comparison array
+        const comparison = teachers
+            .map((teacher, index) => {
+                if (!teacher) return null;
+
+                const data = teacherDataMap.get(teacherIds[index])!;
+                const attendanceRate = data.totalClasses > 0
+                    ? Math.round((data.attendedClasses / data.totalClasses) * 100)
+                    : 0;
+                const avgClassCount = data.attendedClasses > 0
+                    ? Math.round((data.totalDuration / 60 / data.attendedClasses) * 10) / 10
+                    : 0;
+
+                // Performance rating based on attendance rate
+                let rating: "excellent" | "good" | "needs_improvement";
+                if (attendanceRate >= 90) {
+                    rating = "excellent";
+                } else if (attendanceRate >= 70) {
+                    rating = "good";
+                } else {
+                    rating = "needs_improvement";
+                }
+
+                return {
+                    teacherId: teacher._id,
+                    teacherName: teacher.username,
+                    totalClasses: data.totalClasses,
+                    attendedClasses: data.attendedClasses,
+                    attendanceRate,
+                    avgClassCount,
+                    uniqueStudentCount: data.uniqueStudents.size,
+                    rating,
+                };
+            })
+            .filter(Boolean) as Array<{
+                teacherId: Id<"users">;
+                teacherName: string;
+                totalClasses: number;
+                attendedClasses: number;
+                attendanceRate: number;
+                avgClassCount: number;
+                uniqueStudentCount: number;
+                rating: "excellent" | "good" | "needs_improvement";
+            }>;
+
+        // Sort by total classes descending (most active teachers first)
+        comparison.sort((a, b) => b.totalClasses - a.totalClasses);
+
+        return comparison;
+    },
+});

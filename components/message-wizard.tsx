@@ -6,7 +6,7 @@ import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import { useMutation, useQuery } from "convex/react";
 import { ChevronLeft, ChevronRight, Send, Star, X } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 interface MessageWizardProps {
     userId: Id<"users">;
@@ -65,18 +65,40 @@ export function MessageWizard({
 
     // Get teachers for moderator's school or all teachers/moderators for admin
     const allUsers = useQuery(api.users.list, {});
-    const availableRecipients = allUsers?.filter(u => {
-        // Can't message yourself
-        if (u._id === userId) return false;
 
-        if (userRole === "moderator") {
-            // Moderators can message teachers in their school
-            return u.role === "teacher" && u.schoolId === userSchoolId;
-        }
+    // ✅ OPTIMIZED: Memoize recipient filtering to prevent recalculation on every render
+    const availableRecipients = useMemo(() => {
+        if (!allUsers) return [];
+        return allUsers.filter(u => {
+            // Can't message yourself
+            if (u._id === userId) return false;
 
-        // Teachers can message other teachers and moderators
-        return u.role === "teacher" || u.role === "moderator";
-    });
+            if (userRole === "moderator") {
+                // Moderators can message teachers in their school
+                return u.role === "teacher" && u.schoolId === userSchoolId;
+            }
+
+            // Teachers can message other teachers and moderators
+            return u.role === "teacher" || u.role === "moderator";
+        });
+    }, [allUsers, userId, userRole, userSchoolId]);
+
+    // ✅ OPTIMIZED: Memoize recent recipients for sorting
+    const recentRecipientIds = useMemo(() =>
+        wizardPreferences?.recentTeacherIds || [],
+        [wizardPreferences?.recentTeacherIds]
+    );
+
+    // ✅ OPTIMIZED: Memoize sorted recipients (recent first)
+    const sortedRecipients = useMemo(() => {
+        return [...availableRecipients].sort((a, b) => {
+            const aRecent = recentRecipientIds.includes(a._id);
+            const bRecent = recentRecipientIds.includes(b._id);
+            if (aRecent && !bRecent) return -1;
+            if (!aRecent && bRecent) return 1;
+            return a.username.localeCompare(b.username);
+        });
+    }, [availableRecipients, recentRecipientIds]);
 
     const sendDirectMessage = useMutation(api.messages.sendDirectMessage);
 
@@ -163,75 +185,64 @@ export function MessageWizard({
     const renderStepContent = () => {
         switch (currentStep) {
             case "recipients":
-                {
-                    // ✅ Sort recipients to show recent ones first
-                    const recentRecipientIds = wizardPreferences?.recentTeacherIds || [];
-                    const sortedRecipients = [...(availableRecipients || [])].sort((a, b) => {
-                        const aRecent = recentRecipientIds.includes(a._id);
-                        const bRecent = recentRecipientIds.includes(b._id);
-                        if (aRecent && !bRecent) return -1;
-                        if (!aRecent && bRecent) return 1;
-                        return a.username.localeCompare(b.username);
-                    });
-
-                    return (
-                        <div className="space-y-4">
-                            <p className="text-gray-600 dark:text-gray-400">
-                                {t("Select one or more teachers to message", "เลือกครูที่ต้องการส่งข้อความ")}
+                // ✅ OPTIMIZED: Using memoized sortedRecipients and recentRecipientIds
+                return (
+                    <div className="space-y-4">
+                        <p className="text-gray-600 dark:text-gray-400">
+                            {t("Select one or more teachers to message", "เลือกครูที่ต้องการส่งข้อความ")}
+                        </p>
+                        {recentRecipientIds.length > 0 && (
+                            <p className="text-xs text-gray-500 flex items-center gap-1">
+                                <Star className="w-3 h-3 text-yellow-500" />
+                                {t("Recent recipients shown first", "ผู้รับล่าสุดแสดงก่อน")}
                             </p>
-                            {recentRecipientIds.length > 0 && (
-                                <p className="text-xs text-gray-500 flex items-center gap-1">
-                                    <Star className="w-3 h-3 text-yellow-500" />
-                                    {t("Recent recipients shown first", "ผู้รับล่าสุดแสดงก่อน")}
-                                </p>
-                            )}
-                            <div className="space-y-2 max-h-96 overflow-y-auto">
-                                {sortedRecipients.map(user => {
-                                    const isRecent = recentRecipientIds.includes(user._id);
-                                    return (
-                                        <div
-                                            key={user._id}
-                                            className={`flex items-center gap-3 p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer ${selectedRecipients.includes(user._id)
-                                                    ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20'
-                                                    : 'border-gray-300 dark:border-gray-600'
-                                                } ${isRecent ? 'ring-1 ring-yellow-300' : ''}`}
-                                            onClick={() => toggleRecipient(user._id)}
-                                            role="checkbox"
-                                            aria-checked={selectedRecipients.includes(user._id)}
-                                            tabIndex={0}
-                                            onKeyDown={(e) => e.key === 'Enter' && toggleRecipient(user._id)}
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedRecipients.includes(user._id)}
-                                                onChange={() => toggleRecipient(user._id)}
-                                                className="w-5 h-5"
-                                                aria-label={`${t("Select", "เลือก")} ${user.username}`}
-                                            />
-                                            <div className="flex-1">
-                                                <p className="font-medium flex items-center gap-2">
-                                                    {isRecent && <Star className="w-4 h-4 text-yellow-500" />}
-                                                    {user.username}
-                                                </p>
-                                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                    {user.role} {user.schoolId && `• School`}
-                                                </p>
-                                            </div>
+                        )}
+                        <div className="space-y-2 max-h-96 overflow-y-auto">
+                            {sortedRecipients.map(user => {
+                                const isRecent = recentRecipientIds.includes(user._id);
+                                return (
+                                    <div
+                                        key={user._id}
+                                        className={`flex items-center gap-3 p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer ${selectedRecipients.includes(user._id)
+                                            ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20'
+                                            : 'border-gray-300 dark:border-gray-600'
+                                            } ${isRecent ? 'ring-1 ring-yellow-300' : ''}`}
+                                        onClick={() => toggleRecipient(user._id)}
+                                        role="checkbox"
+                                        aria-checked={selectedRecipients.includes(user._id)}
+                                        tabIndex={0}
+                                        onKeyDown={(e) => e.key === 'Enter' && toggleRecipient(user._id)}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedRecipients.includes(user._id)}
+                                            onChange={() => toggleRecipient(user._id)}
+                                            className="w-5 h-5"
+                                            aria-label={`${t("Select", "เลือก")} ${user.username}`}
+                                        />
+                                        <div className="flex-1">
+                                            <p className="font-medium flex items-center gap-2">
+                                                {isRecent && <Star className="w-4 h-4 text-yellow-500" />}
+                                                {user.username}
+                                            </p>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                {user.role} {user.schoolId && `• School`}
+                                            </p>
                                         </div>
-                                    );
-                                })}
-                            </div>
-                            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                                    {t(
-                                        `Selected: ${selectedRecipients.length} recipient(s)`,
-                                        `เลือกแล้ว: ${selectedRecipients.length} คน`
-                                    )}
-                                </p>
-                            </div>
+                                    </div>
+                                );
+                            })}
                         </div>
-                    );
-                }
+                        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                                {t(
+                                    `Selected: ${selectedRecipients.length} recipient(s)`,
+                                    `เลือกแล้ว: ${selectedRecipients.length} คน`
+                                )}
+                            </p>
+                        </div>
+                    </div>
+                );
 
             case "compose":
                 return (

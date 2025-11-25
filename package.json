@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.22.0",
-    "convex": "^1.28.0",
+    "convex": "^1.29.3",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.554.0",
     "mongodb": "^6.21.0",
@@ -60,7 +60,7 @@
     "markdownlint-cli2": "^0.19.0",
     "tailwindcss": "^4.1.17",
     "tsx": "^4.20.6",
-    "typescript": "^5",
+    "typescript": "^5.9.3",
     "vitest": "^4.0.10"
   },
   "lint-staged": {

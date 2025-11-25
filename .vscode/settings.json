@@ -22,5 +22,6 @@
     "git.pruneOnFetch": false,
     "git.postCommitCommand": "none",
     "git.showProgress": false,
-    "mcpExplorer.serverRegistry": "C:\\Users\\User\\.vscode\\MCP tools\\mcp-servers-registry.json"
+    "mcpExplorer.serverRegistry": "C:\\Users\\User\\.vscode\\MCP tools\\mcp-servers-registry.json",
+    "liveServer.settings.port": 5501
 }

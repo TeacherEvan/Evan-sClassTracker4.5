@@ -2,6 +2,77 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.30] - November 25, 2025 🔍 Teacher Comparison Analytics & Performance Optimizations
+
+### 🎯 Feature Enhancement: Teacher Comparison Analytics
+
+**Summary**: Added Teacher Comparison feature to Class Analytics for moderators and admins. Enhanced wizard performance with useMemo optimizations. Fixed build errors and improved code quality.
+
+### Added
+
+#### Teacher Comparison Feature (class-analytics.tsx)
+
+- **Tab Switcher UI**: Summary tab + Teacher Comparison tab for moderators/admins
+- **Teacher Comparison Table**: Side-by-side comparison of all teachers showing:
+  - Total classes taught
+  - Attended classes count
+  - Attendance rate percentage
+  - Average ClassCount per class
+  - Unique student count
+  - Performance rating (Excellent/Good/Needs Improvement)
+- **Color-Coded Ratings**: Visual indicators for performance levels
+- **Role-Based Access**: Teacher Comparison only visible to moderators and admins (not teachers)
+
+#### Backend Query (convex/analytics.ts)
+
+- **`getTeacherComparison` query**: Returns aggregated metrics for all teachers
+  - Indexed query with batch fetching (prevents N+1)
+  - School-scoped for moderators, all schools for admins
+  - Returns: teacherId, teacherName, totalClasses, attendedClasses, attendanceRate, avgClassCount, uniqueStudentCount, rating
+
+#### E2E Test Suite (tests/e2e/analytics.spec.ts)
+
+- **New test file**: Comprehensive analytics feature tests
+- **Test Coverage**:
+  - Teacher opening analytics modal
+  - Teacher seeing summary view (no Teacher Comparison tab)
+  - Moderator accessing Teacher Comparison tab
+  - Tab switching between Summary and Teacher Comparison
+  - Admin accessing Teacher Comparison across all schools
+  - Modal close interactions (X button, Escape key)
+  - Date range filtering
+  - CSV export button visibility
+- **Bilingual selectors**: All tests support EN/TH UI
+
+### Changed
+
+#### Performance Optimizations
+
+- **booking-wizard.tsx**: Added 7 useMemo hooks for filtered teachers, students, grades, and time slots
+- **message-wizard.tsx**: Added 2 useMemo hooks for recipient filtering and sorting
+
+#### Code Quality Fixes
+
+- **class-analytics.tsx**:
+  - Fixed unused import (`Users2` removed)
+  - Fixed property name mismatches (`attendedClasses`, `uniqueStudentCount`, `avgClassCount`)
+  - Made `exportToCSV` use memoized `csvData` for consistency
+- **location-management.tsx**: Prefixed unused variables with underscore (`_handleDelete`, `_err`)
+
+### Technical Details
+
+- **Files Modified**: 6 (class-analytics.tsx, analytics.ts, booking-wizard.tsx, message-wizard.tsx, location-management.tsx, analytics.spec.ts)
+- **Lines Added**: ~500 lines total
+- **Features Added**: Teacher Comparison UI, backend query, E2E test suite
+- **Build Status**: ✅ All TypeScript errors and ESLint warnings resolved
+
+### Documentation
+
+- **Updated CHANGELOG**: v4.5.30 entry with full feature documentation
+- **E2E Test README**: New analytics test coverage documented
+
+---
+
 ## [4.5.29] - November 20, 2025 ✨ User-Specific Wizard Personalization
 
 ### 🎯 Feature Enhancement: Wizard User Experience Optimization

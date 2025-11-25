@@ -1,7 +1,7 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.18 (Nov 2, 2025 - Security: PBKDF2 Password Migration)  
+**Version:** 4.5.30 (Nov 25, 2025 - Teacher Comparison Analytics)  
 **🔴 CRITICAL**: Bcrypt migration required - see Security Considerations
 
 ---
@@ -203,11 +203,23 @@ This documentation is split into focused sections for efficient knowledge discov
 - **Disaster Recovery**: 10 critical failure scenarios with step-by-step recovery
 - **Operational Guides**: 5 practical how-to procedures with copy-paste commands
 - **Refactoring Candidates**: 4 files identified (2,930 to 1,065 lines each)
-- **Recent Updates**: Nov 9, 2025 (v4.5.18) - EMERGENCY: Bcrypt password migration tools added
+- **Recent Updates**: Nov 25, 2025 (v4.5.30) - Teacher Comparison Analytics & Performance Optimizations
 
 ---
 
 ## 🔄 Last Updated
+
+**November 25, 2025** - Version 4.5.30 - Teacher Comparison Analytics 🔍
+
+- **Teacher Comparison Feature**: Compare all teachers side-by-side with metrics
+  - New backend query: `getTeacherComparison` in analytics.ts
+  - Tab switcher UI: Summary vs Teacher Comparison
+  - Metrics: Total classes, attendance rate, avg ClassCount, unique students, rating
+  - Role-based access: Moderators see school teachers, admins see all
+- **Performance Optimizations**: Added useMemo hooks to booking-wizard.tsx (7) and message-wizard.tsx (2)
+- **Build Fixes**: Fixed unused imports, property name mismatches, ESLint warnings
+- **E2E Tests**: New analytics.spec.ts with comprehensive test coverage
+- **Previous (v4.5.29)**: User-Specific Wizard Personalization (Nov 20, 2025)
 
 **November 10, 2025** - Version 4.5.24 - PR #81 Phase 4 Complete 🚀
 

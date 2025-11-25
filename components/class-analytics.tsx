@@ -14,7 +14,7 @@ import {
     Users,
     X
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ClassPaymentCalculator } from "./class-payment-calculator";
 
 interface ClassAnalyticsProps {
@@ -60,20 +60,20 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
         endDate,
     });
 
-    // Handle date changes
-    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newDate = new Date(e.target.value).getTime();
-        if (!isNaN(newDate)) setStartDate(newDate);
-    };
+    // ✅ NEW: Teacher comparison data (moderator/admin only)
+    const teacherComparisonData = useQuery(
+        api.analytics.getTeacherComparison,
+        user?.role === "moderator" || user?.role === "admin"
+            ? { userId, startDate, endDate }
+            : "skip"
+    );
 
-    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newDate = new Date(e.target.value).getTime();
-        if (!isNaN(newDate)) setEndDate(newDate);
-    };
+    // ✅ NEW: Tab state for switching between views (moderator/admin only)
+    const [activeTab, setActiveTab] = useState<"students" | "teachers">("students");
 
-    // Export to CSV
-    const exportToCSV = () => {
-        if (!studentPerformanceData) return;
+    // ✅ OPTIMIZED: Memoize CSV export logic
+    const csvData = useMemo(() => {
+        if (!studentPerformanceData) return null;
 
         const headers = [
             t("Student Name", "ชื่อนักเรียน"),
@@ -96,9 +96,27 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
             ];
         });
 
+        return { headers, rows };
+    }, [studentPerformanceData, language, t]);
+
+    // Handle date changes
+    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newDate = new Date(e.target.value).getTime();
+        if (!isNaN(newDate)) setStartDate(newDate);
+    };
+
+    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newDate = new Date(e.target.value).getTime();
+        if (!isNaN(newDate)) setEndDate(newDate);
+    };
+
+    // Export to CSV (uses memoized csvData)
+    const exportToCSV = () => {
+        if (!csvData) return;
+
         const csvContent = [
-            headers.join(","),
-            ...rows.map((row) => row.join(",")),
+            csvData.headers.join(","),
+            ...csvData.rows.map((row) => row.join(",")),
         ].join("\n");
 
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -252,110 +270,221 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
                         </div>
                     </div>
 
-                    {/* Student Performance Table */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                <Users className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                                {t("Student Performance", "ผลการเรียนของนักเรียน")}
-                            </h3>
-                            <div className="flex items-center gap-2">
-                                {/* Payment Calculator Button (Moderators Only) */}
-                                {user?.role === "moderator" && (
-                                    <button
-                                        onClick={() => setShowPaymentCalculator(true)}
-                                        className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm"
-                                        title={t("Payment Calculator", "เครื่องคำนวณค่าสอน")}
-                                    >
-                                        <Calculator className="w-4 h-4" />
-                                        {t("Calculator", "คำนวณ")}
-                                    </button>
-                                )}
-                                {/* Export CSV Button */}
-                                <button
-                                    onClick={exportToCSV}
-                                    className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
-                                >
-                                    <Download className="w-4 h-4" />
-                                    {t("Export CSV", "ส่งออก CSV")}
-                                </button>
-                            </div>
+                    {/* Tab Switcher for Moderator/Admin */}
+                    {(user?.role === "moderator" || user?.role === "admin") && teacherComparisonData && teacherComparisonData.length > 0 && (
+                        <div className="flex gap-2 mb-4">
+                            <button
+                                onClick={() => setActiveTab("students")}
+                                className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "students"
+                                        ? "bg-blue-600 text-white"
+                                        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                    }`}
+                            >
+                                {t("Student Performance", "ผลการเรียนนักเรียน")}
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("teachers")}
+                                className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "teachers"
+                                        ? "bg-blue-600 text-white"
+                                        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                    }`}
+                            >
+                                {t("Teacher Comparison", "เปรียบเทียบครู")}
+                            </button>
                         </div>
+                    )}
 
-                        {studentPerformanceData.length === 0 ? (
-                            <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                                {t("No student data available for this date range", "ไม่มีข้อมูลนักเรียนในช่วงเวลานี้")}
+                    {/* Teacher Comparison Table (Moderator/Admin Only) */}
+                    {activeTab === "teachers" && (user?.role === "moderator" || user?.role === "admin") && teacherComparisonData && (
+                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden mb-4">
+                            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                                <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <Users className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                                    {t("Teacher Comparison", "เปรียบเทียบครู")}
+                                </h3>
                             </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full">
-                                    <thead className="bg-gray-50 dark:bg-gray-700/50">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                {t("Student", "นักเรียน")}
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                {t("Total", "ทั้งหมด")}
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                {t("Attended", "เข้าเรียน")}
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                {t("Rate", "อัตรา")}
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                {t("Avg CC", "CC เฉลี่ย")}
-                                            </th>
-                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                {t("Performance", "ผลการเรียน")}
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                        {studentPerformanceData.map((student) => {
-                                            const ratingText = getRatingText(student.rating);
-                                            return (
+                            {teacherComparisonData.length === 0 ? (
+                                <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                                    {t("No teacher data available for this date range", "ไม่มีข้อมูลครูในช่วงเวลานี้")}
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-gray-50 dark:bg-gray-700/50">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                    {t("Teacher", "ครู")}
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                    {t("Classes", "คลาส")}
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                    {t("With Notes", "มีบันทึก")}
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                    {t("Attendance", "เข้าเรียน")}
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                    {t("Students", "นักเรียน")}
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                    {t("Total CC", "CC รวม")}
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                            {teacherComparisonData.map((teacher) => (
                                                 <tr
-                                                    key={student.studentId}
+                                                    key={teacher.teacherId}
                                                     className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
                                                 >
                                                     <td className="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">
-                                                        {student.studentName}
+                                                        {teacher.teacherName}
                                                     </td>
                                                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                                                        {student.totalClasses}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                                                        {student.attendedClasses}
+                                                        {teacher.totalClasses}
                                                     </td>
                                                     <td className="px-4 py-3 text-sm">
-                                                        <span
-                                                            className={`font-semibold ${student.attendanceRate >= 80
+                                                        <span className={`font-semibold ${teacher.attendedClasses / teacher.totalClasses >= 0.8
                                                                 ? "text-green-600 dark:text-green-400"
-                                                                : student.attendanceRate >= 60
+                                                                : teacher.attendedClasses / teacher.totalClasses >= 0.5
                                                                     ? "text-yellow-600 dark:text-yellow-400"
                                                                     : "text-red-600 dark:text-red-400"
-                                                                }`}
-                                                        >
-                                                            {student.attendanceRate}%
+                                                            }`}>
+                                                            {teacher.attendedClasses} ({Math.round((teacher.attendedClasses / teacher.totalClasses) * 100)}%)
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-sm">
+                                                        <span className={`font-semibold ${teacher.attendanceRate >= 80
+                                                                ? "text-green-600 dark:text-green-400"
+                                                                : teacher.attendanceRate >= 60
+                                                                    ? "text-yellow-600 dark:text-yellow-400"
+                                                                    : "text-red-600 dark:text-red-400"
+                                                            }`}>
+                                                            {teacher.attendanceRate}%
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
-                                                        {student.avgClassCount}
+                                                        {teacher.uniqueStudentCount}
                                                     </td>
-                                                    <td className="px-4 py-3 text-sm">
-                                                        <span className={`font-semibold ${getPerformanceColor(student.rating)}`}>
-                                                            {language === "en" ? ratingText.en : ratingText.th}
-                                                        </span>
+                                                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 font-medium">
+                                                        {teacher.avgClassCount}
                                                     </td>
                                                 </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Student Performance Table */}
+                    {activeTab === "students" && (
+                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                                <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                    <Users className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                                    {t("Student Performance", "ผลการเรียนของนักเรียน")}
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                    {/* Payment Calculator Button (Moderators Only) */}
+                                    {user?.role === "moderator" && (
+                                        <button
+                                            onClick={() => setShowPaymentCalculator(true)}
+                                            className="flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm"
+                                            title={t("Payment Calculator", "เครื่องคำนวณค่าสอน")}
+                                        >
+                                            <Calculator className="w-4 h-4" />
+                                            {t("Calculator", "คำนวณ")}
+                                        </button>
+                                    )}
+                                    {/* Export CSV Button */}
+                                    <button
+                                        onClick={exportToCSV}
+                                        className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
+                                    >
+                                        <Download className="w-4 h-4" />
+                                        {t("Export CSV", "ส่งออก CSV")}
+                                    </button>
+                                </div>
                             </div>
-                        )}
-                    </div>
+
+                            {studentPerformanceData.length === 0 ? (
+                                <div className="p-8 text-center text-gray-500 dark:text-gray-400">
+                                    {t("No student data available for this date range", "ไม่มีข้อมูลนักเรียนในช่วงเวลานี้")}
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-gray-50 dark:bg-gray-700/50">
+                                            <tr>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                    {t("Student", "นักเรียน")}
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                    {t("Total", "ทั้งหมด")}
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                    {t("Attended", "เข้าเรียน")}
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                    {t("Rate", "อัตรา")}
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                    {t("Avg CC", "CC เฉลี่ย")}
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                    {t("Performance", "ผลการเรียน")}
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                            {studentPerformanceData.map((student) => {
+                                                const ratingText = getRatingText(student.rating);
+                                                return (
+                                                    <tr
+                                                        key={student.studentId}
+                                                        className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+                                                    >
+                                                        <td className="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">
+                                                            {student.studentName}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                                                            {student.totalClasses}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                                                            {student.attendedClasses}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm">
+                                                            <span
+                                                                className={`font-semibold ${student.attendanceRate >= 80
+                                                                    ? "text-green-600 dark:text-green-400"
+                                                                    : student.attendanceRate >= 60
+                                                                        ? "text-yellow-600 dark:text-yellow-400"
+                                                                        : "text-red-600 dark:text-red-400"
+                                                                    }`}
+                                                            >
+                                                                {student.attendanceRate}%
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                                                            {student.avgClassCount}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-sm">
+                                                            <span className={`font-semibold ${getPerformanceColor(student.rating)}`}>
+                                                                {language === "en" ? ratingText.en : ratingText.th}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Footer */}
