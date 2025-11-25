@@ -39,6 +39,25 @@ export default defineSchema({
       platform: v.string(), // Windows/macOS/iOS/Android
       browser: v.string(), // Chrome/Safari/Firefox/Edge
     }))),
+    // Wizard preferences (user-specific settings for wizards)
+    wizardPreferences: v.optional(v.object({
+      defaultDuration: v.optional(v.number()), // Default class duration in minutes
+      defaultClassType: v.optional(v.union(
+        v.literal("regular"),
+        v.literal("makeup"),
+        v.literal("assessment"),
+        v.literal("trial")
+      )),
+      preferredStartTime: v.optional(v.string()), // HH:MM format
+      recentTeacherIds: v.optional(v.array(v.id("users"))), // Last 5 selected teachers
+      recentStudentIds: v.optional(v.array(v.id("students"))), // Last 5 selected students
+      recentGrades: v.optional(v.array(v.string())), // Last 3 selected grades
+      lastReportDateRange: v.optional(v.object({ // Remember last report date range
+        startDate: v.number(),
+        endDate: v.number(),
+      })),
+      skipTeacherStep: v.optional(v.boolean()), // For teachers - skip teacher selection
+    })),
   })
     .index("by_username", ["username"])
     .index("by_school", ["schoolId"])

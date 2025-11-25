@@ -750,3 +750,77 @@ export const updateLanguagePreference = mutation({
     };
   },
 });
+
+// ✅ NEW: Update user's wizard preferences (for personalized wizard experience)
+export const updateWizardPreferences = mutation({
+  args: {
+    userId: v.id("users"),
+    preferences: v.object({
+      defaultDuration: v.optional(v.number()),
+      defaultClassType: v.optional(v.union(
+        v.literal("regular"),
+        v.literal("makeup"),
+        v.literal("assessment"),
+        v.literal("trial")
+      )),
+      preferredStartTime: v.optional(v.string()),
+      recentTeacherIds: v.optional(v.array(v.id("users"))),
+      recentStudentIds: v.optional(v.array(v.id("students"))),
+      recentGrades: v.optional(v.array(v.string())),
+      lastReportDateRange: v.optional(v.object({
+        startDate: v.number(),
+        endDate: v.number(),
+      })),
+      skipTeacherStep: v.optional(v.boolean()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Merge with existing preferences
+    const existingPrefs = user.wizardPreferences || {};
+    const mergedPrefs = { ...existingPrefs, ...args.preferences };
+
+    // Limit recent items to prevent unbounded growth
+    if (mergedPrefs.recentTeacherIds && mergedPrefs.recentTeacherIds.length > 5) {
+      mergedPrefs.recentTeacherIds = mergedPrefs.recentTeacherIds.slice(0, 5);
+    }
+    if (mergedPrefs.recentStudentIds && mergedPrefs.recentStudentIds.length > 5) {
+      mergedPrefs.recentStudentIds = mergedPrefs.recentStudentIds.slice(0, 5);
+    }
+    if (mergedPrefs.recentGrades && mergedPrefs.recentGrades.length > 3) {
+      mergedPrefs.recentGrades = mergedPrefs.recentGrades.slice(0, 3);
+    }
+
+    await ctx.db.patch(args.userId, {
+      wizardPreferences: mergedPrefs,
+    });
+
+    console.log(`⚙️ Updated wizard preferences for ${user.username}`);
+
+    return {
+      success: true,
+      preferences: mergedPrefs,
+    };
+  },
+});
+
+// ✅ NEW: Get user's wizard preferences
+export const getWizardPreferences = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+
+    if (!user) {
+      return null;
+    }
+
+    return user.wizardPreferences || null;
+  },
+});

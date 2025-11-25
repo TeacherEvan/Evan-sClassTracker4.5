@@ -3,10 +3,10 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
-import { useQuery } from "convex/react";
-import { Calendar, ChevronLeft, ChevronRight, Clock, Users, X } from "lucide-react";
-import { useState } from "react";
-import { MultiDateCalendar } from "./multi-date-calendar"; // NEW: Import MultiDateCalendar
+import { useMutation, useQuery } from "convex/react";
+import { Calendar, ChevronLeft, ChevronRight, Clock, Star, Users, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { MultiDateCalendar } from "./multi-date-calendar";
 
 interface BookingWizardProps {
     userId: Id<"users">;
@@ -32,6 +32,7 @@ export interface BookingWizardData {
 type WizardStep = "teacher" | "grade" | "class" | "student" | "booking-type" | "once-off-calendar" | "recurring-config"; // NEW: Added "student"
 
 export function BookingWizard({
+    userId,
     userRole,
     userSchoolId,
     onComplete,
@@ -39,19 +40,59 @@ export function BookingWizard({
 }: BookingWizardProps) {
     const { t } = useLanguage();
 
-    const [currentStep, setCurrentStep] = useState<WizardStep>("teacher");
-    const [selectedTeacherId, setSelectedTeacherId] = useState<Id<"users"> | "">("");
+    // ✅ NEW: Get user's wizard preferences for personalization
+    const wizardPreferences = useQuery(api.users.getWizardPreferences, { userId });
+    const updateWizardPrefs = useMutation(api.users.updateWizardPreferences);
+
+    // ✅ NEW: For teachers, skip teacher selection step
+    const isTeacher = userRole === "teacher";
+    const initialStep: WizardStep = isTeacher ? "grade" : "teacher";
+
+    const [currentStep, setCurrentStep] = useState<WizardStep>(initialStep);
+    const [selectedTeacherId, setSelectedTeacherId] = useState<Id<"users"> | "">(isTeacher ? userId : "");
     const [selectedGrade, setSelectedGrade] = useState("");
     const [selectedClass, setSelectedClass] = useState("");
-    const [selectedStudentId, setSelectedStudentId] = useState<Id<"students"> | "">("");  // NEW: Added student selection
+    const [selectedStudentId, setSelectedStudentId] = useState<Id<"students"> | "">("")
     const [bookingType, setBookingType] = useState<"once-off" | "recurring" | "">("");
 
-    // Once-off state - Changed to array for MultiDateCalendar compatibility
-    const [selectedDates, setSelectedDates] = useState<number[]>([]); // Changed from single date to array
+    // Once-off state
+    const [selectedDates, setSelectedDates] = useState<number[]>([]);
 
     // Recurring state
     const [weeksCount, setWeeksCount] = useState(1);
     const [selectedDays, setSelectedDays] = useState<Array<{ day: string; time: string }>>([]);
+
+    // ✅ NEW: Calculate progress for progress bar
+    const steps: WizardStep[] = isTeacher
+        ? ["grade", "class", "student", "booking-type"]
+        : ["teacher", "grade", "class", "student", "booking-type"];
+    const currentStepIndex = steps.indexOf(currentStep);
+    const totalSteps = steps.length + 1; // +1 for calendar/recurring step
+    const progress = Math.round(((currentStepIndex + 1) / totalSteps) * 100);
+
+    // ✅ NEW: Save preferences on wizard completion
+    const savePreferences = useCallback(async () => {
+        if (!selectedTeacherId) return;
+        try {
+            await updateWizardPrefs({
+                userId,
+                preferences: {
+                    recentTeacherIds: [selectedTeacherId],
+                    recentStudentIds: selectedStudentId ? [selectedStudentId] : [],
+                    recentGrades: selectedGrade ? [selectedGrade] : [],
+                },
+            });
+        } catch (error) {
+            console.warn("Failed to save wizard preferences:", error);
+        }
+    }, [userId, selectedTeacherId, selectedStudentId, selectedGrade, updateWizardPrefs]);
+
+    // ✅ NEW: Restore recent grade if available and no selection made
+    useEffect(() => {
+        if (wizardPreferences?.recentGrades?.length && !selectedGrade && currentStep === "grade") {
+            // Don't auto-select, but we'll highlight it in the UI
+        }
+    }, [wizardPreferences, selectedGrade, currentStep]);
 
     // Get teachers for moderator's school or all teachers for admin
     const allUsers = useQuery(api.users.list, { role: "teacher" });
@@ -88,7 +129,7 @@ export function BookingWizard({
         ).sort()
         : [];
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (currentStep === "teacher" && selectedTeacherId) {
             setCurrentStep("grade");
         } else if (currentStep === "grade" && selectedGrade) {
@@ -103,23 +144,27 @@ export function BookingWizard({
             } else {
                 setCurrentStep("recurring-config");
             }
-        } else if (currentStep === "once-off-calendar" && selectedDates.length > 0) { // Changed: Check array length
+        } else if (currentStep === "once-off-calendar" && selectedDates.length > 0) {
+            // ✅ Save preferences before completing
+            await savePreferences();
             // Complete wizard with once-off data (use first date from array)
             onComplete({
                 teacherId: selectedTeacherId as Id<"users">,
                 grade: selectedGrade,
                 class: selectedClass,
-                studentId: selectedStudentId as Id<"students">, // NEW: Include studentId
+                studentId: selectedStudentId as Id<"students">,
                 bookingType: "once-off",
-                selectedDate: selectedDates[0], // Changed: Extract first date from array
+                selectedDate: selectedDates[0],
             });
         } else if (currentStep === "recurring-config" && weeksCount > 0 && selectedDays.length > 0) {
+            // ✅ Save preferences before completing
+            await savePreferences();
             // Complete wizard with recurring data
             onComplete({
                 teacherId: selectedTeacherId as Id<"users">,
                 grade: selectedGrade,
                 class: selectedClass,
-                studentId: selectedStudentId as Id<"students">, // NEW: Include studentId
+                studentId: selectedStudentId as Id<"students">,
                 bookingType: "recurring",
                 weeksCount,
                 selectedDays,
@@ -163,44 +208,86 @@ export function BookingWizard({
     const renderStepContent = () => {
         switch (currentStep) {
             case "teacher":
-                return (
-                    <div className="space-y-4">
-                        <p className="text-gray-600 dark:text-gray-400">
-                            {t("Choose the teacher for this class booking", "เลือกครูสำหรับการจองคลาสนี้")}
-                        </p>
-                        <select
-                            value={selectedTeacherId}
-                            onChange={(e) => setSelectedTeacherId(e.target.value as Id<"users">)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                        >
-                            <option value="">{t("-- Select Teacher --", "-- เลือกครู --")}</option>
-                            {teachers?.map(teacher => (
-                                <option key={teacher._id} value={teacher._id}>
-                                    {teacher.username}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                );
+                {
+                    // ✅ Sort teachers to show recent ones first
+                    const recentTeacherIds = wizardPreferences?.recentTeacherIds || [];
+                    const sortedTeachers = [...(teachers || [])].sort((a, b) => {
+                        const aRecent = recentTeacherIds.includes(a._id);
+                        const bRecent = recentTeacherIds.includes(b._id);
+                        if (aRecent && !bRecent) return -1;
+                        if (!aRecent && bRecent) return 1;
+                        return a.username.localeCompare(b.username);
+                    });
+
+                    return (
+                        <div className="space-y-4">
+                            <p className="text-gray-600 dark:text-gray-400">
+                                {t("Choose the teacher for this class booking", "เลือกครูสำหรับการจองคลาสนี้")}
+                            </p>
+                            <select
+                                value={selectedTeacherId}
+                                onChange={(e) => setSelectedTeacherId(e.target.value as Id<"users">)}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                                aria-label={t("Select Teacher", "เลือกครู")}
+                            >
+                                <option value="">{t("-- Select Teacher --", "-- เลือกครู --")}</option>
+                                {sortedTeachers.map(teacher => (
+                                    <option key={teacher._id} value={teacher._id}>
+                                        {recentTeacherIds.includes(teacher._id) ? "⭐ " : ""}
+                                        {teacher.username}
+                                    </option>
+                                ))}
+                            </select>
+                            {recentTeacherIds.length > 0 && (
+                                <p className="text-xs text-gray-500 flex items-center gap-1">
+                                    <Star className="w-3 h-3 text-yellow-500" />
+                                    {t("Recently selected teachers", "ครูที่เลือกล่าสุด")}
+                                </p>
+                            )}
+                        </div>
+                    );
+                }
 
             case "grade":
-                return (
-                    <div className="space-y-4">
-                        <p className="text-gray-600 dark:text-gray-400">
-                            {t("Select the grade level", "เลือกระดับชั้น")}
-                        </p>
-                        <select
-                            value={selectedGrade}
-                            onChange={(e) => setSelectedGrade(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                        >
-                            <option value="">{t("-- Select Grade --", "-- เลือกระดับชั้น --")}</option>
-                            {availableGrades.map(grade => (
-                                <option key={grade} value={grade}>{grade}</option>
-                            ))}
-                        </select>
-                    </div>
-                );
+                {
+                    // ✅ Sort grades to show recent ones first
+                    const recentGrades = wizardPreferences?.recentGrades || [];
+                    const sortedGrades = [...availableGrades].sort((a, b) => {
+                        const aRecent = recentGrades.includes(a);
+                        const bRecent = recentGrades.includes(b);
+                        if (aRecent && !bRecent) return -1;
+                        if (!aRecent && bRecent) return 1;
+                        return a.localeCompare(b);
+                    });
+
+                    return (
+                        <div className="space-y-4">
+                            <p className="text-gray-600 dark:text-gray-400">
+                                {t("Select the grade level", "เลือกระดับชั้น")}
+                            </p>
+                            <select
+                                value={selectedGrade}
+                                onChange={(e) => setSelectedGrade(e.target.value)}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                                aria-label={t("Select Grade", "เลือกระดับชั้น")}
+                            >
+                                <option value="">{t("-- Select Grade --", "-- เลือกระดับชั้น --")}</option>
+                                {sortedGrades.map(grade => (
+                                    <option key={grade} value={grade}>
+                                        {recentGrades.includes(grade) ? "⭐ " : ""}
+                                        {grade}
+                                    </option>
+                                ))}
+                            </select>
+                            {recentGrades.length > 0 && (
+                                <p className="text-xs text-gray-500 flex items-center gap-1">
+                                    <Star className="w-3 h-3 text-yellow-500" />
+                                    {t("Recently selected grades", "ระดับชั้นที่เลือกล่าสุด")}
+                                </p>
+                            )}
+                        </div>
+                    );
+                }
 
             case "class":
                 return (
@@ -345,6 +432,19 @@ export function BookingWizard({
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-2xl w-full flex flex-col max-h-[85vh]">
+                {/* Progress Bar */}
+                <div className="h-1 bg-gray-200 dark:bg-gray-700">
+                    <div
+                        className="h-full bg-blue-600 transition-all duration-300"
+                        style={{ width: `${progress}%` }}
+                        role="progressbar"
+                        aria-valuenow={progress}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={t(`Step ${currentStepIndex + 1} of ${totalSteps}`, `ขั้นตอนที่ ${currentStepIndex + 1} จาก ${totalSteps}`)}
+                    />
+                </div>
+
                 {/* Header */}
                 <div className="p-4 md:p-6 border-b bg-white dark:bg-gray-800 flex justify-between items-center">
                     <div className="flex items-center gap-3">
@@ -363,7 +463,7 @@ export function BookingWizard({
                 </div>
 
                 {/* Content */}
-                <div className="overflow-y-auto flex-grow p-4 md:p-6">
+                <div className="overflow-y-auto grow p-4 md:p-6">
                     {renderStepContent()}
                 </div>
 
@@ -371,8 +471,9 @@ export function BookingWizard({
                 <div className="p-4 md:p-6 border-t bg-white dark:bg-gray-800 flex justify-between items-center">
                     <button
                         onClick={handleBack}
-                        disabled={currentStep === "teacher"}
+                        disabled={currentStep === initialStep}
                         className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label={t("Go back", "ย้อนกลับ")}
                     >
                         <ChevronLeft className="w-5 h-5" />
                         {t("Back", "ย้อนกลับ")}
