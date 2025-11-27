@@ -14,7 +14,7 @@ import {
     Users,
     X
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { ClassPaymentCalculator } from "./class-payment-calculator";
 
 interface ClassAnalyticsProps {
@@ -71,9 +71,20 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
     // ✅ NEW: Tab state for switching between views (moderator/admin only)
     const [activeTab, setActiveTab] = useState<"students" | "teachers">("students");
 
-    // ✅ OPTIMIZED: Memoize CSV export logic
-    const csvData = useMemo(() => {
-        if (!studentPerformanceData) return null;
+    // Handle date changes
+    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newDate = new Date(e.target.value).getTime();
+        if (!isNaN(newDate)) setStartDate(newDate);
+    };
+
+    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newDate = new Date(e.target.value).getTime();
+        if (!isNaN(newDate)) setEndDate(newDate);
+    };
+
+    // Export to CSV
+    const exportToCSV = () => {
+        if (!studentPerformanceData) return;
 
         const headers = [
             t("Student Name", "ชื่อนักเรียน"),
@@ -96,27 +107,9 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
             ];
         });
 
-        return { headers, rows };
-    }, [studentPerformanceData, language, t]);
-
-    // Handle date changes
-    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newDate = new Date(e.target.value).getTime();
-        if (!isNaN(newDate)) setStartDate(newDate);
-    };
-
-    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newDate = new Date(e.target.value).getTime();
-        if (!isNaN(newDate)) setEndDate(newDate);
-    };
-
-    // Export to CSV (uses memoized csvData)
-    const exportToCSV = () => {
-        if (!csvData) return;
-
         const csvContent = [
-            csvData.headers.join(","),
-            ...csvData.rows.map((row) => row.join(",")),
+            headers.join(","),
+            ...rows.map((row) => row.join(",")),
         ].join("\n");
 
         const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -276,8 +269,8 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
                             <button
                                 onClick={() => setActiveTab("students")}
                                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "students"
-                                        ? "bg-blue-600 text-white"
-                                        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                                     }`}
                             >
                                 {t("Student Performance", "ผลการเรียนนักเรียน")}
@@ -285,8 +278,8 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
                             <button
                                 onClick={() => setActiveTab("teachers")}
                                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === "teachers"
-                                        ? "bg-blue-600 text-white"
-                                        : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                                     }`}
                             >
                                 {t("Teacher Comparison", "เปรียบเทียบครู")}
@@ -319,16 +312,16 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
                                                     {t("Classes", "คลาส")}
                                                 </th>
                                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                    {t("With Notes", "มีบันทึก")}
+                                                    {t("Attended", "เข้าร่วม")}
                                                 </th>
                                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                    {t("Attendance", "เข้าเรียน")}
+                                                    {t("Attendance %", "อัตราเข้าเรียน")}
                                                 </th>
                                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                                     {t("Students", "นักเรียน")}
                                                 </th>
                                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                    {t("Total CC", "CC รวม")}
+                                                    {t("Avg CC", "CC เฉลี่ย")}
                                                 </th>
                                             </tr>
                                         </thead>
@@ -346,20 +339,20 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
                                                     </td>
                                                     <td className="px-4 py-3 text-sm">
                                                         <span className={`font-semibold ${teacher.attendedClasses / teacher.totalClasses >= 0.8
-                                                                ? "text-green-600 dark:text-green-400"
-                                                                : teacher.attendedClasses / teacher.totalClasses >= 0.5
-                                                                    ? "text-yellow-600 dark:text-yellow-400"
-                                                                    : "text-red-600 dark:text-red-400"
+                                                            ? "text-green-600 dark:text-green-400"
+                                                            : teacher.attendedClasses / teacher.totalClasses >= 0.5
+                                                                ? "text-yellow-600 dark:text-yellow-400"
+                                                                : "text-red-600 dark:text-red-400"
                                                             }`}>
                                                             {teacher.attendedClasses} ({Math.round((teacher.attendedClasses / teacher.totalClasses) * 100)}%)
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-3 text-sm">
                                                         <span className={`font-semibold ${teacher.attendanceRate >= 80
-                                                                ? "text-green-600 dark:text-green-400"
-                                                                : teacher.attendanceRate >= 60
-                                                                    ? "text-yellow-600 dark:text-yellow-400"
-                                                                    : "text-red-600 dark:text-red-400"
+                                                            ? "text-green-600 dark:text-green-400"
+                                                            : teacher.attendanceRate >= 60
+                                                                ? "text-yellow-600 dark:text-yellow-400"
+                                                                : "text-red-600 dark:text-red-400"
                                                             }`}>
                                                             {teacher.attendanceRate}%
                                                         </span>

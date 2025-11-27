@@ -2,6 +2,62 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.31] - November 26, 2025 🖥️ Admin Analytics Dashboard & UI Enhancements
+
+### 🎯 Feature Enhancement: Admin Analytics Dashboard
+
+**Summary**: Created dedicated admin analytics dashboard for system-wide visibility. Enhanced pulse animation visibility. Fixed workspace layout to properly route admin users to their analytics view.
+
+### Added
+
+#### Admin Analytics Dashboard (components/admin-analytics-dashboard.tsx)
+
+- **NEW Component**: 360-line dedicated analytics view for admin users
+- **Summary Cards**: System-wide statistics showing:
+  - Total Schools count
+  - Total Teachers count  
+  - Total Classes count
+  - Completion Rate percentage (attended classes)
+- **Classes by School Table**: Breakdown of class counts per school
+- **CSV Export**: Export aggregated data for reporting
+- **"Detailed Analytics" Button**: Opens detailed class analytics modal
+- **Loading States**: Proper skeleton loading during data fetch
+- **Empty States**: User-friendly messages when no data available
+
+#### Admin Routing in Workspace Layout
+
+- **workspace-layout.tsx**: Added dedicated routing for admin role
+- Admin users now see AdminAnalyticsDashboard instead of blank page
+- Maintained moderator routing to SimpleAnalytics (school-scoped)
+- Teachers continue to use SimpleAnalytics with their own data
+
+### Changed
+
+#### Enhanced Pulse Animation (app/globals.css)
+
+- **Dramatically increased visibility** of pulse-blue animation
+- Multiple layered box-shadows (20px, 40px, 60px spread)
+- Background color pulsing (0.15 → 0.25 opacity)
+- Solid 3px border ring that pulses
+- Optimized 1.5s duration for better UX
+- Animation now clearly visible on all displays
+
+### Technical Details
+
+- **Files Added**: 1 (admin-analytics-dashboard.tsx - 360 lines)
+- **Files Modified**: 2 (workspace-layout.tsx, globals.css)
+- **Build Status**: ✅ All TypeScript errors resolved
+- **Convex Deploy**: ✅ Successfully deployed to production
+
+### Investigation Notes
+
+- **Student Edit Issue**: Code review shows correct implementation in both frontend and backend
+  - Frontend calls `api.students.update` with proper args
+  - Backend mutation validates and updates fields correctly
+  - May need runtime debugging to identify actual issue
+
+---
+
 ## [4.5.30] - November 25, 2025 🔍 Teacher Comparison Analytics & Performance Optimizations
 
 ### 🎯 Feature Enhancement: Teacher Comparison Analytics

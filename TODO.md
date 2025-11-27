@@ -1,10 +1,30 @@
 # TODO List - Evan's Class Tracker 4.5
 
-**Last Updated:** November 19, 2025
+**Last Updated:** November 26, 2025
 
 ---
 
 ## ✅ Recently Completed
+
+### Admin Analytics Dashboard (November 26, 2025)
+
+**Status:** ✅ COMPLETED
+
+**Changes Made:**
+
+- **Frontend**: New `AdminAnalyticsDashboard` component (360 lines) for system-wide analytics
+- **Routing**: Fixed `workspace-layout.tsx` to properly route admin users to analytics
+- **UI**: Enhanced pulse-blue animation in `globals.css` for maximum visibility
+- **Summary Cards**: Total Schools, Teachers, Classes, Completion Rate
+- **Classes by School Table**: Breakdown with CSV export capability
+
+**Impact:**
+
+- Admin users now see comprehensive system-wide metrics
+- Better visibility into school performance
+- Clear visual pulse animation for active elements
+
+**Documentation:** CHANGELOG.md v4.5.31
 
 ### Bulk Student Editing Feature (November 18-19, 2025)
 
@@ -69,7 +89,34 @@
 
 ## 🔥 Priority 1 - This Week
 
-### 1. Monitor PBKDF2 Migration ⏳
+### 1. Investigate Student Edit Issue 🔍
+
+**Status:** Investigation (Reported Nov 26, 2025)  
+**Reported Issue:** "Editing student information doesn't take effect"
+
+**Code Review Findings:**
+
+- **Frontend** (`student-management.tsx`): Correctly calls `api.students.update` with all fields
+- **Backend** (`convex/students.ts`): `update` mutation validates and patches all provided fields
+- **Schema**: No validation issues found
+
+**Possible Causes (Need Runtime Testing):**
+
+- [ ] Form state not properly capturing edited values
+- [ ] Mutation not being awaited before UI refresh
+- [ ] Cache invalidation issue with Convex reactive queries
+- [ ] Specific fields not included in the update args
+
+**Action Items:**
+
+- [ ] Add console.log to frontend update handler
+- [ ] Check Convex dashboard logs for update mutation calls
+- [ ] Test with multiple field combinations
+- [ ] Verify toast success/error messages appear
+
+**Documentation:** CHANGELOG.md v4.5.31 investigation notes
+
+### 2. Monitor PBKDF2 Migration ⏳
 
 **Status:** In Progress (Deployed Nov 2, 2025)  
 **Timeline:** Gradual migration as users login naturally

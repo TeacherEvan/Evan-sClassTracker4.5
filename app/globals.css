@@ -115,21 +115,31 @@ body {
   }
 }
 
-/* Pulsating blue animation for UI visibility */
+/* Pulsating blue animation for UI visibility - MAXIMUM VISIBILITY */
 @keyframes pulse-blue {
 
   0%,
   100% {
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 20px 8px rgba(59, 130, 246, 0.7),
+      0 0 40px 16px rgba(59, 130, 246, 0.4),
+      inset 0 0 30px rgba(59, 130, 246, 0.2);
+    background-color: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.8);
   }
 
   50% {
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0);
+    box-shadow: 0 0 35px 15px rgba(59, 130, 246, 0.5),
+      0 0 60px 25px rgba(59, 130, 246, 0.3),
+      inset 0 0 60px rgba(59, 130, 246, 0.25);
+    background-color: rgba(59, 130, 246, 0.25);
+    border-color: rgba(59, 130, 246, 1);
   }
 }
 
 .animate-pulse-blue {
-  animation: pulse-blue 2s infinite;
+  animation: pulse-blue 1.5s ease-in-out infinite;
+  border: 3px solid rgba(59, 130, 246, 0.8);
+  border-radius: 12px;
 }
 
 /* Less transparent glass effect */

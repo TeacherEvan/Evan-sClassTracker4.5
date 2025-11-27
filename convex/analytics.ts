@@ -344,7 +344,7 @@ export const getStudentPerformance = query({
 /**
  * Get Teacher Comparison Analytics (Moderator-Only)
  * Returns comparative performance data for all teachers in a school
- *
+ * 
  * ✅ NEW (Nov 2025): Enables moderators to compare teacher effectiveness
  */
 export const getTeacherComparison = query({

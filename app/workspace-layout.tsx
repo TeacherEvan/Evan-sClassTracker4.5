@@ -30,6 +30,7 @@ const AdminContactRequests = lazy(() => import("@/components/admin-contact-reque
 const AdminNotificationWindows = lazy(() => import("@/components/admin-notification-windows").then(m => ({ default: m.AdminNotificationWindows })));
 const AdminAppUpdates = lazy(() => import("@/components/admin-app-updates").then(m => ({ default: m.AdminAppUpdates })));
 const AdminDeletedStudentsDashboard = lazy(() => import("@/components/admin-deleted-students-dashboard").then(m => ({ default: m.AdminDeletedStudentsDashboard })));
+const AdminAnalyticsDashboard = lazy(() => import("@/components/admin-analytics-dashboard").then(m => ({ default: m.AdminAnalyticsDashboard })));
 const EventManagement = lazy(() => import("@/components/event-management").then(m => ({ default: m.EventManagement })));
 const SangsomSeedButton = lazy(() => import("@/components/sangsom-seed-button").then(m => ({ default: m.SangsomSeedButton })));
 const PrivateClassesSeedButton = lazy(() => import("@/components/private-classes-seed-button").then(m => ({ default: m.PrivateClassesSeedButton })));
@@ -124,6 +125,7 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
                 );
 
             case "analytics":
+                // Moderators see their school analytics, Admins see all schools analytics
                 if (userRole === "moderator" && userSchoolId) {
                     return (
                         <Suspense fallback={<LoadingFallback />}>
@@ -133,6 +135,14 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
                                 currentUserRole={userRole}
                                 currentUser={currentUser}
                             />
+                        </Suspense>
+                    );
+                }
+                // Admin analytics - show class analytics modal or admin-specific view
+                if (userRole === "admin") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <AdminAnalyticsDashboard userId={userId} currentUser={currentUser} />
                         </Suspense>
                     );
                 }

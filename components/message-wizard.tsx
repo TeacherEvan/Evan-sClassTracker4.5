@@ -65,7 +65,7 @@ export function MessageWizard({
 
     // Get teachers for moderator's school or all teachers/moderators for admin
     const allUsers = useQuery(api.users.list, {});
-
+    
     // ✅ OPTIMIZED: Memoize recipient filtering to prevent recalculation on every render
     const availableRecipients = useMemo(() => {
         if (!allUsers) return [];
@@ -84,8 +84,8 @@ export function MessageWizard({
     }, [allUsers, userId, userRole, userSchoolId]);
 
     // ✅ OPTIMIZED: Memoize recent recipients for sorting
-    const recentRecipientIds = useMemo(() =>
-        wizardPreferences?.recentTeacherIds || [],
+    const recentRecipientIds = useMemo(() => 
+        wizardPreferences?.recentTeacherIds || [], 
         [wizardPreferences?.recentTeacherIds]
     );
 
@@ -204,45 +204,45 @@ export function MessageWizard({
                                     <div
                                         key={user._id}
                                         className={`flex items-center gap-3 p-3 rounded-lg border hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer ${selectedRecipients.includes(user._id)
-                                            ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20'
-                                            : 'border-gray-300 dark:border-gray-600'
+                                                ? 'border-pink-500 bg-pink-50 dark:bg-pink-900/20'
+                                                : 'border-gray-300 dark:border-gray-600'
                                             } ${isRecent ? 'ring-1 ring-yellow-300' : ''}`}
                                         onClick={() => toggleRecipient(user._id)}
-                                        role="checkbox"
-                                        aria-checked={selectedRecipients.includes(user._id)}
-                                        tabIndex={0}
-                                        onKeyDown={(e) => e.key === 'Enter' && toggleRecipient(user._id)}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedRecipients.includes(user._id)}
-                                            onChange={() => toggleRecipient(user._id)}
-                                            className="w-5 h-5"
-                                            aria-label={`${t("Select", "เลือก")} ${user.username}`}
-                                        />
-                                        <div className="flex-1">
-                                            <p className="font-medium flex items-center gap-2">
-                                                {isRecent && <Star className="w-4 h-4 text-yellow-500" />}
-                                                {user.username}
-                                            </p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                {user.role} {user.schoolId && `• School`}
-                                            </p>
+                                            role="checkbox"
+                                            aria-checked={selectedRecipients.includes(user._id)}
+                                            tabIndex={0}
+                                            onKeyDown={(e) => e.key === 'Enter' && toggleRecipient(user._id)}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedRecipients.includes(user._id)}
+                                                onChange={() => toggleRecipient(user._id)}
+                                                className="w-5 h-5"
+                                                aria-label={`${t("Select", "เลือก")} ${user.username}`}
+                                            />
+                                            <div className="flex-1">
+                                                <p className="font-medium flex items-center gap-2">
+                                                    {isRecent && <Star className="w-4 h-4 text-yellow-500" />}
+                                                    {user.username}
+                                                </p>
+                                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                    {user.role} {user.schoolId && `• School`}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
+                            </div>
+                            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                                <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                                    {t(
+                                        `Selected: ${selectedRecipients.length} recipient(s)`,
+                                        `เลือกแล้ว: ${selectedRecipients.length} คน`
+                                    )}
+                                </p>
+                            </div>
                         </div>
-                        <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                                {t(
-                                    `Selected: ${selectedRecipients.length} recipient(s)`,
-                                    `เลือกแล้ว: ${selectedRecipients.length} คน`
-                                )}
-                            </p>
-                        </div>
-                    </div>
-                );
+                    );
 
             case "compose":
                 return (
