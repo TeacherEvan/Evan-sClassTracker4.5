@@ -7,7 +7,9 @@ const YELLOW = '\x1b[33m';
 const RESET = '\x1b[0m';
 
 let errorCount = 0;
-const warningCount = 0; function checkFile(filePath: string) {
+const _warningCount = 0; // Reserved for future use
+
+function checkFile(filePath: string) {
     const content = fs.readFileSync(filePath, 'utf-8');
     const fileName = path.basename(filePath);
     const relativePath = path.relative(process.cwd(), filePath);

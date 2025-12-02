@@ -515,7 +515,6 @@ export const getAvailableUsers = query({
           ? await ctx.db.get(user.schoolId)
           : null;
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
         return {
           ...userWithoutPassword,

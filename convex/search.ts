@@ -67,7 +67,6 @@ export const searchUsers = query({
         });
 
         // Don't return password hashes
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         return filtered.slice(0, limit).map(({ passwordHash: _passwordHash, ...user }) => user);
     },
 });
