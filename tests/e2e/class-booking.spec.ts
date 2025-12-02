@@ -18,7 +18,7 @@ test.describe('Class Booking Workflow', () => {
         await page.waitForSelector('form, [role="dialog"]');
 
         // Fill booking details (adjust selectors based on actual form)
-        const testData = generateTestData('class');
+        const _testData = generateTestData('class'); // Reserved for future form filling
 
         // Select school (if dropdown exists)
         const schoolSelect = page.locator('select:has-option, [role="combobox"]').first();
