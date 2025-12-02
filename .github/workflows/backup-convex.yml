@@ -1,9 +1,11 @@
-name: Daily Convex Backup
+name: Convex Backup (Manual Only)
 
 on:
-  schedule:
-    # Run at 2 AM UTC daily
-    - cron: "0 2 * * *"
+  # Scheduled backups disabled to save costs
+  # Uncomment the schedule section below to re-enable daily backups
+  # schedule:
+  #   # Run at 2 AM UTC daily
+  #   - cron: "0 2 * * *"
 
   # Allow manual trigger
   workflow_dispatch:
@@ -74,7 +76,7 @@ jobs:
 
       # Option 1: Upload to GitHub Releases (FREE & EASIEST)
       - name: Create GitHub Release for Backup
-        if: github.event.inputs.upload_to_cloud != 'false' || github.event_name == 'schedule'
+        if: github.event.inputs.upload_to_cloud != 'false'
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -95,7 +97,7 @@ jobs:
 
       # Cleanup: Remove old backups from GitHub Releases (keep last 30 backups)
       - name: Cleanup old GitHub Release backups
-        if: github.event.inputs.upload_to_cloud != 'false' || github.event_name == 'schedule'
+        if: github.event.inputs.upload_to_cloud != 'false'
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

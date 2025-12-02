@@ -489,6 +489,21 @@ npx convex deploy
 
 This will create a production deployment and provide you with the production URL to add to your Vercel environment variables.
 
+### Manual Backups
+
+Daily automated backups have been disabled to save costs. To run a backup manually:
+
+1. Go to the [Actions tab](../../actions/workflows/backup-convex.yml) in GitHub
+2. Click "Run workflow"
+3. Choose options:
+   - Include file storage in backup (default: true)
+   - Upload to cloud storage (default: true)
+4. Click "Run workflow"
+
+The backup will be uploaded to GitHub Releases with automatic cleanup (keeps last 30 backups).
+
+To re-enable daily automated backups, uncomment the `schedule` section in `.github/workflows/backup-convex.yml`.
+
 ## License
 
 MIT
