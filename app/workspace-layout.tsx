@@ -24,7 +24,6 @@ const SimpleAnalytics = lazy(() => import("@/components/simple-analytics").then(
 const TeacherActivityDashboard = lazy(() => import("@/components/teacher-activity-dashboard").then(m => ({ default: m.TeacherActivityDashboard })));
 const TeacherHelper = lazy(() => import("@/components/teacher-helper").then(m => ({ default: m.TeacherHelper })));
 const TeacherHelperAdmin = lazy(() => import("@/components/teacher-helper-admin").then(m => ({ default: m.TeacherHelperAdmin })));
-const GuardianDashboard = lazy(() => import("@/components/guardian-dashboard").then(m => ({ default: m.GuardianDashboard })));
 const DeviceTestingDashboard = lazy(() => import("@/components/device-testing-dashboard"));
 const AdminContactRequests = lazy(() => import("@/components/admin-contact-requests").then(m => ({ default: m.AdminContactRequests })));
 const AdminNotificationWindows = lazy(() => import("@/components/admin-notification-windows").then(m => ({ default: m.AdminNotificationWindows })));
@@ -61,7 +60,7 @@ export type ViewType =
     | "deleted_students"
     | "data_import";
 
-export type UserRole = "admin" | "moderator" | "teacher" | "guardian";
+export type UserRole = "admin" | "moderator" | "teacher";
 
 interface WorkspaceLayoutProps {
     userId: Id<"users">;
@@ -318,14 +317,6 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
                 return null;
 
             default:
-                // Guardian dashboard as default for guardians
-                if (userRole === "guardian") {
-                    return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <GuardianDashboard currentUser={currentUser} />
-                        </Suspense>
-                    );
-                }
                 return children;
         }
     }, [activeView, currentUser, userId, userRole, userSchoolId, t, children]); return (

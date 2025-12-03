@@ -49,8 +49,6 @@ export function HelpWindow({ userRole, onClose }: HelpWindowProps) {
         return language === "th" ? "ผู้ดูแล" : "Boss";
       case "admin":
         return language === "th" ? "อีวาน" : "Evan";
-      case "guardian":
-        return language === "th" ? "ผู้ปกครอง" : "Guardian";
       default:
         return "";
     }

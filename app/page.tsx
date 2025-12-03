@@ -396,9 +396,7 @@ export default function Home() {
                   ? "ครู"
                   : user.role === "moderator"
                     ? "ผู้ดูแล"
-                    : user.role === "guardian"
-                      ? "ผู้ปกครอง"
-                      : "ผู้จัดการ"
+                    : "ผู้จัดการ"
               )}
             </p>
           </div>

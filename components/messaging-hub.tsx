@@ -5,7 +5,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { logger } from "@/lib/logger";
 import { toast } from "@/lib/toast";
-import type { User, UserWithSchool } from "@/lib/types";
+import type { User } from "@/lib/types";
 import { COMMON_SHORTCUTS, useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
 import { useMutation, useQuery } from "convex/react";
 import {
@@ -390,7 +390,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                         {t("No users available", "ไม่มีผู้ใช้ที่พร้อมใช้งาน")}
                       </p>
                     ) : (
-                      availableUsers.map((user: UserWithSchool) => (
+                      availableUsers.filter((user) => user.role !== "guardian").map((user) => (
                         <button
                           key={user._id}
                           onClick={() => setSelectedUserId(user._id)}
@@ -469,7 +469,7 @@ export function MessagingHub({ currentUser }: MessagingHubProps) {
                     className="w-full px-4 py-3 text-base border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white touch-manipulation transition-shadow"
                   >
                     <option value="">{t("Select a user", "เลือกผู้ใช้")}</option>
-                    {availableUsers?.map((user: UserWithSchool) => (
+                    {availableUsers?.filter((user) => user.role !== "guardian").map((user) => (
                       <option key={user._id} value={user._id}>
                         {user.username} - {t(
                           user.role.charAt(0).toUpperCase() + user.role.slice(1),

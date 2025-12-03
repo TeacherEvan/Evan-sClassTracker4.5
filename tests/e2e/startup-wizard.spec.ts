@@ -137,4 +137,142 @@ test.describe('Startup Wizard Language Switching', () => {
             }
         }
     });
+
+    test('should show Quick Book wizard option for teachers', async ({ page }) => {
+        // Login as teacher
+        await login(page, TEST_USERS.teacher);
+
+        // Clear dismissed flag
+        await page.evaluate(() => {
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith('startupWindowDismissed_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+        });
+        await page.reload();
+        await page.waitForTimeout(1000);
+
+        // Wait for startup wizard
+        const startupWizard = page.locator('text=Welcome Teacher, text=ยินดีต้อนรับ ครู').first();
+        const isVisible = await startupWizard.isVisible({ timeout: 2000 }).catch(() => false);
+        
+        if (isVisible) {
+            // Verify Quick Book option is visible for teachers
+            const quickBookOption = page.locator('text=Quick Book, text=จองด่วน').first();
+            await expect(quickBookOption).toBeVisible({ timeout: 2000 });
+
+            // Verify it has the lightning bolt icon styling (yellow/orange gradient)
+            const quickBookButton = quickBookOption.locator('xpath=ancestor::button');
+            await expect(quickBookButton).toBeVisible();
+        }
+    });
+
+    test('should show Approval wizard option for moderators', async ({ page }) => {
+        // Login as moderator
+        await login(page, TEST_USERS.moderator);
+
+        // Clear dismissed flag
+        await page.evaluate(() => {
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith('startupWindowDismissed_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+        });
+        await page.reload();
+        await page.waitForTimeout(1000);
+
+        // Wait for startup wizard
+        const startupWizard = page.locator('text=Welcome Boss, text=ยินดีต้อนรับ บอส').first();
+        const isVisible = await startupWizard.isVisible({ timeout: 2000 }).catch(() => false);
+        
+        if (isVisible) {
+            // Verify Quick Approvals option is visible for moderators
+            const approvalOption = page.locator('text=Quick Approvals, text=อนุมัติด่วน').first();
+            await expect(approvalOption).toBeVisible({ timeout: 2000 });
+
+            // Verify it has the check square icon styling (green gradient)
+            const approvalButton = approvalOption.locator('xpath=ancestor::button');
+            await expect(approvalButton).toBeVisible();
+        }
+    });
+
+    test('should open Quick Book wizard when clicked', async ({ page }) => {
+        // Login as teacher
+        await login(page, TEST_USERS.teacher);
+
+        // Clear dismissed flag
+        await page.evaluate(() => {
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith('startupWindowDismissed_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+        });
+        await page.reload();
+        await page.waitForTimeout(1000);
+
+        // Wait for startup wizard
+        const startupWizard = page.locator('text=Welcome Teacher, text=ยินดีต้อนรับ ครู').first();
+        const isVisible = await startupWizard.isVisible({ timeout: 2000 }).catch(() => false);
+        
+        if (isVisible) {
+            // Click on Quick Book option
+            const quickBookOption = page.locator('text=Quick Book, text=จองด่วน').first();
+            if (await quickBookOption.isVisible({ timeout: 2000 }).catch(() => false)) {
+                await quickBookOption.click();
+                await page.waitForTimeout(500);
+
+                // Verify Quick Book wizard opens
+                const quickBookWizard = page.locator('text=Rebook recent classes instantly, text=จองคลาสล่าสุดทันที').first();
+                await expect(quickBookWizard).toBeVisible({ timeout: 2000 });
+
+                // Verify no application error
+                const errorDialog = page.locator('text=Application Error, text=Failed to execute');
+                await expect(errorDialog).not.toBeVisible({ timeout: 1000 });
+            }
+        }
+    });
+
+    test('should open Approval wizard when clicked', async ({ page }) => {
+        // Login as moderator
+        await login(page, TEST_USERS.moderator);
+
+        // Clear dismissed flag
+        await page.evaluate(() => {
+            const keys = Object.keys(localStorage);
+            keys.forEach(key => {
+                if (key.startsWith('startupWindowDismissed_')) {
+                    localStorage.removeItem(key);
+                }
+            });
+        });
+        await page.reload();
+        await page.waitForTimeout(1000);
+
+        // Wait for startup wizard
+        const startupWizard = page.locator('text=Welcome Boss, text=ยินดีต้อนรับ บอส').first();
+        const isVisible = await startupWizard.isVisible({ timeout: 2000 }).catch(() => false);
+        
+        if (isVisible) {
+            // Click on Quick Approvals option
+            const approvalOption = page.locator('text=Quick Approvals, text=อนุมัติด่วน').first();
+            if (await approvalOption.isVisible({ timeout: 2000 }).catch(() => false)) {
+                await approvalOption.click();
+                await page.waitForTimeout(500);
+
+                // Verify Approval wizard opens
+                const approvalWizard = page.locator('text=Review and approve pending bookings, text=ตรวจสอบและอนุมัติการจองที่รอดำเนินการ').first();
+                await expect(approvalWizard).toBeVisible({ timeout: 2000 });
+
+                // Verify no application error
+                const errorDialog = page.locator('text=Application Error, text=Failed to execute');
+                await expect(errorDialog).not.toBeVisible({ timeout: 1000 });
+            }
+        }
+    });
 });

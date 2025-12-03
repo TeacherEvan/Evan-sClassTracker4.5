@@ -32,7 +32,11 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : "Unknown";
       const browserLanguage = typeof navigator !== "undefined" ? navigator.language : "en";
       const user = await login({ username, password, userAgent, browserLanguage });
-      onLoginSuccess(user);
+      // Filter out guardian role (deprecated) - guardian users should not be able to login
+      if (user.role === "guardian") {
+        throw new Error("Guardian role is no longer supported. Please contact an administrator.");
+      }
+      onLoginSuccess(user as User);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
