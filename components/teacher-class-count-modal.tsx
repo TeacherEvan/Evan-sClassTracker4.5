@@ -41,7 +41,7 @@ interface ClassCountData {
     teacher: {
         id: Id<"users">;
         username: string;
-        role: "teacher" | "moderator" | "admin" | "guardian";
+        role: "teacher" | "moderator" | "admin";
     };
     dateRange: {
         start: number;
@@ -226,7 +226,8 @@ export function TeacherClassCountModal({
         }
 
         // Generate print content
-        const printContent = generatePrintHTML(classCountData, selectedTeacherUsername, startDate, endDate, printLanguage);
+        // Type assertion: guardian role has been migrated to provider system, all users are now valid UserRole types
+        const printContent = generatePrintHTML(classCountData as ClassCountData, selectedTeacherUsername, startDate, endDate, printLanguage);
 
         printWindow.document.write(printContent);
         printWindow.document.close();

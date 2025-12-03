@@ -714,8 +714,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
     setLoading(true);
     try {
-      // Convert date string to timestamp for guardian students
-      const birthTimestamp = studentType === "guardian" && guardianBirthDate
+      // Convert date string to timestamp for provider students
+      const birthTimestamp = studentType === "provider" && guardianBirthDate
         ? new Date(guardianBirthDate).getTime()
         : undefined;
 
@@ -723,13 +723,13 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         firstName: newStudentNickname,
         lastName: "", // Empty lastName
         nickname: newStudentNickname,
-        grade: studentType === "school" ? newStudentGrade : "N/A", // Required field, use N/A for guardian
+        grade: studentType === "school" ? newStudentGrade : "N/A", // Required field, use N/A for provider
         class: studentType === "school" ? newStudentClass : undefined,
         schoolId: studentType === "school" ? (newStudentSchoolId as Id<"schools">) : undefined,
         dateOfBirth: birthTimestamp,
-        area: studentType === "guardian" ? guardianArea : undefined,
-        guardianName: studentType === "guardian" && newGuardianName ? newGuardianName : undefined,
-        guardianPhone: studentType === "guardian" && newGuardianPhone ? newGuardianPhone : undefined,
+        area: studentType === "provider" ? guardianArea : undefined,
+        guardianName: studentType === "provider" && newGuardianName ? newGuardianName : undefined,
+        guardianPhone: studentType === "provider" && newGuardianPhone ? newGuardianPhone : undefined,
         createdBy: userId,
       });
 
@@ -1438,9 +1438,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                           if (!creatingStudent && schoolId) {
                             setNewStudentSchoolId(schoolId);
                           }
-                          // If provider flow, default to guardian student creation
+                          // If provider flow, default to provider student creation
                           if (!creatingStudent && providerId && !schoolId) {
-                            setStudentType("guardian");
+                            setStudentType("provider");
                           }
                         }}
                         className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
@@ -1471,8 +1471,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                         </button>
                         <button
                           type="button"
-                          onClick={() => setStudentType("guardian")}
-                          className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${studentType === "guardian"
+                          onClick={() => setStudentType("provider")}
+                          className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${studentType === "provider"
                             ? "bg-purple-600 text-white"
                             : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                             }`}
