@@ -1,10 +1,36 @@
 # Evan's Class Tracker 4.5
 
-**Version 4.5.27** | Bilingual English/Thai class tracker for teachers and schools
+**Version 4.5.31** | Bilingual English/Thai class tracker for teachers and schools
 
 Built with Next.js 15, React 19, Convex & Tailwind v4
 
-## ✨ Latest Updates (Nov 18, 2025)
+## ✨ Latest Updates (Dec 3, 2025)
+
+### 📚 Version 4.5.31 - Documentation Consolidation (Dec 3, 2025)
+
+**Documentation Overhaul** - Comprehensive update and consolidation of all documentation
+
+- 📖 **Documentation Updates**:
+  - Updated to v4.5.31 across all documentation files
+  - Clarified bilingual pattern (developer UI vs user content)
+  - Updated guardian deprecation notices (migrated to Provider system Oct 2025)
+  - Added modular architecture documentation (PR #96-98)
+  - Consolidated redundant docs into `docs/archive/`
+  - Updated refactoring guide to reflect completed work
+  
+- 🏗️ **New Documentation**:
+  - Pattern #26: Wizard-Based Onboarding Pattern
+  - Pattern #27: Database Seeding Pattern
+  - Pattern #28: Lazy Loading Pattern
+  - Pattern #29: Modular Component Decomposition (class-booking split)
+  - Pattern #30: Backend Module Split Pattern (classes.ts split)
+  - Modular architecture docs: `components/class-booking/` structure
+  - Modular architecture docs: `convex/classes/` structure
+  
+- 🗂️ **Files Archived**:
+  - `.github/AI_AGENT_WORKFLOW.md` → `docs/archive/`
+  - `.github/WORKFLOWS_QUICKREF.md` → `docs/archive/`
+  - `docs/QUICK_REFERENCE.md` → `docs/archive/`
 
 ### 🔍 Version 4.5.26 - Database Query Optimization (Nov 18, 2025)
 

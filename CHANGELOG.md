@@ -2,7 +2,111 @@
 
 All notable changes to this project are documented here.
 
-## [4.5.31] - November 26, 2025 🖥️ Admin Analytics Dashboard & UI Enhancements
+## [4.5.31] - December 3, 2025 📚 Documentation Consolidation & Architecture Updates
+
+### 📖 Documentation Overhaul
+
+**Summary**: Comprehensive update and consolidation of all documentation to reflect recent architectural changes and completed refactorings.
+
+### Added
+
+#### New Documentation Patterns
+
+- **Pattern #26**: Wizard-Based Onboarding Pattern - Multi-step guided workflows for feature discovery
+- **Pattern #27**: Database Seeding Pattern - Automated data population for development/testing
+- **Pattern #28**: Lazy Loading Pattern - Code-split large components for better performance
+- **Pattern #29**: Modular Component Decomposition - Split monolithic components into maintainable modules
+- **Pattern #30**: Backend Module Split Pattern - Modularize backend logic for better organization
+
+#### Modular Architecture Documentation
+
+- **`components/class-booking/`** structure documentation
+  - Main orchestrator pattern
+  - State management hook
+  - Reusable components
+  - Type-safe interfaces
+  
+- **`convex/classes/`** structure documentation
+  - Re-export pattern for backward compatibility
+  - Queries module (9 functions)
+  - Mutations module (16 functions)
+  - Authorization helpers
+
+### Changed
+
+#### Updated Documentation Files
+
+- **`.github/copilot-instructions.md`**
+  - Version updated to 4.5.31
+  - Updated Rule #2: Clarified bilingual pattern (developer UI vs user content)
+  - Updated Rule #6: Guardian role marked as DEPRECATED
+  - Added modular architecture section
+  - Updated pattern count from 25 to 30
+  - Updated "Last Updated" section with v4.5.31 details
+
+- **`.github/copilot-docs/01-quick-start.md`**
+  - Version updated to 4.5.31
+  - Bilingual pattern clarification
+  - Guardian deprecation notice
+
+- **`.github/copilot-docs/02-architecture.md`**
+  - Added "Modular Architecture (Dec 2025)" section
+  - Documented frontend modular components structure
+  - Documented backend modular structure
+
+- **`.github/copilot-docs/03-patterns.md`**
+  - Updated Pattern #1: Added clarification about developer UI vs user content
+  - Updated Pattern #16: Marked Guardian pattern as DEPRECATED
+  - Added Pattern #26: Wizard-Based Onboarding Pattern
+  - Added Pattern #27: Database Seeding Pattern
+  - Added Pattern #28: Lazy Loading Pattern
+  - Added Pattern #29: Modular Component Decomposition
+  - Added Pattern #30: Backend Module Split Pattern
+
+- **`.github/copilot-docs/10-files.md`**
+  - Updated `components/class-booking/` entry with modular structure
+  - Updated `convex/classes/` entry with modular structure
+  - Added performance optimizations to wizard components
+
+- **`.github/copilot-docs/15-refactoring-guide.md`**
+  - Marked class-booking.tsx refactoring as COMPLETE
+  - Marked classes.ts refactoring as COMPLETE
+  - Updated refactoring status summary
+  - Added completion benefits and results
+
+- **`README.md`**
+  - Version updated to 4.5.31
+  - Added v4.5.31 release notes to Latest Updates section
+
+- **`CHANGELOG.md`**
+  - Added this v4.5.31 entry
+
+- **`docs/GUARDIAN_PROVIDER_IMPLEMENTATION_PLAN.md`**
+  - Added DEPRECATION NOTICE at top
+  - Marked status as COMPLETE
+  - Added migration completion note
+
+### Removed (Archived)
+
+#### Redundant Documentation Files
+
+Moved to `docs/archive/` to reduce documentation clutter:
+
+- `.github/AI_AGENT_WORKFLOW.md` - Redundant with copilot-docs
+- `.github/WORKFLOWS_QUICKREF.md` - Redundant with copilot-docs
+- `docs/QUICK_REFERENCE.md` - Duplicate of QUICK_REFERENCE_CARD.md
+
+### Technical Details
+
+- **Documentation Stats**: ~6,000 lines updated across 15 focused files
+- **Pattern Count**: Increased from 25 to 30 documented patterns
+- **Refactoring Status**: 2 major refactorings marked as complete
+- **Archived Files**: 3 redundant documentation files moved to archive
+- **Version Consistency**: v4.5.31 applied across all documentation
+
+---
+
+## [4.5.31-prev] - November 26, 2025 🖥️ Admin Analytics Dashboard & UI Enhancements
 
 ### 🎯 Feature Enhancement: Admin Analytics Dashboard
 

@@ -10,7 +10,7 @@
 
 1. **NEVER reorder providers** in `app/layout.tsx` - the hierarchy is load-bearing (ErrorBoundary → ConvexClientProvider → DeviceProvider → DataProvider → LanguageProvider). Reordering causes runtime failures.
 
-2. **Everything is bilingual (English/Thai)** - Schema has `title` AND `titleTh`. Forms need parallel inputs. Use `BilingualInput` component. Validation: `&&` (AND) not `||` (OR) for optional fields.
+2. **Developer UI is bilingual (English/Thai)** - Bilingual applies to **developer-created headings and UI labels only**, NOT user-entered content. Users should NEVER be forced to enter data in both languages. Schema fields like `title`/`titleTh` are for system-generated content. Use `BilingualInput` only for admin/developer forms (e.g., creating locations, notifications). User forms (e.g., notes, reasons) should accept single-language input. Validation: `&&` (AND) not `||` (OR) for optional fields.
 
 3. **Always use `.withIndex()`** for Convex queries - check `convex/schema.ts` for indexes. NEVER query inside loops - use batch fetch + Map pattern. This is critical for performance.
 
@@ -18,7 +18,7 @@
 
 5. **All components need `"use client"`** - Next.js App Router requires this directive for client-side hooks (`useQuery`, `useMutation`, `useState`).
 
-6. **Guardian students auto-approve** - Classes with `isGuardianLinked: true` bypass moderator approval workflow (NEW Oct 2025).
+6. **Guardian role is DEPRECATED** - Guardian functionality migrated to Provider system (Oct 2025). Use `providers` table for parent/guardian relationships. The `guardian` literal remains in schema for data migration but DO NOT use for new users. Classes with `isGuardianLinked: true` bypass moderator approval workflow.
 
 7. **Moderators are STRICTLY school-scoped** - Moderators can ONLY access their assigned school's data. Teachers are multi-school. Admins have God mode. NEVER allow moderators to bypass school boundaries (NEW Nov 2025).
 
@@ -33,7 +33,7 @@
 - **Styling**: Tailwind CSS v4
 - **Language**: TypeScript + bilingual UI (English/Thai)
 
-**Latest Version:** 4.5.18 (Nov 2, 2025)
+**Latest Version:** 4.5.31 (Dec 3, 2025)
 
 **Recent Optimizations**: 40-50% faster loads and 10-100x faster queries via N+1 elimination (Oct 2025)
 

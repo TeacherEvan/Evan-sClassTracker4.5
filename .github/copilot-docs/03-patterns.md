@@ -2,7 +2,19 @@
 
 ### 1. Bilingual-First Development
 
-**Every user-facing string needs English + Thai**. Schema has `title` AND `titleTh`. Forms need parallel inputs.
+**Developer-created UI needs English + Thai** - Bilingual applies to **developer-created headings and UI labels only**, NOT user-entered content. Users should NEVER be forced to enter data in both languages.
+
+**What needs bilingual**:
+- UI headings and labels (buttons, tabs, menu items)
+- System-generated content (notifications, error messages)
+- Schema fields like `title`/`titleTh` for admin/developer forms
+
+**What does NOT need bilingual**:
+- User-entered notes, reasons, descriptions
+- Student names, teacher comments
+- Free-form text inputs
+
+Schema has `title` AND `titleTh` for system content. User content uses single-language fields.
 
 ```tsx
 const { t } = useLanguage(); // Helper from lib/language-context.tsx
@@ -491,7 +503,9 @@ export const setTeacherCycle = mutation({
 
 **Example**: See `components/teacher-cycle-editor.tsx` and `IMPLEMENTATION_SUMMARY_CYCLE_EDITOR.md`
 
-### 16. Guardian Student Booking Pattern (NEW Oct 2025)
+### 16. Guardian Student Booking Pattern (NEW Oct 2025) ⚠️ DEPRECATED
+
+**⚠️ DEPRECATED**: Guardian role migrated to Provider system (Oct 2025). Use `providers` table instead of guardian role for new implementations. This pattern remains documented for legacy data support.
 
 **Guardian-linked students bypass moderator approval** - auto-approved bookings for private tutoring.
 
@@ -1303,7 +1317,7 @@ const [showAnalytics, setShowAnalytics] = useState(false);
 - Moderators: Monitor school-wide trends and teacher effectiveness
 - Admins: System-wide insights for strategic decision-making
 
-### 25. Wizard-Based Onboarding Pattern (NEW Nov 2025)
+### 26. Wizard-Based Onboarding Pattern (NEW Nov 2025)
 
 Multi-step guided workflows for feature discovery and onboarding. Used in the startup window for moderators/teachers.
 
@@ -1463,7 +1477,7 @@ if (tab === "wizard-trigger") {
 
 **Example**: See `IMPLEMENTATION_SUMMARY_WIZARD_STARTUP_NOV_1_2025.md` for full implementation details
 
-### 26. Database Seeding Pattern (NEW Nov 2025)
+### 27. Database Seeding Pattern (NEW Nov 2025)
 
 **Automated data population** for development and testing environments.
 
@@ -1498,3 +1512,207 @@ export const seedDatabase = mutation({
 - **Development only**: Should be restricted or careful in production
 
 **Example**: `convex/seed.ts`
+
+### 28. Lazy Loading Pattern (NEW Dec 2025)
+
+**Code-split large components** to reduce initial bundle size and improve Time to Interactive.
+
+```tsx
+// app/page.tsx or layout component
+import { lazy, Suspense } from 'react';
+
+// Lazy load heavy components
+const ClassAnalytics = lazy(() => 
+  import('@/components/class-analytics').then(m => ({ 
+    default: m.ClassAnalytics 
+  }))
+);
+
+const StudentManagement = lazy(() => 
+  import('@/components/student-management').then(m => ({ 
+    default: m.StudentManagement 
+  }))
+);
+
+// Usage with loading fallback
+<Suspense fallback={<LoadingSpinner />}>
+  {activeTab === 'analytics' && <ClassAnalytics />}
+  {activeTab === 'students' && <StudentManagement />}
+</Suspense>
+```
+
+**When to lazy load**:
+
+- ✅ Admin-only features (not all users need them)
+- ✅ Components not visible on first render (modals, tabs)
+- ✅ Large components (>200 lines or >20KB)
+- ✅ Heavy dependencies (chart libraries, PDF generators)
+- ❌ Small utilities (<50 lines)
+- ❌ Components always visible on page load
+- ❌ Components needed for initial render
+
+**Performance impact**:
+
+- Initial bundle: 350KB → 150KB (57% reduction)
+- Time to Interactive: 3-4s → 1.5-2s (50% improvement)
+- Lazy chunks load on-demand: 50-100KB each
+
+**Example**: See `app/page.tsx` workspace layout with 5 lazy-loaded views
+
+### 29. Modular Component Decomposition (NEW Dec 2025)
+
+**Split monolithic components** into focused, maintainable modules.
+
+**Before** (class-booking.tsx - 2,930 lines):
+```tsx
+// Single massive file with everything
+export function ClassBooking() {
+  // 300 lines of state
+  // 400 lines of handlers
+  // 400 lines of multi-date logic
+  // 400 lines of recurring logic
+  // 400 lines of conflict detection
+  // 530 lines of UI rendering
+}
+```
+
+**After** (modular structure):
+```
+components/class-booking/
+├── index.tsx                    # Main orchestrator (126KB)
+├── types.ts                     # Shared TypeScript interfaces
+├── constants.ts                 # Shared constants (defaults, limits)
+├── class-booking-state.ts       # State management hook (9KB)
+└── ClassItemDisplay.tsx         # Reusable class card (30KB)
+```
+
+**Orchestrator pattern** (index.tsx):
+```tsx
+import { useClassBookingState } from './class-booking-state';
+import { ClassItemDisplay } from './ClassItemDisplay';
+import { DEFAULT_START_TIME, DEFAULT_END_TIME } from './constants';
+import type { BookingFormData } from './types';
+
+export function ClassBooking() {
+  // Use shared state hook
+  const {
+    selectedSchool,
+    selectedTeacher,
+    selectedStudent,
+    // ... all state
+  } = useClassBookingState(userId);
+
+  // Render with modular components
+  return (
+    <div>
+      {classes.map(cls => (
+        <ClassItemDisplay key={cls._id} classData={cls} />
+      ))}
+    </div>
+  );
+}
+```
+
+**Benefits**:
+
+- **Easier navigation**: Find specific logic quickly
+- **Reduced cognitive load**: Understand one module at a time
+- **Better testing**: Test components in isolation
+- **Reusable hooks**: Share state logic across components
+- **Type safety**: Shared interfaces prevent drift
+- **Parallel development**: Multiple devs can work on different modules
+
+**When to split**:
+
+- Component exceeds 1,000 lines
+- Multiple distinct responsibilities (state, UI, logic)
+- Repeated patterns that can be extracted
+- Shared state needed across components
+- Component has >5 complex functions
+
+**Example**: PR #97 - class-booking.tsx decomposition
+
+### 30. Backend Module Split Pattern (NEW Dec 2025)
+
+**Modularize backend logic** for better organization and maintainability.
+
+**Before** (classes.ts - 2,213 lines):
+```typescript
+// Single massive file with all queries, mutations, helpers
+export const list = query({ /* ... */ });
+export const book = mutation({ /* ... */ });
+export const approve = mutation({ /* ... */ });
+export const verifyClassAccess = (ctx, classId, userId) => { /* ... */ };
+// ... 24 more functions
+```
+
+**After** (modular structure):
+```
+convex/classes/
+├── index.ts                     # Re-exports (public API)
+├── queries.ts                   # 9 query functions
+├── mutations.ts                 # 16 mutation functions
+├── helpers.ts                   # Authorization helpers
+└── README.md                    # Module documentation
+```
+
+**Re-export pattern** (index.ts):
+```typescript
+// Public API - maintains backward compatibility
+export * from './queries';
+export * from './mutations';
+export * from './helpers';
+
+// All existing imports still work:
+// import { book, list, verifyClassAccess } from './classes'
+```
+
+**Organized by purpose**:
+
+**queries.ts** - Read operations:
+```typescript
+export const list = query({ /* ... */ });
+export const get = query({ /* ... */ });
+export const getByStatus = query({ /* ... */ });
+export const getByTeacher = query({ /* ... */ });
+// ... 5 more queries
+```
+
+**mutations.ts** - Write operations:
+```typescript
+export const book = mutation({ /* ... */ });
+export const update = mutation({ /* ... */ });
+export const approve = mutation({ /* ... */ });
+export const delete = mutation({ /* ... */ });
+// ... 12 more mutations
+```
+
+**helpers.ts** - Shared utilities:
+```typescript
+export const verifyClassAccess = async (ctx, classId, userId) => { /* ... */ };
+export const canModifyClass = async (ctx, classId, userId) => { /* ... */ };
+export const isClassOwner = (classData, userId) => { /* ... */ };
+```
+
+**Benefits**:
+
+- **Logical grouping**: Related functions together
+- **Easier code review**: Review specific module, not entire file
+- **Reduced merge conflicts**: Changes isolated to specific modules
+- **Better documentation**: README per module
+- **Maintains compatibility**: Re-exports preserve existing imports
+- **Clearer intent**: Separate queries from mutations
+
+**When to split**:
+
+- Backend file exceeds 1,500 lines
+- Multiple distinct operation types (CRUD, bulk, reports)
+- Shared helper functions across operations
+- Clear logical boundaries (queries vs mutations)
+- Growing merge conflict frequency
+
+**Example**: PR #98 - classes.ts module split
+
+---
+
+[← Back to Index](../copilot-instructions.md)
