@@ -35,6 +35,7 @@ export const LazyAuditLogs = lazy(() =>
   import("./audit-logs").then(mod => ({ default: mod.AuditLogs }))
 );
 
+// Note: DeviceTestingDashboard uses 'export default' so no transformation needed
 export const LazyDeviceTestingDashboard = lazy(() => 
   import("./device-testing-dashboard")
 );
