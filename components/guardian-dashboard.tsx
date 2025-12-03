@@ -1,3 +1,4 @@
+// @deprecated Guardian role migrated to Provider system. This component is no longer used.
 "use client";
 
 import { api } from "@/convex/_generated/api";
