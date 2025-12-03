@@ -10,8 +10,7 @@ import { undoManager } from "@/lib/undo-manager";
 import { COMMON_SHORTCUTS, useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
 import { useMutation, useQuery } from "convex/react";
 import { BarChart3, Calendar, MapPin, Plus, Users, X } from "lucide-react";
-import { useMemo } from "react";
-import { ClassAnalytics } from "../class-analytics";
+import { Suspense, useMemo } from "react";
 import { ClassConflictModal } from "../class-conflict-modal";
 import { CleanupUnpopulatedClassesButton } from "../cleanup-unpopulated-classes-button";
 import { CollapsibleSection } from "../collapsible-section";
@@ -19,6 +18,7 @@ import { CreateProviderModal } from "../create-provider-modal";
 import { EditClassModal } from "../edit-class-modal";
 import { FilterChip } from "../filter-chip";
 import { HierarchicalStudentSelector } from "../hierarchical-student-selector";
+import { LazyClassAnalytics, ModalLoadingFallback } from "../lazy-components";
 import LocationProposalForm from "../location-proposal-form";
 import { MergeClassesModal } from "../merge-classes-modal";
 import { MultiDateCalendar } from "../multi-date-calendar";
@@ -2483,10 +2483,12 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
       {/* Analytics Modal */}
       {showAnalytics && (
-        <ClassAnalytics
-          userId={userId}
-          onClose={() => setShowAnalytics(false)}
-        />
+        <Suspense fallback={<ModalLoadingFallback />}>
+          <LazyClassAnalytics
+            userId={userId}
+            onClose={() => setShowAnalytics(false)}
+          />
+        </Suspense>
       )}
     </>
   );

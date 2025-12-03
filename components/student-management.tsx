@@ -7,10 +7,10 @@ import type { User } from "@/lib/types";
 import { COMMON_SHORTCUTS, useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
 import { useMutation, useQuery } from "convex/react";
 import { Copy, GraduationCap, Mail, Pencil, Phone, Plus, Trash2, User as UserIcon, X } from "lucide-react";
-import { useMemo, useState } from "react";
-import { BulkEditStudentsModal } from "./bulk-edit-students-modal";
+import { Suspense, useMemo, useState } from "react";
 import { CollapsibleSection } from "./collapsible-section";
 import { CreateProviderModal } from "./create-provider-modal";
+import { LazyBulkEditStudentsModal, ModalLoadingFallback } from "./lazy-components";
 import { PaginatedList } from "./paginated-list";
 import { StudentListSkeleton } from "./ui/skeleton";
 
@@ -1444,16 +1444,18 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
             {/* Bulk Edit Students Modal */}
             {showBulkEditModal && (
-                <BulkEditStudentsModal
-                    selectedStudentIds={Array.from(selectedStudents)}
-                    currentUserId={currentUser._id}
-                    onClose={() => setShowBulkEditModal(false)}
-                    onSuccess={() => {
-                        setSelectedStudents(new Set());
-                        setShowBulkEditModal(false);
-                        setSuccess(t("Students updated successfully!", "อัปเดตนักเรียนสำเร็จ!"));
-                    }}
-                />
+                <Suspense fallback={<ModalLoadingFallback />}>
+                    <LazyBulkEditStudentsModal
+                        selectedStudentIds={Array.from(selectedStudents)}
+                        currentUserId={currentUser._id}
+                        onClose={() => setShowBulkEditModal(false)}
+                        onSuccess={() => {
+                            setSelectedStudents(new Set());
+                            setShowBulkEditModal(false);
+                            setSuccess(t("Students updated successfully!", "อัปเดตนักเรียนสำเร็จ!"));
+                        }}
+                    />
+                </Suspense>
             )}
         </div>
     );
