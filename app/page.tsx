@@ -6,7 +6,7 @@ import { GraduationCap, HelpCircle, LogOut, RefreshCw } from "lucide-react";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 // Core components (always loaded)
-import WorkspaceLayout, { type UserRole } from "@/app/workspace-layout";
+import WorkspaceLayout from "@/app/workspace-layout";
 import { AdminContactButton } from "@/components/admin-contact-button";
 import { DatabaseInit } from "@/components/database-init";
 import { ToastContainer, type ToastNotification } from "@/components/desktop-notification-toast";
@@ -429,7 +429,7 @@ export default function Home() {
       {/* WorkspaceLayout - VS Code-style resizable panels */}
       <WorkspaceLayout
         userId={user._id}
-        userRole={user.role as UserRole}
+        userRole={user.role}
         userSchoolId={user.schoolId}
       />
 
