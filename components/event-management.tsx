@@ -39,7 +39,7 @@ interface EventFormData {
 
 interface EventManagementProps {
     userId: Id<"users">;
-    userRole: "teacher" | "moderator" | "admin" | "guardian";
+    userRole: "teacher" | "moderator" | "admin";
     schoolId?: Id<"schools">;
 }
 

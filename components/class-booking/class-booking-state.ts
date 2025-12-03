@@ -93,7 +93,7 @@ export function useClassBookingState(userId: Id<"users">, userRole: UserRole, us
 
     // Student Creation State
     const [creatingStudent, setCreatingStudent] = useState(false);
-    const [studentType, setStudentType] = useState<"school" | "guardian">("school");
+    const [studentType, setStudentType] = useState<"school" | "provider">("school");
     const [newStudentNickname, setNewStudentNickname] = useState("");
     const [newStudentGrade, setNewStudentGrade] = useState("");
     const [newStudentClass, setNewStudentClass] = useState("");

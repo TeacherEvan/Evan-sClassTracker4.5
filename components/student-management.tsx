@@ -47,7 +47,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const duplicateStudent = useMutation(api.students.duplicate);
     const bulkDeleteStudents = useMutation(api.bulkOperations.bulkDeleteStudents);
 
-    const [selectedSchoolId, setSelectedSchoolId] = useState<Id<"schools"> | "guardian" | "all">("all");
+    const [selectedSchoolId, setSelectedSchoolId] = useState<Id<"schools"> | "provider" | "all">("all");
     const [selectedGrade, setSelectedGrade] = useState<string>("all");
     const [selectedClass, setSelectedClass] = useState<string>("all");
     const [showForm, setShowForm] = useState(false);
@@ -101,7 +101,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     // Query students based on filter
     const students = useQuery(
         api.students.list,
-        selectedSchoolId === "all" || selectedSchoolId === "guardian"
+        selectedSchoolId === "all" || selectedSchoolId === "provider"
             ? {}
             : { schoolId: selectedSchoolId }
     ) as Student[] | undefined;
@@ -111,7 +111,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         if (!students) return undefined;
 
         return students.filter((student) => {
-            if (selectedSchoolId === "guardian") {
+            if (selectedSchoolId === "provider") {
                 return !student.schoolId && student.guardianName;
             }
 
@@ -547,14 +547,14 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     <select
                         value={selectedSchoolId}
                         onChange={(e) => {
-                            setSelectedSchoolId(e.target.value as Id<"schools"> | "guardian" | "all");
+                            setSelectedSchoolId(e.target.value as Id<"schools"> | "provider" | "all");
                             setSelectedGrade("all");
                             setSelectedClass("all");
                         }}
                         className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                     >
                         <option value="all">{t("All Students", "นักเรียนทั้งหมด")}</option>
-                        <option value="guardian">{t("Guardian Only", "ผู้ปกครองเท่านั้น")}</option>
+                        <option value="provider">{t("Provider Only", "ผู้ให้บริการเท่านั้น")}</option>
                         {schools?.map((school) => (
                             <option key={school._id} value={school._id}>
                                 {school.name}

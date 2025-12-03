@@ -18,7 +18,7 @@ export interface HelpFeature {
   detailedDescription: string;
   detailedDescriptionTh: string;
   steps?: HelpStep[];
-  roles: ("teacher" | "moderator" | "admin" | "guardian")[]; // guardian DEPRECATED - use provider system
+  roles: ("teacher" | "moderator" | "admin")[]; // Guardian role migrated to provider system (Nov 2025)
 }
 
 export interface HelpStep {
