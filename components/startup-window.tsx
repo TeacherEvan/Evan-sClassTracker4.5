@@ -4,7 +4,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
-import type { User } from "@/lib/types";
+import type { User, UserRole } from "@/lib/types";
 import { useMutation } from "convex/react";
 import {
     BarChart3,
@@ -166,7 +166,7 @@ export function StartupWindow({
         color: string;
         hoverColor: string;
         disabled?: boolean;
-        roles?: Array<"admin" | "moderator" | "teacher">; // Which roles can see this option
+        roles?: UserRole[]; // Which roles can see this option
     };
 
     // Menu options

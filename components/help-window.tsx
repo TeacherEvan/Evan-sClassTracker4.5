@@ -4,11 +4,12 @@ import { HelpDetailModal } from "@/components/help-detail-modal";
 import { getHelpForRole, type HelpFeature } from "@/lib/help-content";
 import { getHelpIcon } from "@/lib/help-icons";
 import { useLanguage } from "@/lib/language-context";
+import type { UserRole } from "@/lib/types";
 import { BookOpen, ChevronRight, HelpCircle, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 interface HelpWindowProps {
-  userRole: "teacher" | "moderator" | "admin";
+  userRole: UserRole;
   onClose: () => void;
 }
 

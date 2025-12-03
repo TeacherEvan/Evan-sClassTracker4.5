@@ -8,6 +8,8 @@
  * See: docs/migrations/GUARDIAN_ROLE_REMOVAL_REPORT_NOV_9_2025.md
  */
 
+import type { UserRole } from "@/lib/types";
+
 export interface HelpFeature {
   id: string;
   icon: string; // Lucide icon name
@@ -18,7 +20,7 @@ export interface HelpFeature {
   detailedDescription: string;
   detailedDescriptionTh: string;
   steps?: HelpStep[];
-  roles: ("teacher" | "moderator" | "admin")[]; // Guardian role migrated to provider system (Nov 2025)
+  roles: UserRole[]; // guardian DEPRECATED - use provider system (Nov 2025)
 }
 
 export interface HelpStep {
@@ -582,7 +584,7 @@ export const helpCategories: HelpCategory[] = [
 /**
  * Get features relevant to a specific user role
  */
-export function getHelpForRole(role: "teacher" | "moderator" | "admin"): HelpCategory[] {
+export function getHelpForRole(role: UserRole): HelpCategory[] {
   return helpCategories.map(category => ({
     ...category,
     features: category.features.filter(feature => feature.roles.includes(role)),
