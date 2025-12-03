@@ -18,7 +18,7 @@ import { CreateProviderModal } from "../create-provider-modal";
 import { EditClassModal } from "../edit-class-modal";
 import { FilterChip } from "../filter-chip";
 import { HierarchicalStudentSelector } from "../hierarchical-student-selector";
-import { LazyClassAnalytics, ModalLoadingFallback } from "../lazy-components";
+import { LazyClassAnalytics, ModalLoadingFallback } from "@/components/lazy-components";
 import LocationProposalForm from "../location-proposal-form";
 import { MergeClassesModal } from "../merge-classes-modal";
 import { MultiDateCalendar } from "../multi-date-calendar";

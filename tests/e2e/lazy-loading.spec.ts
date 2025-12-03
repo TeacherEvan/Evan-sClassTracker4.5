@@ -1,6 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { login, navigateToTab, TEST_USERS } from './helpers';
 
+// Constants for common selectors used across tests
+const MODAL_SELECTOR = '[role="dialog"], .modal, .fixed.inset-0';
+const CLOSE_BUTTON_SELECTOR = 'button:has-text("Close"), button:has-text("ปิด"), button:has([aria-label="Close"])';
+
 test.describe('Lazy Loading', () => {
     test('bulk edit modal lazy loads correctly', async ({ page }) => {
         // Login as moderator
@@ -28,10 +32,10 @@ test.describe('Lazy Loading', () => {
                 await bulkEditButton.click();
 
                 // Wait for modal to load (checking for modal header or content)
-                await page.waitForSelector('[role="dialog"], .modal, .fixed.inset-0', { timeout: 5000 });
+                await page.waitForSelector(MODAL_SELECTOR, { timeout: 5000 });
 
                 // Verify modal loaded successfully (should have close button)
-                const closeButton = page.locator('button:has-text("Close"), button:has-text("ปิด"), button:has([aria-label="Close"])').first();
+                const closeButton = page.locator(CLOSE_BUTTON_SELECTOR).first();
                 await expect(closeButton).toBeVisible({ timeout: 3000 });
             }
         }
@@ -54,10 +58,10 @@ test.describe('Lazy Loading', () => {
             await detailsButton.click();
 
             // Wait for modal to load
-            await page.waitForSelector('[role="dialog"], .modal, .fixed.inset-0', { timeout: 5000 });
+            await page.waitForSelector(MODAL_SELECTOR, { timeout: 5000 });
 
             // Verify modal has loaded (should have analytics content)
-            const modalContent = page.locator('[role="dialog"], .modal, .fixed.inset-0').first();
+            const modalContent = page.locator(MODAL_SELECTOR).first();
             await expect(modalContent).toBeVisible();
         }
     });
@@ -79,10 +83,10 @@ test.describe('Lazy Loading', () => {
             await calculatorButton.click();
 
             // Wait for calculator modal to load
-            await page.waitForSelector('[role="dialog"], .modal, .fixed.inset-0', { timeout: 5000 });
+            await page.waitForSelector(MODAL_SELECTOR, { timeout: 5000 });
 
             // Verify calculator modal loaded
-            const modalContent = page.locator('[role="dialog"], .modal, .fixed.inset-0').first();
+            const modalContent = page.locator(MODAL_SELECTOR).first();
             await expect(modalContent).toBeVisible();
         }
     });
