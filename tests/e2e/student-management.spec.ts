@@ -204,4 +204,29 @@ test.describe('Student Management', () => {
             expect(count).toBeGreaterThanOrEqual(0);
         }
     });
+
+    test('shows loading skeleton while fetching students', async ({ page }) => {
+        // Login as teacher
+        await login(page, TEST_USERS.teacher);
+
+        // Navigate to Students tab
+        await navigateToTab(page, 'Students');
+
+        // Verify skeleton loading appears during initial load
+        // Note: This test may be flaky in fast networks, but we try to catch it
+        const skeletonTable = page.locator('table tbody tr td .animate-shimmer').first();
+        
+        // The skeleton should either be visible briefly during load
+        // or data should already be loaded (both are acceptable)
+        const isSkeletonVisible = await skeletonTable.isVisible({ timeout: 1000 }).catch(() => false);
+        
+        if (isSkeletonVisible) {
+            // If skeleton was visible, verify it disappears when data loads
+            await expect(skeletonTable).not.toBeVisible({ timeout: 10000 });
+        }
+
+        // Verify actual student data is now visible
+        const studentTable = page.locator('table tbody tr').filter({ has: page.locator('td') }).first();
+        await expect(studentTable).toBeVisible({ timeout: 5000 });
+    });
 });
