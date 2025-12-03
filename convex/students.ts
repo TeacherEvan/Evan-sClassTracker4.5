@@ -383,6 +383,8 @@ export const update = mutation({
     updatedBy: v.id("users"), // Required: user making the update
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
+    schoolId: v.optional(v.id("schools")),
+    providerId: v.optional(v.id("providers")),
     grade: v.optional(v.string()),
     class: v.optional(v.string()),
     guardianId: v.optional(v.id("users")),
