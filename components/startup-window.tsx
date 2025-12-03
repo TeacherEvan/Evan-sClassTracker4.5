@@ -10,18 +10,22 @@ import {
     BarChart3,
     Bell,
     BookOpen,
+    CheckSquare,
     Globe,
     LayoutDashboard,
     Send,
     Sparkles,
     Star,
     X,
+    Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BookingWizard } from "./booking-wizard";
 import { ClassAnalytics } from "./class-analytics";
 import { ClassCountReportWizard } from "./class-count-report-wizard";
 import { MessageWizard } from "./message-wizard";
+import { ModeratorApprovalWizard } from "./moderator-approval-wizard";
+import { TeacherQuickBookWizard } from "./teacher-quick-book-wizard";
 
 interface StartupWindowProps {
     user: User;
@@ -43,6 +47,8 @@ export function StartupWindow({
     const [showClassCountWizard, setShowClassCountWizard] = useState(false);
     const [showMessageWizard, setShowMessageWizard] = useState(false);
     const [showAnalytics, setShowAnalytics] = useState(false);
+    const [showQuickBookWizard, setShowQuickBookWizard] = useState(false);
+    const [showApprovalWizard, setShowApprovalWizard] = useState(false);
 
     // Mutation for creating bookings
     const bookClass = useMutation(api.classes.book);
@@ -79,6 +85,14 @@ export function StartupWindow({
         // Handle wizard flows
         if (tab === "booking-wizard") {
             setShowBookingWizard(true);
+            return;
+        }
+        if (tab === "quick-book-wizard") {
+            setShowQuickBookWizard(true);
+            return;
+        }
+        if (tab === "approval-wizard") {
+            setShowApprovalWizard(true);
             return;
         }
         if (tab === "class-count-wizard") {
@@ -169,6 +183,32 @@ export function StartupWindow({
             color: "from-blue-500 to-blue-600",
             hoverColor: "hover:from-blue-600 hover:to-blue-700",
             roles: ["moderator", "teacher"],
+        },
+        {
+            id: "quick-book",
+            tab: "quick-book-wizard",
+            icon: Zap,
+            title: t("Quick Book", "จองด่วน"),
+            description: t(
+                "Rebook recent classes instantly",
+                "จองคลาสล่าสุดทันที"
+            ),
+            color: "from-yellow-500 to-orange-500",
+            hoverColor: "hover:from-yellow-600 hover:to-orange-600",
+            roles: ["teacher"],
+        },
+        {
+            id: "approval-wizard",
+            tab: "approval-wizard",
+            icon: CheckSquare,
+            title: t("Quick Approvals", "อนุมัติด่วน"),
+            description: t(
+                "Review and approve pending bookings",
+                "ตรวจสอบและอนุมัติการจองที่รอดำเนินการ"
+            ),
+            color: "from-green-500 to-emerald-600",
+            hoverColor: "hover:from-green-600 hover:to-emerald-700",
+            roles: ["moderator"],
         },
         {
             id: "class-count-report",
@@ -542,6 +582,33 @@ export function StartupWindow({
                         handleClose(false);
                         onNavigate("calendar"); // Return to dashboard
                     }}
+                />
+            )}
+
+            {showQuickBookWizard && (
+                <TeacherQuickBookWizard
+                    key={`quick-book-wizard-${language}`}
+                    userId={user._id}
+                    onComplete={() => {
+                        setShowQuickBookWizard(false);
+                        handleClose(false);
+                        onNavigate("classes"); // Navigate to classes tab
+                    }}
+                    onClose={() => setShowQuickBookWizard(false)}
+                />
+            )}
+
+            {showApprovalWizard && user.schoolId && (
+                <ModeratorApprovalWizard
+                    key={`approval-wizard-${language}`}
+                    userId={user._id}
+                    schoolId={user.schoolId as Id<"schools">}
+                    onComplete={() => {
+                        setShowApprovalWizard(false);
+                        handleClose(false);
+                        onNavigate("classes"); // Navigate to classes tab
+                    }}
+                    onClose={() => setShowApprovalWizard(false)}
                 />
             )}
         </div>
