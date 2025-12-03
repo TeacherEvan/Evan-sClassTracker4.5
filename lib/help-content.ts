@@ -582,7 +582,7 @@ export const helpCategories: HelpCategory[] = [
 /**
  * Get features relevant to a specific user role
  */
-export function getHelpForRole(role: "teacher" | "moderator" | "admin" | "guardian"): HelpCategory[] {
+export function getHelpForRole(role: "teacher" | "moderator" | "admin"): HelpCategory[] {
   return helpCategories.map(category => ({
     ...category,
     features: category.features.filter(feature => feature.roles.includes(role)),

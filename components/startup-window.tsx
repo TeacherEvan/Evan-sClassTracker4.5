@@ -128,13 +128,6 @@ export function StartupWindow({
                     subtitle_en: "Ready to teach today?",
                     subtitle_th: "พร้อมสอนวันนี้หรือยัง?"
                 };
-            case "guardian":
-                return {
-                    en: "Welcome",
-                    th: "ยินดีต้อนรับ",
-                    subtitle_en: "Track your student's progress",
-                    subtitle_th: "ติดตามความคืบหน้าของนักเรียน"
-                };
             default:
                 return {
                     en: "Welcome",
@@ -159,7 +152,7 @@ export function StartupWindow({
         color: string;
         hoverColor: string;
         disabled?: boolean;
-        roles?: Array<"admin" | "moderator" | "teacher" | "guardian">; // Which roles can see this option
+        roles?: Array<"admin" | "moderator" | "teacher">; // Which roles can see this option
     };
 
     // Menu options

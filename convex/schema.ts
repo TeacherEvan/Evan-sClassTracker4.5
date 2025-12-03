@@ -9,7 +9,7 @@ export default defineSchema({
       v.literal("teacher"),
       v.literal("moderator"),
       v.literal("admin"),
-      v.literal("guardian") // DEPRECATED - Will be removed after migration to providers
+      v.literal("guardian") // DEPRECATED - Data migration in progress, DO NOT USE for new users
     ),
     schoolId: v.optional(v.id("schools")),
     requirePasswordChange: v.boolean(),
@@ -57,6 +57,8 @@ export default defineSchema({
         endDate: v.number(),
       })),
       skipTeacherStep: v.optional(v.boolean()), // For teachers - skip teacher selection
+      dismissedWizards: v.optional(v.array(v.string())), // ["booking-wizard", "admin-wizard"]
+      showStartupWindow: v.optional(v.boolean()), // Master toggle for startup window
     })),
   })
     .index("by_username", ["username"])

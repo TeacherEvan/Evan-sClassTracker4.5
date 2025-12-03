@@ -8,7 +8,7 @@ import { BookOpen, ChevronRight, HelpCircle, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 interface HelpWindowProps {
-  userRole: "teacher" | "moderator" | "admin" | "guardian";
+  userRole: "teacher" | "moderator" | "admin";
   onClose: () => void;
 }
 
