@@ -37,8 +37,6 @@ export function TeacherQuickBookWizard({
     const [currentStep, setCurrentStep] = useState<WizardStep>("templates");
     const [selectedTemplate, setSelectedTemplate] = useState<BookingTemplate | null>(null);
     const [selectedDates, setSelectedDates] = useState<number[]>([]);
-    const [checkingConflicts, setCheckingConflicts] = useState(false);
-    const [conflicts, setConflicts] = useState<string[]>([]);
 
     // Query teacher's recent bookings (last 30 days) to generate templates
     const recentClasses = useQuery(api.classes.list, {
@@ -116,14 +114,8 @@ export function TeacherQuickBookWizard({
         if (!selectedTemplate || selectedDates.length === 0) return;
 
         try {
-            // Filter out dates with conflicts
-            const datesToBook = selectedDates.filter(date => {
-                const dateStr = new Date(date).toLocaleDateString();
-                return !conflicts.includes(dateStr);
-            });
-
             // Book each date
-            const bookingPromises = datesToBook.map((date) =>
+            const bookingPromises = selectedDates.map((date) =>
                 bookClass({
                     teacherId: userId,
                     schoolId: selectedTemplate.schoolId,
@@ -138,8 +130,8 @@ export function TeacherQuickBookWizard({
             await Promise.all(bookingPromises);
 
             toast.success(
-                `${datesToBook.length} class(es) booked successfully!`,
-                `จอง ${datesToBook.length} คลาสสำเร็จ!`
+                `${selectedDates.length} class(es) booked successfully!`,
+                `จอง ${selectedDates.length} คลาสสำเร็จ!`
             );
 
             onComplete();
@@ -241,13 +233,9 @@ export function TeacherQuickBookWizard({
                             <div className="mt-4">
                                 <button
                                     onClick={handleCheckConflicts}
-                                    disabled={checkingConflicts}
-                                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                 >
-                                    {checkingConflicts
-                                        ? t("Checking conflicts...", "กำลังตรวจสอบคลาสซ้อน...")
-                                        : t(`Check & Continue (${selectedDates.length} dates)`, `ตรวจสอบและดำเนินการต่อ (${selectedDates.length} วัน)`)
-                                    }
+                                    {t(`Continue (${selectedDates.length} dates)`, `ดำเนินการต่อ (${selectedDates.length} วัน)`)}
                                 </button>
                             </div>
                         )}
@@ -265,17 +253,9 @@ export function TeacherQuickBookWizard({
                                 <div><strong>{t("Student:", "นักเรียน:")}</strong> {selectedTemplate?.studentName}</div>
                                 <div><strong>{t("School:", "โรงเรียน:")}</strong> {selectedTemplate?.schoolName}</div>
                                 <div><strong>{t("Time:", "เวลา:")}</strong> {selectedTemplate?.time}</div>
-                                <div><strong>{t("Dates:", "วันที่:")}</strong> {selectedDates.length - conflicts.length} date(s)</div>
+                                <div><strong>{t("Dates:", "วันที่:")}</strong> {selectedDates.length} date(s)</div>
                             </div>
                         </div>
-
-                        {conflicts.length > 0 && (
-                            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
-                                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                                    ⚠️ {t(`${conflicts.length} date(s) have conflicts and will be skipped`, `${conflicts.length} วันมีคลาสซ้อนและจะถูกข้าม`)}
-                                </p>
-                            </div>
-                        )}
 
                         <button
                             onClick={handleConfirmBooking}

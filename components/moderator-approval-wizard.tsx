@@ -5,7 +5,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import { useMutation, useQuery } from "convex/react";
-import { Check, CheckSquare, ChevronLeft, ChevronRight, Clock, User, X } from "lucide-react";
+import { Check, CheckSquare, Clock, User, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 interface ModeratorApprovalWizardProps {

@@ -5,7 +5,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { logger } from "@/lib/logger";
 import { toast } from "@/lib/toast";
-import type { User, UserWithSchool } from "@/lib/types";
+import type { User } from "@/lib/types";
 import { COMMON_SHORTCUTS, useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
 import { useMutation, useQuery } from "convex/react";
 import {
