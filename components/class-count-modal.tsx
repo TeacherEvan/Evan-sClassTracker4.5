@@ -16,9 +16,9 @@ import {
     Search,
     X
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { ClassDetailCard } from "./class-detail-card";
-import { ClassPaymentCalculator } from "./class-payment-calculator";
+import { LazyClassPaymentCalculator, ModalLoadingFallback } from "./lazy-components";
 
 interface ClassCountModalProps {
     teacherId: Id<"users">;
@@ -636,11 +636,13 @@ export function ClassCountModal({ teacherId, userRole, onClose }: ClassCountModa
 
             {/* Payment Calculator Modal (Ephemeral - No Database Storage) */}
             {showPaymentCalculator && (
-                <ClassPaymentCalculator
-                    teacherId={teacherId}
-                    userRole={userRole}
-                    onClose={() => setShowPaymentCalculator(false)}
-                />
+                <Suspense fallback={<ModalLoadingFallback />}>
+                    <LazyClassPaymentCalculator
+                        teacherId={teacherId}
+                        userRole={userRole}
+                        onClose={() => setShowPaymentCalculator(false)}
+                    />
+                </Suspense>
             )}
         </div>
     );

@@ -14,8 +14,8 @@ import {
     Users,
     X
 } from "lucide-react";
-import { useState } from "react";
-import { ClassPaymentCalculator } from "./class-payment-calculator";
+import { Suspense, useState } from "react";
+import { LazyClassPaymentCalculator, ModalLoadingFallback } from "./lazy-components";
 
 interface ClassAnalyticsProps {
     userId: Id<"users">;
@@ -493,11 +493,13 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
 
             {/* Payment Calculator Modal (Moderators Only) */}
             {showPaymentCalculator && user?.role === "moderator" && (
-                <ClassPaymentCalculator
-                    teacherId={userId}
-                    userRole={user.role}
-                    onClose={() => setShowPaymentCalculator(false)}
-                />
+                <Suspense fallback={<ModalLoadingFallback />}>
+                    <LazyClassPaymentCalculator
+                        teacherId={userId}
+                        userRole={user.role}
+                        onClose={() => setShowPaymentCalculator(false)}
+                    />
+                </Suspense>
             )}
         </div>
     );

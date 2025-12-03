@@ -6,8 +6,8 @@ import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
 import { useQuery } from "convex/react";
 import { BarChart3, CheckCircle, Clock, Edit2, FileText, TrendingDown, TrendingUp, Users, XCircle } from "lucide-react";
-import { useState } from "react";
-import { TeacherClassCountModal } from "./teacher-class-count-modal";
+import { Suspense, useState } from "react";
+import { LazyTeacherClassCountModal, ModalLoadingFallback } from "./lazy-components";
 import TeacherLogsManager from "./teacher-logs-manager";
 
 interface SimpleAnalyticsProps {
@@ -402,13 +402,15 @@ export function SimpleAnalytics({ schoolId, currentUserId, currentUserRole, curr
 
             {/* ClassCount Modal */}
             {selectedTeacher && currentUserId && (
-                <TeacherClassCountModal
-                    teacherId={selectedTeacher.id}
-                    teacherUsername={selectedTeacher.username}
-                    moderatorId={currentUserId}
-                    moderatorRole={currentUserRole as "moderator" | "admin"}
-                    onClose={() => setSelectedTeacher(null)}
-                />
+                <Suspense fallback={<ModalLoadingFallback />}>
+                    <LazyTeacherClassCountModal
+                        teacherId={selectedTeacher.id}
+                        teacherUsername={selectedTeacher.username}
+                        moderatorId={currentUserId}
+                        moderatorRole={currentUserRole as "moderator" | "admin"}
+                        onClose={() => setSelectedTeacher(null)}
+                    />
+                </Suspense>
             )}
         </div>
     );
