@@ -1,7 +1,7 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.30 (Nov 25, 2025 - Teacher Comparison Analytics)  
+**Version:** 4.5.31 (Dec 3, 2025 - Documentation Consolidation)  
 **🔴 CRITICAL**: Bcrypt migration required - see Security Considerations
 
 ---
@@ -28,7 +28,7 @@ This documentation is split into focused sections for efficient knowledge discov
 
 ### 📚 Core Documentation
 
-**[Non-Negotiable Patterns](./copilot-docs/03-patterns.md)** (25 patterns)
+**[Non-Negotiable Patterns](./copilot-docs/03-patterns.md)** (29 patterns)
 
 - Bilingual-first development
 - Index-first queries (performance critical)
@@ -56,6 +56,9 @@ This documentation is split into focused sections for efficient knowledge discov
 - Ephemeral calculator pattern (NEW Oct 2025)
 - Analytics dashboard pattern (NEW Nov 2025)
 - Wizard-based onboarding pattern (NEW Nov 2025)
+- Lazy loading pattern (NEW Dec 2025)
+- Modular component decomposition (NEW Dec 2025)
+- Backend module split pattern (NEW Dec 2025)
 
 **[Integration Points & Architecture](./copilot-docs/04-integration.md)**
 
@@ -196,30 +199,36 @@ This documentation is split into focused sections for efficient knowledge discov
 ## 📊 Documentation Stats
 
 - **Documentation Stats**: ~6,000 lines split into 15 focused files
-- **Code Patterns**: 25 non-negotiable patterns documented
+- **Code Patterns**: 29 non-negotiable patterns documented
 - **Architecture Diagrams**: 12 ASCII diagrams across integration docs
 - **Test Best Practices**: 7 E2E testing patterns + 4 performance optimizations
 - **Security Warnings**: 1 CRITICAL - Bcrypt migration required immediately (Nov 9, 2025)
 - **Disaster Recovery**: 10 critical failure scenarios with step-by-step recovery
 - **Operational Guides**: 5 practical how-to procedures with copy-paste commands
-- **Refactoring Candidates**: 4 files identified (2,930 to 1,065 lines each)
-- **Recent Updates**: Nov 25, 2025 (v4.5.30) - Teacher Comparison Analytics & Performance Optimizations
+- **Refactoring Candidates**: 2 files remaining (1,193 to 1,065 lines each)
+- **Refactoring Complete**: class-booking.tsx (2,930→modular), classes.ts (2,213→modular)
+- **Recent Updates**: Dec 3, 2025 (v4.5.31) - Documentation Consolidation & Architecture Updates
 
 ---
 
 ## 🔄 Last Updated
 
-**November 25, 2025** - Version 4.5.30 - Teacher Comparison Analytics 🔍
+**December 3, 2025** - Version 4.5.31 - Documentation Consolidation 📚
 
-- **Teacher Comparison Feature**: Compare all teachers side-by-side with metrics
-  - New backend query: `getTeacherComparison` in analytics.ts
-  - Tab switcher UI: Summary vs Teacher Comparison
-  - Metrics: Total classes, attendance rate, avg ClassCount, unique students, rating
-  - Role-based access: Moderators see school teachers, admins see all
-- **Performance Optimizations**: Added useMemo hooks to booking-wizard.tsx (7) and message-wizard.tsx (2)
-- **Build Fixes**: Fixed unused imports, property name mismatches, ESLint warnings
-- **E2E Tests**: New analytics.spec.ts with comprehensive test coverage
-- **Previous (v4.5.29)**: User-Specific Wizard Personalization (Nov 20, 2025)
+- **Documentation Overhaul**: Comprehensive update and consolidation of all documentation
+  - Updated to v4.5.31 across all documentation files
+  - Clarified bilingual pattern (developer UI vs user content)
+  - Updated guardian deprecation notices (migrated to Provider system Oct 2025)
+  - Added modular architecture documentation (PR #96-98)
+  - Consolidated redundant docs into `docs/archive/`
+  - Updated refactoring guide to reflect completed work
+- **Modular Architecture Documentation**: Added new patterns and structures
+  - Pattern #27: Lazy Loading Pattern
+  - Pattern #28: Modular Component Decomposition (class-booking split)
+  - Pattern #29: Backend Module Split Pattern (classes.ts split)
+  - Updated architecture docs with `components/class-booking/` structure
+  - Updated architecture docs with `convex/classes/` structure
+- **Previous (v4.5.30)**: Teacher Comparison Analytics (Nov 25, 2025)
 
 **November 10, 2025** - Version 4.5.24 - PR #81 Phase 4 Complete 🚀
 
@@ -278,7 +287,7 @@ This documentation is split into focused sections for efficient knowledge discov
 
 1. **NEVER reorder providers** in `app/layout.tsx` - the hierarchy is load-bearing (ErrorBoundary → ConvexClientProvider → DeviceProvider → DataProvider → LanguageProvider). Reordering causes runtime failures.
 
-2. **Everything is bilingual (English/Thai)** - Schema has `title` AND `titleTh`. Forms need parallel inputs. Use `BilingualInput` component. Validation: `&&` (AND) not `||` (OR) for optional fields.
+2. **Developer UI is bilingual (English/Thai)** - Bilingual applies to **developer-created headings and UI labels only**, NOT user-entered content. Users should NEVER be forced to enter data in both languages. Schema fields like `title`/`titleTh` are for system-generated content. Use `BilingualInput` only for admin/developer forms (e.g., creating locations, notifications). User forms (e.g., notes, reasons) should accept single-language input. Validation: `&&` (AND) not `||` (OR) for optional fields.
 
 3. **Always use `.withIndex()`** for Convex queries - check `convex/schema.ts` for indexes. NEVER query inside loops - use batch fetch + Map pattern. This is critical for performance.
 
@@ -286,7 +295,7 @@ This documentation is split into focused sections for efficient knowledge discov
 
 5. **All components need `"use client"`** - Next.js App Router requires this directive for client-side hooks (`useQuery`, `useMutation`, `useState`).
 
-6. **Guardian students auto-approve** - Classes with `isGuardianLinked: true` bypass moderator approval workflow (NEW Oct 2025).
+6. **Guardian role is DEPRECATED** - Guardian functionality migrated to Provider system (Oct 2025). Use `providers` table for parent/guardian relationships. The `guardian` literal remains in schema for data migration but DO NOT use for new users. Classes with `isGuardianLinked: true` bypass moderator approval workflow.
 
 7. **Moderators are STRICTLY school-scoped** - Moderators can ONLY access their assigned school's data. Teachers are multi-school. Admins have God mode. NEVER allow moderators to bypass school boundaries (NEW Nov 2025).
 

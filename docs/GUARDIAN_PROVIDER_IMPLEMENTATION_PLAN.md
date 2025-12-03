@@ -1,9 +1,26 @@
 # Guardian to Provider Migration - Implementation Plan
 
+**⚠️ STATUS**: MIGRATION COMPLETE - Guardian role DEPRECATED (Oct 2025)
+
 **Date**: November 6, 2025  
-**Status**: Ready for Implementation  
+**Updated**: December 3, 2025  
+**Status**: ✅ COMPLETE - Provider system is live, guardian role deprecated  
 **Priority**: Medium (Performance + Code Quality Improvement)  
-**Estimated Time**: 3-4 days  
+**Estimated Time**: 3-4 days (Completed)
+
+---
+
+## ⚠️ DEPRECATION NOTICE
+
+**As of October 2025**, the guardian role has been **DEPRECATED** and migrated to the Provider system:
+
+- **Use `providers` table** for all parent/guardian relationships
+- **DO NOT create new guardian users** - use provider records instead
+- The `guardian` literal remains in schema for data migration support only
+- Legacy guardian data is preserved for backward compatibility
+- Classes with `isGuardianLinked: true` continue to auto-approve
+
+**For new implementations**: See Provider system documentation in Pattern #23 (03-patterns.md)  
 
 ---
 

@@ -73,13 +73,23 @@
 
 ## Backend Logic
 
-**`convex/classes.ts`**
+**`convex/classes/`** (Modular - NEW Dec 2025)
 
+Split from monolithic classes.ts (2,213 lines → modular structure):
+
+- `index.ts` - Re-exports (public API for backward compatibility)
+- `queries.ts` - 9 query functions (15KB)
+- `mutations.ts` - 16 mutation functions (79KB)
+- `helpers.ts` - Authorization helpers (5KB)
+- `README.md` - Module documentation
+
+Features:
 - State machine (pending → acknowledged → approved/rejected)
 - Approval workflow
 - Edit audit trail
 - Authorization helpers (`verifyClassAccess`)
 - Bulk deletion with safeguards
+- Better organization and maintainability
 
 **`convex/students.ts`**
 
@@ -150,12 +160,22 @@
 
 ## UI Components
 
-**`components/class-booking.tsx`**
+**`components/class-booking/`** (Modular - NEW Dec 2025)
 
+Decomposed from monolithic class-booking.tsx (2,930 lines → modular structure):
+
+- `index.tsx` - Main orchestrator component (126KB)
+- `types.ts` - Shared TypeScript interfaces
+- `constants.ts` - Shared constants (defaults, limits)
+- `class-booking-state.ts` - State management hook (9KB)
+- `ClassItemDisplay.tsx` - Reusable class card component (30KB)
+
+Features:
 - Multi-date booking
 - Optional fields
 - Conflict detection
 - Recurring weekly bookings
+- Better maintainability and testability
 
 **`components/edit-class-modal.tsx`**
 
@@ -239,14 +259,22 @@
 - Expandable class card used in Class Count modal
 - Shows all students, notes, attendance, and provider/school info
 
-**`components/booking-wizard.tsx`**
+**`components/booking-wizard.tsx`** (NEW Nov 2025)
 
 - Multi-step booking wizard (teacher→grade→class→type→calendar)
 - 30-day interactive calendar for once-off bookings
 - Recurring class configurator (weeks + day/time selection)
 - Completes to class booking form
+- Performance: 7 useMemo optimizations added (Nov 2025)
 
-**`components/class-count-report-wizard.tsx`**
+**`components/message-wizard.tsx`** (NEW Nov 2025)
+
+- Multi-step messaging wizard (recipients→compose→send)
+- Shows "Pending → Sent" animation
+- Auto-redirects to dashboard after 1.5s
+- Performance: 2 useMemo optimizations added (Nov 2025)
+
+**`components/class-count-report-wizard.tsx`** (NEW Nov 2025)
 
 - Report generation wizard (teacher→date→view/print)
 - Date range selector with validation

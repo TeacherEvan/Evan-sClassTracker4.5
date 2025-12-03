@@ -1,6 +1,6 @@
 # Documentation Index - Evan's Class Tracker 4.5
 
-**Version:** 4.5.18 | **Last Updated:** November 5, 2025
+**Version:** 4.5.31 | **Last Updated:** December 3, 2025
 
 ---
 
@@ -100,8 +100,9 @@
 
 - **[migrations/GUARDIAN_TO_PROVIDER_MIGRATION_PLAN.md](migrations/GUARDIAN_TO_PROVIDER_MIGRATION_PLAN.md)** - Guardian to provider consolidation (archived)
 - **[migrations/IMPLEMENTATION_REVIEW_NOV_6_2025.md](migrations/IMPLEMENTATION_REVIEW_NOV_6_2025.md)** - Migration review (archived)
+- **[migrations/GUARDIAN_ROLE_REMOVAL_REPORT_NOV_9_2025.md](migrations/GUARDIAN_ROLE_REMOVAL_REPORT_NOV_9_2025.md)** - Final guardian removal report
 
-**Active Migration**: See root level `GUARDIAN_PROVIDER_IMPLEMENTATION_PLAN.md` for current migration plan
+**⚠️ DEPRECATION**: Guardian role is DEPRECATED (Oct 2025). See root level `GUARDIAN_PROVIDER_IMPLEMENTATION_PLAN.md` for migration details. Use `providers` table for new implementations.
 
 ---
 
@@ -159,7 +160,7 @@ Critical documentation → **[Important/](Important/)**
 
 - `01-quick-start.md` - Essential rules & setup
 - `02-architecture.md` - Provider hierarchy & auth
-- `03-patterns.md` - 25 non-negotiable patterns
+- `03-patterns.md` - 29 non-negotiable patterns (includes lazy loading, modular decomposition)
 - `04-integration.md` - Component communication
 - `05-security.md` - Known limitations & warnings
 - `06-development.md` - Local dev workflow
@@ -217,6 +218,16 @@ When adding new documentation:
 
 ## 🗂️ Recent Updates
 
+**December 3, 2025** - v4.5.31 - Documentation Consolidation
+
+- ✅ Updated all documentation to v4.5.31
+- ✅ Added 3 new patterns (lazy loading, modular component decomposition, backend module split)
+- ✅ Updated architecture docs with modular structures (`components/class-booking/`, `convex/classes/`)
+- ✅ Marked class-booking.tsx and classes.ts refactoring as COMPLETE
+- ✅ Added guardian deprecation notices throughout documentation
+- ✅ Clarified bilingual pattern (developer UI vs user content)
+- ✅ Archived redundant documentation files to `docs/archive/`
+
 **November 5, 2025** - Documentation reorganization
 
 - ✅ Created logical folder structure (guides, architecture, features, security, ui-design, audits-reviews)
@@ -232,5 +243,5 @@ When adding new documentation:
 
 ---
 
-**Quick Reference:** [QUICK_REFERENCE.md](QUICK_REFERENCE.md)  
+**Quick Reference:** [QUICK_REFERENCE_CARD.md](QUICK_REFERENCE_CARD.md) (archived: [QUICK_REFERENCE.md](archive/QUICK_REFERENCE.md))  
 **Main Documentation Hub:** [.github/copilot-docs/](../.github/copilot-docs/)

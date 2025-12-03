@@ -83,6 +83,100 @@ clearUserSession();
 
 ---
 
+## Modular Architecture (Dec 2025)
+
+**Recent Refactoring**: Large monolithic files split into maintainable modules
+
+### Frontend Modular Components
+
+**`components/class-booking/`** - Decomposed from monolithic class-booking.tsx (2,930 lines → modular)
+
+```
+components/class-booking/
+├── index.tsx                    # Main orchestrator (126KB)
+├── types.ts                     # TypeScript interfaces
+├── constants.ts                 # Shared constants
+├── class-booking-state.ts       # State management hook (9KB)
+└── ClassItemDisplay.tsx         # Class card component (30KB)
+```
+
+**Benefits**:
+- Better code organization and readability
+- Easier to test individual components
+- Reduced cognitive load when editing
+- Type safety with shared interfaces
+- Reusable state management hook
+
+**Usage pattern**:
+```tsx
+// Main component imports and orchestrates
+import { useClassBookingState } from './class-booking-state';
+import { ClassItemDisplay } from './ClassItemDisplay';
+import { DEFAULT_START_TIME, DEFAULT_END_TIME } from './constants';
+import type { BookingFormData } from './types';
+```
+
+### Backend Modular Structure
+
+**`convex/classes/`** - Split from monolithic classes.ts (2,213 lines → modular)
+
+```
+convex/classes/
+├── index.ts                     # Re-exports (public API)
+├── queries.ts                   # 9 query functions (15KB)
+├── mutations.ts                 # 16 mutation functions (79KB)
+├── helpers.ts                   # Authorization helpers (5KB)
+└── README.md                    # Module documentation
+```
+
+**Query functions** (queries.ts):
+- `list` - Paginated class list
+- `get` - Single class details
+- `getByStatus` - Filter by status
+- `getByTeacher` - Teacher's classes
+- `getByStudent` - Student's classes
+- `getBySchool` - School's classes
+- `getConflicts` - Scheduling conflicts
+- `getSchedule` - Weekly schedule view
+- `listForDateRange` - Date-filtered classes
+
+**Mutation functions** (mutations.ts):
+- `book` - Create new class
+- `update` - Edit existing class
+- `acknowledge` - Moderator acknowledges
+- `approve` - Moderator approves
+- `reject` - Moderator rejects
+- `delete` - Soft delete
+- `bulkDelete` - Admin bulk delete
+- `bulkApprove` - Admin bulk approve
+- `bulkReject` - Admin bulk reject
+- `cancel` - Cancel class
+- `postpone` - Reschedule class
+- `markAttended` - Mark attendance
+- ... (16 total)
+
+**Helper functions** (helpers.ts):
+- `verifyClassAccess` - Authorization check
+- `canModifyClass` - Permission check
+- `isClassOwner` - Ownership check
+
+**Re-export pattern** (index.ts):
+```typescript
+// Public API - all exports go through index.ts
+export * from './queries';
+export * from './mutations';
+export * from './helpers';
+```
+
+**Benefits**:
+- Easier to find specific functionality
+- Reduced merge conflicts
+- Better code review experience
+- Logical grouping of related functions
+- Maintains backward compatibility via re-exports
+
+---
+
 ## Database Schema Structure
 
 **Source of truth**: `convex/schema.ts`
