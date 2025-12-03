@@ -12,9 +12,11 @@ All notable changes to this project are documented here.
 
 #### New Documentation Patterns
 
-- **Pattern #27**: Lazy Loading Pattern - Code-split large components for better performance
-- **Pattern #28**: Modular Component Decomposition - Split monolithic components into maintainable modules
-- **Pattern #29**: Backend Module Split Pattern - Modularize backend logic for better organization
+- **Pattern #26**: Wizard-Based Onboarding Pattern - Multi-step guided workflows for feature discovery
+- **Pattern #27**: Database Seeding Pattern - Automated data population for development/testing
+- **Pattern #28**: Lazy Loading Pattern - Code-split large components for better performance
+- **Pattern #29**: Modular Component Decomposition - Split monolithic components into maintainable modules
+- **Pattern #30**: Backend Module Split Pattern - Modularize backend logic for better organization
 
 #### Modular Architecture Documentation
 
@@ -39,7 +41,7 @@ All notable changes to this project are documented here.
   - Updated Rule #2: Clarified bilingual pattern (developer UI vs user content)
   - Updated Rule #6: Guardian role marked as DEPRECATED
   - Added modular architecture section
-  - Updated pattern count from 25 to 29
+  - Updated pattern count from 25 to 30
   - Updated "Last Updated" section with v4.5.31 details
 
 - **`.github/copilot-docs/01-quick-start.md`**
@@ -55,9 +57,11 @@ All notable changes to this project are documented here.
 - **`.github/copilot-docs/03-patterns.md`**
   - Updated Pattern #1: Added clarification about developer UI vs user content
   - Updated Pattern #16: Marked Guardian pattern as DEPRECATED
-  - Added Pattern #27: Lazy Loading Pattern
-  - Added Pattern #28: Modular Component Decomposition
-  - Added Pattern #29: Backend Module Split Pattern
+  - Added Pattern #26: Wizard-Based Onboarding Pattern
+  - Added Pattern #27: Database Seeding Pattern
+  - Added Pattern #28: Lazy Loading Pattern
+  - Added Pattern #29: Modular Component Decomposition
+  - Added Pattern #30: Backend Module Split Pattern
 
 - **`.github/copilot-docs/10-files.md`**
   - Updated `components/class-booking/` entry with modular structure
@@ -95,7 +99,7 @@ Moved to `docs/archive/` to reduce documentation clutter:
 ### Technical Details
 
 - **Documentation Stats**: ~6,000 lines updated across 15 focused files
-- **Pattern Count**: Increased from 25 to 29 documented patterns
+- **Pattern Count**: Increased from 25 to 30 documented patterns
 - **Refactoring Status**: 2 major refactorings marked as complete
 - **Archived Files**: 3 redundant documentation files moved to archive
 - **Version Consistency**: v4.5.31 applied across all documentation

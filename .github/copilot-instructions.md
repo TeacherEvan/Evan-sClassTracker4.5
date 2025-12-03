@@ -28,7 +28,7 @@ This documentation is split into focused sections for efficient knowledge discov
 
 ### 📚 Core Documentation
 
-**[Non-Negotiable Patterns](./copilot-docs/03-patterns.md)** (29 patterns)
+**[Non-Negotiable Patterns](./copilot-docs/03-patterns.md)** (30 patterns)
 
 - Bilingual-first development
 - Index-first queries (performance critical)
@@ -55,6 +55,8 @@ This documentation is split into focused sections for efficient knowledge discov
 - Provider system pattern (NEW Oct 2025)
 - Ephemeral calculator pattern (NEW Oct 2025)
 - Analytics dashboard pattern (NEW Nov 2025)
+- Wizard-based onboarding pattern (NEW Nov 2025)
+- Database seeding pattern (NEW Nov 2025)
 - Wizard-based onboarding pattern (NEW Nov 2025)
 - Lazy loading pattern (NEW Dec 2025)
 - Modular component decomposition (NEW Dec 2025)
@@ -199,7 +201,7 @@ This documentation is split into focused sections for efficient knowledge discov
 ## 📊 Documentation Stats
 
 - **Documentation Stats**: ~6,000 lines split into 15 focused files
-- **Code Patterns**: 29 non-negotiable patterns documented
+- **Code Patterns**: 30 non-negotiable patterns documented
 - **Architecture Diagrams**: 12 ASCII diagrams across integration docs
 - **Test Best Practices**: 7 E2E testing patterns + 4 performance optimizations
 - **Security Warnings**: 1 CRITICAL - Bcrypt migration required immediately (Nov 9, 2025)
@@ -223,9 +225,9 @@ This documentation is split into focused sections for efficient knowledge discov
   - Consolidated redundant docs into `docs/archive/`
   - Updated refactoring guide to reflect completed work
 - **Modular Architecture Documentation**: Added new patterns and structures
-  - Pattern #27: Lazy Loading Pattern
-  - Pattern #28: Modular Component Decomposition (class-booking split)
-  - Pattern #29: Backend Module Split Pattern (classes.ts split)
+  - Pattern #28: Lazy Loading Pattern
+  - Pattern #29: Modular Component Decomposition (class-booking split)
+  - Pattern #30: Backend Module Split Pattern (classes.ts split)
   - Updated architecture docs with `components/class-booking/` structure
   - Updated architecture docs with `convex/classes/` structure
 - **Previous (v4.5.30)**: Teacher Comparison Analytics (Nov 25, 2025)

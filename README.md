@@ -19,9 +19,11 @@ Built with Next.js 15, React 19, Convex & Tailwind v4
   - Updated refactoring guide to reflect completed work
   
 - 🏗️ **New Documentation**:
-  - Pattern #27: Lazy Loading Pattern
-  - Pattern #28: Modular Component Decomposition (class-booking split)
-  - Pattern #29: Backend Module Split Pattern (classes.ts split)
+  - Pattern #26: Wizard-Based Onboarding Pattern
+  - Pattern #27: Database Seeding Pattern
+  - Pattern #28: Lazy Loading Pattern
+  - Pattern #29: Modular Component Decomposition (class-booking split)
+  - Pattern #30: Backend Module Split Pattern (classes.ts split)
   - Modular architecture docs: `components/class-booking/` structure
   - Modular architecture docs: `convex/classes/` structure
   

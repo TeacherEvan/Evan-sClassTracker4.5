@@ -160,7 +160,7 @@ Critical documentation → **[Important/](Important/)**
 
 - `01-quick-start.md` - Essential rules & setup
 - `02-architecture.md` - Provider hierarchy & auth
-- `03-patterns.md` - 29 non-negotiable patterns (includes lazy loading, modular decomposition)
+- `03-patterns.md` - 30 non-negotiable patterns (includes lazy loading, modular decomposition)
 - `04-integration.md` - Component communication
 - `05-security.md` - Known limitations & warnings
 - `06-development.md` - Local dev workflow
@@ -221,7 +221,7 @@ When adding new documentation:
 **December 3, 2025** - v4.5.31 - Documentation Consolidation
 
 - ✅ Updated all documentation to v4.5.31
-- ✅ Added 3 new patterns (lazy loading, modular component decomposition, backend module split)
+- ✅ Added 5 new patterns (database seeding, wizard onboarding, lazy loading, modular component decomposition, backend module split)
 - ✅ Updated architecture docs with modular structures (`components/class-booking/`, `convex/classes/`)
 - ✅ Marked class-booking.tsx and classes.ts refactoring as COMPLETE
 - ✅ Added guardian deprecation notices throughout documentation

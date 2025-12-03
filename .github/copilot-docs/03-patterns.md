@@ -1317,7 +1317,7 @@ const [showAnalytics, setShowAnalytics] = useState(false);
 - Moderators: Monitor school-wide trends and teacher effectiveness
 - Admins: System-wide insights for strategic decision-making
 
-### 25. Wizard-Based Onboarding Pattern (NEW Nov 2025)
+### 26. Wizard-Based Onboarding Pattern (NEW Nov 2025)
 
 Multi-step guided workflows for feature discovery and onboarding. Used in the startup window for moderators/teachers.
 
@@ -1477,7 +1477,7 @@ if (tab === "wizard-trigger") {
 
 **Example**: See `IMPLEMENTATION_SUMMARY_WIZARD_STARTUP_NOV_1_2025.md` for full implementation details
 
-### 26. Database Seeding Pattern (NEW Nov 2025)
+### 27. Database Seeding Pattern (NEW Nov 2025)
 
 **Automated data population** for development and testing environments.
 
@@ -1513,7 +1513,7 @@ export const seedDatabase = mutation({
 
 **Example**: `convex/seed.ts`
 
-### 27. Lazy Loading Pattern (NEW Dec 2025)
+### 28. Lazy Loading Pattern (NEW Dec 2025)
 
 **Code-split large components** to reduce initial bundle size and improve Time to Interactive.
 
@@ -1559,7 +1559,7 @@ const StudentManagement = lazy(() =>
 
 **Example**: See `app/page.tsx` workspace layout with 5 lazy-loaded views
 
-### 28. Modular Component Decomposition (NEW Dec 2025)
+### 29. Modular Component Decomposition (NEW Dec 2025)
 
 **Split monolithic components** into focused, maintainable modules.
 
@@ -1632,7 +1632,7 @@ export function ClassBooking() {
 
 **Example**: PR #97 - class-booking.tsx decomposition
 
-### 29. Backend Module Split Pattern (NEW Dec 2025)
+### 30. Backend Module Split Pattern (NEW Dec 2025)
 
 **Modularize backend logic** for better organization and maintainability.
 
