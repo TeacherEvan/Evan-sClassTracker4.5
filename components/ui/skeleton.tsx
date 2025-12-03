@@ -10,6 +10,8 @@ interface SkeletonProps {
   lines?: number;
 }
 
+const DEFAULT_LINE_HEIGHT = 16;
+
 export function Skeleton({
   className,
   variant = "rectangular",
@@ -17,7 +19,13 @@ export function Skeleton({
   height,
   lines = 1,
 }: SkeletonProps) {
-  const baseClasses = "animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 bg-[length:200%_100%] animate-shimmer";
+  const baseClasses = [
+    "bg-gradient-to-r",
+    "from-gray-200 via-gray-100 to-gray-200",
+    "dark:from-gray-700 dark:via-gray-600 dark:to-gray-700",
+    "bg-[length:200%_100%]",
+    "animate-shimmer"
+  ].join(" ");
   
   const variantClasses = {
     text: "h-4 rounded",
@@ -38,7 +46,7 @@ export function Skeleton({
           <div
             key={i}
             className={cn(baseClasses, variantClasses.text, i === lines - 1 ? "w-3/4" : "w-full")}
-            style={{ height: height || 16 }}
+            style={{ height: height || DEFAULT_LINE_HEIGHT }}
           />
         ))}
       </div>
