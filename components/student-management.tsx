@@ -12,6 +12,7 @@ import { BulkEditStudentsModal } from "./bulk-edit-students-modal";
 import { CollapsibleSection } from "./collapsible-section";
 import { CreateProviderModal } from "./create-provider-modal";
 import { PaginatedList } from "./paginated-list";
+import { StudentListSkeleton } from "./ui/skeleton";
 
 type Student = {
     _id: Id<"students">;
@@ -1049,7 +1050,10 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
             {/* Student List */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                {!filteredStudents || filteredStudents.length === 0 ? (
+                {!filteredStudents ? (
+                    // Show skeleton while loading
+                    <StudentListSkeleton rows={10} />
+                ) : filteredStudents.length === 0 ? (
                     <div className="p-12 text-center text-gray-500 dark:text-gray-400">
                         <GraduationCap className="w-16 h-16 mx-auto mb-4 opacity-50" />
                         <p className="text-lg font-medium">
