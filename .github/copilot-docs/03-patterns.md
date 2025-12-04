@@ -5,11 +5,13 @@
 **Developer-created UI needs English + Thai** - Bilingual applies to **developer-created headings and UI labels only**, NOT user-entered content. Users should NEVER be forced to enter data in both languages.
 
 **What needs bilingual**:
+
 - UI headings and labels (buttons, tabs, menu items)
 - System-generated content (notifications, error messages)
 - Schema fields like `title`/`titleTh` for admin/developer forms
 
 **What does NOT need bilingual**:
+
 - User-entered notes, reasons, descriptions
 - Student names, teacher comments
 - Free-form text inputs
@@ -1564,6 +1566,7 @@ const StudentManagement = lazy(() =>
 **Split monolithic components** into focused, maintainable modules.
 
 **Before** (class-booking.tsx - 2,930 lines):
+
 ```tsx
 // Single massive file with everything
 export function ClassBooking() {
@@ -1577,6 +1580,7 @@ export function ClassBooking() {
 ```
 
 **After** (modular structure):
+
 ```
 components/class-booking/
 ├── index.tsx                    # Main orchestrator (126KB)
@@ -1587,6 +1591,7 @@ components/class-booking/
 ```
 
 **Orchestrator pattern** (index.tsx):
+
 ```tsx
 import { useClassBookingState } from './class-booking-state';
 import { ClassItemDisplay } from './ClassItemDisplay';
@@ -1637,6 +1642,7 @@ export function ClassBooking() {
 **Modularize backend logic** for better organization and maintainability.
 
 **Before** (classes.ts - 2,213 lines):
+
 ```typescript
 // Single massive file with all queries, mutations, helpers
 export const list = query({ /* ... */ });
@@ -1647,6 +1653,7 @@ export const verifyClassAccess = (ctx, classId, userId) => { /* ... */ };
 ```
 
 **After** (modular structure):
+
 ```
 convex/classes/
 ├── index.ts                     # Re-exports (public API)
@@ -1657,6 +1664,7 @@ convex/classes/
 ```
 
 **Re-export pattern** (index.ts):
+
 ```typescript
 // Public API - maintains backward compatibility
 export * from './queries';
@@ -1670,6 +1678,7 @@ export * from './helpers';
 **Organized by purpose**:
 
 **queries.ts** - Read operations:
+
 ```typescript
 export const list = query({ /* ... */ });
 export const get = query({ /* ... */ });
@@ -1679,6 +1688,7 @@ export const getByTeacher = query({ /* ... */ });
 ```
 
 **mutations.ts** - Write operations:
+
 ```typescript
 export const book = mutation({ /* ... */ });
 export const update = mutation({ /* ... */ });
@@ -1688,6 +1698,7 @@ export const delete = mutation({ /* ... */ });
 ```
 
 **helpers.ts** - Shared utilities:
+
 ```typescript
 export const verifyClassAccess = async (ctx, classId, userId) => { /* ... */ };
 export const canModifyClass = async (ctx, classId, userId) => { /* ... */ };

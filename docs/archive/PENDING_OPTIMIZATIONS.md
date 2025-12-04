@@ -877,28 +877,28 @@ export const importStudentsFromCSV = mutation({
 
 ### Implement Soon (MEDIUM Priority) - Phase 2
 
-7. Replace remaining alert() calls with toast notifications
-8. Pagination UI for long lists (frontend)
-9. Memoization for list items
-10. Bundle size optimization
-11. Loading states for slow operations
-12. Loading skeletons for data-loading components
-13. Refactor large components (>500 lines)
-14. Session expiration (24-hour timeout)
+1. Replace remaining alert() calls with toast notifications
+2. Pagination UI for long lists (frontend)
+3. Memoization for list items
+4. Bundle size optimization
+5. Loading states for slow operations
+6. Loading skeletons for data-loading components
+7. Refactor large components (>500 lines)
+8. Session expiration (24-hour timeout)
 
 ### Nice to Have (LOW Priority) - Phase 3
 
-15. Virtual scrolling
-16. Audit logging
-17. Mobile keyboard handling
-18. Swipe gestures
-19. Analytics improvements
-20. CSV import
-21. iCal export
-22. ARIA labels
-23. Keyboard shortcuts
-24. Automated tests
-22. Keyboard shortcuts
+1. Virtual scrolling
+2. Audit logging
+3. Mobile keyboard handling
+4. Swipe gestures
+5. Analytics improvements
+6. CSV import
+7. iCal export
+8. ARIA labels
+9. Keyboard shortcuts
+10. Automated tests
+11. Keyboard shortcuts
 
 ---
 

@@ -59,6 +59,7 @@
 ## Visual Components
 
 ### 1. Help Button (Header)
+
 ```
 ┌─────────────────────────────────────────────────┐
 │  Class Tracker                                  │
@@ -72,6 +73,7 @@
 ```
 
 ### 2. Help Window (Main View)
+
 ```
 ╔══════════════════════════════════════════════════╗
 ║  🔵 Help & Guide                            [✕] ║
@@ -108,6 +110,7 @@
 ```
 
 ### 3. Feature Detail Modal
+
 ```
 ╔══════════════════════════════════════════════════╗
 ║  [← Back]                                  [✕]  ║
@@ -149,36 +152,45 @@
 ## Color Scheme
 
 ### Help Button
+
 - **Background**: `bg-green-100` (light green)
 - **Text**: `text-green-700` (dark green)
 - **Hover**: `bg-green-200` (brighter green)
 - **Icon**: HelpCircle (question mark in circle)
 
 ### Help Window
+
 - **Header**: Green-to-blue gradient
+
   ```
   from-green-600 → via-teal-600 → to-blue-600
   ```
+
 - **Background**: White/dark gray (theme aware)
 - **Category headers**: Blue-purple gradient backgrounds
 - **Feature cards**: Gray gradient with hover effects
 
 ### Feature Detail
+
 - **Header**: Blue-to-purple gradient
+
   ```
   from-blue-600 → via-indigo-600 → to-purple-600
   ```
+
 - **Step numbers**: Blue circles with white text
 - **Tip boxes**: Yellow background with lightbulb icon
 
 ## Interaction States
 
 ### Closed State (Default)
+
 ```
 [🟢 Help]  ← Green button, ready to click
 ```
 
 ### Hover State
+
 ```
 [🟢 Help]  ← Slightly brighter, cursor pointer
    ↑
@@ -186,6 +198,7 @@
 ```
 
 ### Open State - Main Window
+
 ```
 ╔════════════════════╗
 ║ Help Window Open   ║
@@ -197,6 +210,7 @@
 ```
 
 ### Open State - Detail View
+
 ```
 ╔════════════════════╗
 ║ Detail Modal       ║
@@ -211,18 +225,21 @@
 ## Responsive Behavior
 
 ### Desktop (≥768px)
+
 - Full-width modal (max-width: 1280px)
 - Side-by-side feature cards
 - Hover effects active
 - Ample padding and spacing
 
 ### Tablet (≥640px, <768px)
+
 - Slightly narrower modals
 - Single column feature cards
 - Touch-friendly tap targets
 - Optimized spacing
 
 ### Mobile (<640px)
+
 - Full-screen modals
 - Vertical scrolling
 - Large tap targets (44px+)
@@ -232,6 +249,7 @@
 ## Language Switching
 
 ### English Mode
+
 ```
 ┌─────────────────────────────┐
 │ 🟢 Help                     │
@@ -246,6 +264,7 @@
 ```
 
 ### Thai Mode (Switch via 🌐 button)
+
 ```
 ┌─────────────────────────────┐
 │ 🟢 ช่วยเหลือ                │
@@ -262,6 +281,7 @@
 ## Role-Based Content Display
 
 ### Teacher View
+
 ```
 Available Categories:
 ✅ Class Booking (3 features)
@@ -272,6 +292,7 @@ Available Categories:
 ```
 
 ### Moderator View (Boss)
+
 ```
 Available Categories:
 ✅ Class Booking (3 features)
@@ -284,6 +305,7 @@ Available Categories:
 ```
 
 ### Admin View (Evan)
+
 ```
 Available Categories:
 ✅ Class Booking (3 features)
@@ -297,6 +319,7 @@ Available Categories:
 ## Animation Sequences
 
 ### Opening Help Window
+
 ```
 1. User clicks [Help] button
 2. Backdrop fades in (300ms)
@@ -305,6 +328,7 @@ Available Categories:
 ```
 
 ### Expanding Category
+
 ```
 1. User clicks category header
 2. Chevron rotates 90° (300ms)
@@ -313,6 +337,7 @@ Available Categories:
 ```
 
 ### Opening Feature Detail
+
 ```
 1. User clicks feature card
 2. Current view fades out (200ms)
@@ -321,6 +346,7 @@ Available Categories:
 ```
 
 ### Closing
+
 ```
 1. User clicks [X] or [Got it!]
 2. Modal fades out (300ms)
@@ -331,18 +357,21 @@ Available Categories:
 ## Accessibility Features
 
 ### Keyboard Navigation
+
 - **ESC**: Close help window
 - **TAB**: Navigate between interactive elements
 - **ENTER/SPACE**: Activate buttons
 - **Arrow keys**: Scroll content
 
 ### Screen Reader Support
+
 - ARIA labels on all buttons
 - Semantic HTML structure
 - Proper heading hierarchy
 - Alt text for icons (via title attributes)
 
 ### Focus Management
+
 - Focus trapped within modal when open
 - Focus returns to Help button when closed
 - Visible focus indicators on all interactive elements

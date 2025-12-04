@@ -11,6 +11,7 @@ To deploy your Convex app to the cloud, log in by running `npx convex login`.
 ```
 
 This error occurred in both `deploy-production.yml` and `deploy-staging.yml` workflows when running:
+
 ```bash
 npx convex deploy --cmd 'npm run build'
 ```
@@ -18,6 +19,7 @@ npx convex deploy --cmd 'npm run build'
 ## Root Cause
 
 The repository was missing the required `convex.json` configuration file that:
+
 1. Tells the Convex CLI where to find the backend functions directory
 2. Specifies the Node.js runtime version for Convex deployments
 3. Provides project-specific configuration for deployments
@@ -38,6 +40,7 @@ Additionally, the deploy command wasn't configured to pass the Convex deployment
 ```
 
 **Purpose:**
+
 - `functions`: Specifies the directory containing Convex backend functions
 - `node.version`: Ensures Convex uses Node.js 20, matching the project requirements
 
@@ -57,6 +60,7 @@ Added `.convex/` directory to the ignore list:
 Modified both `deploy-production.yml` and `deploy-staging.yml`:
 
 **Before:**
+
 ```yaml
 - name: Deploy Convex backend
   run: npx convex deploy --cmd 'npm run build'
@@ -65,6 +69,7 @@ Modified both `deploy-production.yml` and `deploy-staging.yml`:
 ```
 
 **After:**
+
 ```yaml
 - name: Deploy Convex backend
   run: npx convex deploy --cmd 'npm run build' --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL
@@ -73,6 +78,7 @@ Modified both `deploy-production.yml` and `deploy-staging.yml`:
 ```
 
 **Purpose:** The `--cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL` flag tells Convex to:
+
 1. Deploy the backend functions first
 2. Get the deployment URL
 3. Set it as the `NEXT_PUBLIC_CONVEX_URL` environment variable
@@ -109,19 +115,21 @@ This ensures the Next.js build knows which Convex deployment to connect to.
 The following secrets must be configured in GitHub repository settings → Secrets and variables → Actions:
 
 #### For Production Deployment
+
 - `CONVEX_DEPLOY_KEY`: Deploy key from Convex production project
 - `VERCEL_TOKEN`: Vercel authentication token
 - `VERCEL_ORG_ID`: Vercel organization/team ID
 - `VERCEL_PROJECT_ID`: Vercel project ID
 
 #### For Staging Deployment (Optional)
+
 - `CONVEX_DEPLOY_KEY_STAGING`: Deploy key from Convex staging project
 - Same Vercel secrets as production
 
 ### How to Generate Convex Deploy Keys
 
 1. **Login to Convex Dashboard**
-   - Visit https://dashboard.convex.dev/
+   - Visit <https://dashboard.convex.dev/>
    - Sign in with your account
 
 2. **Select Your Project**
@@ -166,6 +174,7 @@ The following secrets must be configured in GitHub repository settings → Secre
 ### Expected Success Indicators
 
 ✅ **Successful deployment logs should show:**
+
 ```
 Deploying Convex functions...
 ✓ Deployment complete
@@ -177,6 +186,7 @@ Deploying to Vercel...
 ```
 
 ❌ **If deployment still fails, check:**
+
 1. Verify `CONVEX_DEPLOY_KEY` is correctly set in GitHub secrets
 2. Check that the deploy key hasn't expired
 3. Ensure the Convex project exists and is accessible
@@ -187,12 +197,12 @@ Deploying to Vercel...
 After deployment succeeds:
 
 - [ ] Check Convex Dashboard for successful deployment
-  - Visit https://dashboard.convex.dev/
+  - Visit <https://dashboard.convex.dev/>
   - Verify functions are deployed
   - Check deployment logs
 
 - [ ] Check Vercel Dashboard for frontend deployment
-  - Visit https://vercel.com/dashboard
+  - Visit <https://vercel.com/dashboard>
   - Verify production deployment succeeded
   - Check build logs
 
@@ -210,34 +220,41 @@ After deployment succeeds:
 
 - **CI/CD Setup Guide**: `docs/CI_CD_SETUP_GUIDE.md` - Comprehensive guide for setting up all deployment secrets and workflows
 - **Deployment Guide**: `docs/DEPLOYMENT.md` - General deployment instructions
-- **Convex Documentation**: https://docs.convex.dev/ - Official Convex documentation
+- **Convex Documentation**: <https://docs.convex.dev/> - Official Convex documentation
 
 ## Troubleshooting
 
 ### Issue: "Invalid deploy key"
+
 **Solution:** Regenerate the deploy key in Convex dashboard and update the GitHub secret
 
 ### Issue: "Cannot find module 'convex'"
+
 **Solution:** Ensure `npm ci` runs before deployment (already configured in workflows)
 
 ### Issue: "Build failed: NEXT_PUBLIC_CONVEX_URL not set"
+
 **Solution:** Verify the `--cmd-url-env-var-name` flag is present in the deploy command
 
 ### Issue: "Permission denied"
+
 **Solution:** Check that the deploy key has the correct permissions in Convex dashboard
 
 ### Issue: "Project not found"
+
 **Solution:** Verify you're using the correct deploy key for the intended Convex project
 
 ## Security Considerations
 
 ✅ **Best Practices Followed:**
+
 - Deploy keys are stored as GitHub secrets (not in code)
 - `.convex/` directory is excluded from version control
 - `.env.local` is already in `.gitignore`
 - No sensitive data is committed to the repository
 
 ⚠️ **Important Reminders:**
+
 - Never commit deploy keys or API tokens to the repository
 - Regularly rotate deploy keys (every 6-12 months)
 - Use separate deploy keys for production and staging
@@ -246,6 +263,7 @@ After deployment succeeds:
 ## Summary
 
 This fix enables automated Convex deployments in GitHub Actions by:
+
 1. Providing the required `convex.json` configuration
 2. Properly passing the Convex URL to the Next.js build process
 3. Ensuring deployment metadata is not committed to version control
@@ -257,6 +275,7 @@ The changes are minimal, focused, and follow best practices for Convex and Next.
 **Implementation Date:** October 23, 2025  
 **Issue Resolved:** Convex deployment failure in GitHub Actions  
 **Files Modified:**
+
 - `convex.json` (created)
 - `.gitignore` (updated)
 - `.github/workflows/deploy-production.yml` (updated)

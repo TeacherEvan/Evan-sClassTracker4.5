@@ -12,6 +12,7 @@ Implemented a comprehensive data import system for the Sangsom Project schedule,
 ## Problem Statement
 
 The Sangsom Project had a detailed schedule documented on paper (November 2025, พ.ศ. 2568) that needed to be digitized and integrated into the Class Tracker system. The schedule included:
+
 - 32 classes across 3 weeks
 - Multiple class levels (K.1, K.2, K.3, อ.1, อ.2, อ.3)
 - Project topics and activity songs (bilingual Thai/English)
@@ -25,6 +26,7 @@ The Sangsom Project had a detailed schedule documented on paper (November 2025, 
 **Location**: `/SangsomProjectApr.md`
 
 Transcribed the complete schedule from the paper image into a structured Markdown document:
+
 - ✅ 32 class entries with date, time, grade, class number
 - ✅ Bilingual topic descriptions (Thai + English)
 - ✅ Activity/song names for each session
@@ -32,6 +34,7 @@ Transcribed the complete schedule from the paper image into a structured Markdow
 - ✅ Organized by week and day
 
 **Sample Entry**:
+
 ```markdown
 #### จันทร์ที่ 3 พ.ย. 2568 (Monday, November 3, 2025)
 **เวลา 9.00 - 10.30 น.**
@@ -49,12 +52,14 @@ Implemented Convex mutations for idempotent data import:
 #### Functions Created
 
 **`seedSangsomProject`**
+
 - Main seeding mutation
 - Creates school, users, students, location, and classes
 - Idempotent (safe to re-run)
 - Returns detailed results with credentials
 
 **`checkSangsomData`**
+
 - Query existing Sangsom data
 - Returns counts of classes and students
 - Used for verification before seeding
@@ -132,6 +137,7 @@ Created bilingual UI component with React/Next.js:
 Integrated seeding component into admin panel:
 
 1. **Lazy Load Component**
+
    ```tsx
    const SangsomSeedButton = lazy(() => 
      import("@/components/sangsom-seed-button").then(m => ({ default: m.SangsomSeedButton }))
@@ -213,25 +219,30 @@ Comprehensive documentation including:
 ## Data Seeded
 
 ### School
+
 - **Name**: Sangsom School / โรงเรียนสังสม
 - **Moderator**: Created and linked
 
 ### Users
+
 - **Teacher**: `sangsom_teacher` / `TeacherPongsak`
 - **Moderator**: `sangsom_moderator` / `TeacherSangsomModerator`
 
 ### Location
+
 - **Name**: Sangsom Classroom / ห้องเรียนสังสม
 - **Type**: School location
 - **Status**: Active
 
 ### Students (~15-20)
+
 - One student per unique class code
 - Naming: "Student K.1/1 Sangsom"
 - Unique IDs: `SANG-K1-<timestamp>-<random>`
 - Grades: K.1, K.2, K.3, อ.1, อ.2, อ.3
 
 ### Classes (32)
+
 - **Date Range**: November 3-24, 2025
 - **Sessions**: Morning (9:00-10:30), Late Morning (10:30-12:00)
 - **Duration**: 90 minutes each
@@ -284,6 +295,7 @@ Since Convex backend is not running in this environment, here's what needs testi
 ### For Administrators
 
 1. **Access the Feature**
+
    ```
    Login → Admin Panel → Data Import Tab
    ```
@@ -305,6 +317,7 @@ Since Convex backend is not running in this environment, here's what needs testi
 ### For Teachers (Sangsom)
 
 1. **Login**
+
    ```
    Username: sangsom_teacher
    Password: TeacherPongsak
@@ -327,19 +340,22 @@ Since Convex backend is not running in this environment, here's what needs testi
 ### Common Issues
 
 **Issue**: API not found (`seedSangsomProject is not defined`)  
-**Solution**: 
+**Solution**:
+
 1. Stop Convex dev server
 2. Run `npx convex dev` to regenerate types
 3. Refresh browser
 
 **Issue**: Classes don't appear in calendar  
 **Solution**:
+
 1. Navigate to November 2025 (not current month)
 2. Check status filter (show "approved" classes)
 3. Verify correct school selected
 
 **Issue**: "School exists but missing records"  
 **Solution**:
+
 1. Delete Sangsom School via admin UI
 2. Re-run seeder (will recreate all)
 
@@ -391,6 +407,7 @@ Potential improvements for this feature:
 ## Conclusion
 
 Successfully implemented a complete data import system that digitizes the Sangsom Project paper schedule. The solution includes:
+
 - Robust backend logic with error handling
 - User-friendly bilingual admin interface
 - Comprehensive documentation

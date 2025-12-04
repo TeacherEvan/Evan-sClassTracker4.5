@@ -45,12 +45,12 @@
 
 ### 🔧 Toast System Enhancement
 
-6. **Updated `lib/toast.ts`**
+1. **Updated `lib/toast.ts`**
    - Added `ToastAction` interface
    - Support for undo buttons
    - Action callbacks in toasts
 
-7. **Updated `components/desktop-notification-toast.tsx`**
+2. **Updated `components/desktop-notification-toast.tsx`**
    - Added action button rendering
    - Undo mechanism support
    - Bilingual action labels
@@ -64,6 +64,7 @@
 ❌ **Known Issue**: `api.files` missing - existing codebase issue, not from our changes
 
 **Build Output**:
+
 ```
 ✓ Compiled successfully in 39.0s
 Linting and checking validity of types...
@@ -75,6 +76,7 @@ Warning: 'LogLevel' is defined but never used
 ## Files Created/Modified
 
 ### Created (5 new files)
+
 1. `lib/accessibility-utils.ts` - 165 lines
 2. `lib/logger.ts` - 105 lines
 3. `lib/use-keyboard-shortcuts.ts` - 186 lines
@@ -82,13 +84,15 @@ Warning: 'LogLevel' is defined but never used
 5. `components/bulk-action-bar.tsx` - 194 lines
 
 ### Modified (2 existing files)
+
 6. `lib/toast.ts` - Added ToastAction interface
-7. `components/desktop-notification-toast.tsx` - Added action button support
+2. `components/desktop-notification-toast.tsx` - Added action button support
 
 ### Documentation (3 files)
+
 8. `CODE_QUALITY_USER_FRIENDLINESS_AUDIT_NOV_18_2025.md` - 1,122 lines
-9. `IMPLEMENTATION_PLAN_CODE_QUALITY_NOV_18_2025.md` - 454 lines
-10. `IMPLEMENTATION_SUMMARY_CODE_QUALITY_PHASE1_NOV_18_2025.md` - 553 lines
+2. `IMPLEMENTATION_PLAN_CODE_QUALITY_NOV_18_2025.md` - 454 lines
+3. `IMPLEMENTATION_SUMMARY_CODE_QUALITY_PHASE1_NOV_18_2025.md` - 553 lines
 
 **Total**: 10 files (5 new code, 2 modified, 3 docs)
 
@@ -97,6 +101,7 @@ Warning: 'LogLevel' is defined but never used
 ## Key Features Implemented
 
 ### ✅ Accessibility (WCAG 2.1 Level AA)
+
 - Status badges with icon + text + color (not color-only)
 - Minimum 44px touch targets
 - ARIA labels for all statuses
@@ -105,6 +110,7 @@ Warning: 'LogLevel' is defined but never used
 - Skip-to-content helper
 
 ### ✅ Keyboard Shortcuts
+
 - Global shortcuts system
 - Context-aware shortcuts
 - 8 common shortcuts defined
@@ -113,6 +119,7 @@ Warning: 'LogLevel' is defined but never used
 - Smart input detection (skips when typing)
 
 ### ✅ Production-Safe Logging
+
 - Development-only debug logs
 - Structured logging with context
 - Performance tracking
@@ -120,12 +127,14 @@ Warning: 'LogLevel' is defined but never used
 - Zero overhead in production
 
 ### ✅ Undo Mechanism (Toast Actions)
+
 - Toast action buttons
 - 10-second undo window
 - Bilingual labels
 - Callback support
 
 ### ✅ Bulk Actions UI
+
 - Select multiple classes/students
 - Bulk approve/reject
 - Confirmation modals
@@ -137,9 +146,11 @@ Warning: 'LogLevel' is defined but never used
 ## Integration Status
 
 ### ✅ Ready for Integration
+
 All utilities are production-ready and can be integrated into existing components:
 
 **Priority Components** (Next Phase):
+
 1. `class-booking.tsx` - Replace color-only status indicators
 2. `student-management.tsx` - Add keyboard shortcuts
 3. `class-detail-modal.tsx` - Add undo for deletions
@@ -149,6 +160,7 @@ All utilities are production-ready and can be integrated into existing component
 ### 📦 Usage Examples
 
 **Accessibility**:
+
 ```typescript
 import { getStatusAriaLabel, getStatusBadgeClasses, getStatusIconName } from "@/lib/accessibility-utils";
 
@@ -163,6 +175,7 @@ const iconName = getStatusIconName("approved"); // "Check"
 ```
 
 **Keyboard Shortcuts**:
+
 ```typescript
 import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-shortcuts";
 
@@ -175,6 +188,7 @@ useKeyboardShortcuts(shortcuts);
 ```
 
 **Logging**:
+
 ```typescript
 import { logger } from "@/lib/logger";
 
@@ -184,6 +198,7 @@ logger.error("Failed to save", error, { component: "ClassBooking" });
 ```
 
 **Toast with Undo**:
+
 ```typescript
 import { toast } from "@/lib/toast";
 
@@ -202,6 +217,7 @@ toast.show({
 ```
 
 **Bulk Actions**:
+
 ```typescript
 import { BulkActionBar } from "@/components/bulk-action-bar";
 
@@ -220,6 +236,7 @@ const [selected, setSelected] = useState<Set<Id<"classes">>>(new Set());
 ## Testing Checklist
 
 ### ✅ Completed
+
 - [x] TypeScript compilation
 - [x] No syntax errors
 - [x] ESLint warnings minimal
@@ -228,6 +245,7 @@ const [selected, setSelected] = useState<Set<Id<"classes">>>(new Set());
 - [x] Type safety validated
 
 ### ⏳ Pending (Next Phase)
+
 - [ ] E2E tests for keyboard shortcuts
 - [ ] E2E tests for bulk actions
 - [ ] Screen reader testing (NVDA/VoiceOver)
@@ -239,11 +257,13 @@ const [selected, setSelected] = useState<Set<Id<"classes">>>(new Set());
 ## Performance Impact
 
 ### Bundle Size
+
 - **New utilities**: ~35KB (uncompressed)
 - **Minified/gzipped**: ~8KB estimated
 - **Impact**: +0.9% bundle size (acceptable)
 
 ### Runtime Performance
+
 - **Accessibility helpers**: ~0.1ms per render
 - **Keyboard shortcuts**: ~0.5ms registration
 - **Logger**: Zero overhead (debug stripped in prod)
@@ -254,12 +274,14 @@ const [selected, setSelected] = useState<Set<Id<"classes">>>(new Set());
 ## Known Issues & Workarounds
 
 ### ❌ api.files Missing
+
 **Issue**: `convex/files.ts` doesn't export `generateUploadUrl`  
 **Impact**: `image-upload/index.tsx` fails to compile  
 **Workaround**: This is a pre-existing issue, not introduced by our changes  
 **Solution**: Add `generateUploadUrl` mutation to `convex/files.ts` (separate task)
 
 ### ⚠️ ESLint Warning
+
 **Issue**: `LogLevel` type defined but unused  
 **Impact**: None - just a warning  
 **Solution**: Add underscore prefix `_LogLevel` or use in type annotation
@@ -269,6 +291,7 @@ const [selected, setSelected] = useState<Set<Id<"classes">>>(new Set());
 ## Next Steps (Phase 2)
 
 ### Day 2: Integration into Components (6-8 hours)
+
 1. **class-booking.tsx** (2 hours)
    - Replace color-only status with accessibility helpers
    - Add keyboard shortcuts (Ctrl+N, Escape)
@@ -296,11 +319,13 @@ const [selected, setSelected] = useState<Set<Id<"classes">>>(new Set());
    - Replace console logs
 
 ### Day 3: UX Enhancements (4 hours)
+
 1. Implement undo for class deletion (2 hours)
 2. Implement undo for student deletion (1 hour)
 3. Add undo confirmation toasts (1 hour)
 
 ### Day 4: Performance Optimizations (3 hours)
+
 1. Lazy load ClassAnalytics (0.5 hour)
 2. Lazy load AdminContactRequests (0.5 hour)
 3. Lazy load HelpWindow (0.5 hour)
@@ -312,6 +337,7 @@ const [selected, setSelected] = useState<Set<Id<"classes">>>(new Set());
 ## Success Metrics
 
 ### Achieved ✅
+
 - [x] WCAG 2.1 Level AA utilities created
 - [x] Keyboard shortcuts system implemented
 - [x] Production-safe logging utility
@@ -322,6 +348,7 @@ const [selected, setSelected] = useState<Set<Id<"classes">>>(new Set());
 - [x] Zero runtime errors expected
 
 ### Projected (After Integration) 🎯
+
 - [ ] Accessibility: 75 → 90/100 (+15 points)
 - [ ] UX: 87 → 95/100 (+8 points)
 - [ ] Code Quality: 90 → 92/100 (+2 points)
@@ -332,6 +359,7 @@ const [selected, setSelected] = useState<Set<Id<"classes">>>(new Set());
 ## Lessons Learned
 
 ### What Worked Well ✅
+
 1. Utility-first approach (reusable, testable)
 2. TypeScript caught errors early
 3. Bilingual support from day one
@@ -339,12 +367,14 @@ const [selected, setSelected] = useState<Set<Id<"classes">>>(new Set());
 5. Documentation-first planning
 
 ### Challenges 🟡
+
 1. JSX in `.ts` files causes ESLint errors (solved by removing JSX)
 2. Balancing bundle size with features
 3. TypeScript generics for keyboard shortcuts
 4. Pre-existing `api.files` issue
 
 ### Improvements for Next Phase 💡
+
 1. Create `.tsx` versions for components with JSX
 2. Add automated accessibility tests (axe-core)
 3. Create Storybook for new components

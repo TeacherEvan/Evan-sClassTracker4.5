@@ -13,12 +13,14 @@
 **Impact**: +5 points UX, improves WCAG compliance
 
 **Changes**:
+
 1. ✅ Add ARIA labels to color-only status indicators
 2. ✅ Fix touch target sizes (minimum 44px)
 3. ✅ Add `role` and `aria-label` attributes
 4. ✅ Improve focus states visibility
 
 **Implementation**:
+
 - Create `lib/accessibility-utils.ts` with helper functions
 - Update status indicators across 30+ components
 - Add global CSS for minimum touch targets
@@ -34,6 +36,7 @@
 **Impact**: +8 points UX, power user efficiency
 
 **Shortcuts**:
+
 - `Ctrl+N` / `Cmd+N` - New class (when on class booking)
 - `Ctrl+K` / `Cmd+K` - Search/filter classes
 - `Escape` - Close modals/forms
@@ -41,6 +44,7 @@
 - `?` - Show keyboard shortcuts help
 
 **Implementation**:
+
 - Create `lib/use-keyboard-shortcuts.ts` hook
 - Add global shortcuts to `app/page.tsx`
 - Context-aware shortcuts in components
@@ -56,12 +60,14 @@
 **Impact**: +2 points Code Quality, production-ready
 
 **Changes**:
+
 1. ✅ Create `lib/logger.ts` utility
 2. ✅ Replace console.* with logger in components
 3. ✅ Keep console.* in scripts (acceptable)
 4. ✅ Add NODE_ENV checks for dev-only logs
 
 **Implementation**:
+
 ```typescript
 // lib/logger.ts
 export const logger = {
@@ -94,12 +100,14 @@ export const logger = {
 **Impact**: +3 points UX
 
 **Implementation**:
+
 - Extend toast system with action buttons
 - Add 10-second undo window
 - Queue soft deletes with timer
 - Cancel timer on undo click
 
 **Example**:
+
 ```typescript
 // Enhanced toast with undo
 toast.show({
@@ -127,6 +135,7 @@ toast.show({
 **Impact**: +4 points UX
 
 **Features**:
+
 - Checkbox selection for classes/students
 - "Select All" / "Clear Selection" buttons
 - Bulk approve/reject classes
@@ -134,6 +143,7 @@ toast.show({
 - Action confirmation modal
 
 **Implementation**:
+
 - Add selection state to class-booking
 - Create BulkActionBar component
 - Wire to existing `convex/bulkOperations.ts`
@@ -150,12 +160,14 @@ toast.show({
 **Impact**: +5 points Performance, faster initial load
 
 **Targets**:
+
 1. `ClassAnalytics` - Loaded only when needed
 2. `AdminContactRequests` - Admin-only
 3. `HelpWindow` - Loaded on first open
 4. `TeacherActivityDashboard` - Teacher-only
 
 **Implementation**:
+
 ```typescript
 import dynamic from "next/dynamic";
 
@@ -176,12 +188,14 @@ const ClassAnalytics = dynamic(() => import("./class-analytics"), {
 **Impact**: +3 points Performance
 
 **Targets**:
+
 - Conflict detection function
 - Calendar date calculations
 - Filter/sort operations
 - Student list rendering
 
 **Implementation**:
+
 ```typescript
 import { useMemo } from "react";
 
@@ -287,6 +301,7 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
 ## Summary of Changes
 
 ### Files to Create (5 new files)
+
 1. ✅ `lib/accessibility-utils.ts` - Accessibility helpers
 2. ✅ `lib/use-keyboard-shortcuts.ts` - Keyboard shortcuts hook
 3. ✅ `lib/logger.ts` - Logging utility
@@ -294,6 +309,7 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
 5. ✅ `components/keyboard-shortcuts-help.tsx` - Help modal
 
 ### Files to Modify (~50 files)
+
 - **High Priority**: 15 files with accessibility improvements
 - **Medium Priority**: 8 files with lazy loading
 - **Low Priority**: 27 files with console → logger migration
@@ -315,42 +331,49 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
 ## Implementation Order (Week 1)
 
 ### Day 1 (4 hours) ✅ EXECUTING NOW
+
 - [x] Create accessibility utils
 - [x] Update 10 high-traffic components
 - [x] Add ARIA labels to status indicators
 - [x] Fix touch target sizes
 
 ### Day 2 (4 hours)
+
 - [ ] Create keyboard shortcuts hook
 - [ ] Implement global shortcuts
 - [ ] Add shortcuts to 5 key components
 - [ ] Create shortcuts help modal
 
 ### Day 3 (6 hours)
+
 - [ ] Create logger utility
 - [ ] Replace console.* in 15 components
 - [ ] Extend toast for undo actions
 - [ ] Implement undo for class deletion
 
 ### Day 4 (6 hours)
+
 - [ ] Create bulk action bar component
 - [ ] Add checkbox selection to class-booking
 - [ ] Wire bulk operations
 - [ ] Add confirmation modals
 
 ### Day 5 (4 hours)
+
 - [ ] Lazy load 4 heavy components
 - [ ] Add memoization to 6 components
 - [ ] Test performance improvements
 - [ ] Measure bundle size reduction
 
 ### Day 6 (3 hours)
+
 - [ ] Code review and testing
 - [ ] Update documentation
 - [ ] Create changelog entry
 - [ ] Prepare for deployment
 
 ### Day 7 (2 hours)
+
 - [ ] Final testing (E2E tests)
 - [ ] Deploy to staging
 - [ ] Monitor for issues
@@ -374,11 +397,13 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
 ## Risk Mitigation
 
 **Risks**:
+
 1. Breaking existing functionality
 2. Regression in E2E tests
 3. Performance degradation from new features
 
 **Mitigation**:
+
 1. Small, incremental changes
 2. Run E2E tests after each phase
 3. Performance profiling before/after
@@ -390,12 +415,14 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
 ## Post-Implementation
 
 ### Documentation Updates
+
 1. Update README with keyboard shortcuts
 2. Add accessibility guide to docs/
 3. Document undo mechanism
 4. Update CHANGELOG.md
 
 ### Monitoring
+
 1. Track bundle size in CI/CD
 2. Monitor error rates in production
 3. Collect user feedback on new features

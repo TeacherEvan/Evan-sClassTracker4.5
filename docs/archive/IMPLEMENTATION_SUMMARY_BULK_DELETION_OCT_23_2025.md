@@ -20,12 +20,14 @@
 **Problem**: Inline student creation was missing required fields (grade, class)
 
 **Solution**:
+
 - Added grade dropdown (K1-P6)
 - Added class dropdown (/1-/10)
 - Added client-side validation
 - Updated form reset logic
 
 **Files Changed**:
+
 - `components/weekly-calendar.tsx`
 
 **Impact**: Users can now create valid students directly from calendar without validation errors
@@ -37,6 +39,7 @@
 **Problem**: No bulk deletion capability for users
 
 **Solution**:
+
 - Created `bulkDeleteUsers` mutation in `convex/users.ts`
 - Authorization: Admin can delete anyone except other admins, moderators can delete teachers only
 - Rate limiting: 5 operations per minute
@@ -44,10 +47,12 @@
 - Cleanup: Removes moderator from school when deleted
 
 **Files Changed**:
+
 - `convex/users.ts` (new mutation)
 - `components/user-management.tsx` (UI updates)
 
 **Features**:
+
 - ✅ Bulk selection with checkboxes
 - ✅ Select All / Deselect All
 - ✅ Visual feedback (blue highlight)
@@ -64,16 +69,19 @@
 **Problem**: No bulk deletion UI for students (mutation existed but unused)
 
 **Solution**:
+
 - Reused existing `bulkDeleteStudents` mutation from `convex/bulkOperations.ts`
 - Added rate limiting (10 ops/min)
 - UI: Checkboxes, select all, confirmation modal
 - Protection: Students with classes cannot be deleted
 
 **Files Changed**:
+
 - `convex/bulkOperations.ts` (added rate limiting)
 - `components/student-management.tsx` (UI updates)
 
 **Features**:
+
 - ✅ Bulk selection with checkboxes in table
 - ✅ Select All / Deselect All
 - ✅ Visual feedback (blue highlight)
@@ -103,11 +111,13 @@
 ### Data Validation
 
 **Students**:
+
 - Cannot delete if associated classes exist
 - Grade must be selected (K1-P6)
 - Class must be selected (/1-/10)
 
 **Users**:
+
 - Cannot delete self
 - Admins cannot delete other admins
 - Moderators limited to teachers
@@ -119,6 +129,7 @@
 ### New Mutations
 
 #### `convex/users.ts::bulkDeleteUsers`
+
 ```typescript
 export const bulkDeleteUsers = mutation({
   args: {
@@ -133,6 +144,7 @@ export const bulkDeleteUsers = mutation({
 ```
 
 #### `convex/bulkOperations.ts::bulkDeleteStudents` (enhanced)
+
 ```typescript
 // Added optional userId parameter for rate limiting
 args: {
@@ -144,18 +156,21 @@ args: {
 ### UI Components Updated
 
 #### `components/user-management.tsx`
+
 - Added state: `selectedUsers`, `showBulkDeleteConfirm`
 - New handlers: `toggleUserSelection`, `toggleSelectAll`, `handleBulkDelete`
 - New UI: Checkboxes, selection controls, bulk delete modal
 - Filtering: `selectableUsers` computed based on role
 
 #### `components/student-management.tsx`
+
 - Added state: `selectedStudents`, `showBulkDeleteConfirm`
 - New handlers: `toggleStudentSelection`, `toggleSelectAll`, `handleBulkDelete`
 - New UI: Checkbox column, selection controls, bulk delete modal
 - Enhanced table with selection highlighting
 
 #### `components/weekly-calendar.tsx`
+
 - Added state: `newStudentGrade`, `newStudentClass`
 - New UI: Grade and class dropdowns in inline form
 - New validation: Check all three fields before creation
@@ -166,12 +181,15 @@ args: {
 ## Testing
 
 ### Build Status
+
 ✅ **Successful**: `npm run build` completes without errors
 ✅ **Linting**: No new warnings introduced
 ✅ **Type Checking**: All TypeScript types valid
 
 ### Manual Testing Required
+
 See `TESTING_BULK_DELETION.md` for comprehensive test suites:
+
 - 8 test suites
 - 40+ individual test cases
 - Edge cases and error scenarios
@@ -179,6 +197,7 @@ See `TESTING_BULK_DELETION.md` for comprehensive test suites:
 - Regression testing
 
 ### Key Test Scenarios
+
 1. ✅ Weekly calendar student creation with all fields
 2. ⏳ Admin bulk delete teachers and moderators
 3. ⏳ Moderator bulk delete teachers only
@@ -193,6 +212,7 @@ See `TESTING_BULK_DELETION.md` for comprehensive test suites:
 ## Security Considerations
 
 ### Implemented Controls
+
 ✅ **Authorization**: Role-based access control
 ✅ **Rate Limiting**: Prevents abuse and DoS
 ✅ **UI Safeguards**: Confirmation modals, visual feedback
@@ -200,11 +220,13 @@ See `TESTING_BULK_DELETION.md` for comprehensive test suites:
 ✅ **Cleanup**: School-moderator relationships maintained
 
 ### Identified Risks (Medium Level)
+
 ⚠️ **Permanent Data Loss**: Deletions are irreversible
 ⚠️ **Cascade Effects**: Related data (classes, notifications) may be orphaned
 ⚠️ **No Audit Trail**: Deletions not logged for compliance
 
 ### Recommendations (Future Work)
+
 1. 📝 **Soft Deletes**: Implement grace period for recovery
 2. 📝 **Audit Logging**: Track who deleted what and when
 3. 📝 **Export Before Delete**: Allow data export before deletion
@@ -217,6 +239,7 @@ See `SECURITY_REVIEW_BULK_DELETION.md` for full analysis.
 ## Documentation
 
 ### New Documents
+
 1. **`SECURITY_REVIEW_BULK_DELETION.md`**
    - Security analysis
    - Authorization review
@@ -239,11 +262,13 @@ See `SECURITY_REVIEW_BULK_DELETION.md` for full analysis.
 ## Deployment Notes
 
 ### Prerequisites
+
 - Convex schema must be deployed first
 - No database migrations required
 - Backwards compatible with existing data
 
 ### Deployment Steps
+
 1. Deploy Convex functions: `npx convex deploy`
 2. Verify schema updates: Check `convex/_generated/`
 3. Deploy Next.js: `npm run build && npm start` or deploy to Vercel
@@ -253,7 +278,9 @@ See `SECURITY_REVIEW_BULK_DELETION.md` for full analysis.
    - Confirm rate limiting works
 
 ### Rollback Plan
+
 If issues occur:
+
 1. Revert PR branch
 2. Re-deploy previous Convex functions
 3. Previous functionality remains intact (single user/student deletion)
@@ -263,11 +290,13 @@ If issues occur:
 ## Performance Impact
 
 ### Expected Behavior
+
 - **Bulk operations**: ~1-2 seconds for 10 items
 - **UI rendering**: No lag with 100+ items
 - **Rate limiting overhead**: Negligible (<10ms)
 
 ### Optimizations
+
 - Client-side state management (React)
 - Efficient database queries with indexes
 - Batch operations in single mutation call
@@ -277,11 +306,13 @@ If issues occur:
 ## User Experience
 
 ### Before
+
 ❌ Must delete users one at a time
 ❌ Student creation incomplete from calendar
 ❌ Tedious for bulk operations
 
 ### After
+
 ✅ Select multiple users/students
 ✅ One-click bulk deletion
 ✅ Clear visual feedback
@@ -302,16 +333,19 @@ If issues occur:
 ## Future Enhancements
 
 ### Priority 1 (High)
+
 - [ ] Implement soft delete with grace period
 - [ ] Add audit logging for compliance
 - [ ] Document cascade deletion behavior
 
 ### Priority 2 (Medium)
+
 - [ ] Export data before deletion option
 - [ ] Batch size limits (e.g., max 50 at once)
 - [ ] Email notifications for bulk operations
 
 ### Priority 3 (Low)
+
 - [ ] Undo functionality (time-limited)
 - [ ] Required reason field for deletion
 - [ ] Advanced filtering for bulk selection
@@ -321,12 +355,14 @@ If issues occur:
 ## Success Metrics
 
 ### Development
+
 ✅ All features implemented
 ✅ Build succeeds
 ✅ No new errors or warnings
 ✅ Documentation complete
 
 ### Deployment (To Be Measured)
+
 ⏳ User adoption rate
 ⏳ Time saved per bulk operation
 ⏳ Error rate / failed operations
@@ -337,6 +373,7 @@ If issues occur:
 ## Conclusion
 
 Successfully implemented bulk deletion features for both users and students, along with fixing the student creation bug. The solution includes:
+
 - Comprehensive authorization and rate limiting
 - User-friendly UI with safeguards
 - Extensive documentation and testing guides
@@ -351,6 +388,7 @@ Successfully implemented bulk deletion features for both users and students, alo
 ## Related Files
 
 ### Modified Files
+
 - `components/weekly-calendar.tsx`
 - `components/user-management.tsx`
 - `components/student-management.tsx`
@@ -358,11 +396,13 @@ Successfully implemented bulk deletion features for both users and students, alo
 - `convex/bulkOperations.ts`
 
 ### New Files
+
 - `SECURITY_REVIEW_BULK_DELETION.md`
 - `TESTING_BULK_DELETION.md`
 - `IMPLEMENTATION_SUMMARY_BULK_DELETION_OCT_23_2025.md`
 
 ### Reference Files
+
 - `convex/schema.ts` (unchanged)
 - `convex/rateLimit.ts` (used, unchanged)
 - `lib/toast.ts` (used, unchanged)
@@ -372,6 +412,7 @@ Successfully implemented bulk deletion features for both users and students, alo
 ## Questions & Support
 
 For questions about this implementation, refer to:
+
 1. This document for overview
 2. `TESTING_BULK_DELETION.md` for testing instructions
 3. `SECURITY_REVIEW_BULK_DELETION.md` for security details

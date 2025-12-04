@@ -313,13 +313,13 @@ const handleCreateStudent = async () => {
 
 ### Frontend Files
 
-3. **`components/class-booking.tsx`** (3 major changes)
+1. **`components/class-booking.tsx`** (3 major changes)
    - Lines 144-152: Added 5 new state variables
    - Lines 790-920: Updated student creation form UI (type toggle, conditional fields)
    - Lines 599-665: Updated `handleCreateStudent` function (validation, type conversion)
    - Line 649: Changed button text "Request Class" → "Req/Book Class"
 
-4. **`components/hierarchical-student-selector.tsx`** (1 change)
+2. **`components/hierarchical-student-selector.tsx`** (1 change)
    - Lines 183-213: Added guardian students section with purple theme
 
 ---

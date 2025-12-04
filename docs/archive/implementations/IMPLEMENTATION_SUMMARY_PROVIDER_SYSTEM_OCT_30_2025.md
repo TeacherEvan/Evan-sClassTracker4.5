@@ -466,23 +466,23 @@ classes.forEach(c => {
 
 ### Supporting Backend (3 files)
 
-6. ✅ `convex/cancellationRequests.ts` - Optional schoolId handling with type-safe locals
-7. ✅ `convex/exports.ts` - Optional schoolId in export logic
-8. ✅ `convex/postClassNotes.ts` - Optional schoolId in notes with type-safe locals
+1. ✅ `convex/cancellationRequests.ts` - Optional schoolId handling with type-safe locals
+2. ✅ `convex/exports.ts` - Optional schoolId in export logic
+3. ✅ `convex/postClassNotes.ts` - Optional schoolId in notes with type-safe locals
 
 ### Frontend Components (5 files)
 
-9. ✅ `components/class-booking.tsx` - Type updates for optional schoolId
-10. ✅ `components/merge-classes-modal.tsx` - Type updates
-11. ✅ `components/class-conflict-modal.tsx` - Type updates
-12. ✅ `components/weekly-calendar.tsx` - ClassWithDetails type updated (optional schoolId, added providerId)
-13. ✅ `components/class-detail-modal.tsx` - ClassWithDetails type updated (optional schoolId, added providerId)
+1. ✅ `components/class-booking.tsx` - Type updates for optional schoolId
+2. ✅ `components/merge-classes-modal.tsx` - Type updates
+3. ✅ `components/class-conflict-modal.tsx` - Type updates
+4. ✅ `components/weekly-calendar.tsx` - ClassWithDetails type updated (optional schoolId, added providerId)
+5. ✅ `components/class-detail-modal.tsx` - ClassWithDetails type updated (optional schoolId, added providerId)
 
 ### Documentation (3 files)
 
-14. ✅ This file - Implementation summary
-15. ✅ `docs/ARCHITECTURE.md` - Updated with Provider System
-16. ✅ `.github/copilot-docs/03-patterns.md` - Added Pattern #22: Provider System
+1. ✅ This file - Implementation summary
+2. ✅ `docs/ARCHITECTURE.md` - Updated with Provider System
+3. ✅ `.github/copilot-docs/03-patterns.md` - Added Pattern #22: Provider System
 
 ---
 

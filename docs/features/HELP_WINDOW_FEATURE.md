@@ -7,54 +7,66 @@ The Help Window is an interactive, bilingual (English/Thai) help system that pro
 ## Features
 
 ### 1. **Role-Based Content**
+
 The help system automatically filters content based on the user's role:
+
 - **Teachers**: See features related to booking classes, messaging, calendar, teacher's helper, etc.
 - **Moderators (Boss)**: See features for approving bookings, analytics, activity logs, location management, etc.
 - **Admin (Evan)**: See all features including user management, school management, system administration
 - **Guardians**: See guardian-specific features
 
 ### 2. **Bilingual Support**
+
 - All content is available in both English and Thai
 - Automatically uses the current language setting
 - Language can be switched using the globe icon in the header
 - Consistent with the rest of the application's bilingual approach
 
 ### 3. **Organized by Categories**
+
 Content is organized into 5 main categories:
 
 #### **Class Booking** (การจองชั้นเรียน)
+
 - Book a Class
 - Approve Class Bookings
 - View Calendar
 
 #### **Messages & Communication** (ข้อความและการสื่อสาร)
+
 - Send Messages
 - Notifications & Alerts
 
 #### **Reports & Analytics** (รายงานและการวิเคราะห์)
+
 - Analytics Dashboard
 - Teacher Activity Logs
 
 #### **Management & Administration** (การจัดการและการบริหาร)
+
 - Manage Students
 - Manage Locations
 - Manage Users
 - Manage Schools
 
 #### **Advanced Features** (ฟีเจอร์ขั้นสูง)
+
 - Teacher's Helper
 - Events & Reminders
 - Post-Class Notes
 - Contact Admin
 
 ### 4. **Interactive Navigation**
+
 - Click category headers to expand/collapse feature lists
 - Click any feature to view detailed instructions
 - Navigate back from details to feature list
 - Close button returns to main application
 
 ### 5. **Detailed Step-by-Step Instructions**
+
 Each feature includes:
+
 - **Title & Icon**: Visual identification
 - **Description**: What the feature does
 - **Step-by-Step Guide**: Numbered instructions
@@ -64,6 +76,7 @@ Each feature includes:
 ## User Interface
 
 ### Main Help Window
+
 ```
 ┌─────────────────────────────────────────────┐
 │  [X]                                        │
@@ -88,6 +101,7 @@ Each feature includes:
 ```
 
 ### Feature Detail Modal
+
 ```
 ┌─────────────────────────────────────────────┐
 │  [←]                               [X]      │
@@ -114,6 +128,7 @@ Each feature includes:
 ## Access Points
 
 ### Header Button (Primary)
+
 - Green button with HelpCircle icon
 - Located in the top-right header area
 - Text: "Help" (English) / "ช่วยเหลือ" (Thai)
@@ -121,6 +136,7 @@ Each feature includes:
 - Visible on both desktop and mobile
 
 ### Visual Design
+
 - **Main Window**: Green-teal-blue gradient header
 - **Detail Modal**: Blue-indigo-purple gradient header
 - **Feature Cards**: Light gray gradient backgrounds with hover effects
@@ -130,6 +146,7 @@ Each feature includes:
 ## Implementation Details
 
 ### Files Created
+
 1. **`lib/help-content.ts`** (867 lines)
    - Comprehensive help content data structure
    - 20+ features across 5 categories
@@ -157,7 +174,9 @@ Each feature includes:
    - State management for show/hide
 
 ### Integration Pattern
+
 Follows existing patterns in the codebase:
+
 - Uses `useLanguage()` hook for bilingual support
 - Styled with Tailwind CSS v4
 - Modal overlay with backdrop blur
@@ -165,6 +184,7 @@ Follows existing patterns in the codebase:
 - Consistent with other modal components (NotificationWindow, UpdateAnnouncementModal)
 
 ### Code Quality
+
 - ✅ TypeScript strict mode compliant
 - ✅ ESLint validated (no errors)
 - ✅ Follows existing code conventions
@@ -175,6 +195,7 @@ Follows existing patterns in the codebase:
 ## Usage Examples
 
 ### For Teachers
+
 1. Login as teacher
 2. Click green "Help" button in header
 3. Expand "Class Booking" category
@@ -183,6 +204,7 @@ Follows existing patterns in the codebase:
 6. Close and try booking a class
 
 ### For Moderators
+
 1. Login as moderator (Boss)
 2. Click "Help" / "ช่วยเหลือ" button
 3. Browse "Reports & Analytics" section
@@ -190,6 +212,7 @@ Follows existing patterns in the codebase:
 5. Navigate to Analytics tab to use it
 
 ### For Admins (Evan)
+
 1. Login as admin
 2. Access Help window
 3. See all features including admin-only ones
@@ -239,6 +262,7 @@ Follows existing patterns in the codebase:
 ## Maintenance
 
 ### Adding New Features to Help
+
 To add a new feature to the help system:
 
 1. Open `lib/help-content.ts`
@@ -252,6 +276,7 @@ To add a new feature to the help system:
 4. No code changes needed elsewhere - it will automatically appear
 
 Example:
+
 ```typescript
 {
   id: "new-feature",
@@ -267,6 +292,7 @@ Example:
 ```
 
 ### Updating Existing Help Content
+
 1. Locate the feature in `lib/help-content.ts`
 2. Update the relevant fields
 3. Ensure both English and Thai content are updated

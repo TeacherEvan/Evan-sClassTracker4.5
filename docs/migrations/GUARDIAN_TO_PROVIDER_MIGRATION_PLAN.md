@@ -71,7 +71,7 @@ providers: defineTable({
 })
 ```
 
-2. Mark guardian role as deprecated (don't remove yet):
+1. Mark guardian role as deprecated (don't remove yet):
 
 ```typescript
 users: defineTable({
@@ -84,7 +84,7 @@ users: defineTable({
 })
 ```
 
-3. Mark guardian fields as deprecated in students:
+1. Mark guardian fields as deprecated in students:
 
 ```typescript
 students: defineTable({
@@ -98,7 +98,7 @@ students: defineTable({
 })
 ```
 
-4. Mark guardian fields as deprecated in classes:
+1. Mark guardian fields as deprecated in classes:
 
 ```typescript
 classes: defineTable({
@@ -369,14 +369,14 @@ npm run backup:restore
 # Select pre-migration backup
 ```
 
-2. **Revert schema changes**:
+1. **Revert schema changes**:
 
 ```powershell
 git revert <migration-commit>
 npx convex deploy
 ```
 
-3. **Verify rollback**:
+1. **Verify rollback**:
 
 ```powershell
 # Test login as guardian

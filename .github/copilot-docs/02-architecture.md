@@ -101,6 +101,7 @@ components/class-booking/
 ```
 
 **Benefits**:
+
 - Better code organization and readability
 - Easier to test individual components
 - Reduced cognitive load when editing
@@ -108,6 +109,7 @@ components/class-booking/
 - Reusable state management hook
 
 **Usage pattern**:
+
 ```tsx
 // Main component imports and orchestrates
 import { useClassBookingState } from './class-booking-state';
@@ -130,6 +132,7 @@ convex/classes/
 ```
 
 **Query functions** (queries.ts):
+
 - `list` - Paginated class list
 - `get` - Single class details
 - `getByStatus` - Filter by status
@@ -141,6 +144,7 @@ convex/classes/
 - `listForDateRange` - Date-filtered classes
 
 **Mutation functions** (mutations.ts):
+
 - `book` - Create new class
 - `update` - Edit existing class
 - `acknowledge` - Moderator acknowledges
@@ -156,11 +160,13 @@ convex/classes/
 - ... (16 total)
 
 **Helper functions** (helpers.ts):
+
 - `verifyClassAccess` - Authorization check
 - `canModifyClass` - Permission check
 - `isClassOwner` - Ownership check
 
 **Re-export pattern** (index.ts):
+
 ```typescript
 // Public API - all exports go through index.ts
 export * from './queries';
@@ -169,6 +175,7 @@ export * from './helpers';
 ```
 
 **Benefits**:
+
 - Easier to find specific functionality
 - Reduced merge conflicts
 - Better code review experience

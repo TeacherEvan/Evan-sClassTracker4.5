@@ -533,16 +533,16 @@ None identified ✅
 
 ### 🟢 MEDIUM PRIORITY (Future Enhancements)
 
-4. Add animation to CollapsibleSection
-5. Extract date formatting to shared utility
-6. Consider stricter generic type constraints
-7. Add live region announcements for modals
+1. Add animation to CollapsibleSection
+2. Extract date formatting to shared utility
+3. Consider stricter generic type constraints
+4. Add live region announcements for modals
 
 ### 💡 NICE TO HAVE
 
-8. Consider framer-motion for better animations
-9. Add unit tests for pagination logic
-10. Document keyboard shortcuts in help modal
+1. Consider framer-motion for better animations
+2. Add unit tests for pagination logic
+3. Document keyboard shortcuts in help modal
 
 ---
 

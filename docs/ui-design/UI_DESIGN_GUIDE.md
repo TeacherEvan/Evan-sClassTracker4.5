@@ -8,17 +8,20 @@
 ## Design Principles
 
 ### 1. Bilingual-First Design
+
 - **Every UI element** must support English + Thai simultaneously
 - Forms need parallel input fields for both languages
 - Notifications, buttons, labels all bilingual
 
 ### 2. Role-Based UI
+
 - **Teacher**: Focused on booking classes and viewing schedules
 - **Moderator**: Approve/reject classes, manage school resources
 - **Admin**: Full system control, user management, analytics
 - **Guardian**: View student progress (future feature)
 
 ### 3. Real-Time Feedback
+
 - Toast notifications (bottom-right corner) for all actions
 - Live updates via Convex subscriptions (no manual refresh)
 - Clear loading states and error messages
@@ -81,6 +84,7 @@
 ```
 
 **After creation:**
+
 ```
 
   [Alert: \"Student created successfully!\" ]             
@@ -138,6 +142,7 @@
 ```
 
 **After saving:**
+
 ```
 
    
@@ -206,6 +211,7 @@
 ## Color Scheme
 
 ### Primary Actions
+
 - **Book/Create**: Blue (#3B82F6)
 - **Approve**: Green (#10B981)
 - **Edit**: Blue (#3B82F6)
@@ -213,6 +219,7 @@
 - **Cancel**: Gray (#6B7280)
 
 ### Status Colors
+
 - **Pending**: Yellow (#F59E0B)
 - **Acknowledged**: Blue (#3B82F6)
 - **Approved**: Green (#10B981)
@@ -220,6 +227,7 @@
 - **Completed**: Gray (#6B7280)
 
 ### Notifications
+
 - **Success**: Green toast (bottom-right)
 - **Error**: Red toast (bottom-right)
 - **Info**: Blue toast (bottom-right)
@@ -229,12 +237,14 @@
 ## Typography
 
 ### Headings
+
 - **H1**: 2.25rem (36px), bold - Page titles
 - **H2**: 1.875rem (30px), semibold - Section headers
 - **H3**: 1.5rem (24px), semibold - Subsections
 - **H4**: 1.25rem (20px), medium - Card titles
 
 ### Body Text
+
 - **Large**: 1.125rem (18px) - Important info
 - **Regular**: 1rem (16px) - Default body text
 - **Small**: 0.875rem (14px) - Meta information
@@ -245,6 +255,7 @@
 ## Layout Patterns
 
 ### Mobile-First Grid
+
 ```
 Mobile (< 768px):     1 column
 Tablet (768-1024px):  2 columns
@@ -252,12 +263,14 @@ Desktop (> 1024px):   3-4 columns
 ```
 
 ### Spacing System (Tailwind)
+
 - gap-2: 0.5rem (8px) - Tight spacing
 - gap-4: 1rem (16px) - Default spacing
 - gap-6: 1.5rem (24px) - Section spacing
 - gap-8: 2rem (32px) - Page sections
 
 ### Container Widths
+
 - **Max width**: 1280px (xl breakpoint)
 - **Padding**: 1rem mobile, 2rem desktop
 - **Cards**: Rounded corners (0.5rem), shadow-md
@@ -267,6 +280,7 @@ Desktop (> 1024px):   3-4 columns
 ## Interactive Elements
 
 ### Buttons
+
 ```tsx
 // Primary action
 <button className=\"bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded\">
@@ -285,6 +299,7 @@ Desktop (> 1024px):   3-4 columns
 ```
 
 ### Form Inputs
+
 ```tsx
 <input
   type=\"text\"
@@ -294,6 +309,7 @@ Desktop (> 1024px):   3-4 columns
 ```
 
 ### Dropdowns
+
 ```tsx
 <select className=\"border border-gray-300 rounded px-3 py-2 w-full\">
   <option>Select student...</option>
@@ -307,18 +323,22 @@ Desktop (> 1024px):   3-4 columns
 ## Accessibility
 
 ### Keyboard Navigation
+
 - All interactive elements focusable via Tab
 - Escape key closes modals
 - Enter key submits forms
 - Arrow keys navigate dropdowns
 
 ### Screen Readers
+
 - All images have lt text
 - Form inputs have ria-label
-- Error messages have ole=\"alert\"
+- Error messages have
+ole=\"alert\"
 - Status changes announced via ria-live
 
 ### Color Contrast
+
 - All text meets WCAG AA standards (4.5:1 minimum)
 - Icons have labels for screen readers
 - Focus indicators visible (2px blue outline)
@@ -337,6 +357,7 @@ xl: 1280px  // Large desktop
 ```
 
 ### Example Responsive Classes
+
 ```tsx
 <div className=\"grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4\">
   {/* 1 col mobile, 2 col tablet, 3 col desktop */}
@@ -348,11 +369,13 @@ xl: 1280px  // Large desktop
 ## Animation Guidelines
 
 ### Transitions
+
 - **Duration**: 150-200ms for most interactions
 - **Easing**: ease-in-out for smooth feel
 - **Hover**: Subtle scale (1.02x) or color change
 
 ### Toast Notifications
+
 - **Entry**: Slide in from right (200ms)
 - **Exit**: Fade out (150ms)
 - **Duration**: 3 seconds default, 5 seconds for errors
@@ -362,15 +385,19 @@ xl: 1280px  // Large desktop
 ## Component Library
 
 ### Core Components
+
 - class-booking.tsx - Multi-date booking form
 - edit-class-modal.tsx - Full edit modal with audit trail
 - desktop-notification-toast.tsx - Toast notification UI
-- 
+-
+
 otification-window.tsx - One-time notification system
+
 - calendar-picker.tsx - Single date picker
 - multi-date-calendar.tsx - Multi-date selection
 
 ### Admin Components
+
 - user-management.tsx - Bulk user operations
 - student-management.tsx - Bulk student operations
 - school-management.tsx - School CRUD
@@ -381,16 +408,19 @@ otification-window.tsx - One-time notification system
 ## Mobile Considerations
 
 ### Touch Targets
+
 - **Minimum**: 44x44px (Apple HIG, WCAG)
 - **Preferred**: 48x48px for primary actions
 - **Spacing**: 8px minimum between targets
 
 ### Mobile Navigation
+
 - Hamburger menu for < 768px
 - Bottom navigation for frequent actions
 - Swipe gestures for modals (dismiss)
 
 ### Performance
+
 - Lazy load images and heavy components
 - Debounce search inputs (300ms)
 - Paginate long lists (20 items per page)
@@ -400,6 +430,7 @@ otification-window.tsx - One-time notification system
 ## Testing Checklist
 
 ### Visual Testing
+
 - [ ] All UI elements render correctly on mobile/tablet/desktop
 - [ ] Bilingual text displays properly (no overflow)
 - [ ] Colors meet accessibility standards
@@ -407,6 +438,7 @@ otification-window.tsx - One-time notification system
 - [ ] Loading states clear
 
 ### Interactive Testing
+
 - [ ] All buttons clickable and respond correctly
 - [ ] Forms validate inputs
 - [ ] Modals open/close properly
@@ -414,6 +446,7 @@ otification-window.tsx - One-time notification system
 - [ ] Keyboard navigation works
 
 ### Real-Time Testing
+
 - [ ] Toast notifications appear/disappear correctly
 - [ ] Live updates work (open 2 windows, test sync)
 - [ ] No duplicate notifications

@@ -84,6 +84,7 @@ Split from monolithic classes.ts (2,213 lines → modular structure):
 - `README.md` - Module documentation
 
 Features:
+
 - State machine (pending → acknowledged → approved/rejected)
 - Approval workflow
 - Edit audit trail
@@ -171,6 +172,7 @@ Decomposed from monolithic class-booking.tsx (2,930 lines → modular structure)
 - `ClassItemDisplay.tsx` - Reusable class card component (30KB)
 
 Features:
+
 - Multi-date booking
 - Optional fields
 - Conflict detection

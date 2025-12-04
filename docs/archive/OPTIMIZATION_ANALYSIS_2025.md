@@ -382,7 +382,7 @@ const RATE_LIMITS = {
 
 ### Phase 2: Feature Completion (4-6 hours)
 
-4. 🔴 **Implement YouTube Downloader** (HIGH PRIORITY)
+1. 🔴 **Implement YouTube Downloader** (HIGH PRIORITY)
    - Set up API route for yt-dlp
    - Create UI component with bilingual support
    - Add progress tracking
@@ -390,11 +390,11 @@ const RATE_LIMITS = {
 
 ### Phase 3: Polish (2-3 hours)
 
-5. ⚪ **Improve type safety**
+1. ⚪ **Improve type safety**
    - Audit component props for loose types
    - Strengthen TypeScript strict mode compliance
 
-6. ⚪ **Add monitoring for future optimizations**
+2. ⚪ **Add monitoring for future optimizations**
    - Track query performance metrics
    - Set up alerts for slow queries (if using production monitoring)
 
