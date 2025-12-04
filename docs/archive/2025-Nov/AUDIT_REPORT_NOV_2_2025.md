@@ -484,7 +484,7 @@ npx convex run users:adminResetPassword --args '{"username":"admin","newPassword
 # Repeat for moderator1 and Evan
 ```
 
-2. **Code fixes (30 minutes)**:
+1. **Code fixes (30 minutes)**:
 
 **File 1**: `convex/init.ts`
 
@@ -525,7 +525,7 @@ import { hashPassword } from "./users";
 // Use imported function instead
 ```
 
-3. **Verification (5 minutes)**:
+1. **Verification (5 minutes)**:
 
 ```
 # Search for remaining btoa() usage
@@ -535,7 +535,7 @@ grep -r "btoa\(" convex/
 # All password CREATION should use PBKDF2
 ```
 
-4. **Update documentation**:
+1. **Update documentation**:
 
 - Update `CHANGELOG.md` v4.5.18 to note "Partial PBKDF2 migration - seed scripts pending"
 - Create `SECURITY_AUDIT_RESPONSE_NOV_2_2025.md` documenting fixes

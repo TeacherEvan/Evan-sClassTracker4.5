@@ -55,7 +55,7 @@ Completed comprehensive codebase analysis identifying:
 
 #### Feature TODOs
 
-4. **Message Pagination** (`convex/pagination.ts:114`)
+1. **Message Pagination** (`convex/pagination.ts:114`)
 
    ```typescript
    // TODO: Consider splitting into separate queries for direct vs group messages
@@ -65,7 +65,7 @@ Completed comprehensive codebase analysis identifying:
    - Current: Works correctly, potential future enhancement
    - Priority: Low
 
-5. **Auto-Update Script** (`scripts/create-app-update.ts:89`)
+2. **Auto-Update Script** (`scripts/create-app-update.ts:89`)
 
    ```typescript
    // TODO: Parse content to extract features automatically
@@ -75,7 +75,7 @@ Completed comprehensive codebase analysis identifying:
    - Current: Manual feature entry works fine
    - Priority: Low
 
-6. **Messaging Hub UI** (IMPLEMENTATION_SUMMARY_SECURITY_OCT_23_2025.md:41)
+3. **Messaging Hub UI** (IMPLEMENTATION_SUMMARY_SECURITY_OCT_23_2025.md:41)
 
    ```md
    - **TODO**: Add UI to messaging-hub

@@ -239,21 +239,21 @@ throw new Error("Invalid class status");
 
 ### 🟡 MEDIUM PRIORITY (Security)
 
-3. **Add rate limiting to login mutation**
+1. **Add rate limiting to login mutation**
    - Impact: Brute force protection
    - Effort: Low (existing `checkRateLimit` helper)
 
-4. **Document security limitations**
+2. **Document security limitations**
    - Impact: Production readiness awareness
    - Effort: Low (already documented in copilot-instructions.md)
 
 ### 🟢 LOW PRIORITY (Polish)
 
-5. **Audit validation error bilingual coverage**
+1. **Audit validation error bilingual coverage**
    - Impact: Error message consistency
    - Effort: Medium
 
-6. **Add session expiration**
+2. **Add session expiration**
    - Impact: Security improvement
    - Effort: Medium
 

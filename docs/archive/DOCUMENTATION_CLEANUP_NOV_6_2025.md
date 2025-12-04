@@ -13,17 +13,21 @@ Cleaned up 308+ markdown files across the project, removing redundancies and imp
 ### Files Affected
 
 **DELETED** (1 file):
+
 - ❌ `docs/README_OLD.md` - Outdated (v4.5.17), superseded by docs/README.md (v4.5.18)
 
 **MOVED TO docs/migrations/** (2 files):
+
 - 📦 `GUARDIAN_TO_PROVIDER_MIGRATION_PLAN.md` → `docs/migrations/GUARDIAN_TO_PROVIDER_MIGRATION_PLAN.md`
 - 📦 `IMPLEMENTATION_REVIEW_NOV_6_2025.md` → `docs/migrations/IMPLEMENTATION_REVIEW_NOV_6_2025.md`
 
 **MOVED TO docs/convex/** (2 files):
+
 - 📦 `CONVEX_ERROR_HANDLING_BEST_PRACTICES.md` → `docs/convex/ERROR_HANDLING_BEST_PRACTICES.md`
 - 📦 `CONVEX_RELIABILITY_AND_MIGRATION_ANALYSIS.md` → `docs/convex/RELIABILITY_AND_MIGRATION_ANALYSIS.md`
 
 **KEPT IN ROOT** (6 essential files):
+
 - ✅ `README.md` - Main project documentation
 - ✅ `TODO.md` - Active task list
 - ✅ `CHANGELOG.md` - Version history
@@ -45,11 +49,13 @@ Cleaned up 308+ markdown files across the project, removing redundancies and imp
 ### Migration Document Consolidation
 
 **Original State** (3 documents, 2,513 lines total):
+
 1. GUARDIAN_TO_PROVIDER_MIGRATION_PLAN.md (441 lines) - Initial plan
 2. GUARDIAN_PROVIDER_IMPLEMENTATION_PLAN.md (1,155 lines) - Detailed implementation
 3. IMPLEMENTATION_REVIEW_NOV_6_2025.md (917 lines) - Comprehensive review
 
-**Decision**: 
+**Decision**:
+
 - **Keep in Root**: GUARDIAN_PROVIDER_IMPLEMENTATION_PLAN.md (most comprehensive)
 - **Archive**: Original plan and review (moved to docs/migrations/)
 - **Benefit**: Single source of truth, easier to update

@@ -15,12 +15,14 @@ The modal uses responsive, professional spacing:
 ```
 
 **Key Spacing Properties:**
+
 - `max-w-3xl` = 768px max width (perfect for 1366px and 1920px screens)
 - `p-4` = 1rem (16px) padding throughout
 - `space-y-4` = 1rem vertical gaps between sections
 - `rounded-2xl` = 16px border radius for modern look
 
 ### Header Section
+
 ```tsx
 <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-start">
   <div className="flex-1">
@@ -34,6 +36,7 @@ The modal uses responsive, professional spacing:
 ```
 
 ### Content Grid Layout
+
 ```tsx
 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
   <div className="flex items-start gap-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
@@ -48,6 +51,7 @@ The modal uses responsive, professional spacing:
 ```
 
 **Visual Result:**
+
 - Clean 2-column grid on desktop (1 column on mobile)
 - Consistent card padding (p-3)
 - Subtle background colors for visual hierarchy
@@ -79,6 +83,7 @@ The modal uses responsive, professional spacing:
 ```
 
 **Authorization Matrix:**
+
 | User Role | Can See Button? | Condition |
 |-----------|----------------|-----------|
 | Admin | ✅ Always | All classes |
@@ -139,10 +144,12 @@ The modal uses responsive, professional spacing:
 ```
 
 **Bilingual Support:**
+
 - English: "Delete Class" → "Are you sure you want to delete this class? This action cannot be undone."
 - Thai: "ลบคลาส" → "คุณแน่ใจหรือไม่ว่าต้องการลบคลาสนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้"
 
 **Visual Features:**
+
 - Red theme for destructive action
 - Icon to reinforce danger
 - Class preview so user knows what they're deleting
@@ -176,6 +183,7 @@ Display in weekly calendar:
 ```
 
 **Result:**
+
 - English: "09:00 AM"
 - Thai: "09:00"
 
@@ -188,6 +196,7 @@ No delay, no re-editing needed - time displays immediately from the stored times
 ### Three-Step Conversion Process
 
 #### Step 1: Load Existing Time (DB → Form)
+
 ```typescript
 // Helper function to convert timestamp to datetime-local format
 const toLocalDatetimeString = (timestamp: number): string => {
@@ -207,10 +216,12 @@ const [scheduledDate, setScheduledDate] = useState(
 ```
 
 **Example:**
+
 - Database: `1704067200000`
 - Form value: `"2024-01-01T09:00"`
 
 #### Step 2: Display in datetime-local Input
+
 ```tsx
 <input
   type="datetime-local"
@@ -222,6 +233,7 @@ const [scheduledDate, setScheduledDate] = useState(
 ```
 
 #### Step 3: Save Changes (Form → DB)
+
 ```typescript
 const scheduledTimestamp = new Date(scheduledDate).getTime();
 
@@ -236,10 +248,12 @@ await editClass({
 ```
 
 **Example:**
+
 - Form value: `"2024-01-01T09:00"`
 - Database: `1704067200000`
 
 **Why This Works:**
+
 - `datetime-local` input requires `YYYY-MM-DDTHH:MM` format
 - JavaScript `Date` handles all timezone conversions automatically
 - Storage as Unix timestamp is timezone-agnostic
@@ -281,6 +295,7 @@ await editClass({
 ```
 
 **Key CSS Classes:**
+
 - `group` - Parent container enabling group-hover
 - `hidden md:flex` - Only visible on desktop (768px+)
 - `opacity-0 group-hover:opacity-100` - Smooth fade-in on hover
@@ -288,6 +303,7 @@ await editClass({
 - `transition-opacity` - Smooth animation
 
 **Behavior:**
+
 1. On mobile: Quick buttons are hidden
 2. On desktop: Quick buttons appear when hovering over class card
 3. Clicking edit button opens EditClassModal
@@ -330,6 +346,7 @@ await editClass({
 ```
 
 **Authorization Check:**
+
 ```tsx
 const canDelete = currentUser.role === "admin" ||
   currentUser.role === "moderator" ||
@@ -337,6 +354,7 @@ const canDelete = currentUser.role === "admin" ||
 ```
 
 **Features:**
+
 - Only visible if user has delete permission
 - Same hover behavior as edit button
 - Bilingual confirmation dialog
@@ -350,12 +368,14 @@ const canDelete = currentUser.role === "admin" ||
 ### Responsive Design Strategy
 
 **Desktop (md breakpoint and up):**
+
 ```tsx
 // Quick actions visible on hover
 <div className="absolute top-1 right-1 hidden md:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
 ```
 
 **Mobile:**
+
 ```tsx
 // Class card is fully clickable
 <div onClick={() => handleClassClick(classItem)} className="cursor-pointer">
@@ -364,6 +384,7 @@ const canDelete = currentUser.role === "admin" ||
 ```
 
 **Key Differences:**
+
 | Feature | Desktop | Mobile |
 |---------|---------|--------|
 | Quick Edit | ✅ Hover button | ❌ Open modal |
@@ -372,6 +393,7 @@ const canDelete = currentUser.role === "admin" ||
 | Detail Modal | Full features | Full features |
 
 **Why This Works:**
+
 - Mobile users prefer fewer UI elements (cleaner)
 - Hover doesn't work well on touch devices
 - Clicking card to open modal is more intuitive on mobile
@@ -383,12 +405,14 @@ const canDelete = currentUser.role === "admin" ||
 
 ### Implementation Across All Actions
 
-#### Success Example:
+#### Success Example
+
 ```typescript
 toast.success("Class deleted successfully", "ลบคลาสสำเร็จ");
 ```
 
-#### Error Example:
+#### Error Example
+
 ```typescript
 toast.error(
   err instanceof Error ? err.message : "Failed to delete class",
@@ -411,6 +435,7 @@ export const toast = {
 **Where Toasts Appear:**
 
 1. **Class Deletion (Weekly Calendar):**
+
    ```typescript
    deleteClass({...}).then(() => {
      toast.success("Class deleted", "ลบคลาสสำเร็จ");
@@ -418,12 +443,14 @@ export const toast = {
    ```
 
 2. **Class Deletion (Detail Modal):**
+
    ```typescript
    await deleteClass({...});
    toast.success("Class deleted successfully", "ลบคลาสสำเร็จ");
    ```
 
 3. **Class Edit:**
+
    ```typescript
    await editClass({...});
    // Toast shown in EditClassModal
@@ -431,6 +458,7 @@ export const toast = {
    ```
 
 4. **Add Dates:**
+
    ```typescript
    await addDatesToClass({...});
    toast.success(
@@ -440,6 +468,7 @@ export const toast = {
    ```
 
 **Visual Position:**
+
 - Toasts appear in bottom-right corner (per `components/desktop-notification-toast.tsx`)
 - Auto-dismiss after 5 seconds
 - Stack vertically if multiple toasts
@@ -451,6 +480,7 @@ export const toast = {
 ### Multi-Layer Security Architecture
 
 #### Layer 1: UI Button Visibility
+
 ```tsx
 // components/class-detail-modal.tsx
 {(currentUserRole === "admin" ||
@@ -465,6 +495,7 @@ export const toast = {
 **Purpose:** Prevent unauthorized users from seeing the delete button at all.
 
 #### Layer 2: Backend Authorization Helper
+
 ```typescript
 // convex/classes.ts
 async function verifyClassAccess(
@@ -507,13 +538,15 @@ async function verifyClassAccess(
 }
 ```
 
-**Purpose:** 
+**Purpose:**
+
 - Centralized authorization logic
 - Prevents API manipulation attacks
 - Enforces school boundaries for moderators
 - Allows teacher ownership exceptions
 
 #### Layer 3: Mutation-Level Checks
+
 ```typescript
 // convex/classes.ts - deleteClass mutation
 export const deleteClass = mutation({
@@ -549,6 +582,7 @@ export const deleteClass = mutation({
 ```
 
 **Purpose:**
+
 - Mutation-specific business rules
 - Audit logging
 - Additional validation (e.g., past date check)

@@ -69,12 +69,32 @@ interface WorkspaceLayoutProps {
     children?: React.ReactNode;
 }
 
-// Loading fallback component (outside component to prevent recreation on every render)
-const LoadingFallback = () => (
-    <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-    </div>
-);
+// Enhanced loading fallback with better UX
+const LoadingFallback = () => {
+    const { t } = useLanguage();
+    return (
+        <div className="flex items-center justify-center h-full min-h-[400px]">
+            <div className="flex flex-col items-center gap-4">
+                {/* Premium animated spinner with gradient glow */}
+                <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-30 animate-pulse" />
+                    <div className="relative animate-spin rounded-full h-16 w-16 border-4 border-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 bg-clip-border">
+                        <div className="absolute inset-1 bg-white dark:bg-gray-900 rounded-full" />
+                    </div>
+                </div>
+                {/* Loading message */}
+                <p className="text-base font-medium text-gray-600 dark:text-gray-400 animate-pulse">
+                    {t("Loading", "กำลังโหลด")}...
+                </p>
+                {/* Progress indicator */}
+                <div className="w-48 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 rounded-full animate-[shimmer_2s_ease-in-out_infinite]" 
+                         style={{ width: '50%' }} />
+                </div>
+            </div>
+        </div>
+    );
+};
 
 export default function WorkspaceLayout({ userId, userRole, userSchoolId, children }: WorkspaceLayoutProps) {
     const { t } = useLanguage();

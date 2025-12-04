@@ -370,13 +370,13 @@ View all 3 edits →
 
 ### **Frontend (Components):**
 
-2. **`components/post-class-notes-modal.tsx`** (Modified)
+1. **`components/post-class-notes-modal.tsx`** (Modified)
    - Updated `ClassWithStudent` interface to include `currentStudentId`
    - Modified UI to show which student feedback is for
    - Added group class indicator
    - Updated mutation calls to pass `studentId`
 
-3. **`components/class-booking.tsx`** (Modified)
+2. **`components/class-booking.tsx`** (Modified)
    - Enhanced edit history display section
    - Added detailed field-level change rendering
    - Added color coding (red strikethrough for old, green for new)

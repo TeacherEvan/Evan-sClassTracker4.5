@@ -19,6 +19,7 @@ Implemented Phase 1 of code quality and user-friendliness improvements, focusing
 **Purpose**: WCAG 2.1 Level AA compliance helpers
 
 **Key Functions**:
+
 - `getStatusAriaLabel()` - Accessible status labels (EN/TH)
 - `getStatusIcon()` - Icon components for status indicators
 - `renderStatusBadge()` - Accessible status badge with icon + text + color
@@ -27,12 +28,14 @@ Implemented Phase 1 of code quality and user-friendliness improvements, focusing
 - `FOCUS_RING` - Keyboard navigation focus indicators
 
 **Features**:
+
 - Replaces color-only indicators with icon + text + ARIA labels
 - Ensures minimum 44px touch targets (iOS guideline)
 - Provides focus-visible rings for keyboard navigation
 - Supports dark mode variants
 
 **Usage Example**:
+
 ```typescript
 import { renderStatusBadge, getStatusAriaLabel } from "@/lib/accessibility-utils";
 
@@ -51,6 +54,7 @@ import { renderStatusBadge, getStatusAriaLabel } from "@/lib/accessibility-utils
 **Purpose**: Production-safe logging utility
 
 **Key Features**:
+
 - **Development-only debug logs** - `logger.debug()` only in dev
 - **Structured logging** - Consistent format with context
 - **Performance tracking** - `logger.startPerf()` and `logger.perf()`
@@ -58,6 +62,7 @@ import { renderStatusBadge, getStatusAriaLabel } from "@/lib/accessibility-utils
 - **Environment-aware** - Respects NODE_ENV
 
 **API**:
+
 ```typescript
 import { logger } from "@/lib/logger";
 
@@ -83,6 +88,7 @@ endPerf(); // Logs: [PERF] fetchClasses: 123.45ms
 ```
 
 **Migration**:
+
 ```typescript
 // Before
 console.log("Debug info"); // ❌ Logs in production
@@ -98,6 +104,7 @@ logger.debug("Debug info"); // ✅ Development only
 **Purpose**: Global and context-aware keyboard shortcuts
 
 **Key Features**:
+
 - **Flexible key combinations** - Ctrl/Cmd, Shift, Alt support
 - **Scoped shortcuts** - Component-specific shortcuts
 - **Disabled state** - Conditionally disable shortcuts
@@ -105,6 +112,7 @@ logger.debug("Debug info"); // ✅ Development only
 - **Mac/Windows support** - Cmd key on Mac, Ctrl on Windows
 
 **Hook API**:
+
 ```typescript
 import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-shortcuts";
 
@@ -128,6 +136,7 @@ useKeyboardShortcuts(shortcuts);
 ```
 
 **Common Shortcuts Provided**:
+
 - `Ctrl+N` - New item
 - `Ctrl+S` - Save
 - `Ctrl+K` - Search/Filter
@@ -138,6 +147,7 @@ useKeyboardShortcuts(shortcuts);
 - `Ctrl+R` - Refresh data
 
 **Utility Functions**:
+
 - `formatShortcut()` - Display shortcut (e.g., "Ctrl + N")
 - `getShortcutsList()` - Get all shortcuts for help modal
 
@@ -148,6 +158,7 @@ useKeyboardShortcuts(shortcuts);
 **Purpose**: Modal to display all available keyboard shortcuts
 
 **Features**:
+
 - **Automatic shortcut detection** - Shows active shortcuts
 - **Bilingual** - English/Thai descriptions
 - **Keyboard accessible** - Close with Escape
@@ -155,6 +166,7 @@ useKeyboardShortcuts(shortcuts);
 - **Responsive** - Works on mobile/desktop
 
 **Usage**:
+
 ```typescript
 import { KeyboardShortcutsHelp } from "@/components/keyboard-shortcuts-help";
 
@@ -279,11 +291,13 @@ const shortcuts = [
 ## Performance Impact
 
 ### Bundle Size
+
 - **Before**: ~850KB
 - **After**: ~857KB (+7KB for new utilities)
 - **Impact**: Minimal (+0.8%)
 
 ### Runtime Performance
+
 - **Accessibility helpers**: ~0.1ms per render
 - **Keyboard shortcuts**: ~0.5ms initial registration
 - **Logger**: Zero overhead in production (debug stripped)
@@ -310,6 +324,7 @@ const shortcuts = [
 ## Code Quality Metrics
 
 ### Before Phase 1
+
 - Console statements: 51 files
 - Alert usage: 4 files
 - Color-only indicators: 55+ instances
@@ -318,6 +333,7 @@ const shortcuts = [
 - ARIA labels: 25% coverage
 
 ### After Phase 1 (Projected)
+
 - Console statements: 36 files (scripts + error boundaries only)
 - Alert usage: 2 files (critical confirmations only)
 - Color-only indicators: 0 instances ✅
@@ -354,6 +370,7 @@ const shortcuts = [
 ## Deployment Plan
 
 ### Pre-Deployment
+
 1. ✅ Create utility files
 2. ✅ Create help modal component
 3. [ ] Integrate into 5 key components
@@ -362,6 +379,7 @@ const shortcuts = [
 6. [ ] Update documentation
 
 ### Deployment
+
 1. [ ] Merge to main branch
 2. [ ] Deploy to staging
 3. [ ] Smoke test keyboard shortcuts
@@ -369,6 +387,7 @@ const shortcuts = [
 5. [ ] Deploy to production
 
 ### Post-Deployment
+
 1. [ ] Monitor error rates
 2. [ ] Collect user feedback
 3. [ ] Measure bundle size impact
@@ -379,6 +398,7 @@ const shortcuts = [
 ## Success Criteria
 
 ### Phase 1 Goals
+
 - [x] ✅ Create 3 utility files (accessibility, logging, keyboard)
 - [x] ✅ Create keyboard shortcuts help modal
 - [ ] ⏳ Integrate into 5 key components (In Progress)
@@ -387,6 +407,7 @@ const shortcuts = [
 - [ ] ⏳ Add keyboard navigation to critical paths
 
 ### Quality Improvements
+
 - **Accessibility**: 75/100 → 90/100 ✅ Target
 - **UX**: 87/100 → 95/100 ✅ Target
 - **Code Quality**: 90/100 → 92/100 ✅ Target
@@ -396,17 +417,20 @@ const shortcuts = [
 ## Lessons Learned
 
 ### What Went Well
+
 1. ✅ Utility files designed for reusability
 2. ✅ Bilingual support built-in from start
 3. ✅ TypeScript types catch errors early
 4. ✅ Small, focused utilities (single responsibility)
 
 ### Challenges
+
 1. 🟡 Need to balance bundle size with features
 2. 🟡 Keyboard shortcuts can conflict with browser defaults
 3. 🟡 Touch target size requires careful UI redesign
 
 ### Improvements for Next Phase
+
 1. Add automated accessibility testing (axe-core)
 2. Create Storybook for accessibility components
 3. Add keyboard shortcut conflict detection

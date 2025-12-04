@@ -145,18 +145,32 @@ export default function SidebarNav({
                             <button
                                 onClick={() => onViewChange(item.id)}
                                 className={`
-                  w-full flex items-center gap-3 px-4 py-3 text-left transition-colors
+                  w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-200
                   ${isActive
-                                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-r-4 border-blue-600"
-                                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/20 border-r-4 border-blue-700"
+                                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:translate-x-1"
                                     }
                   ${compact ? "justify-center" : ""}
+                  rounded-lg mx-2 group relative overflow-hidden
                 `}
                                 title={compact ? label : undefined}
                             >
-                                <Icon className={`${compact ? "w-6 h-6" : "w-5 h-5"} shrink-0`} />
+                                {/* Hover effect background */}
+                                {!isActive && (
+                                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                                )}
+                                
+                                {/* Icon with animation */}
+                                <Icon className={`${compact ? "w-6 h-6" : "w-5 h-5"} shrink-0 relative z-10 transition-transform duration-200 ${!isActive && "group-hover:scale-110"}`} />
+                                
+                                {/* Label */}
                                 {!compact && (
-                                    <span className="text-sm font-medium">{label}</span>
+                                    <span className="text-sm font-medium relative z-10">{label}</span>
+                                )}
+                                
+                                {/* Active indicator pulse */}
+                                {isActive && (
+                                    <div className="absolute right-2 w-2 h-2 bg-white rounded-full animate-pulse" />
                                 )}
                             </button>
                         </li>

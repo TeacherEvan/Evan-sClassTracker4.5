@@ -274,16 +274,16 @@ Available students:
 
 ### Medium Priority
 
-6. Extract batch size limits to constants
-7. Add structured logging service
-8. Create bulk approval confirmation modal
-9. Add progress indicator for large batches
+1. Extract batch size limits to constants
+2. Add structured logging service
+3. Create bulk approval confirmation modal
+4. Add progress indicator for large batches
 
 ### Low Priority
 
-10. Make seeding start date configurable
-11. Add undo bulk approval feature
-12. Create approval report export (PDF/CSV)
+1. Make seeding start date configurable
+2. Add undo bulk approval feature
+3. Create approval report export (PDF/CSV)
 
 ---
 

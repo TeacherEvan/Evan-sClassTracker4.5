@@ -22,10 +22,13 @@ Look for the **green "Help" button** in the top-right corner of the screen after
 ## How to use it?
 
 ### Step 1: Open Help
+
 Click the green **"Help"** button
 
 ### Step 2: Browse Categories
+
 You'll see organized categories of features:
+
 - 📅 Class Booking
 - 💬 Messages & Communication
 - 📊 Reports & Analytics
@@ -33,20 +36,25 @@ You'll see organized categories of features:
 - ✨ Advanced Features
 
 ### Step 3: Expand a Category
+
 Click on any category header to see the features inside
 
 ### Step 4: View Feature Details
+
 Click on any feature to see:
+
 - What it does
 - Step-by-step instructions
 - Helpful tips
 
-### Step 5: Try it!
+### Step 5: Try it
+
 Close the help window and try using the feature you learned about!
 
 ## Example Use Cases
 
 ### "I want to book a class"
+
 1. Click **Help** button
 2. Expand **"Class Booking"** category
 3. Click **"Book a Class"** feature
@@ -54,6 +62,7 @@ Close the help window and try using the feature you learned about!
 5. Close help and book your class!
 
 ### "How do I send a message?"
+
 1. Click **Help** button
 2. Expand **"Messages & Communication"**
 3. Click **"Send Messages"**
@@ -61,6 +70,7 @@ Close the help window and try using the feature you learned about!
 5. Go to Messages tab and send!
 
 ### "I need to approve a booking (Moderator)"
+
 1. Click **Help** button
 2. Expand **"Class Booking"**
 3. Click **"Approve Class Bookings"**
@@ -72,12 +82,14 @@ Close the help window and try using the feature you learned about!
 The help content is available in both English and Thai:
 
 **English:**
+
 ```
 Help & Guide
 Welcome Teacher! What would you like to do?
 ```
 
 **Thai:**
+
 ```
 ความช่วยเหลือและคู่มือ
 ยินดีต้อนรับครู! คุณต้องการทำอะไร?
@@ -89,15 +101,18 @@ Just use the language switcher (🌐 button) to change languages, and all help c
 
 The help system is smart! It only shows you features you can actually use:
 
-### If you're a **Teacher**:
+### If you're a **Teacher**
+
 - You'll see features like booking classes, viewing calendar, sending messages
 - You won't see moderator-only features like analytics
 
-### If you're a **Moderator (Boss)**:
+### If you're a **Moderator (Boss)**
+
 - You'll see everything teachers see
 - Plus: Analytics, approving bookings, managing students
 
-### If you're an **Admin (Evan)**:
+### If you're an **Admin (Evan)**
+
 - You'll see everything!
 - Including: User management, school management, system admin features
 
@@ -105,7 +120,8 @@ The help system is smart! It only shows you features you can actually use:
 
 The help system documents over **20 features**, including:
 
-### For Everyone:
+### For Everyone
+
 - ✅ Book a Class
 - ✅ View Calendar
 - ✅ Send Messages
@@ -115,14 +131,16 @@ The help system documents over **20 features**, including:
 - ✅ Post-Class Notes
 - ✅ Contact Admin
 
-### For Moderators:
+### For Moderators
+
 - ✅ Approve Bookings
 - ✅ Analytics Dashboard
 - ✅ Teacher Activity Logs
 - ✅ Manage Students
 - ✅ Manage Locations
 
-### For Admins:
+### For Admins
+
 - ✅ Manage Users
 - ✅ Manage Schools
 - ✅ All moderator features
@@ -130,19 +148,22 @@ The help system documents over **20 features**, including:
 
 ## Tips
 
-### 💡 Use it when:
+### 💡 Use it when
+
 - You're new to the system
 - You forgot how to do something
 - You want to learn about a feature
 - You're exploring what's available
 
-### 💡 Best Practices:
+### 💡 Best Practices
+
 - Browse help before asking admin questions
 - Check help when you see a new feature
 - Use it as a quick reference guide
 - Share with new team members
 
-### 💡 Pro Tip:
+### 💡 Pro Tip
+
 The help content is always up-to-date with the current version of the app. If a feature changes, the help will too!
 
 ## Still Need Help?
@@ -173,12 +194,14 @@ A: You can copy text from the help window to create your own notes or print them
 
 ## Visual Guide
 
-### Opening Help:
+### Opening Help
+
 ```
 [Click Help] → [Window Opens] → [Browse Categories] → [Click Feature] → [Read Details]
 ```
 
-### Example Journey:
+### Example Journey
+
 ```
 1. Login to app
    ↓
@@ -213,6 +236,7 @@ A: You can copy text from the help window to create your own notes or print them
 ## Mobile Users
 
 On mobile devices:
+
 - Help button is in the header (may need to scroll up)
 - Help window takes full screen
 - Swipe to scroll content
@@ -238,6 +262,7 @@ The Help Window is your personal guide to the Class Tracker system. It's:
 ---
 
 **Need more details?** See:
+
 - `docs/HELP_WINDOW_FEATURE.md` - Full technical documentation
 - `docs/HELP_WINDOW_UI_FLOW.md` - Visual UI flow and diagrams
 - `IMPLEMENTATION_SUMMARY_HELP_WINDOW.md` - Implementation overview

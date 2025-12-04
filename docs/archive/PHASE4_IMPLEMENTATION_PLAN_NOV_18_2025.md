@@ -10,6 +10,7 @@
 ## Overview
 
 Phase 4 focuses on performance optimizations:
+
 1. **Lazy load heavy components** (reduce initial bundle)
 2. **Memoization** (prevent unnecessary re-renders)
 3. **Query optimization** (reduce Convex calls)
@@ -26,6 +27,7 @@ Phase 4 focuses on performance optimizations:
 ### Target Components for Lazy Loading
 
 #### 1. ClassAnalytics (Currently ~400 lines)
+
 ```typescript
 // Before (eager load)
 import { ClassAnalytics } from "./class-analytics";
@@ -41,6 +43,7 @@ const ClassAnalytics = dynamic(() => import("./class-analytics"), {
 **Savings**: ~50KB gzipped
 
 #### 2. AdminContactRequests (Admin-only)
+
 ```typescript
 const AdminContactRequests = dynamic(
   () => import("./admin-contact-requests"),
@@ -51,6 +54,7 @@ const AdminContactRequests = dynamic(
 **Savings**: ~30KB gzipped
 
 #### 3. HelpWindow (Loaded on first open)
+
 ```typescript
 const HelpWindow = dynamic(() => import("./help-window"), {
   loading: () => <div>Loading help...</div>,
@@ -61,6 +65,7 @@ const HelpWindow = dynamic(() => import("./help-window"), {
 **Savings**: ~20KB gzipped
 
 #### 4. TeacherActivityDashboard (Teacher-only)
+
 ```typescript
 const TeacherActivityDashboard = dynamic(
   () => import("./teacher-activity-dashboard"),
@@ -78,11 +83,13 @@ const TeacherActivityDashboard = dynamic(
 4. ⏳ Measure bundle size reduction
 
 ### Files to Modify
+
 1. `app/page.tsx` - Main app entry (lazy load dashboards)
 2. `components/class-booking.tsx` - Lazy load analytics
 3. `components/workspace-layout.tsx` - Lazy load admin panels
 
 ### Success Criteria
+
 - ✅ Initial bundle < 500KB (currently ~700KB)
 - ✅ Time to Interactive < 2s (currently ~3.5s)
 - ✅ Loading states visible during lazy load
@@ -99,6 +106,7 @@ const TeacherActivityDashboard = dynamic(
 ### Target Areas for Memoization
 
 #### 1. Conflict Detection (Expensive O(n²))
+
 ```typescript
 // Before
 const conflicts = detectConflicts(allClasses, currentClass);
@@ -111,6 +119,7 @@ const conflicts = useMemo(
 ```
 
 #### 2. Calendar Date Calculations
+
 ```typescript
 // Before
 const monthGridDays = getMonthGridDays(currentDate);
@@ -123,6 +132,7 @@ const monthGridDays = useMemo(
 ```
 
 #### 3. Filter/Sort Operations
+
 ```typescript
 // Before
 const filteredClasses = classes?.filter(cls => matchesFilters(cls, filters));
@@ -135,6 +145,7 @@ const filteredClasses = useMemo(
 ```
 
 #### 4. Student List Rendering
+
 ```typescript
 // Before
 const studentList = students?.map(s => ({ ...s, displayName: getDisplayName(s) }));
@@ -155,12 +166,14 @@ const studentList = useMemo(
 5. ⏳ Test for performance improvements
 
 ### Files to Modify
+
 1. `components/class-booking.tsx` - Memoize conflict detection, filters
 2. `components/monthly-calendar.tsx` - Memoize date calculations
 3. `components/student-management.tsx` - Memoize student list
 4. `components/hierarchical-student-selector.tsx` - Memoize tree structure
 
 ### Success Criteria
+
 - ✅ Reduced re-renders (measure with Profiler)
 - ✅ Faster filter updates (<100ms)
 - ✅ Smoother calendar navigation
@@ -176,6 +189,7 @@ const studentList = useMemo(
 ### Optimization Strategies
 
 #### 1. Reduce Query Frequency
+
 ```typescript
 // Before: Query on every render
 const classes = useQuery(api.classes.list, {});
@@ -188,6 +202,7 @@ const classes = useQuery(
 ```
 
 #### 2. Paginate Large Lists
+
 ```typescript
 // Before: Load all 1000+ classes
 const allClasses = useQuery(api.classes.list, {});
@@ -200,6 +215,7 @@ const classes = useQuery(api.classes.listPaginated, {
 ```
 
 #### 3. Use Indexes for Filters
+
 ```typescript
 // Before: Client-side filtering
 const filtered = classes?.filter(c => c.status === "pending");
@@ -216,11 +232,13 @@ const pending = useQuery(api.classes.listByStatus, { status: "pending" });
 4. ⏳ Add indexes to schema if needed
 
 ### Files to Modify
+
 1. `components/class-booking.tsx` - Paginate class list
 2. `convex/classes.ts` - Add paginated queries
 3. `convex/schema.ts` - Add missing indexes
 
 ### Success Criteria
+
 - ✅ Query response time < 200ms
 - ✅ Reduced bandwidth usage
 - ✅ Smoother scrolling/filtering
@@ -236,6 +254,7 @@ const pending = useQuery(api.classes.listByStatus, { status: "pending" });
 ### Strategies
 
 #### 1. Tree-shake Lucide Icons
+
 ```typescript
 // Before: Import entire library
 import * as Icons from "lucide-react";
@@ -245,6 +264,7 @@ import { Check, X, Clock } from "lucide-react";
 ```
 
 #### 2. Remove Unused Dependencies
+
 ```bash
 # Audit dependencies
 npm ls --all
@@ -255,6 +275,7 @@ npm uninstall <unused-package>
 ```
 
 #### 3. Enable Turbopack Optimizations
+
 ```typescript
 // next.config.ts
 export default {
@@ -275,6 +296,7 @@ export default {
 4. ⏳ Remove dead code
 
 ### Success Criteria
+
 - ✅ Bundle size < 500KB
 - ✅ No duplicate dependencies
 - ✅ All imports tree-shakeable
@@ -308,11 +330,13 @@ export default {
 ## Tools for Measurement
 
 ### 1. Lighthouse
+
 ```bash
 npx lighthouse http://localhost:3000 --view
 ```
 
 ### 2. Next.js Bundle Analyzer
+
 ```bash
 npm install --save-dev @next/bundle-analyzer
 ```
@@ -333,12 +357,14 @@ ANALYZE=true npm run build
 ```
 
 ### 3. React DevTools Profiler
+
 - Open DevTools → Profiler tab
 - Click "Record"
 - Interact with app
 - Analyze flamegraph
 
 ### 4. Convex Dashboard
+
 - Monitor query execution times
 - Check index usage
 - Identify slow queries
@@ -348,12 +374,15 @@ ANALYZE=true npm run build
 ## Risk Mitigation
 
 ### Risk: Lazy loading causes layout shift
+
 **Solution**: Add skeleton loaders with fixed heights
 
 ### Risk: Over-memoization increases memory
+
 **Solution**: Profile memory usage, only memoize expensive ops
 
 ### Risk: Breaking changes in query structure
+
 **Solution**: Test thoroughly, add pagination progressively
 
 ---

@@ -88,7 +88,7 @@ Implemented a security-first ephemeral payment calculator with professional sing
 
 #### Frontend (Calculator Component)
 
-4. **`components/class-payment-calculator.tsx`** (852 lines - NEW FILE)
+1. **`components/class-payment-calculator.tsx`** (852 lines - NEW FILE)
    - **Disclaimer Screen**: Mandatory security warning before access
    - **Calculator Screen**: Teacher selection, rate input, date range filtering, entity filtering
    - **Real-time Calculation**: ClassCount × Rate with live totals
@@ -103,15 +103,15 @@ Implemented a security-first ephemeral payment calculator with professional sing
 
 #### Documentation
 
-5. **`TODO.md`** (~50 lines added)
+1. **`TODO.md`** (~50 lines added)
    - Added comprehensive "Class Payment Calculator" entry to Recently Completed section
    - Documented all features, technical details, security considerations
    - Updated last modified date to October 31, 2025
 
-6. **`IMPLEMENTATION_SUMMARY_CLASS_COUNT_ENHANCEMENTS_NOV_2025.md`** (updated references)
+2. **`IMPLEMENTATION_SUMMARY_CLASS_COUNT_ENHANCEMENTS_NOV_2025.md`** (updated references)
    - Previously documented Phase 3 plan, now marked as complete
 
-7. **`IMPLEMENTATION_SUMMARY_PAYMENT_CALCULATOR_OCT_31_2025.md`** (THIS FILE - NEW)
+3. **`IMPLEMENTATION_SUMMARY_PAYMENT_CALCULATOR_OCT_31_2025.md`** (THIS FILE - NEW)
    - Full implementation documentation
 
 ---

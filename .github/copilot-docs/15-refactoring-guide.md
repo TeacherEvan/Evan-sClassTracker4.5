@@ -22,6 +22,7 @@ Systematic approach to refactoring large files while maintaining functionality a
 **Status**: ✅ COMPLETE - Refactored into modular structure (PR #97)
 
 **Result**: Monolithic file (2,930 lines) split into maintainable modules:
+
 ```
 components/class-booking/
 ├── index.tsx                    # Main orchestrator (126KB)
@@ -32,6 +33,7 @@ components/class-booking/
 ```
 
 **Benefits Achieved**:
+
 - ✅ Better code organization and readability
 - ✅ Easier to test individual components
 - ✅ Reduced cognitive load when editing
@@ -521,6 +523,7 @@ After refactoring:
 **Status**: ✅ COMPLETE - Refactored into modular structure (PR #98)
 
 **Result**: Monolithic backend file (2,213 lines) split into logical modules:
+
 ```
 convex/classes/
 ├── index.ts                     # Re-exports (public API)
@@ -531,6 +534,7 @@ convex/classes/
 ```
 
 **Benefits Achieved**:
+
 - ✅ Logical grouping of related functions
 - ✅ Easier code review (specific modules only)
 - ✅ Reduced merge conflicts

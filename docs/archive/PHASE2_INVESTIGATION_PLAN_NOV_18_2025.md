@@ -11,15 +11,18 @@
 ### Current State Analysis
 
 #### ✅ **Completed Components**
+
 1. **class-booking.tsx** - Fully integrated with accessibility utilities
    - Keyboard shortcuts: Ctrl+N, Escape
    - Accessible status badges with icons
    - WCAG 2.1 Level AA compliant
 
 #### 📊 **Console Usage Analysis**
+
 **Total console.* calls in components**: 20 components with console usage
 
 **Priority Components** (from original plan):
+
 - `student-management.tsx`: 1 console.log
 - `messaging-hub.tsx`: 4 console.error
 - `monthly-calendar.tsx`: 1 console.error
@@ -27,11 +30,13 @@
 - Other components: 15 with console usage
 
 #### 🎨 **Color-Only Indicators Analysis**
+
 - `student-management.tsx`: ✅ Clean (no status badges found)
 - `messaging-hub.tsx`: ✅ Minimal color usage
 - `monthly-calendar.tsx`: ⚠️ Likely has color-coded calendar cells
 
 #### 🔧 **Convex Files Issue**
+
 **Status**: ✅ **RESOLVED** - `convex/files.ts` exists and exports `generateUploadUrl`
 
 **Root Cause**: Convex API types need regeneration
@@ -47,13 +52,17 @@
 Based on investigation, here's the optimized plan:
 
 #### **Priority 1: Fix Build Blocker** (15 minutes)
+
 ```bash
 npx convex dev
 ```
+
 This will regenerate API types and resolve the `api.files` error.
 
 #### **Priority 2: messaging-hub.tsx** (30 minutes)
+
 **Changes**:
+
 1. Replace 4 console.error with logger.error
 2. Add keyboard shortcuts (Escape to close)
 3. Verify no color-only status indicators
@@ -61,7 +70,9 @@ This will regenerate API types and resolve the `api.files` error.
 **Rationale**: Quick win - only needs logger replacement
 
 #### **Priority 3: student-management.tsx** (1 hour)
+
 **Changes**:
+
 1. Replace 1 console.log with logger
 2. Add keyboard shortcuts (Ctrl+N, Escape)
 3. Add ARIA labels to student list items
@@ -70,7 +81,9 @@ This will regenerate API types and resolve the `api.files` error.
 **Rationale**: Core CRUD component, high user interaction
 
 #### **Priority 4: monthly-calendar.tsx** (1.5 hours)
+
 **Changes**:
+
 1. Replace 1 console.error with logger
 2. Add keyboard navigation (Arrow keys)
 3. Make calendar cells 44px minimum
@@ -80,6 +93,7 @@ This will regenerate API types and resolve the `api.files` error.
 **Rationale**: Most complex - calendar interaction patterns
 
 #### **Priority 5: Build, Test, Document** (1 hour)
+
 1. Full production build
 2. Manual testing of keyboard shortcuts
 3. Accessibility testing
@@ -90,6 +104,7 @@ This will regenerate API types and resolve the `api.files` error.
 ## 🎯 EXECUTION STRATEGY
 
 ### Step 1: Regenerate Convex Types ✅
+
 ```bash
 npx convex dev
 # Wait for "Convex functions ready"
@@ -102,6 +117,7 @@ npm run build  # Verify build passes
 **File**: `components/messaging-hub.tsx`
 
 **Changes**:
+
 ```typescript
 // Add imports
 import { logger } from "@/lib/logger";
@@ -128,6 +144,7 @@ Line 147: logger.error("Failed to delete message", error, { component: "Messagin
 **File**: `components/student-management.tsx`
 
 **Changes**:
+
 ```typescript
 // Add imports
 import { logger } from "@/lib/logger";
@@ -158,6 +175,7 @@ useKeyboardShortcuts([
 **File**: `components/monthly-calendar.tsx`
 
 **Changes**:
+
 ```typescript
 // Add imports
 import { logger } from "@/lib/logger";
@@ -256,23 +274,27 @@ useKeyboardShortcuts([
 ## ✅ SUCCESS CRITERIA
 
 ### Build Passing
+
 - [ ] `npx convex dev` regenerates types
 - [ ] `npm run build` completes with 0 errors
 - [ ] ESLint warnings < 5
 
 ### Code Quality
+
 - [ ] 0 console.* in updated components
 - [ ] All status badges have icons + text + color
 - [ ] All buttons have MIN_TOUCH_TARGET
 - [ ] All keyboard shortcuts documented
 
 ### Accessibility
+
 - [ ] WCAG 2.1 Level AA compliance
 - [ ] Screen reader friendly labels
 - [ ] Keyboard navigation functional
 - [ ] Touch targets >= 44px
 
 ### User Experience
+
 - [ ] Keyboard shortcuts save 2-3 clicks per action
 - [ ] Error messages properly logged
 - [ ] No regressions in existing functionality
@@ -282,6 +304,7 @@ useKeyboardShortcuts([
 ## 🚀 NEXT ACTIONS (In Order)
 
 1. **Run Convex Dev** (blocking)
+
    ```bash
    cd C:\Users\User\OneDrive\Documents\Vs2\Evan'sClassTracker4.5\Evan-sClassTracker4.5
    npx convex dev
@@ -318,18 +341,21 @@ useKeyboardShortcuts([
 ## 📝 RISK MITIGATION
 
 ### Risk 1: Convex Dev Fails
+
 **Probability**: Low  
 **Impact**: High (blocks everything)  
 **Mitigation**: `convex/files.ts` exists, just needs type regeneration  
 **Fallback**: Check `.env.local` for correct Convex deployment URL
 
 ### Risk 2: Calendar Keyboard Navigation Complex
+
 **Probability**: Medium  
 **Impact**: Medium (delays completion)  
 **Mitigation**: Start with simple arrow key navigation, iterate if needed  
 **Fallback**: Skip advanced navigation, focus on basic accessibility
 
 ### Risk 3: Build Time Exceeds Estimate
+
 **Probability**: Low  
 **Impact**: Low (just takes longer)  
 **Mitigation**: Changes are isolated, low risk of breaking changes

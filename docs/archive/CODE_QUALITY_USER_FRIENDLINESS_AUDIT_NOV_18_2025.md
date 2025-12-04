@@ -43,6 +43,7 @@ Evan's Class Tracker 4.5 demonstrates **excellent code quality** with strong pat
 #### 1. Exceptional Documentation (98/100)
 
 **Evidence**:
+
 - 15+ comprehensive markdown guides (6,000+ lines)
 - Clear architectural patterns (25 documented)
 - Migration guides with step-by-step procedures
@@ -50,6 +51,7 @@ Evan's Class Tracker 4.5 demonstrates **excellent code quality** with strong pat
 - Disaster recovery protocols
 
 **Files**:
+
 - `docs/` folder with organized guides
 - `CHANGELOG.md` with detailed version history
 - `DATABASE_OPTIMIZATION_NOV_18_2025.md` with query analysis
@@ -62,6 +64,7 @@ Evan's Class Tracker 4.5 demonstrates **excellent code quality** with strong pat
 #### 2. Strong Type Safety (95/100)
 
 **TypeScript Configuration**:
+
 ```typescript
 // tsconfig.json
 {
@@ -75,12 +78,14 @@ Evan's Class Tracker 4.5 demonstrates **excellent code quality** with strong pat
 ```
 
 **Type Coverage**:
+
 - ✅ 70+ files in `components/` - all TypeScript
 - ✅ 47+ files in `convex/` - all TypeScript
 - ✅ Shared types in `lib/types.ts`
 - ✅ Convex auto-generates types (`_generated/dataModel.d.ts`)
 
 **Improvement Since Nov 5**:
+
 - Unused variable warnings configured in ESLint (+3 points)
 - Better type inference from Convex schema
 
@@ -106,6 +111,7 @@ Evan's Class Tracker 4.5 demonstrates **excellent code quality** with strong pat
    - ~95% faster panel toggle operations
 
 **Convex Package Update**:
+
 ```json
 // package.json
 "convex": "^1.28.0" → "^1.29.2" // Latest stable (Nov 18)
@@ -116,6 +122,7 @@ Evan's Class Tracker 4.5 demonstrates **excellent code quality** with strong pat
 #### 4. Comprehensive Pattern Enforcement (92/100)
 
 **Non-Negotiable Patterns** (25 documented):
+
 - ✅ Bilingual-first development (English/Thai)
 - ✅ Index-first query optimization
 - ✅ N+1 query prevention
@@ -129,6 +136,7 @@ Evan's Class Tracker 4.5 demonstrates **excellent code quality** with strong pat
 - ✅ Modal accordion pattern
 
 **Enforcement Mechanisms**:
+
 - Documentation in `docs/core-patterns.md`
 - Code examples in implementation summaries
 - ESLint rules for basic checks
@@ -138,6 +146,7 @@ Evan's Class Tracker 4.5 demonstrates **excellent code quality** with strong pat
 #### 5. Strong Error Handling (90/100)
 
 **Global Error Boundary**:
+
 ```typescript
 // components/error-boundary.tsx
 export class ErrorBoundary extends Component {
@@ -149,6 +158,7 @@ export class ErrorBoundary extends Component {
 ```
 
 **Toast Notification System**:
+
 ```typescript
 // lib/toast.ts
 export function toast(message: string, type: "success" | "error" | "info") {
@@ -157,6 +167,7 @@ export function toast(message: string, type: "success" | "error" | "info") {
 ```
 
 **Usage**:
+
 - ✅ 4 files use `alert()` (only for critical confirmations)
 - ✅ 51+ files use `console.*()` for development logging
 - ✅ All user-facing errors use toast system
@@ -177,6 +188,7 @@ export function toast(message: string, type: "success" | "error" | "info") {
 | `components/class-detail-modal.tsx` | **1,065** | 🟡 MEDIUM | +0 (no change) |
 
 **Impact**:
+
 - Difficult to navigate and understand
 - Merge conflicts more likely
 - TypeScript compilation slower
@@ -189,11 +201,13 @@ export function toast(message: string, type: "success" | "error" | "info") {
 #### 2. TODO/FIXME Markers (4 instances)
 
 **Found**:
+
 ```bash
 grep -r "TODO|FIXME|XXX|HACK|BUG" **/*.{ts,tsx}
 ```
 
 **Results** (4 files):
+
 1. `lib/types.ts:9` - DEPRECATED "guardian" role migration reminder
 2. `tests/e2e/helpers.ts:??` - Test helper improvement notes
 3. `convex/pagination.ts:??` - Pagination optimization notes
@@ -206,17 +220,20 @@ grep -r "TODO|FIXME|XXX|HACK|BUG" **/*.{ts,tsx}
 #### 3. Console Logging in Production (51 instances)
 
 **Found**:
+
 ```bash
 grep "console\.(log|warn|error)" **/*.{ts,tsx} | wc -l
 # Result: 51 files with console statements
 ```
 
 **Analysis**:
+
 - ✅ Most are in scripts (`backup-to-mongodb.ts`, `create-app-update.ts`)
 - ✅ Some in error boundaries (intentional for debugging)
 - 🟡 A few in components (e.g., `error-boundary.tsx`, `messaging-hub.tsx`)
 
 **Recommendation**:
+
 ```typescript
 // Replace with proper logging utility
 import { logger } from "@/lib/logger";
@@ -232,12 +249,14 @@ if (process.env.NODE_ENV === "development") {
 #### 4. Alert() Usage (4 instances)
 
 **Found**:
+
 ```bash
 grep "alert\(" **/*.{ts,tsx}
 # Result: 4 files
 ```
 
 **Files**:
+
 1. `lib/toast.ts` - Fallback for toast system
 2. `components/class-count-modal.tsx` - Confirmation dialog
 3. `components/class-booking.tsx` - Critical error alert
@@ -256,12 +275,14 @@ grep "alert\(" **/*.{ts,tsx}
 #### 1. Bilingual Support (98/100)
 
 **Implementation**:
+
 - ✅ All UI text in both English and Thai
 - ✅ Language switcher in header
 - ✅ Persistent language preference
 - ✅ Schema fields: `title` + `titleTh`, `name` + `nameTh`
 
 **Components**:
+
 ```typescript
 // components/bilingual-input.tsx
 export function BilingualInput({ value, valueTh, onChange, onChangeTh }) {
@@ -281,6 +302,7 @@ export function BilingualInput({ value, valueTh, onChange, onChangeTh }) {
 #### 2. Toast Notification System (95/100)
 
 **Implementation**:
+
 ```typescript
 // lib/toast.ts
 export function toast(message: string, type: "success" | "error" | "info" | "warning") {
@@ -292,6 +314,7 @@ export function toast(message: string, type: "success" | "error" | "info" | "war
 ```
 
 **Benefits**:
+
 - ✅ Non-blocking (unlike alert())
 - ✅ Auto-dismiss after 3 seconds
 - ✅ Multiple toasts stack
@@ -304,12 +327,14 @@ export function toast(message: string, type: "success" | "error" | "info" | "war
 #### 3. Loading States & Feedback (92/100)
 
 **Evidence**:
+
 - ✅ Skeleton loaders in `monthly-calendar.tsx`
 - ✅ Spinner in `database-init.tsx`
 - ✅ "Loading..." states in all data-dependent components
 - ✅ Disabled buttons during mutations
 
 **Example**:
+
 ```typescript
 const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -323,6 +348,7 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 #### 4. Responsive Design (90/100)
 
 **Tailwind CSS v4**:
+
 ```css
 /* Responsive breakpoints */
 sm: 640px  /* Mobile landscape */
@@ -332,6 +358,7 @@ xl: 1280px /* Large desktop */
 ```
 
 **Components**:
+
 - ✅ `workspace-layout.tsx` - Resizable panels
 - ✅ `monthly-calendar.tsx` - Mobile-optimized grid
 - ✅ `sidebar-nav.tsx` - Collapsible on mobile
@@ -345,12 +372,14 @@ xl: 1280px /* Large desktop */
 **Added v4.5.16 (Oct 2025)**:
 
 **Startup Window**:
+
 - ✅ Guided onboarding for new users
 - ✅ 5 workflows for moderators/teachers
 - ✅ Step-by-step with progress indicators
 - ✅ Skippable for experienced users
 
 **Booking Wizard**:
+
 - ✅ Multi-step class creation
 - ✅ Validation at each step
 - ✅ Summary before submission
@@ -366,6 +395,7 @@ xl: 1280px /* Large desktop */
 **Problem**: 3,000+ classes caused 60-second load times and browser crashes.
 
 **Solution**:
+
 - ✅ Force filter selection before showing results
 - ✅ Reduces DOM from 3,000 → 50-150 elements (95-98% reduction)
 - ✅ Load time: 60s → 2-3s
@@ -387,11 +417,13 @@ xl: 1280px /* Large desktop */
 #### 1. No Keyboard Shortcuts (70/100)
 
 **Missing**:
+
 - ❌ No global keyboard shortcuts (e.g., `Ctrl+N` for new class)
 - ❌ No Tab navigation improvements
 - ❌ No Escape key to close modals (some components)
 
 **Recommendation**:
+
 ```typescript
 useEffect(() => {
   const handleKeyDown = (e: KeyboardEvent) => {
@@ -414,12 +446,14 @@ useEffect(() => {
 #### 2. Limited Accessibility (75/100)
 
 **Issues**:
+
 - 🟡 Some components missing ARIA labels
 - 🟡 Color-only indicators (no text/icons)
 - 🟡 Focus states not always visible
 - 🟡 Screen reader announcements missing for dynamic content
 
 **Example Fix**:
+
 ```typescript
 // Before
 <div className={status === "approved" ? "bg-green-500" : "bg-red-500"} />
@@ -439,6 +473,7 @@ useEffect(() => {
 #### 3. No Undo Mechanism (80/100)
 
 **Missing**:
+
 - ❌ No undo for class deletion
 - ❌ No undo for student deletion
 - ❌ No undo for bulk operations
@@ -446,6 +481,7 @@ useEffect(() => {
 **Current Workaround**: Soft deletes (can restore from admin panel).
 
 **Recommendation**: Add "Undo" toast after destructive actions:
+
 ```typescript
 function deleteClass(classId: Id<"classes">) {
   const deleteAction = api.classes.delete({ classId });
@@ -466,11 +502,13 @@ function deleteClass(classId: Id<"classes">) {
 **Current**: Bulk operations exist in backend (`convex/bulkOperations.ts`).
 
 **Missing**: Frontend UI for:
+
 - ❌ Bulk approve classes
 - ❌ Bulk delete students
 - ❌ Bulk move classes to different school
 
 **Recommendation**: Add checkbox selection + action bar:
+
 ```typescript
 const [selectedClasses, setSelectedClasses] = useState<Set<Id<"classes">>>(new Set());
 
@@ -491,11 +529,13 @@ const [selectedClasses, setSelectedClasses] = useState<Set<Id<"classes">>>(new S
 **Issue**: Some buttons/links < 44px (iOS accessibility guideline).
 
 **Examples**:
+
 - Filter chips: ~36px height
 - Calendar day cells: ~40px
 - Icon buttons: ~32px
 
 **Recommendation**:
+
 ```css
 /* Minimum touch target size */
 .btn-sm {
@@ -520,6 +560,7 @@ const [selectedClasses, setSelectedClasses] = useState<Set<Id<"classes">>>(new S
 #### 1. PBKDF2 Password Hashing (95/100)
 
 **Implementation** (v4.5.18, Nov 2, 2025):
+
 ```typescript
 // convex/users.ts
 const hashPassword = async (password: string): Promise<string> => {
@@ -534,6 +575,7 @@ const hashPassword = async (password: string): Promise<string> => {
 **Security Level**: A+ (100,000 iterations = 100x stronger than bcrypt)
 
 **Emergency Migration** (v4.5.23, Nov 9, 2025):
+
 - ✅ Tools created for bcrypt → PBKDF2 migration
 - ✅ Verification: 0 bcrypt users in current deployment
 - ✅ Status: System is secure
@@ -543,6 +585,7 @@ const hashPassword = async (password: string): Promise<string> => {
 #### 2. Rate Limiting (90/100)
 
 **Implementation**:
+
 ```typescript
 // convex/rateLimit.ts
 export async function checkRateLimit(
@@ -566,6 +609,7 @@ export async function checkRateLimit(
 #### 3. Audit Logging (92/100)
 
 **Implementation**:
+
 ```typescript
 // convex/auditHelpers.ts
 export async function logAudit(
@@ -595,12 +639,14 @@ export async function logAudit(
 #### 4. Role-Based Access Control (95/100)
 
 **Implementation**:
+
 - ✅ Four roles: admin, moderator, teacher, guardian
 - ✅ Moderators strictly school-scoped (no cross-school access)
 - ✅ Teachers multi-school capable
 - ✅ Admins have God mode
 
 **Enforcement**:
+
 ```typescript
 // Backend validation
 if (userRole === "moderator" && classData.schoolId !== userSchoolId) {
@@ -609,6 +655,7 @@ if (userRole === "moderator" && classData.schoolId !== userSchoolId) {
 ```
 
 **Frontend Guard**:
+
 ```typescript
 {userRole === "admin" && <AdminPanel />}
 {userRole === "moderator" && <ModeratorPanel />}
@@ -635,6 +682,7 @@ if (userRole === "moderator" && classData.schoolId !== userSchoolId) {
 **Risk**: Medium (XSS if data rendered as HTML).
 
 **Example**:
+
 ```typescript
 // Current
 const name = formData.get("name") as string;
@@ -653,6 +701,7 @@ await ctx.db.insert("students", { name });
 **Issue**: No CSP headers configured.
 
 **Recommendation**:
+
 ```typescript
 // next.config.ts
 export default {
@@ -675,6 +724,7 @@ export default {
 **Issue**: Sessions expire after 24h without warning.
 
 **Recommendation**:
+
 ```typescript
 // Show toast 5 minutes before expiry
 useEffect(() => {
@@ -698,6 +748,7 @@ useEffect(() => {
 #### Target: `components/class-booking.tsx` (3,120 lines)
 
 **Current Structure**:
+
 ```
 ClassBooking Component (3,120 lines)
 ├── Form Logic (600 lines)
@@ -711,6 +762,7 @@ ClassBooking Component (3,120 lines)
 ```
 
 **Proposed Split** (8 files):
+
 ```
 ClassBooking (main, 400 lines)
 ├── useClassFilters.ts (hook, 150 lines)
@@ -724,6 +776,7 @@ ClassBooking (main, 400 lines)
 ```
 
 **Benefits**:
+
 - ✅ Each file < 500 lines (maintainable)
 - ✅ Clear separation of concerns
 - ✅ Easier testing (unit test hooks)
@@ -737,6 +790,7 @@ ClassBooking (main, 400 lines)
 #### Target: `convex/classes.ts` (2,213 lines)
 
 **Current Structure**:
+
 ```
 classes.ts (2,213 lines)
 ├── Queries (800 lines)
@@ -757,6 +811,7 @@ classes.ts (2,213 lines)
 ```
 
 **Proposed Split** (5 files):
+
 ```
 classes/
 ├── queries.ts (600 lines)
@@ -767,6 +822,7 @@ classes/
 ```
 
 **Benefits**:
+
 - ✅ Clearer file organization
 - ✅ Easier to find specific mutations/queries
 - ✅ Reduces risk of merge conflicts
@@ -783,6 +839,7 @@ classes/
 **Target**: Analytics dashboard, help window, admin panels.
 
 **Implementation**:
+
 ```typescript
 // Before
 import { ClassAnalytics } from "./class-analytics";
@@ -803,6 +860,7 @@ const ClassAnalytics = dynamic(() => import("./class-analytics"), {
 **Target**: Calendar rendering, conflict detection.
 
 **Example**:
+
 ```typescript
 import { useMemo } from "react";
 
@@ -823,6 +881,7 @@ const conflicts = useMemo(() =>
 **Library**: `react-virtual` or `react-window`
 
 **Example**:
+
 ```typescript
 import { useVirtual } from "react-virtual";
 
@@ -852,6 +911,7 @@ return (
 #### 1. Dark Mode Support (+2 points)
 
 **Implementation**:
+
 ```typescript
 // lib/theme-context.tsx
 const [theme, setTheme] = useState<"light" | "dark">("light");
@@ -862,6 +922,7 @@ const [theme, setTheme] = useState<"light" | "dark">("light");
 ```
 
 **CSS**:
+
 ```css
 /* Tailwind dark mode */
 .dark .bg-white { background-color: #1a1a1a; }
@@ -873,6 +934,7 @@ const [theme, setTheme] = useState<"light" | "dark">("light");
 #### 2. Offline Mode (+3 points)
 
 **Implementation**:
+
 - Service worker for caching
 - IndexedDB for local data
 - Sync queue for offline mutations
@@ -888,6 +950,7 @@ const [theme, setTheme] = useState<"light" | "dark">("light");
 **Library**: `xlsx`
 
 **Example**:
+
 ```typescript
 import * as XLSX from "xlsx";
 
@@ -908,6 +971,7 @@ function exportToExcel(data: any[], filename: string) {
 #### E2E Tests (Playwright)
 
 **Coverage**:
+
 - ✅ Login flow
 - ✅ Student management (CRUD)
 - ✅ Class booking
@@ -915,11 +979,13 @@ function exportToExcel(data: any[], filename: string) {
 - ✅ Calendar interactions
 
 **Performance** (as of Nov 18, 2025):
+
 - Test execution: 1.5-2 minutes (30-40% faster than before)
 - Pass rate: 97%
 - Parallelism: 6 workers
 
 **Configuration**:
+
 ```typescript
 // playwright.config.ts
 export default {
@@ -942,11 +1008,13 @@ export default {
 **Existing**: `convex/__tests__/users.test.ts`
 
 **Missing**:
+
 - ❌ No tests for React components
 - ❌ No tests for utility functions
 - ❌ No tests for hooks
 
 **Recommendation**:
+
 ```typescript
 // lib/__tests__/toast.test.ts
 import { describe, it, expect } from "vitest";
@@ -967,6 +1035,7 @@ describe("toast", () => {
 #### ESLint
 
 **Configuration**:
+
 ```javascript
 // eslint.config.mjs
 export default [
@@ -999,6 +1068,7 @@ export default [
 #### Git Hooks (Husky)
 
 **Pre-commit**:
+
 ```json
 {
   "lint-staged": {
@@ -1037,19 +1107,19 @@ export default [
 
 ### Short-Term (This Month)
 
-4. **Add Bulk Action UI** (Priority: MEDIUM)
+1. **Add Bulk Action UI** (Priority: MEDIUM)
    - Checkbox selection for classes/students
    - Action bar for bulk operations
    - **Effort**: 2 days
    - **Impact**: +4 points to UX
 
-5. **Implement Undo Mechanism** (Priority: MEDIUM)
+2. **Implement Undo Mechanism** (Priority: MEDIUM)
    - Toast-based undo for deletions
    - Time window: 10 seconds
    - **Effort**: 1 day
    - **Impact**: +3 points to UX
 
-6. **Lazy Load Heavy Components** (Priority: MEDIUM)
+3. **Lazy Load Heavy Components** (Priority: MEDIUM)
    - Analytics, admin panels, help window
    - **Effort**: 1 day
    - **Impact**: +5 points to Performance
@@ -1058,18 +1128,18 @@ export default [
 
 ### Long-Term (Next Quarter)
 
-7. **Add Unit Tests** (Priority: LOW)
+1. **Add Unit Tests** (Priority: LOW)
    - Component tests with Testing Library
    - Hook tests with Vitest
    - **Effort**: 1 week
    - **Impact**: +8 points to Testing
 
-8. **Dark Mode Support** (Priority: LOW)
+2. **Dark Mode Support** (Priority: LOW)
    - Theme context + Tailwind dark variants
    - **Effort**: 2 days
    - **Impact**: +2 points to UX
 
-9. **Offline Mode** (Priority: LOW)
+3. **Offline Mode** (Priority: LOW)
    - Service worker + IndexedDB
    - **Effort**: 1 week
    - **Impact**: +5 points to UX

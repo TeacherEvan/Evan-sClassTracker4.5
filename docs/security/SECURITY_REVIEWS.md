@@ -5,7 +5,7 @@
 
 ---
 
-##  Critical Vulnerabilities (Must Fix Before Production)
+## Critical Vulnerabilities (Must Fix Before Production)
 
 ### 1. Schools Management - No Permission Checks
 
@@ -15,10 +15,12 @@
 **Problem**: ANY authenticated user can create/delete schools and assign moderators
 
 **Attack Scenarios**:
+
 - Teacher creates fake school  assigns self as moderator  gains elevated privileges
 - Malicious user deletes all schools  system data loss
 
 **Required Fix**:
+
 ```typescript
 export const create = mutation({
   args: { 
@@ -63,10 +65,12 @@ export const create = mutation({
 **Problem**: ANY user can create/modify ANY student
 
 **Attack Scenarios**:
+
 - Teacher from School A modifies students from School B
 - Malicious user changes guardian information
 
 **Required Fix**:
+
 ```typescript
 export const update = mutation({
   args: {
@@ -102,13 +106,14 @@ export const update = mutation({
 
 ---
 
-##  Implemented Security Features
+## Implemented Security Features
 
 ### 1. Login Rate Limiting (24-Hour Lockout)
 
 **Status**: Implemented October 2025
 
 **Features**:
+
 - Tracks failed login attempts
 - **24-hour lockout** after 5 failed attempts
 - Auto-unlock after cooldown period
@@ -116,6 +121,7 @@ export const update = mutation({
 - Stores last 10 login sessions with device/browser info
 
 **Schema** (convex/schema.ts):
+
 ```typescript
 users: defineTable({
   // ... existing fields
@@ -133,6 +139,7 @@ users: defineTable({
 ```
 
 **User Experience**:
+
 - Attempt 1-4: \"Invalid username or password. X attempt(s) remaining.\"
 - Attempt 5: \"Account locked for 24 hours. Contact admin to reset.\"
 - After 24hrs: Auto-unlock on next login
@@ -145,21 +152,25 @@ users: defineTable({
 
 **Features**:
  **Authorization Checks**:
+
 - Only admins/moderators can bulk delete
 - Moderators restricted to deleting teachers only
 - Admins cannot delete other admins
 - Users cannot delete themselves
 
  **Rate Limiting**:
+
 - Bulk user deletion: 5 ops per minute
 - Single user deletion: 10 ops per minute
 
  **Validation**:
+
 - User existence check before deletion
 - Role-based permission validation
 - School moderator cleanup when deleting moderators
 
  **UI Safeguards**:
+
 - Double confirmation modal
 - Selected items highlighted
 - Clear count of affected items
@@ -188,6 +199,7 @@ users: defineTable({
 **Status**: Implemented October 2025
 
 **Features**:
+
 - File uploads via Convex Storage (CDN-backed)
 - Automatic cleanup after 14 days
 - MIME type validation
@@ -195,6 +207,7 @@ users: defineTable({
 - Soft deletes with isActive flag
 
 **Storage Limits**:
+
 - Free tier: 1GB storage, 5GB bandwidth/month
 - Estimated cost: <\.10/month typical usage
 
@@ -202,7 +215,7 @@ users: defineTable({
 
 ---
 
-##  Known Limitations (Development Only)
+## Known Limitations (Development Only)
 
 ### 1. Password Hashing with btoa()
 
@@ -235,20 +248,22 @@ users: defineTable({
 ### 3. Missing Rate Limits
 
 **Protected**:
--  Class bookings: 30/min
--  Messages: 20/min
--  Bulk user delete: 5/min
+
+- Class bookings: 30/min
+- Messages: 20/min
+- Bulk user delete: 5/min
 
 **Unprotected**:
--  Login attempts: unlimited (mitigated by 24hr lockout)
--  Password changes: unlimited (DoS risk)
--  Bulk student delete: unlimited
+
+- Login attempts: unlimited (mitigated by 24hr lockout)
+- Password changes: unlimited (DoS risk)
+- Bulk student delete: unlimited
 
 **TODO**: Add rate limiting to unprotected endpoints
 
 ---
 
-##  Security Checklist
+## Security Checklist
 
 ### Before Production Deployment
 
@@ -274,7 +289,7 @@ pm audit)
 
 ---
 
-##  Testing & Validation
+## Testing & Validation
 
 ### Critical Security Tests
 
@@ -295,7 +310,7 @@ pm audit)
 
 ---
 
-##  Related Documentation
+## Related Documentation
 
 - [AUDIT_LOGGING_IMPLEMENTATION.md](AUDIT_LOGGING_IMPLEMENTATION.md) - Audit trail system
 - [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Security best practices
