@@ -7,15 +7,17 @@ import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import { useMutation, useQuery } from "convex/react";
 import { AlertTriangle, Check, Clock, Edit2, Info, MapPin, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { HierarchicalStudentSelector } from "../hierarchical-student-selector";
 import type { ClassItemDisplayProps } from "./types";
 
 /**
  * ClassItemDisplay Component
  * Displays a single class item with all its details, actions, and related data
+ * 
+ * ⚡ PERFORMANCE: Memoized to prevent unnecessary re-renders in class lists
  */
-export function ClassItemDisplay({
+export const ClassItemDisplay = memo(function ClassItemDisplay({
   classItem,
   userRole,
   userId,
@@ -585,4 +587,4 @@ export function ClassItemDisplay({
       )}
     </div>
   );
-}
+});

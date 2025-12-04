@@ -248,6 +248,38 @@ h3 {
   animation: fadeIn 150ms ease-out;
 }
 
+/* Smooth fade-in for mounting components */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeInScale {
+  animation: fadeInScale 200ms ease-out;
+}
+
+/* Slide up animation for modals */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Print styles for ClassCount modal */
 @media print {
 
