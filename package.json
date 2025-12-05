@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.22.0",
-    "convex": "^1.29.3",
+    "convex": "^1.30.0",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.554.0",
     "mongodb": "^6.21.0",
