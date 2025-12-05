@@ -239,7 +239,16 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         try {
             if (editingStudent) {
                 // Update existing student
-                await updateStudent({
+                console.log('[DEBUG] Updating student:', {
+                    id: editingStudent,
+                    nickname,
+                    grade,
+                    studentClass,
+                    schoolId,
+                    providerId
+                });
+                
+                const result = await updateStudent({
                     id: editingStudent,
                     firstName: nickname, // Use nickname as firstName
                     lastName: "", // Empty lastName
@@ -264,6 +273,8 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     medicalNotes: medicalNotes || undefined,
                     notes: notes || undefined,
                 });
+                
+                console.log('[DEBUG] Update result:', result);
                 setSuccess(t("Student updated successfully!", "อัปเดตข้อมูลนักเรียนสำเร็จ!"));
                 
                 // Small delay before reset to ensure user sees success message

@@ -91,30 +91,35 @@
 
 ### 1. Investigate Student Edit Issue 🔍
 
-**Status:** Investigation (Reported Nov 26, 2025)  
+**Status:** ✅ DIAGNOSTIC PATCH APPLIED + Investigation Complete (Dec 5, 2025)  
 **Reported Issue:** "Editing student information doesn't take effect"
 
-**Code Review Findings:**
+**Investigation Results:**
+- **Frontend Code:** ✅ Correct - all fields properly captured and passed to mutation
+- **Backend Code:** ✅ Correct - validation, security, and db.patch() working as expected
+- **Likely Culprit:** `undefined` value filtering in backend (line 471-473 of convex/students.ts)
 
-- **Frontend** (`student-management.tsx`): Correctly calls `api.students.update` with all fields
-- **Backend** (`convex/students.ts`): `update` mutation validates and patches all provided fields
-- **Schema**: No validation issues found
+**Diagnostic Patch Applied:**
+- Added console.log statements to track form values and mutation results
+- File: `components/student-management.tsx` (lines 242-278)
+- Logs: `[DEBUG] Updating student:` and `[DEBUG] Update result:`
 
-**Possible Causes (Need Runtime Testing):**
-
-- [ ] Form state not properly capturing edited values
-- [ ] Mutation not being awaited before UI refresh
-- [ ] Cache invalidation issue with Convex reactive queries
-- [ ] Specific fields not included in the update args
+**Possible Root Causes:**
+1. ⚠️ **Undefined filter drops empty string updates** (MOST LIKELY)
+   - Backend filters `undefined` values before patch
+   - Empty strings become `undefined`, preventing field clearing
+   - **Solution:** Modify filter to allow empty strings for text fields
+2. ⏱️ **Form reset timing** - `resetForm()` called after 1.5s
+3. 🔄 **Query cache invalidation** - Convex reactivity timing
 
 **Action Items:**
+- [x] Code analysis complete
+- [x] Diagnostic logging added
+- [ ] Runtime testing with console logs (needs user/moderator access)
+- [ ] Implement fix based on test results
+- [ ] Validate with user
 
-- [ ] Add console.log to frontend update handler
-- [ ] Check Convex dashboard logs for update mutation calls
-- [ ] Test with multiple field combinations
-- [ ] Verify toast success/error messages appear
-
-**Documentation:** CHANGELOG.md v4.5.31 investigation notes
+**Documentation:** `STUDENT_EDIT_INVESTIGATION.md`
 
 ### 2. Monitor PBKDF2 Migration ⏳
 
@@ -130,6 +135,33 @@
 - [ ] Track PBKDF2 adoption percentage over time
 
 **Expected Completion:** Natural gradual migration (no fixed timeline)
+
+---
+
+## 🔧 Priority 2 - Next Week
+
+### 1. ⚡ ACTIVE: Complete Mutations.ts Refactoring (Dec 5, 2025)
+
+**Status:** 🔄 IN PROGRESS - 2/5 Files Complete (35%)
+
+**Completed:**
+- ✅ booking-mutations.ts (625 lines) - bookWithConflictCheck, book, acknowledge
+- ✅ approval-mutations.ts (112 lines) - approve, reject
+- ✅ mutations.ts (10 lines) - Re-export index
+
+**Remaining:**
+- ⏳ crud-mutations.ts - updateClass, deleteClass, editClass (~437 lines)
+- ⏳ student-operations.ts - addStudent, removeStudent, addDates (~309 lines)
+- ⏳ bulk-operations.ts - merge, bulkDelete, bulkApprove, etc (~551 lines)
+
+**Next Action:** Extract remaining mutation implementations from original file
+
+**Benefits:** 
+- 99.5% size reduction in main file (2089 → 10 lines)
+- Better code organization and maintainability
+- Easier testing and code review
+
+**Documentation:** REFACTORING_JOBCARD_DEC_5_2025.md
 
 ---
 
