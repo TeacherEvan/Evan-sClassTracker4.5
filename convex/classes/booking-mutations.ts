@@ -1,9 +1,7 @@
 import { v } from "convex/values";
-import type { Id } from "../_generated/dataModel";
 import { mutation } from "../_generated/server";
 import { logAudit } from "../auditHelpers";
 import { checkRateLimit, validateLength } from "../rateLimit";
-import { verifyClassAccess } from "./helpers";
 
 export const bookWithConflictCheck = mutation({
   args: {
@@ -49,16 +47,18 @@ export const bookWithConflictCheck = mutation({
 
     // Check for time conflicts first
     const scheduledDate = new Date(args.scheduledDate);
-    const scheduledDateOnly = new Date(scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate()).getTime();
+    const dayStart = new Date(scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate()).getTime();
+    const dayEnd = dayStart + 24 * 60 * 60 * 1000; // End of day
 
+    // Use proper index for teacher + date range query
     const existingClasses = await ctx.db
       .query("classes")
-      .withIndex("by_teacher_date", (q) =>
+      .withIndex("by_teacher_and_date", (q) =>
         q
           .eq("teacherId", args.teacherId)
-          .eq("scheduledDateOnly", scheduledDateOnly)
+          .gte("scheduledDate", dayStart)
+          .lt("scheduledDate", dayEnd)
       )
-      .filter((q) => q.eq(q.field("deleted"), false))
       .collect();
 
     const conflictingClasses = existingClasses.filter((c) => {
@@ -74,7 +74,7 @@ export const bookWithConflictCheck = mutation({
         conflicts: conflictingClasses.map((c) => ({
           _id: c._id,
           scheduledDate: c.scheduledDate,
-          studentIds: c.studentIds,
+          studentId: c.studentId,
           locationId: c.locationId,
         })),
       };
@@ -92,21 +92,21 @@ export const bookWithConflictCheck = mutation({
     // Auto-approve if booked by moderator or admin
     const status = isModerator || isAdmin ? "approved" : "pending";
     const approvedAt = isModerator || isAdmin ? Date.now() : undefined;
-    const approvedBy = isModerator || isAdmin ? args.bookedByUserId : undefined;
+    const approvedByUserId = isModerator || isAdmin ? args.bookedByUserId : undefined;
 
     const classId = await ctx.db.insert("classes", {
       teacherId: args.teacherId,
       schoolId: args.schoolId,
       providerId: args.providerId,
-      studentIds: [args.studentId],
+      studentId: args.studentId,
       locationId: args.locationId,
       pendingLocationName: args.pendingLocationName,
       pendingLocationNameTh: args.pendingLocationNameTh,
       scheduledDate: args.scheduledDate,
-      scheduledDateOnly,
       status,
       approvedAt,
-      approvedBy,
+      approvedByUserId,
+      approvedByUsername: approvedByUserId ? bookedBy.username : undefined,
       bookedByUserId: args.bookedByUserId,
       bookedByUsername: bookedBy.username,
       approvalSource: isModerator ? "moderator" : isAdmin ? "admin" : undefined,
@@ -120,7 +120,6 @@ export const bookWithConflictCheck = mutation({
       preparationNotes: args.preparationNotes,
       preparationNotesTh: args.preparationNotesTh,
       classType: args.classType || "regular",
-      deleted: false,
       createdAt: Date.now(),
     });
 
@@ -148,12 +147,13 @@ export const bookWithConflictCheck = mutation({
     await logAudit(ctx, {
       userId: args.bookedByUserId,
       action: isModerator ? "book_class" : "request_class",
-      actionTh: isModerator ? "จองชั้นเรียน" : "ขอชั้นเรียน",
-      details: `${isModerator ? "Booked" : "Requested"} class for ${student.firstName} ${student.lastName} at ${locationText} on ${new Date(args.scheduledDate).toLocaleDateString()}`,
-      detailsTh: `${isModerator ? "จอง" : "ขอ"}ชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} วันที่ ${new Date(args.scheduledDate).toLocaleDateString("th-TH")}`,
-      relatedClassId: classId,
-      relatedStudentId: args.studentId,
-      createdAt: Date.now(),
+      targetType: "classes",
+      targetId: classId.toString(),
+      details: {
+        studentName: `${student.firstName} ${student.lastName}`,
+        location: locationText,
+        scheduledDate: args.scheduledDate,
+      },
     });
 
     // If auto-approved, send notification to teacher
@@ -279,33 +279,25 @@ export const book = mutation({
     if (args.preparationNotes) validateLength(args.preparationNotes, "Preparation Notes", 2000, 0);
     if (args.preparationNotesTh) validateLength(args.preparationNotesTh, "Preparation Notes (Thai)", 2000, 0);
 
-    // Calculate scheduled date (date only, no time)
-    const scheduledDate = new Date(args.scheduledDate);
-    const scheduledDateOnly = new Date(
-      scheduledDate.getFullYear(),
-      scheduledDate.getMonth(),
-      scheduledDate.getDate()
-    ).getTime();
-
     // Auto-approve if booked by moderator or admin
     const status = isModerator || isAdmin ? "approved" : "pending";
     const approvedAt = isModerator || isAdmin ? Date.now() : undefined;
-    const approvedBy = isModerator || isAdmin ? args.bookedByUserId : undefined;
+    const approvedByUserId = isModerator || isAdmin ? args.bookedByUserId : undefined;
 
-    // Insert class
+    // Insert class - use schema-compliant fields
     const classId = await ctx.db.insert("classes", {
       teacherId: args.teacherId,
       schoolId: args.schoolId,
       providerId: args.providerId,
-      studentIds: [args.studentId],
+      studentId: args.studentId,
       locationId: args.locationId,
       pendingLocationName: args.pendingLocationName,
       pendingLocationNameTh: args.pendingLocationNameTh,
       scheduledDate: args.scheduledDate,
-      scheduledDateOnly,
       status,
       approvedAt,
-      approvedBy,
+      approvedByUserId,
+      approvedByUsername: approvedByUserId ? bookedBy.username : undefined,
       bookedByUserId: args.bookedByUserId,
       bookedByUsername: bookedBy.username,
       approvalSource: isModerator ? "moderator" : isAdmin ? "admin" : undefined,
@@ -319,34 +311,31 @@ export const book = mutation({
       preparationNotes: args.preparationNotes,
       preparationNotesTh: args.preparationNotesTh,
       classType: args.classType || "regular",
-      deleted: false,
       createdAt: Date.now(),
     });
 
     // Get location for audit log
     let locationText = "Pending Location Request";
-    let locationTextTh = "รอการอนุมัติสถานที่";
     if (args.locationId) {
       const location = await ctx.db.get(args.locationId);
       if (location) {
         locationText = location.name;
-        locationTextTh = location.nameTh || location.name;
       }
     } else if (args.pendingLocationName) {
       locationText = `Pending: ${args.pendingLocationName}`;
-      locationTextTh = `รอการอนุมัติ: ${args.pendingLocationNameTh || args.pendingLocationName}`;
     }
 
     // ✅ AUDIT LOG
     await logAudit(ctx, {
       userId: args.bookedByUserId,
       action: isModerator ? "book_class" : "request_class",
-      actionTh: isModerator ? "จองชั้นเรียน" : "ขอชั้นเรียน",
-      details: `${isModerator ? "Booked" : "Requested"} class for ${student.firstName} ${student.lastName} at ${locationText} on ${new Date(args.scheduledDate).toLocaleDateString()}`,
-      detailsTh: `${isModerator ? "จอง" : "ขอ"}ชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} วันที่ ${new Date(args.scheduledDate).toLocaleDateString("th-TH")}`,
-      relatedClassId: classId,
-      relatedStudentId: args.studentId,
-      createdAt: Date.now(),
+      targetType: "classes",
+      targetId: classId.toString(),
+      details: {
+        studentName: `${student.firstName} ${student.lastName}`,
+        location: locationText,
+        scheduledDate: args.scheduledDate,
+      },
     });
 
     // If auto-approved, send notification to teacher
@@ -356,7 +345,7 @@ export const book = mutation({
         title: "New Class Booked",
         titleTh: "จองชั้นเรียนใหม่",
         message: `A class has been booked for ${student.firstName} ${student.lastName} at ${locationText} on ${new Date(args.scheduledDate).toLocaleString()}`,
-        messageTh: `มีการจองชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationTextTh} วันที่ ${new Date(args.scheduledDate).toLocaleString("th-TH")}`,
+        messageTh: `มีการจองชั้นเรียนสำหรับ ${student.firstName} ${student.lastName} ที่ ${locationText} วันที่ ${new Date(args.scheduledDate).toLocaleString("th-TH")}`,
         type: "info",
         read: false,
         createdAt: Date.now(),
@@ -368,41 +357,38 @@ export const book = mutation({
 });
 
 // Mutation to acknowledge a class (teacher confirms they saw the booking)
+// Note: The schema uses "acknowledged" status, not separate acknowledgedAt/By fields
 export const acknowledge = mutation({
   args: {
     id: v.id("classes"),
     userId: v.id("users"), // Teacher ID
   },
   handler: async (ctx, args) => {
-    // ✅ SECURITY: Verify teacher permissions
-    await verifyClassAccess(ctx, args.id, args.userId);
-
     // Get class
     const cls = await ctx.db.get(args.id);
     if (!cls) {
       throw new Error("Class not found");
     }
 
-    // Verify it's the teacher's class
+    // ✅ SECURITY: Verify it's the teacher's class
     if (cls.teacherId !== args.userId) {
       throw new Error("Unauthorized: Only the assigned teacher can acknowledge");
     }
 
-    // Update class
+    // Update class status to acknowledged
     await ctx.db.patch(args.id, {
-      acknowledgedAt: Date.now(),
-      acknowledgedBy: args.userId,
+      status: "acknowledged",
     });
 
     // ✅ AUDIT LOG
     await logAudit(ctx, {
       userId: args.userId,
       action: "acknowledge_class",
-      actionTh: "ยืนยันการรับทราบชั้นเรียน",
-      details: `Acknowledged class on ${new Date(cls.scheduledDate || 0).toLocaleDateString()}`,
-      detailsTh: `ยืนยันการรับทราบชั้นเรียนวันที่ ${new Date(cls.scheduledDate || 0).toLocaleDateString("th-TH")}`,
-      relatedClassId: args.id,
-      createdAt: Date.now(),
+      targetType: "classes",
+      targetId: args.id.toString(),
+      details: {
+        scheduledDate: cls.scheduledDate,
+      },
     });
 
     return { success: true };

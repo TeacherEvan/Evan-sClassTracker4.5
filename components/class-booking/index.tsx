@@ -573,7 +573,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
   const handleAcknowledge = async (classId: Id<"classes">) => {
     try {
-      await acknowledgeClass({ userId, classId });
+      await acknowledgeClass({ id: classId, userId });
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to acknowledge class",
@@ -584,7 +584,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
   const handleApprove = async (classId: Id<"classes">) => {
     try {
-      await approveClass({ userId, classId });
+      await approveClass({ id: classId, userId });
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to approve class",
@@ -606,7 +606,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     }
 
     try {
-      await rejectClass({ userId, classId: pendingRejectId, reason: rejectionReason, reasonTh: rejectionReason });
+      await rejectClass({ id: pendingRejectId, userId, reason: rejectionReason, reasonTh: rejectionReason });
       setShowRejectDialog(false);
       setPendingRejectId(null);
       setRejectionReason("");

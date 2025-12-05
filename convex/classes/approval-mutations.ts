@@ -1,9 +1,6 @@
 import { v } from "convex/values";
-import type { Id } from "../_generated/dataModel";
 import { mutation } from "../_generated/server";
 import { logAudit } from "../auditHelpers";
-import { checkRateLimit } from "../rateLimit";
-import { verifyClassAccess } from "./helpers";
 
 // Mutation to approve a class (moderator/admin only)
 export const approve = mutation({
@@ -12,16 +9,13 @@ export const approve = mutation({
     userId: v.id("users"), // Moderator/Admin ID
   },
   handler: async (ctx, args) => {
-    // ✅ SECURITY: Verify moderator/admin permissions
-    await verifyClassAccess(ctx, args.id, args.userId);
-
     // Get user
     const user = await ctx.db.get(args.userId);
     if (!user) {
       throw new Error("User not found");
     }
 
-    // Only moderators and admins can approve
+    // ✅ SECURITY: Only moderators and admins can approve
     if (user.role !== "moderator" && user.role !== "admin") {
       throw new Error("Unauthorized: Only moderators and admins can approve classes");
     }
@@ -32,23 +26,30 @@ export const approve = mutation({
       throw new Error("Class not found");
     }
 
-    // Update class status
+    // ✅ SECURITY: Moderators can only approve classes from their school
+    if (user.role === "moderator" && user.schoolId !== cls.schoolId) {
+      throw new Error("Unauthorized: Moderators can only approve classes from their assigned school");
+    }
+
+    // Update class status - use schema-compliant fields
     await ctx.db.patch(args.id, {
       status: "approved",
       approvedAt: Date.now(),
-      approvedBy: args.userId,
-      approvalSource: user.role,
+      approvedByUserId: args.userId,
+      approvedByUsername: user.username,
+      approvalSource: user.role as "moderator" | "admin",
     });
 
     // ✅ AUDIT LOG
     await logAudit(ctx, {
       userId: args.userId,
       action: "approve_class",
-      actionTh: "อนุมัติชั้นเรียน",
-      details: `Approved class on ${new Date(cls.scheduledDate || 0).toLocaleDateString()}`,
-      detailsTh: `อนุมัติชั้นเรียนวันที่ ${new Date(cls.scheduledDate || 0).toLocaleDateString("th-TH")}`,
-      relatedClassId: args.id,
-      createdAt: Date.now(),
+      targetType: "classes",
+      targetId: args.id.toString(),
+      details: {
+        scheduledDate: cls.scheduledDate,
+        studentId: cls.studentId?.toString(),
+      },
     });
 
     // Send notification to teacher
@@ -76,16 +77,13 @@ export const reject = mutation({
     reasonTh: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // ✅ SECURITY: Verify moderator/admin permissions
-    await verifyClassAccess(ctx, args.id, args.userId);
-
     // Get user
     const user = await ctx.db.get(args.userId);
     if (!user) {
       throw new Error("User not found");
     }
 
-    // Only moderators and admins can reject
+    // ✅ SECURITY: Only moderators and admins can reject
     if (user.role !== "moderator" && user.role !== "admin") {
       throw new Error("Unauthorized: Only moderators and admins can reject classes");
     }
@@ -96,24 +94,29 @@ export const reject = mutation({
       throw new Error("Class not found");
     }
 
-    // Update class status
+    // ✅ SECURITY: Moderators can only reject classes from their school
+    if (user.role === "moderator" && user.schoolId !== cls.schoolId) {
+      throw new Error("Unauthorized: Moderators can only reject classes from their assigned school");
+    }
+
+    // Update class status - rejected classes go back to pending or get marked
+    // Note: Schema doesn't have rejectedAt/rejectedBy, so we just change status
     await ctx.db.patch(args.id, {
       status: "rejected",
-      rejectedAt: Date.now(),
-      rejectedBy: args.userId,
-      rejectionReason: args.reason,
-      rejectionReasonTh: args.reasonTh,
     });
 
     // ✅ AUDIT LOG
     await logAudit(ctx, {
       userId: args.userId,
       action: "reject_class",
-      actionTh: "ปฏิเสธชั้นเรียน",
-      details: `Rejected class on ${new Date(cls.scheduledDate || 0).toLocaleDateString()}: ${args.reason}`,
-      detailsTh: `ปฏิเสธชั้นเรียนวันที่ ${new Date(cls.scheduledDate || 0).toLocaleDateString("th-TH")}: ${args.reasonTh || args.reason}`,
-      relatedClassId: args.id,
-      createdAt: Date.now(),
+      targetType: "classes",
+      targetId: args.id.toString(),
+      reason: args.reason,
+      details: {
+        scheduledDate: cls.scheduledDate,
+        studentId: cls.studentId?.toString(),
+        reasonTh: args.reasonTh,
+      },
     });
 
     // Send notification to teacher

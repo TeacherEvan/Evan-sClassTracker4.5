@@ -125,7 +125,7 @@ export function ModeratorApprovalWizard({
         try {
             const approvalPromises = Array.from(selectedClassIds).map(async (classId) => {
                 try {
-                    await approveClass({ classId, userId });
+                    await approveClass({ id: classId, userId });
                     approved++;
                 } catch (error) {
                     console.error(`Failed to approve class ${classId}:`, error);
@@ -160,7 +160,7 @@ export function ModeratorApprovalWizard({
             const rejectionPromises = Array.from(selectedClassIds).map(async (classId) => {
                 try {
                     const notes = rejectionNotes.get(classId) || "Rejected by moderator";
-                    await rejectClass({ classId, userId, reason: notes });
+                    await rejectClass({ id: classId, userId, reason: notes });
                     rejected++;
                 } catch (error) {
                     console.error(`Failed to reject class ${classId}:`, error);
@@ -188,7 +188,7 @@ export function ModeratorApprovalWizard({
 
     const handleSingleApprove = async (classId: Id<"classes">) => {
         try {
-            await approveClass({ classId, userId });
+            await approveClass({ id: classId, userId });
             toast.success("Class approved", "อนุมัติคลาสแล้ว");
         } catch (error) {
             console.error("Error approving class:", error);
@@ -204,7 +204,7 @@ export function ModeratorApprovalWizard({
         }
 
         try {
-            await rejectClass({ classId, userId, reason: notes });
+            await rejectClass({ id: classId, userId, reason: notes });
             toast.success("Class rejected", "ปฏิเสธคลาสแล้ว");
             setRejectionNotes(prev => {
                 const newMap = new Map(prev);

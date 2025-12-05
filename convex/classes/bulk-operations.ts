@@ -3,7 +3,7 @@ import type { Id } from "../_generated/dataModel";
 import { mutation } from "../_generated/server";
 import { verifyClassAccess } from "./helpers";
 import { logAudit } from "../auditHelpers";
-import { checkRateLimit } from "../rateLimit";
+import { checkRateLimit, validateLength } from "../rateLimit";
 
 export const mergeClasses = mutation({
   args: {

@@ -1,8 +1,6 @@
 import { v } from "convex/values";
-import type { Id } from "../_generated/dataModel";
 import { mutation } from "../_generated/server";
 import { verifyClassAccess } from "./helpers";
-import { logAudit } from "../auditHelpers";
 import { checkRateLimit } from "../rateLimit";
 
 export const addDatesToClass = mutation({

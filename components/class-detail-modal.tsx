@@ -142,7 +142,7 @@ export function ClassDetailModal({
 
   const handleApprove = async () => {
     try {
-      await approveClass({ userId: currentUserId, classId: classData._id });
+      await approveClass({ id: classData._id, userId: currentUserId });
       toast.success("Class approved successfully", "อนุมัติคลาสสำเร็จ");
       onClose(); // Close modal after action
     } catch (err) {
@@ -165,8 +165,8 @@ export function ClassDetailModal({
 
     try {
       await rejectClass({
+        id: classData._id,
         userId: currentUserId,
-        classId: classData._id,
         reason: rejectReason,
         reasonTh: rejectReasonTh
       });
