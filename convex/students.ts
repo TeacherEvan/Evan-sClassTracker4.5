@@ -17,7 +17,7 @@ function generateGuardianStudentId(
   const locationCode = locationSource.substring(0, 5).toUpperCase().replace(/[^A-Z0-9]/g, '');
   
   // Name hash: first 2 chars of first name + first 2 chars of last name
-  const nameHash = `${firstName.substring(0, 2)}${lastName.substring(0, 2)}`.toUpperCase();
+  const nameHash = `${(firstName + '  ').substring(0, 2)}${(lastName + '  ').substring(0, 2)}`.toUpperCase();
   
   // Birth hash: YYYYMMDD format
   const birthHash = new Date(birthDate).toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
