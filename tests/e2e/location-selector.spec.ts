@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { login, navigateToTab, TEST_USERS, waitForToast } from './helpers';
+import { login, navigateToTab, TEST_USERS } from './helpers';
 
 test.describe.configure({ mode: 'serial' });
 
