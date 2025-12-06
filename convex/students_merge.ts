@@ -94,11 +94,13 @@ export const mergeStudents = mutation({
     }
 
     // ✅ SECURITY: Role-based access control
-    if (user.role === "teacher" || user.role === "moderator") {
-      // Teachers/moderators can only merge students from their school
+    if (user.role === "teacher") {
+      // Teachers can only merge students from their school
       if (sourceStudent.schoolId !== user.schoolId || targetStudent.schoolId !== user.schoolId) {
         throw new Error("Unauthorized: Cannot merge students from other schools");
       }
+    } else if (user.role === "moderator") {
+      throw new Error("Unauthorized: Moderators cannot merge students");
     } else if (user.role === "guardian") {
       throw new Error("Unauthorized: Guardians cannot merge students");
     } else if (user.role !== "admin") {
