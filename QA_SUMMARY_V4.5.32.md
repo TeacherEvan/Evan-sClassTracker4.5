@@ -98,6 +98,7 @@ npm run build
 | `lazy-loading.spec.ts` | Code-split loading | ✅ Complete |
 
 **Performance Optimizations** (Nov 2025):
+
 - Test execution: 2-3 min → 1.5-2 min (30-40% faster)
 - Login flow: 8-10s → 4-5s per test (50% faster)
 - Parallelism: 4 workers → 6 workers
@@ -143,11 +144,13 @@ npm run build
 **Status**: ⚠️ **UNRESOLVED**
 
 **Problem**:
+
 - Bcrypt library incompatible with Convex runtime (requires Node.js)
 - Temporary bypass: All bcrypt users can login with **ANY password**
 - Migration to PBKDF2 completed but not deployed
 
 **Impact**:
+
 - All users with bcrypt hashes have ZERO password security
 - Exploit risk: HIGH if publicly disclosed
 
@@ -166,6 +169,7 @@ npm run build
 ```
 
 **Files**:
+
 - Migration script: `scripts/migrate-bcrypt-passwords.ps1` (115 lines)
 - Backend logic: `convex/migrateBcryptPasswords.ts` (207 lines)
 - Documentation: `.github/copilot-docs/05-security.md` (lines 45-102)
@@ -251,24 +255,24 @@ npm run build
 
 ### High 🟡
 
-2. **E2E Test Execution**
+1. **E2E Test Execution**
    - Action: Run in staging environment
    - Timeline: Before deployment
    - Risk: MEDIUM (CI environment limitation)
 
-3. **Guardian Deprecation Cleanup**
+2. **Guardian Deprecation Cleanup**
    - Action: Remove deprecated references
    - Timeline: Next sprint (v4.6.0)
    - Risk: LOW (technical debt)
 
 ### Medium 🟢
 
-4. **Test Coverage Expansion**
+1. **Test Coverage Expansion**
    - Action: Add tests for Provider system, watchlist, audit UI
    - Timeline: Q1 2026
    - Risk: LOW (manual testing sufficient)
 
-5. **Markdown Documentation Formatting**
+2. **Markdown Documentation Formatting**
    - Action: Auto-fix remaining lint errors
    - Timeline: Next update
    - Risk: VERY LOW (cosmetic)
@@ -329,17 +333,21 @@ npm run build
 ### Immediate Actions (Required Before Deployment)
 
 1. **Execute Bcrypt Migration** 🔴 **CRITICAL**
+
    ```powershell
    .\scripts\migrate-bcrypt-passwords.ps1
    ```
+
    - Estimated time: 15-30 minutes
    - Verification: Admin dashboard query
    - Follow-up: Force password change for affected users
 
 2. **Run E2E Tests in Staging**
+
    ```bash
    npm run test:e2e
    ```
+
    - Environment: Staging with Convex connection
    - Expected: 97%+ pass rate
    - Document: Any failures for investigation
@@ -429,6 +437,7 @@ Evan's Class Tracker v4.5.32 demonstrates excellent code quality, comprehensive 
 **Once Migration Complete**: ✅ **APPROVE FOR PRODUCTION**
 
 **Risk Level**:
+
 - Current: 🟡 Medium (bcrypt vulnerability)
 - After Migration: 🟢 Low (excellent code quality)
 
