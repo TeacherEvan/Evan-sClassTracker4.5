@@ -193,7 +193,7 @@ export default defineSchema({
     // NEW OPTIONAL FIELDS
     nickname: v.optional(v.string()), // Preferred name
     dateOfBirth: v.optional(v.number()), // For age calculation - REQUIRED for provider students
-    area: v.optional(v.string()), // Teaching location area (e.g., "Bangkok District 1") - REQUIRED for auto-guardian students
+    area: v.optional(v.string()), // Teaching location district code (e.g., "BKK-01" for Bang Kapi) - REQUIRED for auto-guardian students
     parentName: v.optional(v.string()), // Primary parent
     parentPhone: v.optional(v.string()), // Contact number
     parentEmail: v.optional(v.string()), // Email contact

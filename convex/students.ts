@@ -395,6 +395,7 @@ export const update = mutation({
     // Optional fields
     nickname: v.optional(v.string()),
     dateOfBirth: v.optional(v.number()), // Timestamp
+    area: v.optional(v.string()), // Teaching location district code
     parentName: v.optional(v.string()),
     parentPhone: v.optional(v.string()),
     parentEmail: v.optional(v.string()),
@@ -462,6 +463,7 @@ export const update = mutation({
     if (updates.lastName) validateLength(updates.lastName, "Last name", 100, 1);
     if (updates.nickname) validateLength(updates.nickname, "Nickname", 100, 0);
     if (updates.notes) validateLength(updates.notes, "Notes", 2000, 0);
+    if (updates.area) validateLength(updates.area, "Area", 100, 0);
 
     // Validate: class is required for school-linked students
     if (student.schoolId && updates.class === "") {

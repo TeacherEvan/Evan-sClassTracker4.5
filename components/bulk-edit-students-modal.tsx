@@ -7,6 +7,7 @@ import { toast } from "@/lib/toast";
 import { useMutation, useQuery } from "convex/react";
 import { AlertCircle, Save, X } from "lucide-react";
 import { useState } from "react";
+import { LocationSelector } from "./location-selector";
 
 interface BulkEditStudentsModalProps {
     selectedStudentIds: Id<"students">[];
@@ -35,6 +36,7 @@ export function BulkEditStudentsModal({
     const [updateGuardianName, setUpdateGuardianName] = useState(false);
     const [updateGuardianPhone, setUpdateGuardianPhone] = useState(false);
     const [updateGuardianEmail, setUpdateGuardianEmail] = useState(false);
+    const [updateArea, setUpdateArea] = useState(false); // NEW: District location
     const [updateParentName, setUpdateParentName] = useState(false);
     const [updateParentPhone, setUpdateParentPhone] = useState(false);
     const [updateParentEmail, setUpdateParentEmail] = useState(false);
@@ -52,6 +54,7 @@ export function BulkEditStudentsModal({
     const [guardianName, setGuardianName] = useState("");
     const [guardianPhone, setGuardianPhone] = useState("");
     const [guardianEmail, setGuardianEmail] = useState("");
+    const [area, setArea] = useState(""); // NEW: District code
     const [parentName, setParentName] = useState("");
     const [parentPhone, setParentPhone] = useState("");
     const [parentEmail, setParentEmail] = useState("");
@@ -87,6 +90,7 @@ export function BulkEditStudentsModal({
         if (updateGuardianName) updates.guardianName = guardianName;
         if (updateGuardianPhone) updates.guardianPhone = guardianPhone;
         if (updateGuardianEmail) updates.guardianEmail = guardianEmail;
+        if (updateArea) updates.area = area; // NEW: District code
         if (updateParentName) updates.parentName = parentName;
         if (updateParentPhone) updates.parentPhone = parentPhone;
         if (updateParentEmail) updates.parentEmail = parentEmail;
@@ -147,6 +151,7 @@ export function BulkEditStudentsModal({
         updateGuardianName,
         updateGuardianPhone,
         updateGuardianEmail,
+        updateArea, // NEW: District location
         updateParentName,
         updateParentPhone,
         updateParentEmail,
@@ -448,6 +453,35 @@ export function BulkEditStudentsModal({
                                     disabled={!updateGuardianEmail}
                                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
+                            </div>
+                        </div>
+
+                        {/* Teaching Location (District) */}
+                        <div className="flex items-start gap-3">
+                            <input
+                                type="checkbox"
+                                id="update-area"
+                                checked={updateArea}
+                                onChange={(e) => setUpdateArea(e.target.checked)}
+                                className="mt-1"
+                            />
+                            <div className="grow">
+                                <label htmlFor="update-area" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t("Teaching Location (District)", "สถานที่สอน (เขต)")}
+                                </label>
+                                <LocationSelector
+                                    value={area}
+                                    onChange={setArea}
+                                    disabled={!updateArea}
+                                    placeholder={t("Select teaching location", "เลือกสถานที่สอน")}
+                                    _placeholderTh="เลือกสถานที่สอน"
+                                />
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    {t(
+                                        "Required for guardian-linked students",
+                                        "จำเป็นสำหรับนักเรียนที่เชื่อมโยงกับผู้ปกครอง"
+                                    )}
+                                </p>
                             </div>
                         </div>
                     </div>

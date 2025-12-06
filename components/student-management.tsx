@@ -11,6 +11,7 @@ import { Suspense, useMemo, useState } from "react";
 import { CollapsibleSection } from "./collapsible-section";
 import { CreateProviderModal } from "./create-provider-modal";
 import { LazyBulkEditStudentsModal, ModalLoadingFallback } from "./lazy-components";
+import { LocationSelector } from "./location-selector";
 import { PaginatedList } from "./paginated-list";
 import { StudentListSkeleton } from "./ui/skeleton";
 
@@ -73,6 +74,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
     // Optional fields state
     const [dateOfBirth, setDateOfBirth] = useState("");
+    const [area, setArea] = useState(""); // District code (e.g., "BKK-01")
     const [parentName, setParentName] = useState("");
     const [parentPhone, setParentPhone] = useState("");
     const [parentEmail, setParentEmail] = useState("");
@@ -263,6 +265,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     // Optional fields
                     nickname: nickname || undefined,
                     dateOfBirth: dateOfBirth ? new Date(dateOfBirth).getTime() : undefined,
+                    area: area || undefined, // District code
                     parentName: parentName || undefined,
                     parentPhone: parentPhone || undefined,
                     parentEmail: parentEmail || undefined,
@@ -297,6 +300,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     // Optional fields
                     nickname: nickname || undefined,
                     dateOfBirth: dateOfBirth ? new Date(dateOfBirth).getTime() : undefined,
+                    area: area || undefined, // District code
                     parentName: parentName || undefined,
                     parentPhone: parentPhone || undefined,
                     parentEmail: parentEmail || undefined,
@@ -320,6 +324,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const handleEdit = (student: Student & {
         nickname?: string;
         dateOfBirth?: number;
+        area?: string;
         parentName?: string;
         parentPhone?: string;
         parentEmail?: string;
@@ -342,6 +347,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
         // Load optional fields
         setDateOfBirth(student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : "");
+        setArea(student.area || ""); // District code
         setParentName(student.parentName || "");
         setParentPhone(student.parentPhone || "");
         setParentEmail(student.parentEmail || "");
@@ -495,6 +501,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
         // Reset optional fields
         setDateOfBirth("");
+        setArea(""); // Reset district code
         setParentName("");
         setParentPhone("");
         setParentEmail("");
@@ -908,6 +915,25 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
+                                        </div>
+
+                                        {/* Teaching Location (District) */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                {t("Teaching Location (District)", "สถานที่สอน (เขต)")}
+                                            </label>
+                                            <LocationSelector
+                                                value={area}
+                                                onChange={setArea}
+                                                placeholder={t("Select teaching location", "เลือกสถานที่สอน")}
+                                                _placeholderTh="เลือกสถานที่สอน"
+                                            />
+                                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                {t(
+                                                    "Required for guardian-linked students for unique identification",
+                                                    "จำเป็นสำหรับนักเรียนที่เชื่อมโยงกับผู้ปกครองเพื่อการระบุตัวตนที่ไม่ซ้ำกัน"
+                                                )}
+                                            </p>
                                         </div>
 
                                         {/* Primary Parent Contact */}
