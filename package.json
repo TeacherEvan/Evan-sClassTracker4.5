@@ -1,6 +1,6 @@
 {
   "name": "class-tracker",
-  "version": "4.5.29",
+  "version": "4.5.32",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 3001",
@@ -34,7 +34,7 @@
     "@modelcontextprotocol/sdk": "^1.22.0",
     "convex": "^1.30.0",
     "date-fns": "^4.1.0",
-    "lucide-react": "^0.554.0",
+    "lucide-react": "^0.556.0",
     "mongodb": "^6.21.0",
     "next": "15.5.4",
     "react": "19.1.0",

@@ -2,6 +2,57 @@
 
 All notable changes to this project are documented here.
 
+## [4.5.32] - December 6, 2025 🔧 Schema Alignment & Type Safety
+
+### 🛠️ Technical Debt Elimination
+
+**Summary**: Fixed 104 TypeScript errors and 12 ESLint warnings through comprehensive schema alignment and dependency updates.
+
+### Fixed
+
+#### Backend Schema Alignment (`convex/classes/`)
+- **approval-mutations.ts**: Fixed `approvedBy` → `approvedByUserId` field mapping
+- **approval-mutations.ts**: Removed non-existent `rejectedAt`/`rejectedBy` fields
+- **approval-mutations.ts**: Corrected `logAudit()` signature (targetType, details object)
+- **booking-mutations.ts**: Fixed `studentIds` → `studentId` (schema uses singular)
+- **booking-mutations.ts**: Corrected index name `by_teacher_date` → `by_teacher_and_date`
+- **booking-mutations.ts**: Removed non-existent `deleted`/`scheduledDateOnly` fields
+- **booking-mutations.ts**: Fixed `acknowledge` mutation to use status change
+- **bulk-operations.ts**: Added missing `validateLength` import
+- **mutations.ts**: Removed unused imports (v, Id, mutation)
+- **crud-mutations.ts**: Removed unused imports
+- **student-operations.ts**: Removed unused imports
+
+#### Frontend API Contract Fixes
+- **class-booking/index.tsx**: Fixed approve/reject mutation args (`classId` → `id`)
+- **class-detail-modal.tsx**: Fixed approve/reject mutation args
+- **moderator-approval-wizard.tsx**: Fixed all 4 approval mutation calls
+
+### Changed
+
+#### Dependencies Updated
+- **lucide-react**: 0.554.0 → 0.556.0 (now includes built-in TypeScript types)
+- **tsx**: 4.20.6 → 4.21.0
+- **vitest**: 4.0.13 → 4.0.15
+- **@eslint/eslintrc**: 3.3.1 → 3.3.3
+- **@modelcontextprotocol/sdk**: 1.22.0 → 1.24.3
+
+#### Configuration
+- **tsconfig.json**: Reverted to standard config (custom typeRoots no longer needed)
+
+### Removed
+- **types/lucide-react.d.ts**: No longer needed (v0.556.0 includes types)
+- Archived Dec 5, 2025 session docs to `docs/archive/2025-Dec/`
+
+### Quality Metrics
+| Metric | Before | After |
+|--------|--------|-------|
+| TypeScript Errors | 104 | **0** |
+| ESLint Warnings | 12 | **0** |
+| Build Time | - | **18.7s** |
+
+---
+
 ## [4.5.31] - December 3, 2025 📚 Documentation Consolidation & Architecture Updates
 
 ### 📖 Documentation Overhaul
