@@ -156,15 +156,16 @@ export const mergeStudents = mutation({
     }
 
     // STEP 4: Update all teacher logs references
-    const logsWithSource = await ctx.db.query("teacherLogs").collect();
+    const logsWithSource = await ctx.db
+      .query("teacherLogs")
+      .withIndex("by_related_student", (q) => q.eq("relatedStudentId", args.sourceStudentId))
+      .collect();
     let updatedLogsCount = 0;
     for (const log of logsWithSource) {
-      if (log.relatedStudentId === args.sourceStudentId) {
-        await ctx.db.patch(log._id, {
-          relatedStudentId: args.targetStudentId,
-        });
-        updatedLogsCount++;
-      }
+      await ctx.db.patch(log._id, {
+        relatedStudentId: args.targetStudentId,
+      });
+      updatedLogsCount++;
     }
 
     // STEP 5: Soft-delete the source student (mark as merged)
