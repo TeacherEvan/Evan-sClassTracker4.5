@@ -11,6 +11,7 @@ All notable changes to this project are documented here.
 ### Fixed
 
 #### Backend Schema Alignment (`convex/classes/`)
+
 - **approval-mutations.ts**: Fixed `approvedBy` → `approvedByUserId` field mapping
 - **approval-mutations.ts**: Removed non-existent `rejectedAt`/`rejectedBy` fields
 - **approval-mutations.ts**: Corrected `logAudit()` signature (targetType, details object)
@@ -24,6 +25,7 @@ All notable changes to this project are documented here.
 - **student-operations.ts**: Removed unused imports
 
 #### Frontend API Contract Fixes
+
 - **class-booking/index.tsx**: Fixed approve/reject mutation args (`classId` → `id`)
 - **class-detail-modal.tsx**: Fixed approve/reject mutation args
 - **moderator-approval-wizard.tsx**: Fixed all 4 approval mutation calls
@@ -31,6 +33,7 @@ All notable changes to this project are documented here.
 ### Changed
 
 #### Dependencies Updated
+
 - **lucide-react**: 0.554.0 → 0.556.0 (now includes built-in TypeScript types)
 - **tsx**: 4.20.6 → 4.21.0
 - **vitest**: 4.0.13 → 4.0.15
@@ -38,13 +41,16 @@ All notable changes to this project are documented here.
 - **@modelcontextprotocol/sdk**: 1.22.0 → 1.24.3
 
 #### Configuration
+
 - **tsconfig.json**: Reverted to standard config (custom typeRoots no longer needed)
 
 ### Removed
+
 - **types/lucide-react.d.ts**: No longer needed (v0.556.0 includes types)
 - Archived Dec 5, 2025 session docs to `docs/archive/2025-Dec/`
 
 ### Quality Metrics
+
 | Metric | Before | After |
 |--------|--------|-------|
 | TypeScript Errors | 104 | **0** |
