@@ -3,23 +3,29 @@ import { mutation, query } from "./_generated/server";
 import { AuditActions, AuditTargetTypes, logAudit } from "./auditHelpers";
 import { checkRateLimit, validateLength } from "./rateLimit";
 
-// Helper function to generate unique ID for GUARDIAN students
+// Helper function to generate unique ID for GUARDIAN/PROVIDER students with location
 function generateGuardianStudentId(
   firstName: string,
   lastName: string,
   birthDate: number,
-  area: string
+  district?: string,
+  province?: string,
+  area?: string
 ): string {
-  // Area code: first 5 chars of area, uppercase, alphanumeric only
-  const areaCode = area.substring(0, 5).toUpperCase().replace(/[^A-Z0-9]/g, '');
+  // Location code: use first available location field (prefer district, then province, then area)
+  const locationSource = district || province || area || "NOLOC";
+  const locationCode = locationSource.substring(0, 5).toUpperCase().replace(/[^A-Z0-9]/g, '');
+  
   // Name hash: first 2 chars of first name + first 2 chars of last name
   const nameHash = `${firstName.substring(0, 2)}${lastName.substring(0, 2)}`.toUpperCase();
+  
   // Birth hash: YYYYMMDD format
   const birthHash = new Date(birthDate).toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
+  
   // Random component for collision prevention
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
 
-  return `${areaCode}-${nameHash}-${birthHash}-${random}`;
+  return `${locationCode}-${nameHash}-${birthHash}-${random}`;
 }
 
 // Helper function to generate unique ID for SCHOOL students
@@ -102,8 +108,10 @@ export const create = mutation({
     createdBy: v.id("users"), // Teacher who created the student
     // Optional fields
     nickname: v.optional(v.string()),
-    dateOfBirth: v.optional(v.number()), // Timestamp - REQUIRED for guardian students
-    area: v.optional(v.string()), // Teaching location area - REQUIRED for guardian students
+    dateOfBirth: v.optional(v.number()), // Timestamp - REQUIRED for provider students
+    district: v.optional(v.string()), // District for location-based duplicate detection
+    province: v.optional(v.string()), // Province for location-based duplicate detection
+    area: v.optional(v.string()), // Specific area/neighborhood for location-based duplicate detection
     parentName: v.optional(v.string()),
     parentPhone: v.optional(v.string()),
     parentEmail: v.optional(v.string()),
@@ -199,14 +207,26 @@ export const create = mutation({
       throw new Error("Grade is required for provider-linked students");
     }
 
-    // NEW: Validate guardian student requirements
+    // NEW: Validate provider students require at least 2 location fields for duplicate detection
+    if (args.providerId) {
+      const locationFieldsCount = [args.district, args.province, args.area].filter(Boolean).length;
+      if (locationFieldsCount < 2) {
+        throw new Error("Provider students require at least 2 location fields (district, province, or area) for accurate duplicate detection");
+      }
+    }
+
+    // NEW: Validate guardian student requirements (legacy - transitioning to provider system)
     const isGuardianStudent = hasGuardian;
     if (isGuardianStudent) {
       if (!args.dateOfBirth) {
         throw new Error("Guardian students must have a birth date for unique identification");
       }
-      if (!args.area) {
-        throw new Error("Guardian students must have a teaching area for unique identification");
+      // For guardian students without provider, also require location fields
+      if (!args.providerId) {
+        const locationFieldsCount = [args.district, args.province, args.area].filter(Boolean).length;
+        if (locationFieldsCount < 2) {
+          throw new Error("Guardian students require at least 2 location fields (district, province, or area) for accurate duplicate detection");
+        }
       }
     }
 
@@ -232,45 +252,90 @@ export const create = mutation({
       }
     }
 
-    // NEW: ✅ PREVENT DUPLICATES for provider students (name + grade + provider)
+    // NEW: ✅ PREVENT DUPLICATES for provider students (name + grade + provider + location match)
     if (args.providerId) {
       const providerStudents = await ctx.db
         .query("students")
         .withIndex("by_provider", (q) => q.eq("providerId", args.providerId!))
         .collect();
 
-      const providerDuplicate = providerStudents.find(
-        (s) =>
+      // Check for duplicates with matching name, grade, and location
+      const providerDuplicate = providerStudents.find((s) => {
+        const nameMatch = 
           s.firstName.toLowerCase() === args.firstName.toLowerCase() &&
-          (s.lastName || "").toLowerCase() === (args.lastName || "").toLowerCase() &&
-          s.grade === args.grade
-      );
+          (s.lastName || "").toLowerCase() === (args.lastName || "").toLowerCase();
+        const gradeMatch = s.grade === args.grade;
+        
+        // Location match: at least 2 of 3 location fields must match
+        const locationMatches = [
+          args.district && s.district === args.district,
+          args.province && s.province === args.province,
+          args.area && s.area === args.area
+        ].filter(Boolean).length;
+
+        return nameMatch && gradeMatch && locationMatches >= 2;
+      });
 
       if (providerDuplicate) {
         const provider = await ctx.db.get(args.providerId);
+        const locationStr = [args.district, args.province, args.area].filter(Boolean).join(", ");
         throw new Error(
-          `Student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" already exists in ${args.grade} for provider "${provider?.name || "Unknown"}" (ID: ${providerDuplicate.studentId})`
+          `Student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" already exists in ${args.grade} for provider "${provider?.name || "Unknown"}" in ${locationStr} (ID: ${providerDuplicate.studentId})`
         );
       }
     }
 
-    // NEW: ✅ PREVENT DUPLICATES for guardian students (name + birthDate + area)
-    if (isGuardianStudent && args.area) {
-      const areaStudents = await ctx.db
-        .query("students")
-        .withIndex("by_area", (q) => q.eq("area", args.area!))
-        .collect();
+    // NEW: ✅ PREVENT DUPLICATES for guardian students (name + birthDate + location match)
+    if (isGuardianStudent && !args.providerId) {
+      // Query by one of the location fields to narrow down search
+      let potentialDuplicates: Array<{
+        _id: string;
+        firstName: string;
+        lastName: string;
+        dateOfBirth?: number;
+        district?: string;
+        province?: string;
+        area?: string;
+        studentId: string;
+      }> = [];
+      
+      if (args.district) {
+        potentialDuplicates = await ctx.db
+          .query("students")
+          .withIndex("by_district", (q) => q.eq("district", args.district!))
+          .collect();
+      } else if (args.province) {
+        potentialDuplicates = await ctx.db
+          .query("students")
+          .withIndex("by_province", (q) => q.eq("province", args.province!))
+          .collect();
+      } else if (args.area) {
+        potentialDuplicates = await ctx.db
+          .query("students")
+          .withIndex("by_area", (q) => q.eq("area", args.area!))
+          .collect();
+      }
 
-      const guardianDuplicate = areaStudents.find(
-        (s) =>
+      const guardianDuplicate = potentialDuplicates.find((s) => {
+        const nameMatch = 
           s.firstName.toLowerCase() === args.firstName.toLowerCase() &&
-          (s.lastName || "").toLowerCase() === (args.lastName || "").toLowerCase() &&
-          s.dateOfBirth === args.dateOfBirth
-      );
+          (s.lastName || "").toLowerCase() === (args.lastName || "").toLowerCase();
+        const birthMatch = s.dateOfBirth === args.dateOfBirth;
+        
+        // Location match: at least 2 of 3 location fields must match
+        const locationMatches = [
+          args.district && s.district === args.district,
+          args.province && s.province === args.province,
+          args.area && s.area === args.area
+        ].filter(Boolean).length;
+
+        return nameMatch && birthMatch && locationMatches >= 2;
+      });
 
       if (guardianDuplicate) {
+        const locationStr = [args.district, args.province, args.area].filter(Boolean).join(", ");
         throw new Error(
-          `Guardian student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" with this birth date already exists in ${args.area} (ID: ${guardianDuplicate.studentId})`
+          `Guardian student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" with this birth date already exists in ${locationStr} (ID: ${guardianDuplicate.studentId})`
         );
       }
     }
@@ -278,12 +343,14 @@ export const create = mutation({
     // Generate unique student ID based on student type
     let studentId: string;
 
-    if (isGuardianStudent && args.dateOfBirth && args.area) {
-      // Guardian student: use birthDate + area based ID
+    if (isGuardianStudent && args.dateOfBirth) {
+      // Guardian student: use birthDate + location based ID
       studentId = generateGuardianStudentId(
         args.firstName,
         args.lastName || "",
         args.dateOfBirth,
+        args.district,
+        args.province,
         args.area
       );
     } else if (args.providerId) {
@@ -311,8 +378,8 @@ export const create = mutation({
       }
 
       // Regenerate with new random component based on student type
-      if (isGuardianStudent && args.dateOfBirth && args.area) {
-        studentId = generateGuardianStudentId(args.firstName, args.lastName || "", args.dateOfBirth, args.area);
+      if (isGuardianStudent && args.dateOfBirth) {
+        studentId = generateGuardianStudentId(args.firstName, args.lastName || "", args.dateOfBirth, args.district, args.province, args.area);
       } else if (args.providerId) {
         studentId = generateStudentId(args.firstName, args.lastName || "", args.providerId);
       } else {
@@ -345,7 +412,9 @@ export const create = mutation({
       // Optional fields
       nickname: args.nickname,
       dateOfBirth: args.dateOfBirth,
-      area: args.area, // NEW: Teaching location area
+      district: args.district, // NEW: District for location-based duplicate detection
+      province: args.province, // NEW: Province for location-based duplicate detection
+      area: args.area, // NEW: Specific area/neighborhood for location-based duplicate detection
       parentName: args.parentName,
       parentPhone: args.parentPhone,
       parentEmail: args.parentEmail,
@@ -395,6 +464,9 @@ export const update = mutation({
     // Optional fields
     nickname: v.optional(v.string()),
     dateOfBirth: v.optional(v.number()), // Timestamp
+    district: v.optional(v.string()), // District for location-based duplicate detection
+    province: v.optional(v.string()), // Province for location-based duplicate detection
+    area: v.optional(v.string()), // Specific area/neighborhood for location-based duplicate detection
     parentName: v.optional(v.string()),
     parentPhone: v.optional(v.string()),
     parentEmail: v.optional(v.string()),
