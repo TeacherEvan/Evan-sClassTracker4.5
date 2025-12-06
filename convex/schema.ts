@@ -193,7 +193,10 @@ export default defineSchema({
     // NEW OPTIONAL FIELDS
     nickname: v.optional(v.string()), // Preferred name
     dateOfBirth: v.optional(v.number()), // For age calculation - REQUIRED for provider students
-    area: v.optional(v.string()), // Teaching location area (e.g., "Bangkok District 1") - REQUIRED for auto-guardian students
+    area: v.optional(v.string()), // Teaching location area (e.g., "Bangkok District 1") - REQUIRED for auto-guardian students - DEPRECATED in favor of structured location
+    // NEW STRUCTURED LOCATION FIELDS (Dec 2025)
+    provinceCode: v.optional(v.string()), // Thailand province code (e.g., "BKK", "CNX")
+    districtName: v.optional(v.string()), // District name in English (e.g., "Mueang Chiang Mai")
     parentName: v.optional(v.string()), // Primary parent
     parentPhone: v.optional(v.string()), // Contact number
     parentEmail: v.optional(v.string()), // Email contact
@@ -210,8 +213,11 @@ export default defineSchema({
     .index("by_guardian", ["guardianName"])
     .index("by_guardian_id", ["guardianId"]) // DEPRECATED - will be removed
     .index("by_created_by", ["createdBy"])
-    .index("by_area", ["area"]) // Area-based queries for auto-guardian students
-    .index("by_grade_and_class", ["grade", "class"]), // NEW
+    .index("by_area", ["area"]) // Area-based queries for auto-guardian students - DEPRECATED
+    .index("by_grade_and_class", ["grade", "class"]) // NEW
+    .index("by_province", ["provinceCode"]) // NEW - Province-based queries (Dec 2025)
+    .index("by_district", ["districtName"]) // NEW - District-based queries (Dec 2025)
+    .index("by_province_and_district", ["provinceCode", "districtName"]), // NEW - Combined location queries (Dec 2025)
 
   notifications: defineTable({
     title: v.string(),
