@@ -131,7 +131,15 @@ export const detectDuplicates = mutation({
         studentId: args.studentId,
         possibleDuplicateIds: potentialDuplicates.map((d) => d.studentId),
         matchedFields: maxMatches,
-        matchDetails: bestMatch.details,
+        matchDetails: {
+          firstName: bestMatch.details.firstName,
+          lastName: bestMatch.details.lastName,
+          grade: bestMatch.details.grade,
+          dateOfBirth: bestMatch.details.dateOfBirth,
+          guardianPhone: bestMatch.details.guardianPhone,
+          area: bestMatch.details.area,
+          schoolId: bestMatch.details.schoolId,
+        },
         status: "pending",
         createdAt: Date.now(),
         userDecision: "create_new", // User proceeded with creation
@@ -172,15 +180,14 @@ export const listWatchlist = query({
     }
 
     // Get watchlist entries
-    let query = ctx.db.query("duplicateWatchlist");
+    const baseQuery = ctx.db.query("duplicateWatchlist");
     
+    let entries;
     if (args.status) {
-      query = query.withIndex("by_status", (q) => q.eq("status", args.status!));
+      entries = await baseQuery.withIndex("by_status", (q) => q.eq("status", args.status!)).order("desc").collect();
     } else {
-      query = query.withIndex("by_created_at");
+      entries = await baseQuery.withIndex("by_created_at").order("desc").collect();
     }
-
-    const entries = await query.order("desc").collect();
 
     // Fetch student details for each entry
     const enrichedEntries = await Promise.all(

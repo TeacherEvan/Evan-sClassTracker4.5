@@ -36,12 +36,12 @@ export const bookWithConflictCheck = mutation({
   },
   handler: async (ctx, args) => {
     // XOR validation - must have EITHER schoolId OR providerId (not both, not neither)
-    const hasSchool = args.schoolId !== undefined;
-    const hasProvider = args.providerId !== undefined;
-    if (hasSchool && hasProvider) {
+    const hasSchoolArg = args.schoolId !== undefined;
+    const hasProviderArg = args.providerId !== undefined;
+    if (hasSchoolArg && hasProviderArg) {
       throw new Error("Class cannot be linked to both school and provider - choose one");
     }
-    if (!hasSchool && !hasProvider) {
+    if (!hasSchoolArg && !hasProviderArg) {
       throw new Error("Class must be linked to either a school or a provider");
     }
 
@@ -249,12 +249,12 @@ export const book = mutation({
   },
   handler: async (ctx, args) => {
     // XOR validation - must have EITHER schoolId OR providerId (not both, not neither)
-    const hasSchool = args.schoolId !== undefined;
-    const hasProvider = args.providerId !== undefined;
-    if (hasSchool && hasProvider) {
+    const hasSchoolArg = args.schoolId !== undefined;
+    const hasProviderArg = args.providerId !== undefined;
+    if (hasSchoolArg && hasProviderArg) {
       throw new Error("Class cannot be linked to both school and provider - choose one");
     }
-    if (!hasSchool && !hasProvider) {
+    if (!hasSchoolArg && !hasProviderArg) {
       throw new Error("Class must be linked to either a school or a provider");
     }
 
