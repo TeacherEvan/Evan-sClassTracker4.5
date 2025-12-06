@@ -56,8 +56,10 @@ export const addDatesToClass = mutation({
       throw new Error("School not found");
     }
 
-    // 5. Determine if this is a moderator/admin booking
+    // 5. Determine if this is a moderator/admin booking or provider-based class
     const isModerator = user.role === "admin" || user.role === "moderator";
+    const hasProvider = classData.providerId !== undefined;
+    // DEPRECATED: isGuardianLinked - use providerId instead for provider-based auto-approval
     const isGuardianLinked = classData.isGuardianLinked || false;
 
     // 6. Create new class entries for each date
@@ -68,14 +70,15 @@ export const addDatesToClass = mutation({
       // Create new class with same details but new date
       const newClassId = await ctx.db.insert("classes", {
         schoolId: classData.schoolId,
-        providerId: classData.providerId, // NEW: Include provider if present
+        providerId: classData.providerId, // Include provider if present
         teacherId: classData.teacherId,
         studentId: classData.studentId,
         locationId: classData.locationId,
         scheduledDate,
         duration: classData.duration,
-        status: isModerator || isGuardianLinked ? "approved" : "pending",
-        isGuardianLinked,
+        // Auto-approve for: moderator/admin, provider classes, or legacy guardian-linked classes
+        status: isModerator || hasProvider || isGuardianLinked ? "approved" : "pending",
+        isGuardianLinked, // Keep for backward compatibility with existing data
         createdAt: Date.now(),
         // Optional fields
         ...(classData.subject && { subject: classData.subject }),
@@ -96,8 +99,9 @@ export const addDatesToClass = mutation({
     const locationText = location?.name || "Unknown location";
     const locationTextTh = location?.nameTh || "ไม่ทราบสถานที่";
 
-    // 8. Send notification to moderator (if teacher added dates AND school-linked)
-    if (!isGuardianLinked && !isModerator && classData.schoolId && school?.moderatorId) {
+    // 8. Send notification to moderator (if teacher added dates AND school-linked AND not provider-based)
+    // Provider classes and legacy guardian-linked classes skip moderator notification
+    if (!hasProvider && !isGuardianLinked && !isModerator && classData.schoolId && school?.moderatorId) {
       await ctx.db.insert("notifications", {
         userId: school.moderatorId,
         title: `Additional Class Dates Requested`,

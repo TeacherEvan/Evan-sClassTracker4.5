@@ -88,11 +88,16 @@ export const bookWithConflictCheck = mutation({
 
     const isModerator = bookedBy.role === "moderator";
     const isAdmin = bookedBy.role === "admin";
+    const hasProvider = args.providerId !== undefined;
 
-    // Auto-approve if booked by moderator or admin
-    const status = isModerator || isAdmin ? "approved" : "pending";
-    const approvedAt = isModerator || isAdmin ? Date.now() : undefined;
-    const approvedByUserId = isModerator || isAdmin ? args.bookedByUserId : undefined;
+    // Auto-approve if: 
+    // 1. Booked by moderator/admin
+    // 2. Class has a provider (provider classes bypass moderator approval)
+    const shouldAutoApprove = isModerator || isAdmin || hasProvider;
+    const status = shouldAutoApprove ? "approved" : "pending";
+    const approvedAt = shouldAutoApprove ? Date.now() : undefined;
+    const approvedByUserId = shouldAutoApprove ? args.bookedByUserId : undefined;
+    const approvalSource = isModerator ? "moderator" : isAdmin ? "admin" : hasProvider ? "auto_provider" : undefined;
 
     const classId = await ctx.db.insert("classes", {
       teacherId: args.teacherId,
@@ -109,7 +114,8 @@ export const bookWithConflictCheck = mutation({
       approvedByUsername: approvedByUserId ? bookedBy.username : undefined,
       bookedByUserId: args.bookedByUserId,
       bookedByUsername: bookedBy.username,
-      approvalSource: isModerator ? "moderator" : isAdmin ? "admin" : undefined,
+      approvalSource,
+      guardianTitle: args.guardianTitle,
       duration: args.duration,
       subject: args.subject,
       subjectTh: args.subjectTh,
@@ -279,10 +285,15 @@ export const book = mutation({
     if (args.preparationNotes) validateLength(args.preparationNotes, "Preparation Notes", 2000, 0);
     if (args.preparationNotesTh) validateLength(args.preparationNotesTh, "Preparation Notes (Thai)", 2000, 0);
 
-    // Auto-approve if booked by moderator or admin
-    const status = isModerator || isAdmin ? "approved" : "pending";
-    const approvedAt = isModerator || isAdmin ? Date.now() : undefined;
-    const approvedByUserId = isModerator || isAdmin ? args.bookedByUserId : undefined;
+    // Auto-approve if: 
+    // 1. Booked by moderator/admin
+    // 2. Class has a provider (provider classes bypass moderator approval)
+    const hasProvider = args.providerId !== undefined;
+    const shouldAutoApprove = isModerator || isAdmin || hasProvider;
+    const status = shouldAutoApprove ? "approved" : "pending";
+    const approvedAt = shouldAutoApprove ? Date.now() : undefined;
+    const approvedByUserId = shouldAutoApprove ? args.bookedByUserId : undefined;
+    const approvalSource = isModerator ? "moderator" : isAdmin ? "admin" : hasProvider ? "auto_provider" : undefined;
 
     // Insert class - use schema-compliant fields
     const classId = await ctx.db.insert("classes", {
@@ -300,7 +311,8 @@ export const book = mutation({
       approvedByUsername: approvedByUserId ? bookedBy.username : undefined,
       bookedByUserId: args.bookedByUserId,
       bookedByUsername: bookedBy.username,
-      approvalSource: isModerator ? "moderator" : isAdmin ? "admin" : undefined,
+      approvalSource,
+      guardianTitle: args.guardianTitle,
       duration: args.duration,
       subject: args.subject,
       subjectTh: args.subjectTh,
