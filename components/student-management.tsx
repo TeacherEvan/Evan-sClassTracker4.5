@@ -6,12 +6,13 @@ import { useLanguage } from "@/lib/language-context";
 import type { User } from "@/lib/types";
 import { COMMON_SHORTCUTS, useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
 import { useMutation, useQuery } from "convex/react";
-import { Copy, GraduationCap, Mail, Pencil, Phone, Plus, Trash2, User as UserIcon, X } from "lucide-react";
+import { Copy, GraduationCap, GitMerge, Mail, Pencil, Phone, Plus, Trash2, User as UserIcon, X } from "lucide-react";
 import { Suspense, useMemo, useState } from "react";
 import { CollapsibleSection } from "./collapsible-section";
 import { CreateProviderModal } from "./create-provider-modal";
 import { LazyBulkEditStudentsModal, ModalLoadingFallback } from "./lazy-components";
 import { PaginatedList } from "./paginated-list";
+import { StudentMergeModal } from "./student-merge-modal";
 import { StudentListSkeleton } from "./ui/skeleton";
 
 type Student = {
@@ -97,6 +98,10 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     // Delete reason state
     const [deleteReason, setDeleteReason] = useState("");
     const [forceDelete, setForceDelete] = useState(false);
+
+    // Merge modal state
+    const [showMergeModal, setShowMergeModal] = useState(false);
+    const [pendingMergeStudent, setPendingMergeStudent] = useState<Student | null>(null);
 
     // Query students based on filter
     const students = useQuery(
@@ -401,6 +406,16 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to duplicate student");
         }
+    };
+
+    const handleMerge = (student: Student) => {
+        setPendingMergeStudent(student);
+        setShowMergeModal(true);
+    };
+
+    const handleMergeSuccess = () => {
+        setSuccess(t("Students merged successfully!", "รวมนักเรียนสำเร็จ!"));
+        setPendingMergeStudent(null);
     };
 
     const initiateBulkDelete = () => {
@@ -1216,6 +1231,15 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                                                                 <Copy className="w-4 h-4" />
                                                                             </button>
                                                                         )}
+                                                                        {(currentUser.role === "teacher" || currentUser.role === "admin") && (
+                                                                            <button
+                                                                                onClick={() => handleMerge(student)}
+                                                                                className="text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
+                                                                                title={t("Merge with another student", "รวมกับนักเรียนคนอื่น")}
+                                                                            >
+                                                                                <GitMerge className="w-4 h-4" />
+                                                                            </button>
+                                                                        )}
                                                                         <button
                                                                             onClick={() => handleEdit(student)}
                                                                             className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
@@ -1450,6 +1474,19 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                         setSchoolId(""); // Clear school
                         setShowCreateProvider(false);
                     }}
+                />
+            )}
+
+            {/* Student Merge Modal */}
+            {showMergeModal && pendingMergeStudent && (
+                <StudentMergeModal
+                    userId={currentUser._id}
+                    sourceStudent={pendingMergeStudent}
+                    onClose={() => {
+                        setShowMergeModal(false);
+                        setPendingMergeStudent(null);
+                    }}
+                    onSuccess={handleMergeSuccess}
                 />
             )}
 
