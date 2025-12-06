@@ -631,9 +631,12 @@ export const getMergedStudents = query({
       throw new Error("Unauthorized: Admin or moderator access required");
     }
 
-    // Get all students with mergedIntoId set
-    const allStudents = await ctx.db.query("students").collect();
-    const mergedStudents = allStudents.filter((s) => s.mergedIntoId);
+    // Get all students with mergedIntoId set (use index for performance)
+    const mergedStudents = await ctx.db
+      .query("students")
+      .withIndex("by_merged_into")
+      .filter((q) => q.neq(q.field("mergedIntoId"), undefined))
+      .collect();
 
     // Filter by school for moderators
     if (user.role === "moderator" && user.schoolId) {
