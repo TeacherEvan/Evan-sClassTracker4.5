@@ -180,6 +180,7 @@ export const AuditActions = {
     UPDATE_STUDENT: "update_student",
     DELETE_STUDENT: "delete_student",
     BULK_DELETE_STUDENTS: "bulk_delete_students",
+    MERGE: "merge_students",
 
     // Location Management
     CREATE_LOCATION: "create_location",
@@ -208,6 +209,7 @@ export const AuditTargetTypes = {
     CLASSES: "classes",
     SCHOOLS: "schools",
     STUDENTS: "students",
+    STUDENT: "student",
     LOCATIONS: "locations",
     NOTIFICATIONS: "notifications",
     NOTIFICATION_WINDOWS: "notificationWindows",

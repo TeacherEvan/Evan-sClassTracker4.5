@@ -732,3 +732,173 @@ export const migrateClassField = mutation({
     };
   },
 });
+
+// Mutation to merge two students (keep target, merge source data)
+export const mergeStudents = mutation({
+  args: {
+    targetStudentId: v.id("students"), // Student to keep
+    sourceStudentId: v.id("students"), // Student to merge and delete
+    mergedBy: v.id("users"), // Admin or teacher performing merge
+    fieldsToKeep: v.object({
+      // Which fields to take from source (rest from target)
+      nickname: v.optional(v.boolean()),
+      guardianName: v.optional(v.boolean()),
+      guardianPhone: v.optional(v.boolean()),
+      guardianEmail: v.optional(v.boolean()),
+      dateOfBirth: v.optional(v.boolean()),
+      area: v.optional(v.boolean()),
+      parentName: v.optional(v.boolean()),
+      parentPhone: v.optional(v.boolean()),
+      parentEmail: v.optional(v.boolean()),
+      secondaryParentName: v.optional(v.boolean()),
+      secondaryParentPhone: v.optional(v.boolean()),
+      allergies: v.optional(v.boolean()),
+      specialNeeds: v.optional(v.boolean()),
+      medicalNotes: v.optional(v.boolean()),
+      notes: v.optional(v.boolean()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    // Verify both students exist
+    const targetStudent = await ctx.db.get(args.targetStudentId);
+    const sourceStudent = await ctx.db.get(args.sourceStudentId);
+
+    if (!targetStudent) {
+      throw new Error("Target student not found");
+    }
+    if (!sourceStudent) {
+      throw new Error("Source student not found");
+    }
+
+    // Verify user permissions
+    const mergedByUser = await ctx.db.get(args.mergedBy);
+    if (!mergedByUser) {
+      throw new Error("User not found");
+    }
+
+    // Only admins and teachers can merge students
+    if (mergedByUser.role !== "admin" && mergedByUser.role !== "teacher") {
+      throw new Error("Only admins and teachers can merge students");
+    }
+
+    // Prevent merging if students are in different contexts
+    if (targetStudent.schoolId !== sourceStudent.schoolId) {
+      throw new Error("Cannot merge students from different schools");
+    }
+    if (targetStudent.providerId !== sourceStudent.providerId) {
+      throw new Error("Cannot merge students from different providers");
+    }
+
+    // Build update object with selected fields from source
+    const updates: Record<string, string | number | undefined> = {};
+
+    if (args.fieldsToKeep.nickname && sourceStudent.nickname) {
+      updates.nickname = sourceStudent.nickname;
+    }
+    if (args.fieldsToKeep.guardianName && sourceStudent.guardianName) {
+      updates.guardianName = sourceStudent.guardianName;
+    }
+    if (args.fieldsToKeep.guardianPhone && sourceStudent.guardianPhone) {
+      updates.guardianPhone = sourceStudent.guardianPhone;
+    }
+    if (args.fieldsToKeep.guardianEmail && sourceStudent.guardianEmail) {
+      updates.guardianEmail = sourceStudent.guardianEmail;
+    }
+    if (args.fieldsToKeep.dateOfBirth && sourceStudent.dateOfBirth) {
+      updates.dateOfBirth = sourceStudent.dateOfBirth;
+    }
+    if (args.fieldsToKeep.area && sourceStudent.area) {
+      updates.area = sourceStudent.area;
+    }
+    if (args.fieldsToKeep.parentName && sourceStudent.parentName) {
+      updates.parentName = sourceStudent.parentName;
+    }
+    if (args.fieldsToKeep.parentPhone && sourceStudent.parentPhone) {
+      updates.parentPhone = sourceStudent.parentPhone;
+    }
+    if (args.fieldsToKeep.parentEmail && sourceStudent.parentEmail) {
+      updates.parentEmail = sourceStudent.parentEmail;
+    }
+    if (args.fieldsToKeep.secondaryParentName && sourceStudent.secondaryParentName) {
+      updates.secondaryParentName = sourceStudent.secondaryParentName;
+    }
+    if (args.fieldsToKeep.secondaryParentPhone && sourceStudent.secondaryParentPhone) {
+      updates.secondaryParentPhone = sourceStudent.secondaryParentPhone;
+    }
+    if (args.fieldsToKeep.allergies && sourceStudent.allergies) {
+      updates.allergies = sourceStudent.allergies;
+    }
+    if (args.fieldsToKeep.specialNeeds && sourceStudent.specialNeeds) {
+      updates.specialNeeds = sourceStudent.specialNeeds;
+    }
+    if (args.fieldsToKeep.medicalNotes && sourceStudent.medicalNotes) {
+      updates.medicalNotes = sourceStudent.medicalNotes;
+    }
+    if (args.fieldsToKeep.notes) {
+      // Combine notes if both exist
+      if (sourceStudent.notes && targetStudent.notes) {
+        updates.notes = `${targetStudent.notes}\n\n--- Merged from ${sourceStudent.firstName} ${sourceStudent.lastName} (${sourceStudent.studentId}) ---\n${sourceStudent.notes}`;
+      } else if (sourceStudent.notes) {
+        updates.notes = sourceStudent.notes;
+      }
+    }
+
+    // Update target student with merged data
+    if (Object.keys(updates).length > 0) {
+      await ctx.db.patch(args.targetStudentId, updates);
+    }
+
+    // Update all classes that reference the source student to point to target student
+    const classesToUpdate = await ctx.db
+      .query("classes")
+      .withIndex("by_student", (q) => q.eq("studentId", args.sourceStudentId))
+      .collect();
+
+    for (const cls of classesToUpdate) {
+      await ctx.db.patch(cls._id, {
+        studentId: args.targetStudentId,
+      });
+    }
+
+    // Also check additionalStudentIds arrays
+    const allClasses = await ctx.db.query("classes").collect();
+    for (const cls of allClasses) {
+      if (cls.additionalStudentIds?.includes(args.sourceStudentId)) {
+        // Replace source with target in the array
+        const updatedIds = cls.additionalStudentIds.map(id =>
+          id === args.sourceStudentId ? args.targetStudentId : id
+        );
+        // Remove duplicates if target was already in the array
+        const uniqueIds = [...new Set(updatedIds)];
+        await ctx.db.patch(cls._id, {
+          additionalStudentIds: uniqueIds as Id<"students">[],
+        });
+      }
+    }
+
+    // Soft delete the source student
+    await ctx.db.delete(args.sourceStudentId);
+
+    // Log the merge in audit logs (using existing audit system)
+    await logAudit(ctx, {
+      userId: args.mergedBy,
+      action: AuditActions.MERGE,
+      targetType: AuditTargetTypes.STUDENT,
+      targetId: args.targetStudentId,
+      metadata: {
+        mergedStudentId: args.sourceStudentId,
+        mergedStudentName: `${sourceStudent.firstName} ${sourceStudent.lastName}`,
+        mergedStudentStudentId: sourceStudent.studentId,
+        fieldsUpdated: Object.keys(updates),
+        classesUpdated: classesToUpdate.length,
+      },
+    });
+
+    return {
+      success: true,
+      targetStudentId: args.targetStudentId,
+      classesUpdated: classesToUpdate.length,
+      fieldsUpdated: Object.keys(updates),
+    };
+  },
+});

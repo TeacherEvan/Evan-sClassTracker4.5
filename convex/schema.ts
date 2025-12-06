@@ -687,4 +687,29 @@ export default defineSchema({
     .index("by_school", ["schoolId"])
     .index("by_user_and_timestamp", ["userId", "timestamp"])
     .index("by_status_and_timestamp", ["status", "timestamp"]),
+
+  studentWatchlist: defineTable({
+    studentId: v.id("students"), // Student being flagged
+    potentialDuplicateIds: v.array(v.id("students")), // Array of potential duplicate student IDs
+    reason: v.string(), // Reason for flagging (e.g., "Duplicate detected")
+    reasonTh: v.string(),
+    status: v.union(
+      v.literal("pending"), // Awaiting review
+      v.literal("resolved"), // Merged or dismissed
+      v.literal("dismissed") // Not a duplicate
+    ),
+    notes: v.optional(v.string()), // Admin notes
+    notesTh: v.optional(v.string()),
+    flaggedBy: v.id("users"), // User who flagged (system or admin)
+    flaggedAt: v.number(),
+    resolvedBy: v.optional(v.id("users")), // Admin who resolved
+    resolvedAt: v.optional(v.number()),
+    mergedIntoId: v.optional(v.id("students")), // If merged, which student was kept
+    matchedFields: v.array(v.string()), // Fields that matched (e.g., ["firstName", "lastName", "grade", "school"])
+  })
+    .index("by_student", ["studentId"])
+    .index("by_status", ["status"])
+    .index("by_flagged_at", ["flaggedAt"])
+    .index("by_flagged_by", ["flaggedBy"])
+    .index("by_resolved_at", ["resolvedAt"]),
 });
