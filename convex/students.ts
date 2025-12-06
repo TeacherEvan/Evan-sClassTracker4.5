@@ -103,7 +103,10 @@ export const create = mutation({
     // Optional fields
     nickname: v.optional(v.string()),
     dateOfBirth: v.optional(v.number()), // Timestamp - REQUIRED for guardian students
-    area: v.optional(v.string()), // Teaching location area - REQUIRED for guardian students
+    area: v.optional(v.string()), // Teaching location area - REQUIRED for guardian students - DEPRECATED in favor of structured location
+    // NEW STRUCTURED LOCATION FIELDS (Dec 2025)
+    provinceCode: v.optional(v.string()), // Thailand province code (e.g., "BKK", "CNX")
+    districtName: v.optional(v.string()), // District name in English (e.g., "Mueang Chiang Mai")
     parentName: v.optional(v.string()),
     parentPhone: v.optional(v.string()),
     parentEmail: v.optional(v.string()),
@@ -345,7 +348,10 @@ export const create = mutation({
       // Optional fields
       nickname: args.nickname,
       dateOfBirth: args.dateOfBirth,
-      area: args.area, // NEW: Teaching location area
+      area: args.area, // DEPRECATED - kept for backward compatibility
+      // NEW STRUCTURED LOCATION FIELDS (Dec 2025)
+      provinceCode: args.provinceCode,
+      districtName: args.districtName,
       parentName: args.parentName,
       parentPhone: args.parentPhone,
       parentEmail: args.parentEmail,
@@ -395,6 +401,10 @@ export const update = mutation({
     // Optional fields
     nickname: v.optional(v.string()),
     dateOfBirth: v.optional(v.number()), // Timestamp
+    area: v.optional(v.string()), // DEPRECATED - kept for backward compatibility
+    // NEW STRUCTURED LOCATION FIELDS (Dec 2025)
+    provinceCode: v.optional(v.string()),
+    districtName: v.optional(v.string()),
     parentName: v.optional(v.string()),
     parentPhone: v.optional(v.string()),
     parentEmail: v.optional(v.string()),
@@ -628,15 +638,33 @@ export const duplicate = mutation({
       lastName: originalStudent.lastName,
       studentId,
       schoolId: originalStudent.schoolId,
+      providerId: originalStudent.providerId,
       guardianId: originalStudent.guardianId,
       guardianTitle: originalStudent.guardianTitle,
       grade: originalStudent.grade,
+      class: originalStudent.class,
       guardianName: originalStudent.guardianName,
       guardianPhone: originalStudent.guardianPhone,
       guardianEmail: originalStudent.guardianEmail,
       acknowledged: originalStudent.acknowledged,
       createdBy: originalStudent.createdBy,
       createdAt: Date.now(),
+      // Optional fields
+      nickname: originalStudent.nickname,
+      dateOfBirth: originalStudent.dateOfBirth,
+      area: originalStudent.area, // DEPRECATED - kept for backward compatibility
+      // NEW STRUCTURED LOCATION FIELDS (Dec 2025)
+      provinceCode: originalStudent.provinceCode,
+      districtName: originalStudent.districtName,
+      parentName: originalStudent.parentName,
+      parentPhone: originalStudent.parentPhone,
+      parentEmail: originalStudent.parentEmail,
+      secondaryParentName: originalStudent.secondaryParentName,
+      secondaryParentPhone: originalStudent.secondaryParentPhone,
+      allergies: originalStudent.allergies,
+      specialNeeds: originalStudent.specialNeeds,
+      medicalNotes: originalStudent.medicalNotes,
+      notes: originalStudent.notes,
     });
 
     return { id: newId, studentId };

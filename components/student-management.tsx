@@ -13,6 +13,7 @@ import { CreateProviderModal } from "./create-provider-modal";
 import { LazyBulkEditStudentsModal, ModalLoadingFallback } from "./lazy-components";
 import { PaginatedList } from "./paginated-list";
 import { StudentListSkeleton } from "./ui/skeleton";
+import { ThailandLocationDropdown } from "./thailand-location-dropdown";
 
 type Student = {
     _id: Id<"students">;
@@ -73,6 +74,9 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
     // Optional fields state
     const [dateOfBirth, setDateOfBirth] = useState("");
+    // NEW: Structured location fields (Dec 2025)
+    const [provinceCode, setProvinceCode] = useState("");
+    const [districtName, setDistrictName] = useState("");
     const [parentName, setParentName] = useState("");
     const [parentPhone, setParentPhone] = useState("");
     const [parentEmail, setParentEmail] = useState("");
@@ -263,6 +267,9 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     // Optional fields
                     nickname: nickname || undefined,
                     dateOfBirth: dateOfBirth ? new Date(dateOfBirth).getTime() : undefined,
+                    // NEW STRUCTURED LOCATION FIELDS (Dec 2025)
+                    provinceCode: provinceCode || undefined,
+                    districtName: districtName || undefined,
                     parentName: parentName || undefined,
                     parentPhone: parentPhone || undefined,
                     parentEmail: parentEmail || undefined,
@@ -297,6 +304,9 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     // Optional fields
                     nickname: nickname || undefined,
                     dateOfBirth: dateOfBirth ? new Date(dateOfBirth).getTime() : undefined,
+                    // NEW STRUCTURED LOCATION FIELDS (Dec 2025)
+                    provinceCode: provinceCode || undefined,
+                    districtName: districtName || undefined,
                     parentName: parentName || undefined,
                     parentPhone: parentPhone || undefined,
                     parentEmail: parentEmail || undefined,
@@ -320,6 +330,8 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const handleEdit = (student: Student & {
         nickname?: string;
         dateOfBirth?: number;
+        provinceCode?: string; // NEW (Dec 2025)
+        districtName?: string; // NEW (Dec 2025)
         parentName?: string;
         parentPhone?: string;
         parentEmail?: string;
@@ -342,6 +354,9 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
         // Load optional fields
         setDateOfBirth(student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : "");
+        // NEW STRUCTURED LOCATION FIELDS (Dec 2025)
+        setProvinceCode(student.provinceCode || "");
+        setDistrictName(student.districtName || "");
         setParentName(student.parentName || "");
         setParentPhone(student.parentPhone || "");
         setParentEmail(student.parentEmail || "");
@@ -495,6 +510,9 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
         // Reset optional fields
         setDateOfBirth("");
+        // NEW STRUCTURED LOCATION FIELDS (Dec 2025)
+        setProvinceCode("");
+        setDistrictName("");
         setParentName("");
         setParentPhone("");
         setParentEmail("");
@@ -908,6 +926,21 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                                                 />
                                             </div>
+                                        </div>
+
+                                        {/* Thailand Location (Province/District) - NEW Dec 2025 */}
+                                        <div className="pt-2">
+                                            <h5 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                                                {t("Location (Thailand)", "ที่อยู่ (ประเทศไทย)")}
+                                            </h5>
+                                            <ThailandLocationDropdown
+                                                provinceCode={provinceCode}
+                                                districtName={districtName}
+                                                onProvinceChange={(code) => setProvinceCode(code)}
+                                                onDistrictChange={(name) => setDistrictName(name)}
+                                                showLabels={true}
+                                                disabled={isSubmitting}
+                                            />
                                         </div>
 
                                         {/* Primary Parent Contact */}
