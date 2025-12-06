@@ -219,7 +219,7 @@ export default defineSchema({
     .index("by_area", ["area"]) // Area-based queries for provider students
     .index("by_district", ["district"]) // NEW - District-based queries
     .index("by_province", ["province"]) // NEW - Province-based queries
-    .index("by_grade_and_class", ["grade", "class"])
+    .index("by_grade_and_class", ["grade", "class"]),
 
   notifications: defineTable({
     title: v.string(),

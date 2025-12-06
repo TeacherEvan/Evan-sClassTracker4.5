@@ -435,7 +435,7 @@ export const update = mutation({
         throw new Error("Unauthorized: Cannot modify students from other schools");
       }
       
-      if (isProviderStudent) {
+      if (isProviderStudent && student.providerId) {
         // Verify teacher owns the provider
         const provider = await ctx.db.get(student.providerId);
         if (!provider || provider.createdBy !== user._id) {
@@ -527,7 +527,7 @@ export const remove = mutation({
         throw new Error("Unauthorized: Cannot delete students from other schools");
       }
       
-      if (isProviderStudent) {
+      if (isProviderStudent && student.providerId) {
         // Verify teacher owns the provider
         const provider = await ctx.db.get(student.providerId);
         if (!provider || provider.createdBy !== user._id) {

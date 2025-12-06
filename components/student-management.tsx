@@ -83,6 +83,12 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const [medicalNotes, setMedicalNotes] = useState("");
     const [notes, setNotes] = useState("");
 
+    // NEW: Location fields state
+    const [district, setDistrict] = useState("");
+    const [province, setProvince] = useState("");
+    const [area, setArea] = useState("");
+    const [autoCreateProvider, setAutoCreateProvider] = useState(false);
+
     // Confirmation dialog states
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [pendingDeleteStudent, setPendingDeleteStudent] = useState<{ id: Id<"students">; name: string } | null>(null);
@@ -197,10 +203,9 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             return;
         }
 
-        // XOR Validation: Student must be linked to EITHER school OR provider OR guardian (not multiple, not none)
+        // XOR Validation: Student must be linked to EITHER school OR provider (auto-create counts as provider)
         const hasSchool = !!schoolId;
-        const hasProvider = !!providerId;
-        const hasGuardian = !!guardianName.trim();
+        const hasProvider = !!providerId || autoCreateProvider;
 
         if (hasSchool && hasProvider) {
             setError(
@@ -213,11 +218,11 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             return;
         }
 
-        if (!hasSchool && !hasProvider && !hasGuardian) {
+        if (!hasSchool && !hasProvider) {
             setError(
                 t(
-                    "Student must be linked to either a school, provider, or guardian",
-                    "นักเรียนต้องเชื่อมโยงกับโรงเรียน ผู้ให้บริการ หรือผู้ปกครอง"
+                    "Student must be linked to either a school or provider (or auto-create provider)",
+                    "นักเรียนต้องเชื่อมโยงกับโรงเรียนหรือผู้ให้บริการ (หรือสร้างผู้ให้บริการอัตโนมัติ)"
                 )
             );
             setIsSubmitting(false);
@@ -234,6 +239,21 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             );
             setIsSubmitting(false);
             return;
+        }
+
+        // Validate: At least 2 location fields required for provider students
+        if (hasProvider) {
+            const locationFieldCount = [district, province, area].filter(f => f.trim()).length;
+            if (locationFieldCount < 2) {
+                setError(
+                    t(
+                        "Provider students require at least 2 location fields (district, province, or area)",
+                        "นักเรียนผู้ให้บริการต้องมีข้อมูลสถานที่อย่างน้อย 2 ฟิลด์ (เขต จังหวัด หรือพื้นที่)"
+                    )
+                );
+                setIsSubmitting(false);
+                return;
+            }
         }
 
         try {
@@ -263,6 +283,10 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     // Optional fields
                     nickname: nickname || undefined,
                     dateOfBirth: dateOfBirth ? new Date(dateOfBirth).getTime() : undefined,
+                    // NEW: Location fields
+                    district: district || undefined,
+                    province: province || undefined,
+                    area: area || undefined,
                     parentName: parentName || undefined,
                     parentPhone: parentPhone || undefined,
                     parentEmail: parentEmail || undefined,
@@ -288,6 +312,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     lastName: "", // Empty lastName
                     ...(schoolId && { schoolId }),
                     ...(providerId && { providerId }),
+                    autoCreateProvider: autoCreateProvider || undefined, // NEW: Auto-create provider flag
                     grade,
                     class: studentClass && studentClass.trim() ? studentClass.trim() : undefined,
                     guardianName: guardianName || undefined,
@@ -297,6 +322,10 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     // Optional fields
                     nickname: nickname || undefined,
                     dateOfBirth: dateOfBirth ? new Date(dateOfBirth).getTime() : undefined,
+                    // NEW: Location fields
+                    district: district || undefined,
+                    province: province || undefined,
+                    area: area || undefined,
                     parentName: parentName || undefined,
                     parentPhone: parentPhone || undefined,
                     parentEmail: parentEmail || undefined,
@@ -504,6 +533,12 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         setSpecialNeeds("");
         setMedicalNotes("");
         setNotes("");
+
+        // NEW: Reset location fields
+        setDistrict("");
+        setProvince("");
+        setArea("");
+        setAutoCreateProvider(false);
     };
 
     const cancelEdit = () => {
@@ -792,10 +827,41 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                             </div>
                                         </div>
 
+                                        {/* NEW: Auto-Create Provider Checkbox */}
+                                        <div className="pt-2">
+                                            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={autoCreateProvider}
+                                                    onChange={(e) => {
+                                                        setAutoCreateProvider(e.target.checked);
+                                                        if (e.target.checked) {
+                                                            setSchoolId(""); // Clear school if auto-create enabled
+                                                            setProviderId(""); // Clear provider if auto-create enabled
+                                                        }
+                                                    }}
+                                                    disabled={!!schoolId || !!providerId}
+                                                    className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                                                />
+                                                <span>
+                                                    {t(
+                                                        "Auto-create \"Evan'sPVTclass\" provider for private tutoring",
+                                                        "สร้าง \"Evan'sPVTclass\" อัตโนมัติสำหรับการสอนส่วนตัว"
+                                                    )}
+                                                </span>
+                                            </label>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 ml-6 mt-1">
+                                                {t(
+                                                    "Creates a personal provider for your private students automatically",
+                                                    "สร้างผู้ให้บริการส่วนตัวสำหรับนักเรียนส่วนตัวของคุณโดยอัตโนมัติ"
+                                                )}
+                                            </p>
+                                        </div>
+
                                         <p className="text-xs text-gray-500 dark:text-gray-400">
                                             {t(
-                                                "Select either a school OR a provider (not both). Leave both empty to link to guardian only.",
-                                                "เลือกโรงเรียนหรือผู้ให้บริการ (ไม่ใช่ทั้งสองอย่าง) เว้นว่างทั้งสองเพื่อเชื่อมโยงกับผู้ปกครองเท่านั้น"
+                                                "Select a school, a provider, OR auto-create provider (choose one option only)",
+                                                "เลือกโรงเรียน ผู้ให้บริการ หรือสร้างผู้ให้บริการอัตโนมัติ (เลือกเพียงตัวเลือกเดียว)"
                                             )}
                                         </p>
                                     </div>
@@ -821,6 +887,74 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                         </select>
                                     </div>
                                 )}
+
+                                {/* NEW: Location Fields (Required for Provider Students) */}
+                                {(providerId || autoCreateProvider) && (
+                                    <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                        <div className="flex items-center justify-between">
+                                            <h4 className="font-semibold text-gray-900 dark:text-white">
+                                                {t("Location Information", "ข้อมูลสถานที่")}
+                                            </h4>
+                                            <span className="text-xs text-red-600 dark:text-red-400 font-medium">
+                                                {t("Required: At least 2 fields", "จำเป็น: อย่างน้อย 2 ฟิลด์")}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            {t(
+                                                "Please provide at least 2 of the following location fields for duplicate detection",
+                                                "กรุณาระบุข้อมูลสถานที่อย่างน้อย 2 ฟิลด์เพื่อป้องกันข้อมูลซ้ำ"
+                                            )}
+                                        </p>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    {t("District", "เขต")}
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={district}
+                                                    onChange={(e) => setDistrict(e.target.value)}
+                                                    placeholder={t("e.g., Bang Rak", "เช่น บางรัก")}
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    {t("Province", "จังหวัด")}
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={province}
+                                                    onChange={(e) => setProvince(e.target.value)}
+                                                    placeholder={t("e.g., Bangkok", "เช่น กรุงเทพฯ")}
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    {t("Area/Neighborhood", "พื้นที่/ย่าน")}
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={area}
+                                                    onChange={(e) => setArea(e.target.value)}
+                                                    placeholder={t("e.g., Thonglor", "เช่น ทองหล่อ")}
+                                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            {t(
+                                                "Location fields help identify students and prevent duplicates. Fill at least 2 fields.",
+                                                "ข้อมูลสถานที่ช่วยระบุตัวตนนักเรียนและป้องกันข้อมูลซ้ำ กรอกอย่างน้อย 2 ฟิลด์"
+                                            )}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Guardian Information */}
@@ -830,8 +964,8 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                 </h4>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
                                     {t(
-                                        "Required if no school is selected",
-                                        "จำเป็นหากไม่ได้เลือกโรงเรียน"
+                                        "Optional contact information",
+                                        "ข้อมูลติดต่อเพิ่มเติม (ไม่บังคับ)"
                                     )}
                                 </p>
 
