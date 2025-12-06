@@ -327,7 +327,7 @@ test.describe('Teacher Features - Accessibility and UX', () => {
     await navPromise;
   });
 
-  test('should display error messages when API fails', async () => {
+  test('should display error messages when API fails', async ({ page }) => {
     // This test validates error handling UI exists
     // Full test would require mocking API failures
     

@@ -167,6 +167,7 @@ export const AuditActions = {
     BULK_DELETE_CLASSES: "bulk_delete_classes",
     BULK_APPROVE_CLASSES: "bulk_approve_classes",
     EDIT_CLASS: "edit_class",
+    UPDATE_CLASS: "update_class",
     APPROVE_CLASS: "approve_class",
     REJECT_CLASS: "reject_class",
 
@@ -194,6 +195,11 @@ export const AuditActions = {
     // App Updates
     CREATE_APP_UPDATE: "create_app_update",
     DELETE_APP_UPDATE: "delete_app_update",
+
+    // Teacher Management
+    CREATE_TEACHER: "create_teacher",
+    UPDATE_TEACHER: "update_teacher",
+    DELETE_TEACHER: "delete_teacher",
 
     // System
     CLEAN_AUDIT_LOGS: "clean_audit_logs",
