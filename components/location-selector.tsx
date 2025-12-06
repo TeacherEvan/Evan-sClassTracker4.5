@@ -16,7 +16,6 @@ interface LocationSelectorProps {
   value: string; // District code (e.g., "BKK-01")
   onChange: (districtCode: string) => void;
   placeholder?: string;
-  _placeholderTh?: string; // Prefixed with _ to indicate intentionally unused
   required?: boolean;
   disabled?: boolean;
   className?: string;
@@ -46,7 +45,6 @@ export function LocationSelector({
   value,
   onChange,
   placeholder,
-  _placeholderTh,
   required = false,
   disabled = false,
   className = "",

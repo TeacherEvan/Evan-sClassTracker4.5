@@ -196,7 +196,7 @@ test.describe('Location Selector', () => {
                 await bulkEditButton.click();
 
                 // Wait for bulk edit modal
-                await page.waitForSelector('text=Bulk Edit Students, text=แก้ไขนักเรียนแบบกลุ่ม', { timeout: 5000 });
+                await page.waitForSelector('text=Bulk Edit Students, text="แก้ไขนักเรียนแบบกลุ่ม"', { timeout: 5000 });
 
                 // Find location selector checkbox in bulk edit modal
                 const locationCheckbox = page.locator('input[id="update-area"]').first();

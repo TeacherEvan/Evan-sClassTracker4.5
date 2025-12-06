@@ -474,7 +474,6 @@ export function BulkEditStudentsModal({
                                     onChange={setArea}
                                     disabled={!updateArea}
                                     placeholder={t("Select teaching location", "เลือกสถานที่สอน")}
-                                    _placeholderTh="เลือกสถานที่สอน"
                                 />
                                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                     {t(
