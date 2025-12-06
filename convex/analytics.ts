@@ -346,12 +346,15 @@ export const getStudentPerformance = query({
  * Returns comparative performance data for all teachers in a school
  * 
  * ✅ NEW (Nov 2025): Enables moderators to compare teacher effectiveness
+ * ✅ ENHANCED (Dec 2025): Added district/province filtering
  */
 export const getTeacherComparison = query({
     args: {
         userId: v.id("users"),
         startDate: v.optional(v.number()),
         endDate: v.optional(v.number()),
+        district: v.optional(v.string()), // Filter by district (optional)
+        province: v.optional(v.string()), // Filter by province (optional)
     },
     handler: async (ctx, args) => {
         // Get user to determine role
@@ -401,6 +404,31 @@ export const getTeacherComparison = query({
                     )
                 )
                 .collect();
+        }
+
+        // ✅ NEW: Apply district/province filtering if specified
+        if (args.district || args.province) {
+            // Fetch school details to filter by district/province
+            const schoolIds = [...new Set(classes.map(c => c.schoolId).filter(Boolean))];
+            const schools = await Promise.all(
+                schoolIds.map(id => ctx.db.get(id as Id<"schools">))
+            );
+            const schoolsMap = new Map(schools.filter(Boolean).map(s => [s!._id, s!]));
+
+            // Filter classes by district/province
+            classes = classes.filter(c => {
+                if (!c.schoolId) return false;
+                const school = schoolsMap.get(c.schoolId);
+                if (!school) return false;
+
+                if (args.district && school.district !== args.district) {
+                    return false;
+                }
+                if (args.province && school.province !== args.province) {
+                    return false;
+                }
+                return true;
+            });
         }
 
         // Group classes by teacher
@@ -502,5 +530,76 @@ export const getTeacherComparison = query({
         comparison.sort((a, b) => b.totalClasses - a.totalClasses);
 
         return comparison;
+    },
+});
+
+/**
+ * Get Available Filters (Districts & Provinces)
+ * Returns unique districts and provinces for filtering analytics
+ * Moderators can ONLY see options for THEIR school
+ * 
+ * ✅ NEW (Dec 2025): District/Province filtering for analytics
+ */
+export const getAvailableFilters = query({
+    args: {
+        userId: v.id("users"),
+    },
+    handler: async (ctx, args) => {
+        // Get user to determine role
+        const user = await ctx.db.get(args.userId);
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        // ✅ SECURITY: Moderators can ONLY see their assigned school's filters
+        let schools: Doc<"schools">[];
+        if (user.role === "moderator" && user.schoolId) {
+            const school = await ctx.db.get(user.schoolId);
+            schools = school ? [school] : [];
+        } else if (user.role === "admin") {
+            // Admins see all schools
+            schools = await ctx.db.query("schools").collect();
+        } else {
+            // Teachers don't need filters (they only see their own data)
+            return { districts: [], provinces: [] };
+        }
+
+        // Extract unique districts and provinces (bilingual)
+        const districtsSet = new Set<string>();
+        const provincesSet = new Set<string>();
+        const districtsBilingual: Array<{ value: string; label: string; labelTh: string }> = [];
+        const provincesBilingual: Array<{ value: string; label: string; labelTh: string }> = [];
+
+        for (const school of schools) {
+            if (school.district) {
+                if (!districtsSet.has(school.district)) {
+                    districtsSet.add(school.district);
+                    districtsBilingual.push({
+                        value: school.district,
+                        label: school.district,
+                        labelTh: school.districtTh || school.district,
+                    });
+                }
+            }
+            if (school.province) {
+                if (!provincesSet.has(school.province)) {
+                    provincesSet.add(school.province);
+                    provincesBilingual.push({
+                        value: school.province,
+                        label: school.province,
+                        labelTh: school.provinceTh || school.province,
+                    });
+                }
+            }
+        }
+
+        // Sort alphabetically
+        districtsBilingual.sort((a, b) => a.label.localeCompare(b.label));
+        provincesBilingual.sort((a, b) => a.label.localeCompare(b.label));
+
+        return {
+            districts: districtsBilingual,
+            provinces: provincesBilingual,
+        };
     },
 });

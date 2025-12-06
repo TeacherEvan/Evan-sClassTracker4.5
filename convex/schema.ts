@@ -71,9 +71,28 @@ export default defineSchema({
     nameTh: v.string(),
     moderatorId: v.optional(v.id("users")),
     createdAt: v.number(),
+    // Location filtering for analytics (optional, for reporting)
+    district: v.optional(v.string()), // District/Area (English)
+    districtTh: v.optional(v.string()), // District/Area (Thai)
+    province: v.optional(v.string()), // Province/State (English)
+    provinceTh: v.optional(v.string()), // Province/State (Thai)
   })
     .index("by_moderator", ["moderatorId"])
-    .index("by_created_at", ["createdAt"]),
+    .index("by_created_at", ["createdAt"])
+    .index("by_district", ["district"]) // NEW - Filter by district
+    .index("by_province", ["province"]), // NEW - Filter by province
+
+  teacherSchoolConnections: defineTable({
+    teacherId: v.id("users"), // Teacher user ID
+    schoolId: v.id("schools"), // School ID
+    connectedBy: v.id("users"), // Moderator or admin who made the connection
+    connectedAt: v.number(), // Timestamp when connected
+    isActive: v.boolean(), // Soft delete flag (disconnected but preserved for audit)
+  })
+    .index("by_teacher", ["teacherId"])
+    .index("by_school", ["schoolId"])
+    .index("by_teacher_and_school", ["teacherId", "schoolId"])
+    .index("by_school_and_active", ["schoolId", "isActive"]), // NEW - Active teachers for a school
 
   providers: defineTable({
     name: v.string(),           // Provider name (English)
@@ -160,6 +179,13 @@ export default defineSchema({
       v.literal("auto_guardian"),
       v.literal("system")
     )),
+    // MODERATOR ANALYTICS & REVIEW SYSTEM
+    includeInReports: v.optional(v.boolean()), // Whether to include in analytics reports (default true)
+    flaggedForReview: v.optional(v.boolean()), // Flagged by moderator for review
+    reviewNotes: v.optional(v.string()), // Moderator review notes (English)
+    reviewNotesTh: v.optional(v.string()), // Moderator review notes (Thai)
+    flaggedBy: v.optional(v.id("users")), // Moderator who flagged this class
+    flaggedAt: v.optional(v.number()), // When it was flagged
   })
     .index("by_teacher", ["teacherId"])
     .index("by_school", ["schoolId"])
@@ -172,7 +198,9 @@ export default defineSchema({
     .index("by_teacher_and_status", ["teacherId", "status"]) // NEW - Optimize approved class queries
     .index("by_teacher_and_guardian_linked", ["teacherId", "isGuardianLinked"]) // NEW - Guardian class queries
     .index("by_edited", ["isEdited"])
-    .index("by_last_edited", ["lastEditedAt"]),
+    .index("by_last_edited", ["lastEditedAt"])
+    .index("by_flagged_for_review", ["flaggedForReview"]) // NEW - Moderator flagged classes
+    .index("by_school_and_flagged", ["schoolId", "flaggedForReview"]), // NEW - School-scoped flagged classes
 
   students: defineTable({
     firstName: v.string(),
