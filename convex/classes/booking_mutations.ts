@@ -88,8 +88,6 @@ export const bookWithConflictCheck = mutation({
 
     const isModerator = bookedBy.role === "moderator";
     const isAdmin = bookedBy.role === "admin";
-    const hasProvider = args.providerId !== undefined;
-
     // Auto-approve if: 
     // 1. Booked by moderator/admin
     // 2. Class has a provider (provider classes bypass moderator approval)
