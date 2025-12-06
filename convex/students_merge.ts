@@ -369,30 +369,42 @@ export const getMergeSuggestions = query({
       return nameMatch;
     });
 
-    // For each suggestion, count affected records
-    const enrichedSuggestions = await Promise.all(
-      suggestions.map(async (suggestion) => {
-        // Count classes with this student
-        const classesCount = await ctx.db
-          .query("classes")
-          .withIndex("by_student", (q) => q.eq("studentId", args.studentId))
-          .collect();
+    // Batch fetch all classes and notes for all relevant students (source + suggestions)
+    const allStudentIds = [args.studentId, ...suggestions.map(s => s._id)];
 
-        // Count notes
-        const notesCount = await ctx.db
-          .query("postClassNotes")
-          .withIndex("by_student", (q) => q.eq("studentId", args.studentId))
-          .collect();
+    // Fetch all classes for these students
+    const allClasses = await ctx.db
+      .query("classes")
+      .withIndex("by_student")
+      .collect();
+    const classesByStudent = new Map();
+    for (const cls of allClasses) {
+      if (allStudentIds.some(id => id.equals(cls.studentId))) {
+        const count = classesByStudent.get(cls.studentId) || 0;
+        classesByStudent.set(cls.studentId, count + 1);
+      }
+    }
 
-        return {
-          ...suggestion,
-          matchScore: 100, // Exact name + grade match
-          affectedClasses: classesCount.length,
-          affectedNotes: notesCount.length,
-        };
-      })
-    );
+    // Fetch all notes for these students
+    const allNotes = await ctx.db
+      .query("postClassNotes")
+      .withIndex("by_student")
+      .collect();
+    const notesByStudent = new Map();
+    for (const note of allNotes) {
+      if (allStudentIds.some(id => id.equals(note.studentId))) {
+        const count = notesByStudent.get(note.studentId) || 0;
+        notesByStudent.set(note.studentId, count + 1);
+      }
+    }
 
+    // Enrich suggestions with counts for each suggestion's studentId
+    const enrichedSuggestions = suggestions.map((suggestion) => ({
+      ...suggestion,
+      matchScore: 100, // Exact name + grade match
+      affectedClasses: classesByStudent.get(suggestion._id) || 0,
+      affectedNotes: notesByStudent.get(suggestion._id) || 0,
+    }));
     return enrichedSuggestions;
   },
 });
