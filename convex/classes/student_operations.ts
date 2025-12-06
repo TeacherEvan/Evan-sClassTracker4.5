@@ -56,9 +56,9 @@ export const addDatesToClass = mutation({
       throw new Error("School not found");
     }
 
-    // 5. Determine if this is a moderator/admin booking
+    // 5. Determine if this is a moderator/admin booking or provider class (auto-approve)
     const isModerator = user.role === "admin" || user.role === "moderator";
-    const isGuardianLinked = classData.isGuardianLinked || false;
+    const hasProvider = !!classData.providerId; // Provider classes auto-approve
 
     // 6. Create new class entries for each date
     const createdClassIds: string[] = [];
@@ -68,14 +68,13 @@ export const addDatesToClass = mutation({
       // Create new class with same details but new date
       const newClassId = await ctx.db.insert("classes", {
         schoolId: classData.schoolId,
-        providerId: classData.providerId, // NEW: Include provider if present
+        providerId: classData.providerId, // Include provider if present
         teacherId: classData.teacherId,
         studentId: classData.studentId,
         locationId: classData.locationId,
         scheduledDate,
         duration: classData.duration,
-        status: isModerator || isGuardianLinked ? "approved" : "pending",
-        isGuardianLinked,
+        status: isModerator || hasProvider ? "approved" : "pending",
         createdAt: Date.now(),
         // Optional fields
         ...(classData.subject && { subject: classData.subject }),
@@ -96,8 +95,8 @@ export const addDatesToClass = mutation({
     const locationText = location?.name || "Unknown location";
     const locationTextTh = location?.nameTh || "ไม่ทราบสถานที่";
 
-    // 8. Send notification to moderator (if teacher added dates AND school-linked)
-    if (!isGuardianLinked && !isModerator && classData.schoolId && school?.moderatorId) {
+    // 8. Send notification to moderator (if teacher added dates AND school-linked, NOT provider)
+    if (!hasProvider && !isModerator && classData.schoolId && school?.moderatorId) {
       await ctx.db.insert("notifications", {
         userId: school.moderatorId,
         title: `Additional Class Dates Requested`,
