@@ -85,15 +85,17 @@ export const detectDuplicates = mutation({
         .collect();
     } else if (newStudent.providerId) {
       // Provider students: compare within same provider
+      const providerId = newStudent.providerId; // Capture for type safety
       allStudents = await ctx.db
         .query("students")
-        .withIndex("by_provider", (q) => q.eq("providerId", newStudent.providerId!))
+        .withIndex("by_provider", (q) => q.eq("providerId", providerId))
         .collect();
     } else if (newStudent.area) {
       // Area-based students: compare within same area
+      const area = newStudent.area; // Capture for type safety
       allStudents = await ctx.db
         .query("students")
-        .withIndex("by_area", (q) => q.eq("area", newStudent.area!))
+        .withIndex("by_area", (q) => q.eq("area", area))
         .collect();
     } else {
       // Fallback: compare all students (rare case)
@@ -194,7 +196,7 @@ export const listWatchlist = query({
       entries.map(async (entry) => {
         const student = await ctx.db.get(entry.studentId);
         const possibleDuplicates = await Promise.all(
-          entry.possibleDuplicateIds.map(async (id) => await ctx.db.get(id))
+          entry.possibleDuplicateIds.map((id) => ctx.db.get(id))
         );
 
         return {
@@ -230,7 +232,7 @@ export const getWatchlistEntry = query({
     // Fetch student details
     const student = await ctx.db.get(entry.studentId);
     const possibleDuplicates = await Promise.all(
-      entry.possibleDuplicateIds.map(async (id) => await ctx.db.get(id))
+      entry.possibleDuplicateIds.map((id) => ctx.db.get(id))
     );
 
     // Get classes for all students
@@ -240,8 +242,8 @@ export const getWatchlistEntry = query({
       .collect();
 
     const duplicateClasses = await Promise.all(
-      entry.possibleDuplicateIds.map(async (id) =>
-        await ctx.db
+      entry.possibleDuplicateIds.map((id) =>
+        ctx.db
           .query("classes")
           .withIndex("by_student", (q) => q.eq("studentId", id))
           .collect()
