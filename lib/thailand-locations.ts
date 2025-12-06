@@ -86,7 +86,7 @@ export const THAILAND_REGIONS: ThailandRegion[] = [
     name: 'Western Thailand',
     nameTh: 'ภาคตะวันตก',
     provinces: [
-      'kanchanaburi', 'tak', 'ratchaburi', 'phetchaburi', 'prachuap_khiri_khan'
+      'kanchanaburi', 'tak', 'ratchaburi'
     ]
   },
   {
