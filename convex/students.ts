@@ -372,7 +372,12 @@ export const create = mutation({
       });
     }
 
-    return { id, studentId };
+    return {
+      id,
+      studentId,
+      // Signal to frontend to check for duplicates
+      checkDuplicates: true,
+    };
   },
 });
 

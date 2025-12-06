@@ -88,11 +88,18 @@ export const bookWithConflictCheck = mutation({
 
     const isModerator = bookedBy.role === "moderator";
     const isAdmin = bookedBy.role === "admin";
+    const isTeacher = bookedBy.role === "teacher";
+    
+    // ✅ NEW: Auto-approve provider classes (teacher's own provider students)
+    const hasProvider = args.providerId !== undefined;
+    const isProviderAutoApprove = hasProvider && isTeacher;
 
-    // Auto-approve if booked by moderator or admin
-    const status = isModerator || isAdmin ? "approved" : "pending";
-    const approvedAt = isModerator || isAdmin ? Date.now() : undefined;
-    const approvedByUserId = isModerator || isAdmin ? args.bookedByUserId : undefined;
+    // Auto-approve if:
+    // 1. Booked by moderator or admin (existing logic)
+    // 2. Teacher booking their own provider class (NEW logic)
+    const status = isModerator || isAdmin || isProviderAutoApprove ? "approved" : "pending";
+    const approvedAt = isModerator || isAdmin || isProviderAutoApprove ? Date.now() : undefined;
+    const approvedByUserId = isModerator || isAdmin || isProviderAutoApprove ? args.bookedByUserId : undefined;
 
     const classId = await ctx.db.insert("classes", {
       teacherId: args.teacherId,
@@ -109,7 +116,7 @@ export const bookWithConflictCheck = mutation({
       approvedByUsername: approvedByUserId ? bookedBy.username : undefined,
       bookedByUserId: args.bookedByUserId,
       bookedByUsername: bookedBy.username,
-      approvalSource: isModerator ? "moderator" : isAdmin ? "admin" : undefined,
+      approvalSource: isModerator ? "moderator" : isAdmin ? "admin" : isProviderAutoApprove ? "auto_provider" : undefined,
       duration: args.duration,
       subject: args.subject,
       subjectTh: args.subjectTh,
@@ -146,7 +153,7 @@ export const bookWithConflictCheck = mutation({
     // Create audit log
     await logAudit(ctx, {
       userId: args.bookedByUserId,
-      action: isModerator ? "book_class" : "request_class",
+      action: isModerator || isProviderAutoApprove ? "book_class" : "request_class",
       targetType: "classes",
       targetId: classId.toString(),
       details: {
@@ -234,6 +241,7 @@ export const book = mutation({
 
     const isModerator = bookedBy.role === "moderator";
     const isAdmin = bookedBy.role === "admin";
+    const isTeacher = bookedBy.role === "teacher";
 
     // Validate: teacher exists
     const teacher = await ctx.db.get(args.teacherId);
@@ -279,10 +287,16 @@ export const book = mutation({
     if (args.preparationNotes) validateLength(args.preparationNotes, "Preparation Notes", 2000, 0);
     if (args.preparationNotesTh) validateLength(args.preparationNotesTh, "Preparation Notes (Thai)", 2000, 0);
 
-    // Auto-approve if booked by moderator or admin
-    const status = isModerator || isAdmin ? "approved" : "pending";
-    const approvedAt = isModerator || isAdmin ? Date.now() : undefined;
-    const approvedByUserId = isModerator || isAdmin ? args.bookedByUserId : undefined;
+    // ✅ NEW: Auto-approve provider classes (teacher's own provider students)
+    const hasProvider = args.providerId !== undefined;
+    const isProviderAutoApprove = hasProvider && isTeacher;
+
+    // Auto-approve if:
+    // 1. Booked by moderator or admin (existing logic)
+    // 2. Teacher booking their own provider class (NEW logic)
+    const status = isModerator || isAdmin || isProviderAutoApprove ? "approved" : "pending";
+    const approvedAt = isModerator || isAdmin || isProviderAutoApprove ? Date.now() : undefined;
+    const approvedByUserId = isModerator || isAdmin || isProviderAutoApprove ? args.bookedByUserId : undefined;
 
     // Insert class - use schema-compliant fields
     const classId = await ctx.db.insert("classes", {
@@ -300,7 +314,7 @@ export const book = mutation({
       approvedByUsername: approvedByUserId ? bookedBy.username : undefined,
       bookedByUserId: args.bookedByUserId,
       bookedByUsername: bookedBy.username,
-      approvalSource: isModerator ? "moderator" : isAdmin ? "admin" : undefined,
+      approvalSource: isModerator ? "moderator" : isAdmin ? "admin" : isProviderAutoApprove ? "auto_provider" : undefined,
       duration: args.duration,
       subject: args.subject,
       subjectTh: args.subjectTh,
@@ -328,7 +342,7 @@ export const book = mutation({
     // ✅ AUDIT LOG
     await logAudit(ctx, {
       userId: args.bookedByUserId,
-      action: isModerator ? "book_class" : "request_class",
+      action: isModerator || isProviderAutoApprove ? "book_class" : "request_class",
       targetType: "classes",
       targetId: classId.toString(),
       details: {
