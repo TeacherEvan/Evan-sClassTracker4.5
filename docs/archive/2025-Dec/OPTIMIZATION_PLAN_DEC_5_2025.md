@@ -23,6 +23,7 @@
 ## 🎯 Optimization Strategy
 
 ### Philosophy: **Surgical Refactoring**
+
 - Extract reusable components
 - Create focused hooks
 - Split by feature/responsibility
@@ -37,7 +38,9 @@
 **Remaining:** 2,495 lines still in index.tsx
 
 ### Analysis
+
 The component has **excessive responsibility**:
+
 - Form state management (✅ extracted to `class-booking-state.ts`)
 - Multi-date booking logic (❌ still in index.tsx)
 - Recurring booking config (❌ still in index.tsx)
@@ -74,6 +77,7 @@ components/class-booking/
 ```
 
 ### Benefits
+
 - ✅ Main component reduced to **500 lines** (80% reduction)
 - ✅ Each subcomponent has **single responsibility**
 - ✅ Easier to test in isolation
@@ -81,6 +85,7 @@ components/class-booking/
 - ✅ Better reusability
 
 ### Implementation Order
+
 1. **Week 1:** Extract `FilterPanel.tsx` (safest, least coupling)
 2. **Week 2:** Extract `MultiDateBooking.tsx` (moderate coupling)
 3. **Week 3:** Extract `BookingForm.tsx` (high coupling with state)
@@ -95,7 +100,9 @@ components/class-booking/
 **Remaining:** All mutations still in one file
 
 ### Analysis
+
 The file contains **11 mutation functions**:
+
 - `book` (200 lines) - Main booking logic
 - `bookWithConflictCheck` (150 lines) - Conflict detection
 - `bookMultipleDates` (180 lines) - Multi-date booking
@@ -140,6 +147,7 @@ convex/classes/
 ```
 
 ### Benefits
+
 - ✅ Main file reduced to **200 lines** (90% reduction)
 - ✅ Mutations grouped by **feature area**
 - ✅ Easier to find specific logic
@@ -147,6 +155,7 @@ convex/classes/
 - ✅ Reduced merge conflicts
 
 ### Implementation Order
+
 1. **Day 1:** Extract `helpers.ts` (no external dependencies)
 2. **Day 2:** Extract `booking.ts` (core functionality)
 3. **Day 3:** Extract `multi-booking.ts` (depends on booking.ts)
@@ -161,7 +170,9 @@ convex/classes/
 **Recent Change:** Diagnostic logs added (Dec 5, 2025)
 
 ### Analysis
+
 The component handles:
+
 - Student list display (200 lines)
 - Student creation form (250 lines)
 - Student edit form (250 lines)
@@ -197,12 +208,14 @@ components/student-management/
 ```
 
 ### Benefits
+
 - ✅ Main component reduced to **300 lines** (80% reduction)
 - ✅ Form reusable for create + edit
 - ✅ Bulk operations isolated
 - ✅ Filter logic self-contained
 
 ### Implementation Order
+
 1. **Week 1:** Extract `student-helpers.ts` + `FilterPanel.tsx`
 2. **Week 2:** Extract `StudentForm.tsx` (high coupling)
 3. **Week 3:** Extract `StudentList.tsx` + `BulkOperationsBar.tsx`
@@ -215,7 +228,9 @@ components/student-management/
 **Status:** Monolithic modal component
 
 ### Analysis
+
 The modal displays:
+
 - Class header (100 lines)
 - Student list (150 lines)
 - Post-class notes (200 lines)
@@ -248,12 +263,14 @@ components/class-detail/
 ```
 
 ### Benefits
+
 - ✅ Main modal reduced to **200 lines** (83% reduction)
 - ✅ Each section independently testable
 - ✅ Actions menu reusable
 - ✅ Notes component reusable
 
 ### Implementation Order
+
 1. **Week 1:** Extract `class-detail-helpers.ts` + `ClassHeader.tsx`
 2. **Week 2:** Extract `StudentsList.tsx` + `PostClassNotes.tsx`
 3. **Week 3:** Extract `ClassActions.tsx` + cleanup
@@ -263,6 +280,7 @@ components/class-detail/
 ## 📈 Expected Impact
 
 ### Before Optimization
+
 - **Total Lines:** 7,249 lines in 4 files
 - **Average File Size:** 1,812 lines
 - **Maintenance Difficulty:** HIGH
@@ -270,6 +288,7 @@ components/class-detail/
 - **Onboarding Time:** 3-4 hours per file
 
 ### After Optimization
+
 - **Total Lines:** ~7,250 lines (same code, organized)
 - **Average File Size:** ~250 lines per file
 - **File Count:** 4 → 30 files (25% increase)
@@ -278,6 +297,7 @@ components/class-detail/
 - **Onboarding Time:** 15 min per file
 
 ### Metrics
+
 - **80-90% reduction** in main component sizes
 - **100% code reusability** for extracted components
 - **50% faster** development (easier to find code)
@@ -288,6 +308,7 @@ components/class-detail/
 ## 🚀 Recommended Implementation Sequence
 
 ### Sprint 1 (Week 1) - Quick Wins
+
 **Goal:** Extract helpers + simple components  
 **Time:** 8-10 hours
 
@@ -301,6 +322,7 @@ components/class-detail/
 ---
 
 ### Sprint 2 (Week 2) - Backend Split
+
 **Goal:** Complete convex/classes refactoring  
 **Time:** 10-12 hours
 
@@ -314,6 +336,7 @@ components/class-detail/
 ---
 
 ### Sprint 3 (Week 3) - Frontend Components
+
 **Goal:** Extract high-value UI components  
 **Time:** 12-15 hours
 
@@ -327,6 +350,7 @@ components/class-detail/
 ---
 
 ### Sprint 4 (Week 4) - Finalization
+
 **Goal:** Complete all remaining splits  
 **Time:** 8-10 hours
 
@@ -343,6 +367,7 @@ components/class-detail/
 ## ⚠️ Critical Considerations
 
 ### Must Maintain
+
 1. **Real-time Reactivity:** Convex `useQuery`/`useMutation` hooks
 2. **Bilingual Support:** EN/TH throughout
 3. **Security:** Role-based access control
@@ -350,13 +375,16 @@ components/class-detail/
 5. **Error Handling:** Toast notifications
 
 ### Testing Strategy
+
 1. **Before Split:** Manual smoke test all features
 2. **During Split:** Component-level validation
 3. **After Split:** Full regression test
 4. **E2E Tests:** Update Playwright tests for new structure
 
 ### Rollback Plan
+
 If refactoring causes issues:
+
 1. Keep original files as `*.backup.tsx`
 2. Git branch per sprint
 3. Feature flags for new components
@@ -367,6 +395,7 @@ If refactoring causes issues:
 ## 💰 Cost-Benefit Analysis
 
 ### Time Investment
+
 - **Planning:** 2 hours (DONE)
 - **Implementation:** 38-47 hours (4 weeks)
 - **Testing:** 10-12 hours
@@ -374,6 +403,7 @@ If refactoring causes issues:
 - **Total:** 54-66 hours (~1.5-2 months part-time)
 
 ### Long-Term Savings
+
 - **Debugging Time:** 50% reduction
 - **Feature Development:** 30% faster
 - **Onboarding:** 70% faster
@@ -399,18 +429,21 @@ If refactoring causes issues:
 ## 📝 Next Steps
 
 ### Immediate (This Session)
+
 1. **Review & Feedback:** Discuss optimization strategy
 2. **Prioritize:** Agree on Sprint 1 scope
 3. **Create Branch:** `feat/refactor-sprint-1`
 4. **Begin:** Extract first helper file
 
 ### This Week
+
 1. Complete Sprint 1 (helpers + simple components)
 2. Test each extraction
 3. Update documentation
 4. Prepare Sprint 2 plan
 
 ### This Month
+
 1. Complete all 4 sprints
 2. Full regression testing
 3. Update refactoring guide
@@ -422,6 +455,7 @@ If refactoring causes issues:
 **Recommended Start:** Extract `convex/classes/helpers.ts` (lowest risk, high value)
 
 **Would you like to:**
+
 - A) Start Sprint 1 immediately (extract helpers)?
 - B) Review/adjust the plan first?
 - C) Prioritize a different file?

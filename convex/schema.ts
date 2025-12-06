@@ -71,9 +71,16 @@ export default defineSchema({
     nameTh: v.string(),
     moderatorId: v.optional(v.id("users")),
     createdAt: v.number(),
+    // NEW: Geographic information for filtering
+    district: v.optional(v.string()), // District name in English
+    districtTh: v.optional(v.string()), // District name in Thai
+    province: v.optional(v.string()), // Province name in English
+    provinceTh: v.optional(v.string()), // Province name in Thai
   })
     .index("by_moderator", ["moderatorId"])
-    .index("by_created_at", ["createdAt"]),
+    .index("by_created_at", ["createdAt"])
+    .index("by_province", ["province"])
+    .index("by_district", ["district"]),
 
   providers: defineTable({
     name: v.string(),           // Provider name (English)
@@ -160,6 +167,13 @@ export default defineSchema({
       v.literal("auto_guardian"),
       v.literal("system")
     )),
+    // NEW: Moderator analytics and review flags
+    flaggedForReview: v.optional(v.boolean()), // Moderator can flag classes for review
+    includeInReports: v.optional(v.boolean()), // Moderator can exclude classes from reports (default true)
+    reviewNotes: v.optional(v.string()), // Moderator review notes (English)
+    reviewNotesTh: v.optional(v.string()), // Moderator review notes (Thai)
+    flaggedBy: v.optional(v.id("users")), // Moderator who flagged this class
+    flaggedAt: v.optional(v.number()), // When class was flagged
   })
     .index("by_teacher", ["teacherId"])
     .index("by_school", ["schoolId"])
@@ -172,7 +186,9 @@ export default defineSchema({
     .index("by_teacher_and_status", ["teacherId", "status"]) // NEW - Optimize approved class queries
     .index("by_teacher_and_guardian_linked", ["teacherId", "isGuardianLinked"]) // NEW - Guardian class queries
     .index("by_edited", ["isEdited"])
-    .index("by_last_edited", ["lastEditedAt"]),
+    .index("by_last_edited", ["lastEditedAt"])
+    .index("by_flagged", ["flaggedForReview"])
+    .index("by_school_and_flagged", ["schoolId", "flaggedForReview"]), // NEW - School-scoped flagged classes
 
   students: defineTable({
     firstName: v.string(),
@@ -193,7 +209,10 @@ export default defineSchema({
     // NEW OPTIONAL FIELDS
     nickname: v.optional(v.string()), // Preferred name
     dateOfBirth: v.optional(v.number()), // For age calculation - REQUIRED for provider students
-    area: v.optional(v.string()), // Teaching location area (e.g., "Bangkok District 1") - REQUIRED for auto-guardian students
+    area: v.optional(v.string()), // Teaching location area (e.g., "Bangkok District 1") - REQUIRED for auto-guardian students - DEPRECATED in favor of structured location
+    // NEW STRUCTURED LOCATION FIELDS (Dec 2025)
+    provinceCode: v.optional(v.string()), // Thailand province code (e.g., "BKK", "CNX")
+    districtName: v.optional(v.string()), // District name in English (e.g., "Mueang Chiang Mai")
     parentName: v.optional(v.string()), // Primary parent
     parentPhone: v.optional(v.string()), // Contact number
     parentEmail: v.optional(v.string()), // Email contact
@@ -210,8 +229,11 @@ export default defineSchema({
     .index("by_guardian", ["guardianName"])
     .index("by_guardian_id", ["guardianId"]) // DEPRECATED - will be removed
     .index("by_created_by", ["createdBy"])
-    .index("by_area", ["area"]) // Area-based queries for auto-guardian students
-    .index("by_grade_and_class", ["grade", "class"]), // NEW
+    .index("by_area", ["area"]) // Area-based queries for auto-guardian students - DEPRECATED
+    .index("by_grade_and_class", ["grade", "class"]) // NEW
+    .index("by_province", ["provinceCode"]) // NEW - Province-based queries (Dec 2025)
+    .index("by_district", ["districtName"]) // NEW - District-based queries (Dec 2025)
+    .index("by_province_and_district", ["provinceCode", "districtName"]), // NEW - Combined location queries (Dec 2025)
 
   notifications: defineTable({
     title: v.string(),
@@ -725,4 +747,22 @@ export default defineSchema({
     .index("by_reviewed_by", ["reviewedBy"])
     .index("by_created_at", ["createdAt"])
     .index("by_status_and_created_at", ["status", "createdAt"]),
+
+  // NEW: Teacher-School Connections (many-to-many relationship)
+  // Moderators can only connect/disconnect teachers to their own school
+  teacherSchools: defineTable({
+    teacherId: v.id("users"), // Teacher user ID
+    schoolId: v.id("schools"), // School ID
+    connectedBy: v.id("users"), // Moderator or admin who made the connection
+    connectedAt: v.number(), // Timestamp of connection
+    isActive: v.boolean(), // Soft delete flag (for audit trail)
+    disconnectedBy: v.optional(v.id("users")), // Moderator or admin who disconnected
+    disconnectedAt: v.optional(v.number()), // Timestamp of disconnection
+  })
+    .index("by_teacher", ["teacherId"])
+    .index("by_school", ["schoolId"])
+    .index("by_teacher_and_school", ["teacherId", "schoolId"])
+    .index("by_active", ["isActive"])
+    .index("by_teacher_and_active", ["teacherId", "isActive"])
+    .index("by_school_and_active", ["schoolId", "isActive"]),
 });

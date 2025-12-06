@@ -444,7 +444,7 @@ npm run build  # Verify build passes
 
 ### Phase 2 Completion (2.5 hours)
 
-3. **Integrate monthly-calendar.tsx** (1.5 hours)
+1. **Integrate monthly-calendar.tsx** (1.5 hours)
    - Add arrow key navigation
    - Replace console.error
    - Add status icons
@@ -457,7 +457,7 @@ npm run build  # Verify build passes
 
 ### Testing & Documentation (1 hour)
 
-5. **Manual testing** (30 min)
+1. **Manual testing** (30 min)
    - Test all keyboard shortcuts
    - Verify logger output
    - Check accessibility
