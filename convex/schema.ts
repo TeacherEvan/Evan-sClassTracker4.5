@@ -203,6 +203,14 @@ export default defineSchema({
     specialNeeds: v.optional(v.string()), // Learning accommodations
     medicalNotes: v.optional(v.string()), // Medical conditions/medications
     notes: v.optional(v.string()), // General notes
+    // SOFT DELETE & MERGE FIELDS
+    isDeleted: v.optional(v.boolean()), // Soft delete flag
+    deletedAt: v.optional(v.number()), // When student was soft-deleted
+    deletedBy: v.optional(v.id("users")), // Who soft-deleted the student
+    deletionReason: v.optional(v.string()), // Why student was deleted
+    mergedIntoId: v.optional(v.id("students")), // Target student if this was merged
+    mergedAt: v.optional(v.number()), // When merge occurred
+    mergedBy: v.optional(v.id("users")), // Who performed the merge
   })
     .index("by_student_id", ["studentId"])
     .index("by_school", ["schoolId"])
@@ -211,7 +219,9 @@ export default defineSchema({
     .index("by_guardian_id", ["guardianId"]) // DEPRECATED - will be removed
     .index("by_created_by", ["createdBy"])
     .index("by_area", ["area"]) // Area-based queries for auto-guardian students
-    .index("by_grade_and_class", ["grade", "class"]), // NEW
+    .index("by_grade_and_class", ["grade", "class"]) // NEW
+    .index("by_deleted", ["isDeleted"]) // Soft delete queries
+    .index("by_merged_into", ["mergedIntoId"]), // Merge tracking
 
   notifications: defineTable({
     title: v.string(),

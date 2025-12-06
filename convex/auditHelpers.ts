@@ -180,6 +180,9 @@ export const AuditActions = {
     UPDATE_STUDENT: "update_student",
     DELETE_STUDENT: "delete_student",
     BULK_DELETE_STUDENTS: "bulk_delete_students",
+    MERGE_STUDENTS: "merge_students",
+    RESTORE_STUDENT: "restore_student",
+    HARD_DELETE_STUDENT: "hard_delete_student",
 
     // Location Management
     CREATE_LOCATION: "create_location",

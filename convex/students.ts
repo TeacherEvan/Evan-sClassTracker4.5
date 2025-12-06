@@ -32,20 +32,30 @@ function generateStudentId(firstName: string, lastName: string, schoolId: string
   return `${schoolHash}-${nameHash}-${timestamp}-${random}`;
 }
 
-// Query to list students
+// Query to list students (excludes soft-deleted by default)
 export const list = query({
   args: {
     schoolId: v.optional(v.id("schools")),
+    includeDeleted: v.optional(v.boolean()), // Optional: include soft-deleted students
   },
   handler: async (ctx, args) => {
+    let students;
+    
     if (args.schoolId) {
-      return await ctx.db
+      students = await ctx.db
         .query("students")
         .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId!))
         .collect();
+    } else {
+      students = await ctx.db.query("students").collect();
     }
 
-    return await ctx.db.query("students").collect();
+    // Filter out soft-deleted students unless explicitly requested
+    if (!args.includeDeleted) {
+      students = students.filter((s) => !s.isDeleted);
+    }
+
+    return students;
   },
 });
 
@@ -59,29 +69,45 @@ export const getById = query({
   },
 });
 
-// Query to get student by student ID
+// Query to get student by student ID (excludes soft-deleted by default)
 export const getByStudentId = query({
   args: {
     studentId: v.string(),
+    includeDeleted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const student = await ctx.db
       .query("students")
       .withIndex("by_student_id", (q) => q.eq("studentId", args.studentId))
       .first();
+    
+    // Filter out soft-deleted unless explicitly requested
+    if (student && student.isDeleted && !args.includeDeleted) {
+      return null;
+    }
+    
+    return student;
   },
 });
 
-// Query to get students by guardian
+// Query to get students by guardian (excludes soft-deleted by default)
 export const getByGuardian = query({
   args: {
     guardianName: v.string(),
+    includeDeleted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const students = await ctx.db
       .query("students")
       .withIndex("by_guardian", (q) => q.eq("guardianName", args.guardianName))
       .collect();
+    
+    // Filter out soft-deleted unless explicitly requested
+    if (!args.includeDeleted) {
+      return students.filter((s) => !s.isDeleted);
+    }
+    
+    return students;
   },
 });
 
@@ -211,6 +237,7 @@ export const create = mutation({
     }
 
     // ✅ PREVENT DUPLICATES: Check if student already exists with same name + grade + class + school
+    // Ignore soft-deleted students
     if (args.schoolId) {
       const duplicateCheck = await ctx.db
         .query("students")
@@ -219,6 +246,7 @@ export const create = mutation({
 
       const duplicate = duplicateCheck.find(
         (s) =>
+          !s.isDeleted && // Ignore deleted students
           s.firstName.toLowerCase() === args.firstName.toLowerCase() &&
           (s.lastName || "").toLowerCase() === (args.lastName || "").toLowerCase() &&
           s.grade === args.grade &&
@@ -233,6 +261,7 @@ export const create = mutation({
     }
 
     // NEW: ✅ PREVENT DUPLICATES for provider students (name + grade + provider)
+    // Ignore soft-deleted students
     if (args.providerId) {
       const providerStudents = await ctx.db
         .query("students")
@@ -241,6 +270,7 @@ export const create = mutation({
 
       const providerDuplicate = providerStudents.find(
         (s) =>
+          !s.isDeleted && // Ignore deleted students
           s.firstName.toLowerCase() === args.firstName.toLowerCase() &&
           (s.lastName || "").toLowerCase() === (args.lastName || "").toLowerCase() &&
           s.grade === args.grade
@@ -255,6 +285,7 @@ export const create = mutation({
     }
 
     // NEW: ✅ PREVENT DUPLICATES for guardian students (name + birthDate + area)
+    // Ignore soft-deleted students
     if (isGuardianStudent && args.area) {
       const areaStudents = await ctx.db
         .query("students")
@@ -263,6 +294,7 @@ export const create = mutation({
 
       const guardianDuplicate = areaStudents.find(
         (s) =>
+          !s.isDeleted && // Ignore deleted students
           s.firstName.toLowerCase() === args.firstName.toLowerCase() &&
           (s.lastName || "").toLowerCase() === (args.lastName || "").toLowerCase() &&
           s.dateOfBirth === args.dateOfBirth
@@ -478,7 +510,7 @@ export const update = mutation({
   },
 });
 
-// Mutation to delete student
+// Mutation to delete student (SOFT DELETE - marks as deleted but keeps data)
 export const remove = mutation({
   args: {
     id: v.id("students"),
@@ -493,11 +525,11 @@ export const remove = mutation({
   },
   handler: async (ctx, args) => {
     const {
-      userAgent: _userAgent,
-      screenResolution: _screenResolution,
-      timezone: _timezone,
-      locale: _locale,
-      sessionId: _sessionId,
+      userAgent,
+      screenResolution,
+      timezone,
+      locale,
+      sessionId,
       ...operationArgs
     } = args;
 
@@ -508,10 +540,18 @@ export const remove = mutation({
       windowMs: 60000,
     });
 
+    // Validate reason
+    validateLength(operationArgs.reason, "Deletion reason", 500, 10);
+
     // Get student details before deletion
     const student = await ctx.db.get(operationArgs.id);
     if (!student) {
       throw new Error("Student not found");
+    }
+
+    // Check if already deleted
+    if (student.isDeleted) {
+      throw new Error("Student is already deleted");
     }
 
     // ✅ SECURITY: Verify user permissions
@@ -554,7 +594,15 @@ export const remove = mutation({
       }
     }
 
-    // ✅ CRITICAL: Audit logging BEFORE deletion (so we can track WHO/WHEN/WHY/WHAT)
+    // ✅ SOFT DELETE: Mark as deleted instead of removing from database
+    await ctx.db.patch(operationArgs.id, {
+      isDeleted: true,
+      deletedAt: Date.now(),
+      deletedBy: operationArgs.deletedBy,
+      deletionReason: operationArgs.reason,
+    });
+
+    // ✅ CRITICAL: Audit logging AFTER soft delete (track WHO/WHEN/WHY/WHAT)
     await logAudit(ctx, {
       userId: operationArgs.deletedBy,
       action: AuditActions.DELETE_STUDENT,
@@ -571,10 +619,14 @@ export const remove = mutation({
         area: student.area,
         affectedClasses: activeClasses.length,
         affectedClassIds: activeClasses.map(c => c._id),
+        softDelete: true, // Indicate this was a soft delete
       },
+      userAgent,
+      screenResolution,
+      timezone,
+      locale,
+      sessionId,
     });
-
-    await ctx.db.delete(operationArgs.id);
 
     return { success: true };
   },
@@ -643,29 +695,45 @@ export const duplicate = mutation({
   },
 });
 
-// Query to get students created by a specific teacher
+// Query to get students created by a specific teacher (excludes soft-deleted by default)
 export const getByTeacher = query({
   args: {
     teacherId: v.id("users"),
+    includeDeleted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const students = await ctx.db
       .query("students")
       .withIndex("by_created_by", (q) => q.eq("createdBy", args.teacherId))
       .collect();
+    
+    // Filter out soft-deleted unless explicitly requested
+    if (!args.includeDeleted) {
+      return students.filter((s) => !s.isDeleted);
+    }
+    
+    return students;
   },
 });
 
-// Query to get students for a guardian
+// Query to get students for a guardian (excludes soft-deleted by default)
 export const getByGuardianId = query({
   args: {
     guardianId: v.id("users"),
+    includeDeleted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const students = await ctx.db
       .query("students")
       .withIndex("by_guardian_id", (q) => q.eq("guardianId", args.guardianId))
       .collect();
+    
+    // Filter out soft-deleted unless explicitly requested
+    if (!args.includeDeleted) {
+      return students.filter((s) => !s.isDeleted);
+    }
+    
+    return students;
   },
 });
 
