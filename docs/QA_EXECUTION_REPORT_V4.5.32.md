@@ -36,7 +36,7 @@ This report documents the quality assurance testing performed on Evan's Class Tr
 
 **Evidence**:
 
-```
+```text
 Exit code: 0
 No output (clean compilation)
 ```
@@ -82,7 +82,7 @@ No output (clean compilation)
 
 **Evidence**:
 
-```
+```text
 Route (app)                         Size  First Load JS
 ┌ ○ /                            62.7 kB         207 kB
 ├ ○ /_not-found                      0 B         145 kB
@@ -90,6 +90,7 @@ Route (app)                         Size  First Load JS
 + First Load JS shared by all     166 kB
 
  ✓ Compiled successfully in 9.3s
+```
 ```
 
 **Performance Notes**:
@@ -872,6 +873,3 @@ npm run audit  # ⏳ NOT EXECUTED
 **Classification**: Internal Use  
 **Distribution**: Development Team, Product Owner, Technical Lead
 
----
-
-**--- End of Report ---**
