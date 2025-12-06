@@ -90,6 +90,38 @@ export const bookWithConflictCheck = mutation({
     const isAdmin = bookedBy.role === "admin";
     const isTeacher = bookedBy.role === "teacher";
     
+    // ✅ NEW: Validate teacher permissions for provider classes
+    if (isTeacher && args.providerId) {
+      const provider = await ctx.db.get(args.providerId);
+      if (!provider) {
+        throw new Error("Provider not found");
+      }
+      // Teachers can only book for THEIR providers
+      if (provider.createdBy !== args.bookedByUserId) {
+        throw new Error("Unauthorized: You can only book classes for providers you created");
+      }
+    }
+
+    // ✅ NEW: Validate teacher permissions for school classes
+    if (isTeacher && args.schoolId) {
+      // Teachers can only book for THEIR school
+      if (bookedBy.schoolId !== args.schoolId) {
+        throw new Error("Unauthorized: You can only book classes for your assigned school");
+      }
+    }
+
+    // ✅ NEW: Validate moderator school boundaries (CRITICAL)
+    if (isModerator && args.schoolId) {
+      if (bookedBy.schoolId !== args.schoolId) {
+        throw new Error("Unauthorized: Moderators can only book classes for their assigned school");
+      }
+    }
+
+    // ✅ NEW: Moderators CANNOT book provider classes
+    if (isModerator && args.providerId) {
+      throw new Error("Unauthorized: Moderators cannot book provider classes. Providers are for teachers and admins only.");
+    }
+    
     // ✅ NEW: Auto-approve provider classes (teacher's own provider students)
     const hasProvider = args.providerId !== undefined;
     const isProviderAutoApprove = hasProvider && isTeacher;
@@ -286,6 +318,38 @@ export const book = mutation({
     if (args.materialsTh) validateLength(args.materialsTh, "Materials (Thai)", 1000, 0);
     if (args.preparationNotes) validateLength(args.preparationNotes, "Preparation Notes", 2000, 0);
     if (args.preparationNotesTh) validateLength(args.preparationNotesTh, "Preparation Notes (Thai)", 2000, 0);
+
+    // ✅ NEW: Validate teacher permissions for provider classes
+    if (isTeacher && args.providerId) {
+      const provider = await ctx.db.get(args.providerId);
+      if (!provider) {
+        throw new Error("Provider not found");
+      }
+      // Teachers can only book for THEIR providers
+      if (provider.createdBy !== args.bookedByUserId) {
+        throw new Error("Unauthorized: You can only book classes for providers you created");
+      }
+    }
+
+    // ✅ NEW: Validate teacher permissions for school classes
+    if (isTeacher && args.schoolId) {
+      // Teachers can only book for THEIR school
+      if (bookedBy.schoolId !== args.schoolId) {
+        throw new Error("Unauthorized: You can only book classes for your assigned school");
+      }
+    }
+
+    // ✅ NEW: Validate moderator school boundaries (CRITICAL)
+    if (isModerator && args.schoolId) {
+      if (bookedBy.schoolId !== args.schoolId) {
+        throw new Error("Unauthorized: Moderators can only book classes for their assigned school");
+      }
+    }
+
+    // ✅ NEW: Moderators CANNOT book provider classes
+    if (isModerator && args.providerId) {
+      throw new Error("Unauthorized: Moderators cannot book provider classes. Providers are for teachers and admins only.");
+    }
 
     // ✅ NEW: Auto-approve provider classes (teacher's own provider students)
     const hasProvider = args.providerId !== undefined;
