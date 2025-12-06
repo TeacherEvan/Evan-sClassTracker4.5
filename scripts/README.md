@@ -46,6 +46,26 @@ node scripts/test-guardian-migration.js
 
 Shows step-by-step instructions for testing migration in local development environment.
 
+#### `validate-migration-script.mjs` (NEW)
+
+**Purpose**: Automated validation of migration implementation against acceptance criteria
+
+**Usage**:
+
+```bash
+node scripts/validate-migration-script.mjs
+```
+
+**Features**:
+
+- Checks all 7 acceptance criteria
+- Validates 38 implementation points
+- Verifies file existence and code structure
+- Provides detailed pass/fail report
+- Exit code 0 on success, 1 on failure
+
+**Output**: See `docs/migrations/MIGRATION_VALIDATION_REPORT_DEC_6_2025.md`
+
 #### `migrate-bcrypt-passwords.ps1`
 
 **Purpose**: Migrate legacy bcrypt password hashes to PBKDF2
