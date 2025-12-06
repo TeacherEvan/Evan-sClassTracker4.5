@@ -20,7 +20,7 @@ const LocationManagement = lazy(() => import("@/components/location-management")
 const StudentManagement = lazy(() => import("@/components/student-management").then(m => ({ default: m.StudentManagement })));
 const ModeratorListView = lazy(() => import("@/components/moderator-list-view").then(m => ({ default: m.ModeratorListView })));
 const UserManagement = lazy(() => import("@/components/user-management").then(m => ({ default: m.UserManagement })));
-const SimpleAnalytics = lazy(() => import("@/components/simple-analytics").then(m => ({ default: m.SimpleAnalytics })));
+const ModeratorAnalyticsPanel = lazy(() => import("@/components/moderator-analytics-panel").then(m => ({ default: m.ModeratorAnalyticsPanel })));
 const TeacherActivityDashboard = lazy(() => import("@/components/teacher-activity-dashboard").then(m => ({ default: m.TeacherActivityDashboard })));
 const TeacherHelper = lazy(() => import("@/components/teacher-helper").then(m => ({ default: m.TeacherHelper })));
 const TeacherHelperAdmin = lazy(() => import("@/components/teacher-helper-admin").then(m => ({ default: m.TeacherHelperAdmin })));
@@ -144,20 +144,15 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
                 );
 
             case "analytics":
-                // Moderators see their school analytics, Admins see all schools analytics
+                // Moderators see their enhanced analytics panel with teacher connections and class flagging
                 if (userRole === "moderator" && userSchoolId) {
                     return (
                         <Suspense fallback={<LoadingFallback />}>
-                            <SimpleAnalytics
-                                schoolId={userSchoolId}
-                                currentUserId={userId}
-                                currentUserRole={userRole}
-                                currentUser={currentUser}
-                            />
+                            <ModeratorAnalyticsPanel currentUser={currentUser} />
                         </Suspense>
                     );
                 }
-                // Admin analytics - show class analytics modal or admin-specific view
+                // Admin analytics - show admin-specific analytics dashboard
                 if (userRole === "admin") {
                     return (
                         <Suspense fallback={<LoadingFallback />}>
