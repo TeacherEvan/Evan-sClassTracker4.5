@@ -381,7 +381,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                 deletedBy: currentUser._id,
                 reason: deleteReason.trim()
             });
-            setSuccess(t("Student deleted!", "ลบนักเรียนแล้ว!"));
+            setSuccess(t("Student soft-deleted! (Admins can restore)", "ลบนักเรียนแบบซอฟต์แล้ว! (ผู้ดูแลระบบสามารถกู้คืนได้)"));
             setShowDeleteConfirm(false);
             setPendingDeleteStudent(null);
             setDeleteReason("");
@@ -1318,12 +1318,21 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-4 md:p-6 max-w-md w-full">
                         <h3 className="text-xl font-bold mb-4 text-red-600 dark:text-red-400">
-                            {t("Confirm Delete", "ยืนยันการลบ")}
+                            {t("⚠️ Soft Delete Student", "⚠️ ลบนักเรียนแบบซอฟต์")}
                         </h3>
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded-lg p-3 mb-4">
+                            <p className="text-blue-900 dark:text-blue-100 text-sm">
+                                ℹ️{" "}
+                                {t(
+                                    "This is a soft delete - the student will be hidden but data will be preserved. Admins can restore deleted students.",
+                                    "นี่คือการลบแบบซอฟต์ - นักเรียนจะถูกซ่อนแต่ข้อมูลจะถูกเก็บไว้ ผู้ดูแลระบบสามารถกู้คืนนักเรียนที่ถูกลบได้"
+                                )}
+                            </p>
+                        </div>
                         <p className="mb-4 text-gray-700 dark:text-gray-300">
                             {t(
-                                `Delete student "${pendingDeleteStudent.name}"? This cannot be undone.`,
-                                `ลบนักเรียน "${pendingDeleteStudent.name}"? การกระทำนี้ไม่สามารถย้อนกลับได้`
+                                `Soft delete student "${pendingDeleteStudent.name}"? You can restore later.`,
+                                `ลบนักเรียน "${pendingDeleteStudent.name}" แบบซอฟต์? คุณสามารถกู้คืนได้ภายหลัง`
                             )}
                         </p>
 
@@ -1357,7 +1366,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                 disabled={!deleteReason.trim()}
                                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {t("Delete", "ลบ")}
+                                {t("Soft Delete", "ลบแบบซอฟต์")}
                             </button>
                         </div>
                     </div>
