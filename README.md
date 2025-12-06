@@ -1,10 +1,39 @@
 # Evan's Class Tracker 4.5
 
-**Version 4.5.31** | Bilingual English/Thai class tracker for teachers and schools
+**Version 4.5.32** | Bilingual English/Thai class tracker for teachers and schools
 
 Built with Next.js 15, React 19, Convex & Tailwind v4
 
-## ✨ Latest Updates (Dec 3, 2025)
+## ✨ Latest Updates (Dec 6, 2025)
+
+### 📚 Version 4.5.32 - Admin & Moderator Documentation (Dec 6, 2025)
+
+**Comprehensive Documentation Suite** - Complete guides, FAQs, and training for administrators and moderators
+
+- 📖 **New Documentation**:
+  - **Admin & Moderator Feature Guide** (`docs/guides/admin-moderator-guide.md`) - 20,000+ chars
+    - Complete coverage of all admin features (user management, schools, providers, analytics, security)
+    - Moderator features and school-scoped dashboard
+    - Schema changes & migrations documented
+    - Common workflows with step-by-step instructions
+  - **Admin FAQ** (`docs/features/ADMIN_FAQ.md`) - 50+ Q&A covering all admin responsibilities
+  - **Moderator FAQ** (`docs/features/MODERATOR_FAQ.md`) - Fully bilingual (English/Thai) FAQ
+  - **Admin Training Guide** (`docs/guides/training/admin-training.md`) - 6 modules, 2-3 hours, certification checklist
+  - **Moderator Training Guide** (`docs/guides/training/moderator-training.md`) - 6 modules, 1-2 hours, bilingual
+
+- 🎯 **Key Topics Covered**:
+  - Teacher/provider/guardian schema migration
+  - Moderator authorization and school-scoping
+  - Analytics system (admin vs moderator views)
+  - Password security (PBKDF2 migration, critical bcrypt issue)
+  - Dropdown usage patterns and merge workflows
+  - Troubleshooting and best practices
+
+- 🔐 **Security Highlights**:
+  - Critical bcrypt migration documented (ANY password works until migration)
+  - Migration tools and procedures provided
+  - Account lockout policies explained
+  - Audit logging and error monitoring
 
 ### 📚 Version 4.5.31 - Documentation Consolidation (Dec 3, 2025)
 
@@ -423,6 +452,30 @@ Look for the green **"Help"** button in the top-right corner of the application 
 
 ## Documentation
 
+**Admin & Moderator Guides**:
+
+- [Admin & Moderator Feature Guide](docs/guides/admin-moderator-guide.md) - Complete feature reference
+- [Admin FAQ](docs/features/ADMIN_FAQ.md) - 50+ frequently asked questions
+- [Moderator FAQ](docs/features/MODERATOR_FAQ.md) - Bilingual FAQ for moderators
+- [Admin Training Guide](docs/guides/training/admin-training.md) - 6-module training (2-3 hours)
+- [Moderator Training Guide](docs/guides/training/moderator-training.md) - 6-module bilingual training (1-2 hours)
+
+**Feature Documentation**:
+
+- [Features Overview](docs/features/FEATURES_DOCUMENTATION.md) - Complete feature list
+- [Help Window](docs/features/HELP_WINDOW_FEATURE.md) - Interactive help system
+- [Contact Admin](docs/features/CONTACT_ADMIN_FEATURE.md) - Admin communication
+- [Gold Tablet Notifications](docs/features/GOLD_TABLET_NOTIFICATION_WINDOW.md) - Notification system
+
+**Developer Guides**:
+
+- [E2E Testing Guide](docs/guides/testing/E2E_TESTING_GUIDE.md) - Playwright test suite
+- [Development Workflow](.github/copilot-docs/06-development.md) - Setup and best practices
+- [Architecture](.github/copilot-docs/02-architecture.md) - System architecture
+- [Security](.github/copilot-docs/05-security.md) - Security considerations
+
+**Legacy Documentation**:
+
 - [FEATURES_DOCUMENTATION.md](FEATURES_DOCUMENTATION.md) - Detailed feature documentation
 - [DEPLOYMENT.md](DEPLOYMENT.md) - Deployment guide
 - [FEATURES.md](FEATURES.md) - Original feature specifications
@@ -540,7 +593,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ### 🖼️ Version 4.5.27 - Image Processing & Seeding (Nov 18, 2025)
 
-**Robust Image Handling & Test Data Generation**
+#### Robust Image Handling & Test Data Generation**
 
 - 📸 **Image Processing Pipeline**:
   - Secure client-side uploads via `generateUploadUrl`
