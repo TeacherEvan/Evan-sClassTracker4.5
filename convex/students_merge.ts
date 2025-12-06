@@ -42,7 +42,7 @@ export const mergeStudents = mutation({
       windowMs: 60000,
     });
 
-    // Validate reason
+    // Validate reason (min 10, max 500 chars)
     validateLength(args.reason, "Merge reason", 500, 10);
 
     // Get source and target students

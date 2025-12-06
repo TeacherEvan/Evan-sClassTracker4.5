@@ -3,6 +3,7 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import { STUDENT_MERGE_CONSTANTS } from "@/lib/student-merge-constants";
 import { useMutation, useQuery } from "convex/react";
 import {
     AlertCircle,
@@ -76,11 +77,11 @@ export function StudentMergeModal({
             return;
         }
 
-        if (reason.trim().length < 10) {
+        if (reason.trim().length < STUDENT_MERGE_CONSTANTS.MIN_REASON_LENGTH) {
             setError(
                 t(
-                    "Please provide a reason (minimum 10 characters)",
-                    "กรุณาระบุเหตุผล (อย่างน้อย 10 ตัวอักษร)"
+                    `Please provide a reason (minimum ${STUDENT_MERGE_CONSTANTS.MIN_REASON_LENGTH} characters)`,
+                    `กรุณาระบุเหตุผล (อย่างน้อย ${STUDENT_MERGE_CONSTANTS.MIN_REASON_LENGTH} ตัวอักษร)`
                 )
             );
             return;
@@ -343,7 +344,10 @@ export function StudentMergeModal({
                     {/* Reason Input */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            {t("Reason for merge (required, minimum 10 characters)", "เหตุผลในการรวม (จำเป็น, อย่างน้อย 10 ตัวอักษร)")}
+                            {t(
+                                `Reason for merge (required, minimum ${STUDENT_MERGE_CONSTANTS.MIN_REASON_LENGTH} characters)`,
+                                `เหตุผลในการรวม (จำเป็น, อย่างน้อย ${STUDENT_MERGE_CONSTANTS.MIN_REASON_LENGTH} ตัวอักษร)`
+                            )}
                             <span className="text-red-500">*</span>
                         </label>
                         <textarea
@@ -357,10 +361,13 @@ export function StudentMergeModal({
                             rows={3}
                         />
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            {reason.length}/500 {t("characters", "ตัวอักษร")}
-                            {reason.length < 10 && reason.length > 0 && (
+                            {reason.length}/{STUDENT_MERGE_CONSTANTS.MAX_REASON_LENGTH} {t("characters", "ตัวอักษร")}
+                            {reason.length < STUDENT_MERGE_CONSTANTS.MIN_REASON_LENGTH && reason.length > 0 && (
                                 <span className="text-red-500 ml-2">
-                                    {t("(minimum 10 characters)", "(อย่างน้อย 10 ตัวอักษร)")}
+                                    {t(
+                                        `(minimum ${STUDENT_MERGE_CONSTANTS.MIN_REASON_LENGTH} characters)`,
+                                        `(อย่างน้อย ${STUDENT_MERGE_CONSTANTS.MIN_REASON_LENGTH} ตัวอักษร)`
+                                    )}
                                 </span>
                             )}
                         </p>
@@ -394,7 +401,7 @@ export function StudentMergeModal({
                         </button>
                         <button
                             onClick={handleMerge}
-                            disabled={!selectedTargetId || reason.trim().length < 10 || isSubmitting}
+                            disabled={!selectedTargetId || reason.trim().length < STUDENT_MERGE_CONSTANTS.MIN_REASON_LENGTH || isSubmitting}
                             className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                             {isSubmitting ? (
