@@ -10,6 +10,7 @@ import { Copy, GraduationCap, Mail, Pencil, Phone, Plus, Trash2, User as UserIco
 import { Suspense, useMemo, useState } from "react";
 import { CollapsibleSection } from "./collapsible-section";
 import { CreateProviderModal } from "./create-provider-modal";
+import { DuplicateDetectionModal } from "./duplicate-detection-modal";
 import { LazyBulkEditStudentsModal, ModalLoadingFallback } from "./lazy-components";
 import { PaginatedList } from "./paginated-list";
 import { StudentListSkeleton } from "./ui/skeleton";
@@ -97,6 +98,10 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     // Delete reason state
     const [deleteReason, setDeleteReason] = useState("");
     const [forceDelete, setForceDelete] = useState(false);
+
+    // Duplicate detection state
+    const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+    const [newlyCreatedStudentId, setNewlyCreatedStudentId] = useState<Id<"students"> | null>(null);
 
     // Query students based on filter
     const students = useQuery(
@@ -283,7 +288,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                 }, 1500);
             } else {
                 // Create new student
-                await createStudent({
+                const newStudentId = await createStudent({
                     firstName: nickname, // Use nickname as firstName
                     lastName: "", // Empty lastName
                     ...(schoolId && { schoolId }),
@@ -307,8 +312,13 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     medicalNotes: medicalNotes || undefined,
                     notes: notes || undefined,
                 });
+                
+                // Store the newly created student ID for duplicate checking
+                setNewlyCreatedStudentId(newStudentId as Id<"students">);
                 setSuccess(t("Student created!", "สร้างข้อมูลนักเรียนแล้ว!"));
-                resetForm();
+                
+                // Show duplicate detection modal
+                setShowDuplicateModal(true);
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : "Operation failed");
@@ -1467,6 +1477,23 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                         }}
                     />
                 </Suspense>
+            )}
+
+            {/* Duplicate Detection Modal */}
+            {showDuplicateModal && newlyCreatedStudentId && (
+                <DuplicateDetectionModal
+                    studentId={newlyCreatedStudentId}
+                    currentUserId={currentUser._id}
+                    onClose={() => {
+                        setShowDuplicateModal(false);
+                        setNewlyCreatedStudentId(null);
+                    }}
+                    onIgnore={() => {
+                        setShowDuplicateModal(false);
+                        setNewlyCreatedStudentId(null);
+                        resetForm();
+                    }}
+                />
             )}
         </div>
     );
