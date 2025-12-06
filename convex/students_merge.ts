@@ -120,18 +120,25 @@ export const mergeStudents = mutation({
     }
 
     // STEP 2: Update all class references (additional students)
-    const allClasses = await ctx.db.query("classes").collect();
+    // Use an index if available, otherwise filter at the DB level
+    const classesWithAdditional = await ctx.db
+      .query("classes")
+      .filter((q) =>
+        q.and(
+          q.neq(q.field("additionalStudentIds"), undefined),
+          q.any(q.field("additionalStudentIds"), args.sourceStudentId)
+        )
+      )
+      .collect();
     let updatedAdditionalCount = 0;
-    for (const classItem of allClasses) {
-      if (classItem.additionalStudentIds?.includes(args.sourceStudentId)) {
-        const updatedAdditional = classItem.additionalStudentIds.map((id) =>
-          id === args.sourceStudentId ? args.targetStudentId : id
-        );
-        await ctx.db.patch(classItem._id, {
-          additionalStudentIds: updatedAdditional,
-        });
-        updatedAdditionalCount++;
-      }
+    for (const classItem of classesWithAdditional) {
+      const updatedAdditional = classItem.additionalStudentIds.map((id) =>
+        id === args.sourceStudentId ? args.targetStudentId : id
+      );
+      await ctx.db.patch(classItem._id, {
+        additionalStudentIds: updatedAdditional,
+      });
+      updatedAdditionalCount++;
     }
 
     // STEP 3: Update all post-class notes references
