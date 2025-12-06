@@ -214,6 +214,7 @@ export const AuditTargetTypes = {
     APP_UPDATES: "appUpdates",
     AUDIT_LOGS: "auditLogs",
     MESSAGES: "messages",
+    TEACHER_SCHOOLS: "teacher_schools", // NEW - Teacher-school connections
 } as const;
 
 /**

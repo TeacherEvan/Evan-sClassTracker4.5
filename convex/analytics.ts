@@ -59,7 +59,12 @@ export const getSummaryAnalytics = query({
                 .filter(q =>
                     q.and(
                         q.gte(q.field("scheduledDate"), startDate),
-                        q.lte(q.field("scheduledDate"), endDate)
+                        q.lte(q.field("scheduledDate"), endDate),
+                        // Filter by includeInReports (default true if undefined)
+                        q.or(
+                            q.eq(q.field("includeInReports"), true),
+                            q.eq(q.field("includeInReports"), undefined)
+                        )
                     )
                 )
                 .collect();
@@ -73,7 +78,12 @@ export const getSummaryAnalytics = query({
                 .filter(q =>
                     q.and(
                         q.lte(q.field("scheduledDate"), endDate),
-                        q.eq(q.field("status"), "approved")
+                        q.eq(q.field("status"), "approved"),
+                        // Filter by includeInReports (default true if undefined)
+                        q.or(
+                            q.eq(q.field("includeInReports"), true),
+                            q.eq(q.field("includeInReports"), undefined)
+                        )
                     )
                 )
                 .collect();
@@ -85,7 +95,12 @@ export const getSummaryAnalytics = query({
                 .filter(q =>
                     q.and(
                         q.lte(q.field("scheduledDate"), endDate),
-                        q.eq(q.field("status"), "approved")
+                        q.eq(q.field("status"), "approved"),
+                        // Filter by includeInReports (default true if undefined)
+                        q.or(
+                            q.eq(q.field("includeInReports"), true),
+                            q.eq(q.field("includeInReports"), undefined)
+                        )
                     )
                 )
                 .collect();
@@ -189,7 +204,12 @@ export const getStudentPerformance = query({
                 .filter(q =>
                     q.and(
                         q.gte(q.field("scheduledDate"), startDate),
-                        q.lte(q.field("scheduledDate"), endDate)
+                        q.lte(q.field("scheduledDate"), endDate),
+                        // Filter by includeInReports (default true if undefined)
+                        q.or(
+                            q.eq(q.field("includeInReports"), true),
+                            q.eq(q.field("includeInReports"), undefined)
+                        )
                     )
                 )
                 .collect();
@@ -203,7 +223,12 @@ export const getStudentPerformance = query({
                 .filter(q =>
                     q.and(
                         q.lte(q.field("scheduledDate"), endDate),
-                        q.eq(q.field("status"), "approved")
+                        q.eq(q.field("status"), "approved"),
+                        // Filter by includeInReports (default true if undefined)
+                        q.or(
+                            q.eq(q.field("includeInReports"), true),
+                            q.eq(q.field("includeInReports"), undefined)
+                        )
                     )
                 )
                 .collect();
@@ -215,7 +240,12 @@ export const getStudentPerformance = query({
                 .filter(q =>
                     q.and(
                         q.lte(q.field("scheduledDate"), endDate),
-                        q.eq(q.field("status"), "approved")
+                        q.eq(q.field("status"), "approved"),
+                        // Filter by includeInReports (default true if undefined)
+                        q.or(
+                            q.eq(q.field("includeInReports"), true),
+                            q.eq(q.field("includeInReports"), undefined)
+                        )
                     )
                 )
                 .collect();
@@ -385,7 +415,12 @@ export const getTeacherComparison = query({
                 .filter(q =>
                     q.and(
                         q.lte(q.field("scheduledDate"), endDate),
-                        q.eq(q.field("status"), "approved")
+                        q.eq(q.field("status"), "approved"),
+                        // Filter by includeInReports (default true if undefined)
+                        q.or(
+                            q.eq(q.field("includeInReports"), true),
+                            q.eq(q.field("includeInReports"), undefined)
+                        )
                     )
                 )
                 .collect();
@@ -397,7 +432,12 @@ export const getTeacherComparison = query({
                 .filter(q =>
                     q.and(
                         q.lte(q.field("scheduledDate"), endDate),
-                        q.eq(q.field("status"), "approved")
+                        q.eq(q.field("status"), "approved"),
+                        // Filter by includeInReports (default true if undefined)
+                        q.or(
+                            q.eq(q.field("includeInReports"), true),
+                            q.eq(q.field("includeInReports"), undefined)
+                        )
                     )
                 )
                 .collect();
