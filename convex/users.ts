@@ -703,6 +703,9 @@ export const bulkDeleteUsers = mutation({
 });
 
 // ✅ NEW: Query to track PBKDF2 migration progress (admin only)
+// ⚠️ WARNING: This performs a full table scan of users.
+// As the user base grows, this will become a performance bottleneck.
+// Consider adding a 'passwordHashType' field and index, or paginating this query.
 export const getMigrationStats = query({
   args: {},
   handler: async (ctx) => {

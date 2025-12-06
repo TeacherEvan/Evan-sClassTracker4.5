@@ -10,13 +10,21 @@
 
 import type * as adminContactRequests from "../adminContactRequests.js";
 import type * as analytics from "../analytics.js";
-import type * as analyticsDellSangsom from "../analyticsDellSangsom.js";
 import type * as appUpdates from "../appUpdates.js";
 import type * as auditHelpers from "../auditHelpers.js";
 import type * as auditLogs from "../auditLogs.js";
 import type * as bulkOperations from "../bulkOperations.js";
 import type * as cancellationRequests from "../cancellationRequests.js";
 import type * as classes from "../classes.js";
+import type * as classes_approval_mutations from "../classes/approval_mutations.js";
+import type * as classes_booking_mutations from "../classes/booking_mutations.js";
+import type * as classes_bulk_operations from "../classes/bulk_operations.js";
+import type * as classes_crud_mutations from "../classes/crud_mutations.js";
+import type * as classes_helpers from "../classes/helpers.js";
+import type * as classes_index from "../classes/index.js";
+import type * as classes_mutations from "../classes/mutations.js";
+import type * as classes_queries from "../classes/queries.js";
+import type * as classes_student_operations from "../classes/student_operations.js";
 import type * as crons from "../crons.js";
 import type * as deleteSangsomData from "../deleteSangsomData.js";
 import type * as errorReports from "../errorReports.js";
@@ -64,13 +72,21 @@ import type {
 declare const fullApi: ApiFromModules<{
   adminContactRequests: typeof adminContactRequests;
   analytics: typeof analytics;
-  analyticsDellSangsom: typeof analyticsDellSangsom;
   appUpdates: typeof appUpdates;
   auditHelpers: typeof auditHelpers;
   auditLogs: typeof auditLogs;
   bulkOperations: typeof bulkOperations;
   cancellationRequests: typeof cancellationRequests;
   classes: typeof classes;
+  "classes/approval_mutations": typeof classes_approval_mutations;
+  "classes/booking_mutations": typeof classes_booking_mutations;
+  "classes/bulk_operations": typeof classes_bulk_operations;
+  "classes/crud_mutations": typeof classes_crud_mutations;
+  "classes/helpers": typeof classes_helpers;
+  "classes/index": typeof classes_index;
+  "classes/mutations": typeof classes_mutations;
+  "classes/queries": typeof classes_queries;
+  "classes/student_operations": typeof classes_student_operations;
   crons: typeof crons;
   deleteSangsomData: typeof deleteSangsomData;
   errorReports: typeof errorReports;

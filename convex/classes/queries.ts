@@ -346,33 +346,45 @@ export const getUpcomingForNotification = query({
       .order("asc")
       .take(5);
 
-    // Enrich with student and location data
-    const enrichedClasses = await Promise.all(
-      classes.map(async (cls) => {
-        const student = await ctx.db.get(cls.studentId);
-        let locationName = "";
+    // Batch fetch student and location data
+    const studentIds = [...new Set(classes.map((c) => c.studentId))];
+    const locationIds = [...new Set(classes.map((c) => c.locationId).filter(Boolean))];
 
-        if (cls.locationId) {
-          const location = await ctx.db.get(cls.locationId);
-          locationName = location
-            ? user.role === "admin" || user.role === "moderator"
-              ? `${location.name} / ${location.nameTh}`
-              : location.name
-            : "";
-        } else if (cls.pendingLocationName) {
-          locationName = cls.pendingLocationName;
-        }
+    const students = await Promise.all(studentIds.map((id) => ctx.db.get(id)));
+    const locations = await Promise.all(locationIds.map((id) => ctx.db.get(id!)));
 
-        return {
-          _id: cls._id,
-          scheduledDate: cls.scheduledDate,
-          studentName: student
-            ? `${student.firstName} ${student.lastName}`
-            : "Unknown Student",
-          locationName: locationName || "No location",
-        };
-      })
+    const studentMap = new Map(
+      students.filter((s): s is NonNullable<typeof s> => s !== null).map((s) => [s._id, s])
     );
+    const locationMap = new Map(
+      locations.filter((l): l is NonNullable<typeof l> => l !== null).map((l) => [l._id, l])
+    );
+
+    // Enrich with student and location data
+    const enrichedClasses = classes.map((cls) => {
+      const student = studentMap.get(cls.studentId);
+      let locationName = "";
+
+      if (cls.locationId) {
+        const location = locationMap.get(cls.locationId);
+        locationName = location
+          ? user.role === "admin" || user.role === "moderator"
+            ? `${location.name} / ${location.nameTh}`
+            : location.name
+          : "";
+      } else if (cls.pendingLocationName) {
+        locationName = cls.pendingLocationName;
+      }
+
+      return {
+        _id: cls._id,
+        scheduledDate: cls.scheduledDate,
+        studentName: student
+          ? `${student.firstName} ${student.lastName}`
+          : "Unknown Student",
+        locationName: locationName || "No location",
+      };
+    });
 
     return enrichedClasses;
   },
