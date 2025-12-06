@@ -95,16 +95,19 @@
 **Reported Issue:** "Editing student information doesn't take effect"
 
 **Investigation Results:**
+
 - **Frontend Code:** ✅ Correct - all fields properly captured and passed to mutation
 - **Backend Code:** ✅ Correct - validation, security, and db.patch() working as expected
 - **Likely Culprit:** `undefined` value filtering in backend (line 471-473 of convex/students.ts)
 
 **Diagnostic Patch Applied:**
+
 - Added console.log statements to track form values and mutation results
 - File: `components/student-management.tsx` (lines 242-278)
 - Logs: `[DEBUG] Updating student:` and `[DEBUG] Update result:`
 
 **Possible Root Causes:**
+
 1. ⚠️ **Undefined filter drops empty string updates** (MOST LIKELY)
    - Backend filters `undefined` values before patch
    - Empty strings become `undefined`, preventing field clearing
@@ -113,6 +116,7 @@
 3. 🔄 **Query cache invalidation** - Convex reactivity timing
 
 **Action Items:**
+
 - [x] Code analysis complete
 - [x] Diagnostic logging added
 - [ ] Runtime testing with console logs (needs user/moderator access)
@@ -145,18 +149,21 @@
 **Status:** 🔄 IN PROGRESS - 2/5 Files Complete (35%)
 
 **Completed:**
+
 - ✅ booking-mutations.ts (625 lines) - bookWithConflictCheck, book, acknowledge
 - ✅ approval-mutations.ts (112 lines) - approve, reject
 - ✅ mutations.ts (10 lines) - Re-export index
 
 **Remaining:**
+
 - ⏳ crud-mutations.ts - updateClass, deleteClass, editClass (~437 lines)
 - ⏳ student-operations.ts - addStudent, removeStudent, addDates (~309 lines)
 - ⏳ bulk-operations.ts - merge, bulkDelete, bulkApprove, etc (~551 lines)
 
 **Next Action:** Extract remaining mutation implementations from original file
 
-**Benefits:** 
+**Benefits:**
+
 - 99.5% size reduction in main file (2089 → 10 lines)
 - Better code organization and maintainability
 - Easier testing and code review
