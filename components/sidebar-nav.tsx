@@ -3,6 +3,7 @@
 import type { ViewType } from "@/app/workspace-layout";
 import { useLanguage } from "@/lib/language-context";
 import {
+    AlertTriangle,
     BarChart3,
     BookOpen,
     Calendar,
@@ -107,6 +108,13 @@ const navItems: NavItem[] = [
         icon: Shield,
         labelEn: "Providers",
         labelTh: "ผู้ให้บริการ",
+        roles: ["admin"],
+    },
+    {
+        id: "student_watchlist",
+        icon: AlertTriangle,
+        labelEn: "Watchlist",
+        labelTh: "รายการเฝ้าระวัง",
         roles: ["admin"],
     },
 ];

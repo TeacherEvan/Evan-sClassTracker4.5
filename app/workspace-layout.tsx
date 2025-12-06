@@ -30,6 +30,7 @@ const AdminNotificationWindows = lazy(() => import("@/components/admin-notificat
 const AdminAppUpdates = lazy(() => import("@/components/admin-app-updates").then(m => ({ default: m.AdminAppUpdates })));
 const AdminDeletedStudentsDashboard = lazy(() => import("@/components/admin-deleted-students-dashboard").then(m => ({ default: m.AdminDeletedStudentsDashboard })));
 const AdminAnalyticsDashboard = lazy(() => import("@/components/admin-analytics-dashboard").then(m => ({ default: m.AdminAnalyticsDashboard })));
+const AdminStudentWatchlist = lazy(() => import("@/components/admin-student-watchlist").then(m => ({ default: m.AdminStudentWatchlist })));
 const EventManagement = lazy(() => import("@/components/event-management").then(m => ({ default: m.EventManagement })));
 const SangsomSeedButton = lazy(() => import("@/components/sangsom-seed-button").then(m => ({ default: m.SangsomSeedButton })));
 const PrivateClassesSeedButton = lazy(() => import("@/components/private-classes-seed-button").then(m => ({ default: m.PrivateClassesSeedButton })));
@@ -58,6 +59,7 @@ export type ViewType =
     | "notification_windows"
     | "app_updates"
     | "deleted_students"
+    | "student_watchlist"
     | "data_import";
 
 export type UserRole = "admin" | "moderator" | "teacher";
@@ -280,6 +282,16 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
                                 userId={userId}
                                 onClose={() => setActiveView("calendar")}
                             />
+                        </Suspense>
+                    );
+                }
+                return null;
+
+            case "student_watchlist":
+                if (userRole === "admin") {
+                    return (
+                        <Suspense fallback={<LoadingFallback />}>
+                            <AdminStudentWatchlist currentUserId={userId} />
                         </Suspense>
                     );
                 }
