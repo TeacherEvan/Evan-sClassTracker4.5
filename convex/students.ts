@@ -861,8 +861,21 @@ export const mergeStudents = mutation({
     }
 
     // Also check additionalStudentIds arrays
-    const allClasses = await ctx.db.query("classes").collect();
-    for (const cls of allClasses) {
+    let classesToCheck;
+    if (targetStudent.schoolId) {
+      classesToCheck = await ctx.db
+        .query("classes")
+        .withIndex("by_school", (q) => q.eq("schoolId", targetStudent.schoolId))
+        .collect();
+    } else if (targetStudent.providerId) {
+      classesToCheck = await ctx.db
+        .query("classes")
+        .withIndex("by_provider", (q) => q.eq("providerId", targetStudent.providerId))
+        .collect();
+    } else {
+      classesToCheck = await ctx.db.query("classes").collect();
+    }
+    for (const cls of classesToCheck) {
       if (cls.additionalStudentIds?.includes(args.sourceStudentId)) {
         // Replace source with target in the array
         const updatedIds = cls.additionalStudentIds.map(id =>
