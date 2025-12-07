@@ -4,6 +4,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
+import type { UserRole } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
 import {
     Bell,
@@ -39,7 +40,7 @@ interface EventFormData {
 
 interface EventManagementProps {
     userId: Id<"users">;
-    userRole: "teacher" | "moderator" | "admin";
+    userRole: UserRole;
     schoolId?: Id<"schools">;
 }
 

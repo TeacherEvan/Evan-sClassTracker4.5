@@ -3,13 +3,11 @@
 // TODO: This component is under development - api.classReview is not yet exported from Convex
 "use client";
 
-import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { User } from "@/lib/types";
-import { useQuery, useMutation } from "convex/react";
-import { Flag, FlagOff, Calendar, Clock, MapPin, User as UserIcon } from "lucide-react";
+import { Calendar, Clock, Flag, FlagOff, MapPin, User as UserIcon } from "lucide-react";
 import { useMemo } from "react";
 
 interface FlaggedClassesReviewProps {
@@ -18,7 +16,8 @@ interface FlaggedClassesReviewProps {
 
 export function FlaggedClassesReview({ currentUser }: FlaggedClassesReviewProps) {
     const { t, language } = useLanguage();
-    
+    const [confirmingUnflagId, setConfirmingUnflagId] = useState<string | null>(null);
+
     // Get school ID (moderators use their assigned school)
     const schoolId = currentUser.schoolId!;
 
@@ -53,21 +52,21 @@ export function FlaggedClassesReview({ currentUser }: FlaggedClassesReviewProps)
 
     // Group classes by status
     type FlaggedClass = typeof flaggedClasses extends (infer U)[] ? U : never;
-    
+
     const groupedClasses = useMemo(() => {
-        if (!flaggedClasses) return { 
-            approved: [] as FlaggedClass[], 
-            pending: [] as FlaggedClass[], 
-            rejected: [] as FlaggedClass[] 
+        if (!flaggedClasses) return {
+            approved: [] as FlaggedClass[],
+            pending: [] as FlaggedClass[],
+            rejected: [] as FlaggedClass[]
         };
-        
+
         return {
             approved: flaggedClasses.filter((c) => c.status === "approved") as FlaggedClass[],
             pending: flaggedClasses.filter((c) => c.status === "pending") as FlaggedClass[],
             rejected: flaggedClasses.filter((c) => c.status === "rejected") as FlaggedClass[],
         };
     }, [flaggedClasses]);
-    
+
     // Only moderators and admins can use this component
     if (currentUser.role !== "moderator" && currentUser.role !== "admin") {
         return null;
@@ -102,21 +101,13 @@ export function FlaggedClassesReview({ currentUser }: FlaggedClassesReviewProps)
     }
 
     const handleUnflag = async (classId: Id<"classes">) => {
-        const confirmed = window.confirm(
-            t(
-                "Remove flag from this class?",
-                "ลบเครื่องหมายออกจากคลาสนี้?"
-            )
-        );
-
-        if (!confirmed) return;
-
         try {
             await unflagClass({
                 classId,
                 userId: currentUser._id,
             });
 
+            setConfirmingUnflagId(null);
             toast.success(
                 "Class unflagged successfully",
                 "ลบเครื่องหมายคลาสสำเร็จ"
@@ -140,10 +131,10 @@ export function FlaggedClassesReview({ currentUser }: FlaggedClassesReviewProps)
     };
 
     const renderClassCard = (cls: NonNullable<typeof flaggedClasses>[number]) => {
-        const locationDisplay = language === "th" 
-            ? (cls.locationNameTh || cls.locationName) 
+        const locationDisplay = language === "th"
+            ? (cls.locationNameTh || cls.locationName)
             : (cls.locationName || cls.locationNameTh);
-        
+
         const reviewNotesDisplay = language === "th"
             ? (cls.reviewNotesTh || cls.reviewNotes)
             : (cls.reviewNotes || cls.reviewNotesTh);
@@ -155,24 +146,40 @@ export function FlaggedClassesReview({ currentUser }: FlaggedClassesReviewProps)
             >
                 {/* Status badge */}
                 <div className="mb-3 flex items-start justify-between">
-                    <span className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        cls.status === "approved" ? "bg-green-100 text-green-700" :
-                        cls.status === "pending" ? "bg-yellow-100 text-yellow-700" :
-                        "bg-red-100 text-red-700"
-                    }`}>
+                    <span className={`rounded-full px-3 py-1 text-xs font-medium ${cls.status === "approved" ? "bg-green-100 text-green-700" :
+                            cls.status === "pending" ? "bg-yellow-100 text-yellow-700" :
+                                "bg-red-100 text-red-700"
+                        }`}>
                         {t(
                             cls.status.charAt(0).toUpperCase() + cls.status.slice(1),
                             cls.status === "approved" ? "อนุมัติ" :
-                            cls.status === "pending" ? "รอดำเนินการ" : "ปฏิเสธ"
+                                cls.status === "pending" ? "รอดำเนินการ" : "ปฏิเสธ"
                         )}
                     </span>
-                    <button
-                        onClick={() => handleUnflag(cls.classId as Id<"classes">)}
-                        className="flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200"
-                    >
-                        <FlagOff className="h-3 w-3" />
-                        {t("Unflag", "ลบเครื่องหมาย")}
-                    </button>
+                    {confirmingUnflagId === cls.classId ? (
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => handleUnflag(cls.classId as Id<"classes">)}
+                                className="rounded-md bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
+                            >
+                                {t("Confirm", "ยืนยัน")}
+                            </button>
+                            <button
+                                onClick={() => setConfirmingUnflagId(null)}
+                                className="rounded-md bg-gray-200 px-2 py-1 text-xs text-gray-700 hover:bg-gray-300"
+                            >
+                                {t("Cancel", "ยกเลิก")}
+                            </button>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={() => setConfirmingUnflagId(cls.classId)}
+                            className="flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200"
+                        >
+                            <FlagOff className="h-3 w-3" />
+                            {t("Unflag", "ลบเครื่องหมาย")}
+                        </button>
+                    )}
                 </div>
 
                 {/* Class details */}

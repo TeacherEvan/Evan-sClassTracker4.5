@@ -8,7 +8,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { User } from "@/lib/types";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { Link2, Unlink, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -18,7 +18,7 @@ interface TeacherConnectionManagerProps {
 
 export function TeacherConnectionManager({ currentUser }: TeacherConnectionManagerProps) {
     const { t } = useLanguage();
-    
+
     // Get school ID (for moderators, use their assigned school)
     const schoolId = currentUser.role === "moderator" ? currentUser.schoolId : null;
 
@@ -29,7 +29,7 @@ export function TeacherConnectionManager({ currentUser }: TeacherConnectionManag
 
     const schools = useQuery(api.schools.list, {});
     const allTeachers = useQuery(api.users.list, {});
-    
+
     // TODO: Uncomment when api.teacherSchools is added to Convex exports
     // const connectedTeachers = useQuery(
     //     selectedSchoolId
@@ -57,6 +57,7 @@ export function TeacherConnectionManager({ currentUser }: TeacherConnectionManag
 
     const [isConnecting, setIsConnecting] = useState(false);
     const [selectedTeacherId, setSelectedTeacherId] = useState<Id<"users"> | "">("");
+    const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
 
     // Filter teachers who have teacher role
     const teacherUsers = useMemo(() => {
@@ -72,7 +73,7 @@ export function TeacherConnectionManager({ currentUser }: TeacherConnectionManag
     const availableTeachers = useMemo(() => {
         return teacherUsers.filter((t) => !connectedTeacherIds.has(t._id));
     }, [teacherUsers, connectedTeacherIds]);
-    
+
     // Only moderators and admins can use this component
     if (currentUser.role !== "moderator" && currentUser.role !== "admin") {
         return null;
@@ -138,38 +139,20 @@ export function TeacherConnectionManager({ currentUser }: TeacherConnectionManag
         }
     };
 
-    const handleDisconnect = async (teacherId: Id<"users">) => {
-        if (!selectedSchoolId) return;
-
-        const confirmed = window.confirm(
-            t(
-                "Are you sure you want to disconnect this teacher from the school?",
-                "คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการเชื่อมต่อครูคนนี้จากโรงเรียน?"
-            )
-        );
-
-        if (!confirmed) return;
-
-        try {
-            await disconnectTeacher({
-                teacherId,
-                schoolId: selectedSchoolId as Id<"schools">,
-                userId: currentUser._id,
-            });
-
-            toast.success(
-                "Teacher disconnected successfully",
-                "ยกเลิกการเชื่อมต่อครูสำเร็จ"
-            );
-        } catch (err) {
-            toast.error(
-                err instanceof Error ? err.message : "Failed to disconnect teacher",
-                err instanceof Error ? err.message : "ยกเลิกการเชื่อมต่อครูล้มเหลว"
-            );
-        }
+    const handleDisconnect = async (connectionId: Id<"teacherSchoolConnections">) => {
+        setDisconnectingId(connectionId);
     };
 
-    // Get school name for display
+    const confirmDisconnect = async (connectionId: Id<"teacherSchoolConnections">) => {
+        try {
+            await disconnect({ connectionId });
+            toast.success("Teacher disconnected successfully", "ยกเลิกการเชื่อมต่อครูเรียบร้อยแล้ว");
+            setDisconnectingId(null);
+        } catch (error) {
+            console.error("Failed to disconnect teacher:", error);
+            toast.error("Failed to disconnect teacher", "ไม่สามารถยกเลิกการเชื่อมต่อครูได้");
+        }
+    };    // Get school name for display
     const selectedSchool = schools?.find((s) => s._id === selectedSchoolId);
 
     return (
@@ -284,13 +267,30 @@ export function TeacherConnectionManager({ currentUser }: TeacherConnectionManag
                                                 {new Date(ct.connectedAt).toLocaleDateString()}
                                             </p>
                                         </div>
-                                        <button
-                                            onClick={() => handleDisconnect(ct.teacherId as Id<"users">)}
-                                            className="flex items-center gap-2 rounded-md bg-red-100 px-3 py-1 text-sm text-red-700 hover:bg-red-200"
-                                        >
-                                            <Unlink className="h-4 w-4" />
-                                            {t("Disconnect", "ยกเลิกการเชื่อมต่อ")}
-                                        </button>
+                                        {disconnectingId === ct.connectionId ? (
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => confirmDisconnect(ct.connectionId as Id<"teacherSchoolConnections">)}
+                                                    className="rounded-md bg-red-600 px-3 py-1 text-sm text-white hover:bg-red-700"
+                                                >
+                                                    {t("Confirm", "ยืนยัน")}
+                                                </button>
+                                                <button
+                                                    onClick={() => setDisconnectingId(null)}
+                                                    className="rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-300"
+                                                >
+                                                    {t("Cancel", "ยกเลิก")}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleDisconnect(ct.connectionId as Id<"teacherSchoolConnections">)}
+                                                className="flex items-center gap-2 rounded-md bg-red-100 px-3 py-1 text-sm text-red-700 hover:bg-red-200"
+                                            >
+                                                <Unlink className="h-4 w-4" />
+                                                {t("Disconnect", "ยกเลิกการเชื่อมต่อ")}
+                                            </button>
+                                        )}
                                     </div>
                                 ))}
                             </div>

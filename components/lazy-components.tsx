@@ -3,56 +3,56 @@
 import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
 
 // Lazy load admin-only components
-export const LazyAdminAnalyticsDashboard = lazy(() => 
+export const LazyAdminAnalyticsDashboard = lazy(() =>
   import("./admin-analytics-dashboard").then(mod => ({ default: mod.AdminAnalyticsDashboard }))
 );
 
-export const LazyAdminAppUpdates = lazy(() => 
+export const LazyAdminAppUpdates = lazy(() =>
   import("./admin-app-updates").then(mod => ({ default: mod.AdminAppUpdates }))
 );
 
-export const LazyAdminContactButton = lazy(() => 
+export const LazyAdminContactButton = lazy(() =>
   import("./admin-contact-button").then(mod => ({ default: mod.AdminContactButton }))
 );
 
-export const LazyAdminContactRequests = lazy(() => 
+export const LazyAdminContactRequests = lazy(() =>
   import("./admin-contact-requests").then(mod => ({ default: mod.AdminContactRequests }))
 );
 
-export const LazyAdminDeletedStudentsDashboard = lazy(() => 
+export const LazyAdminDeletedStudentsDashboard = lazy(() =>
   import("./admin-deleted-students-dashboard").then(mod => ({ default: mod.AdminDeletedStudentsDashboard }))
 );
 
-export const LazyAdminErrorReports = lazy(() => 
+export const LazyAdminErrorReports = lazy(() =>
   import("./admin-error-reports").then(mod => ({ default: mod.AdminErrorReports }))
 );
 
-export const LazyAdminNotificationWindows = lazy(() => 
+export const LazyAdminNotificationWindows = lazy(() =>
   import("./admin-notification-windows").then(mod => ({ default: mod.AdminNotificationWindows }))
 );
 
-export const LazyAuditLogs = lazy(() => 
+export const LazyAuditLogs = lazy(() =>
   import("./audit-logs").then(mod => ({ default: mod.AuditLogs }))
 );
 
 // Note: DeviceTestingDashboard uses 'export default' so no transformation needed
-export const LazyDeviceTestingDashboard = lazy(() => 
+export const LazyDeviceTestingDashboard = lazy(() =>
   import("./device-testing-dashboard")
 );
 
-export const LazyBulkEditStudentsModal = lazy(() => 
+export const LazyBulkEditStudentsModal = lazy(() =>
   import("./bulk-edit-students-modal").then(mod => ({ default: mod.BulkEditStudentsModal }))
 );
 
-export const LazyClassPaymentCalculator = lazy(() => 
+export const LazyClassPaymentCalculator = lazy(() =>
   import("./class-payment-calculator").then(mod => ({ default: mod.ClassPaymentCalculator }))
 );
 
-export const LazyTeacherClassCountModal = lazy(() => 
+export const LazyTeacherClassCountModal = lazy(() =>
   import("./teacher-class-count-modal").then(mod => ({ default: mod.TeacherClassCountModal }))
 );
 
-export const LazyClassAnalytics = lazy(() => 
+export const LazyClassAnalytics = lazy(() =>
   import("./class-analytics").then(mod => ({ default: mod.ClassAnalytics }))
 );
 

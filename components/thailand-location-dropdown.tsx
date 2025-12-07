@@ -33,7 +33,7 @@ interface ThailandLocationDropdownProps {
 
 /**
  * Thailand Location Dropdown Component
- * 
+ *
  * Features:
  * - Cascading dropdowns (Province → District)
  * - Search/autocomplete for both fields
@@ -41,7 +41,7 @@ interface ThailandLocationDropdownProps {
  * - Bilingual display (English default, Thai supported)
  * - Keyboard navigation
  * - Accessible (ARIA labels, keyboard support)
- * 
+ *
  * Usage:
  * ```tsx
  * <ThailandLocationDropdown
@@ -63,7 +63,7 @@ export function ThailandLocationDropdown({
   disabled = false,
   className = "",
 }: ThailandLocationDropdownProps) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
 
   // Local state
   const [provinceSearch, setProvinceSearch] = useState("");
@@ -121,7 +121,7 @@ export function ThailandLocationDropdown({
     setProvinceSearch("");
     setShowProvinceDropdown(false);
     setHighlightedProvinceIndex(0);
-    
+
     // Clear district when province changes
     if (districtName) {
       onDistrictChange("");
@@ -261,10 +261,10 @@ export function ThailandLocationDropdown({
             {required && <span className="text-red-500 ml-1">*</span>}
           </label>
         )}
-        
+
         <div className="relative">
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          
+
           <input
             ref={provinceInputRef}
             type="text"
@@ -276,6 +276,7 @@ export function ThailandLocationDropdown({
             placeholder={t("Search province...", "ค้นหาจังหวัด...")}
             className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label={t("Province", "จังหวัด")}
+            role="combobox"
             aria-expanded={showProvinceDropdown}
             aria-controls="province-dropdown"
             autoComplete="off"
@@ -299,9 +300,8 @@ export function ThailandLocationDropdown({
           )}
 
           <ChevronDown
-            className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-transform ${
-              showProvinceDropdown ? "rotate-180" : ""
-            }`}
+            className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-transform ${showProvinceDropdown ? "rotate-180" : ""
+              }`}
           />
         </div>
 
@@ -322,15 +322,13 @@ export function ThailandLocationDropdown({
                   key={province.code}
                   id={`province-option-${index}`}
                   onClick={() => handleProvinceSelect(province)}
-                  className={`px-4 py-2 cursor-pointer transition-colors ${
-                    index === highlightedProvinceIndex
+                  className={`px-4 py-2 cursor-pointer transition-colors ${index === highlightedProvinceIndex
                       ? "bg-blue-50 dark:bg-blue-900/20"
                       : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                  } ${
-                    province.code === provinceCode
+                    } ${province.code === provinceCode
                       ? "font-semibold text-blue-600 dark:text-blue-400"
                       : "text-gray-900 dark:text-white"
-                  }`}
+                    }`}
                   role="option"
                   aria-selected={province.code === provinceCode}
                 >
@@ -361,7 +359,7 @@ export function ThailandLocationDropdown({
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          
+
           <input
             ref={districtInputRef}
             type="text"
@@ -377,6 +375,7 @@ export function ThailandLocationDropdown({
             }
             className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label={t("District", "อำเภอ")}
+            role="combobox"
             aria-expanded={showDistrictDropdown}
             aria-controls="district-dropdown"
             autoComplete="off"
@@ -399,9 +398,8 @@ export function ThailandLocationDropdown({
           )}
 
           <ChevronDown
-            className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-transform ${
-              showDistrictDropdown ? "rotate-180" : ""
-            }`}
+            className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-transform ${showDistrictDropdown ? "rotate-180" : ""
+              }`}
           />
         </div>
 
@@ -422,15 +420,13 @@ export function ThailandLocationDropdown({
                   key={district.nameEn}
                   id={`district-option-${index}`}
                   onClick={() => handleDistrictSelect(district)}
-                  className={`px-4 py-2 cursor-pointer transition-colors ${
-                    index === highlightedDistrictIndex
+                  className={`px-4 py-2 cursor-pointer transition-colors ${index === highlightedDistrictIndex
                       ? "bg-blue-50 dark:bg-blue-900/20"
                       : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                  } ${
-                    district.nameEn === districtName
+                    } ${district.nameEn === districtName
                       ? "font-semibold text-blue-600 dark:text-blue-400"
                       : "text-gray-900 dark:text-white"
-                  }`}
+                    }`}
                   role="option"
                   aria-selected={district.nameEn === districtName}
                 >
