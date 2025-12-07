@@ -3,11 +3,10 @@
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
+import type { UserRole } from "@/lib/types";
 import { useQuery } from "convex/react";
 import { format } from "date-fns";
 import { Activity, BookOpen, Calendar, X } from "lucide-react";
-
-type UserRole = "admin" | "moderator" | "teacher";
 
 interface BottomPanelProps {
   userId: Id<"users">;

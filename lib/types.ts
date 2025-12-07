@@ -6,9 +6,11 @@
 import type { Id } from "@/convex/_generated/dataModel";
 
 // User types
-// NOTE: Guardian role migrated to Provider system
+// NOTE: Guardian role migrated to Provider system (Oct 2025)
+// The "guardian" literal is kept for backward compatibility during data migration
 // See: docs/migrations/GUARDIAN_ROLE_REMOVAL_REPORT_NOV_9_2025.md
-export type UserRole = "teacher" | "moderator" | "admin";
+// TODO: Remove "guardian" after all guardian users have been migrated to providers
+export type UserRole = "teacher" | "moderator" | "admin" | "guardian";
 
 export type User = {
   _id: Id<"users">;

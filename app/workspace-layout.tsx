@@ -5,7 +5,7 @@ import RightPanel from "@/components/right-panel";
 import SidebarNav from "@/components/sidebar-nav";
 import { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
-import type { User } from "@/lib/types";
+import type { User, UserRole } from "@/lib/types";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
@@ -59,8 +59,6 @@ export type ViewType =
     | "app_updates"
     | "deleted_students"
     | "data_import";
-
-export type UserRole = "admin" | "moderator" | "teacher";
 
 interface WorkspaceLayoutProps {
     userId: Id<"users">;
