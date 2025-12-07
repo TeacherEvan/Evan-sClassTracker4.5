@@ -63,7 +63,10 @@ export function AdminStudentWatchlist({ currentUserId }: AdminStudentWatchlistPr
                     notesTh: "รวมสำเร็จ",
                 });
             } catch (error) {
-                console.error("Failed to resolve watchlist entry:", error);
+                toast.error(
+                    error instanceof Error ? error.message : "Failed to resolve watchlist entry",
+                    "ไม่สามารถแก้ไขรายการเฝ้าระวังได้"
+                );
             }
         }
         setShowMergeDialog(false);
