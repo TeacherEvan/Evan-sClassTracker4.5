@@ -98,8 +98,13 @@ export const detectDuplicates = mutation({
         .withIndex("by_area", (q) => q.eq("area", area))
         .collect();
     } else {
-      // Fallback: compare all students (rare case)
-      allStudents = await ctx.db.query("students").collect();
+      // No scope available - skip duplicate detection for performance
+      console.warn("Student has no schoolId, providerId, or area - skipping duplicate detection");
+      return {
+        hasDuplicates: false,
+        duplicates: [],
+        message: "No scope available for duplicate detection",
+      };
     }
 
     // Filter out the new student itself
