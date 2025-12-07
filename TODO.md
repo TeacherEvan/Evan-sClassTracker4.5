@@ -1,10 +1,34 @@
 # TODO List - Evan's Class Tracker 4.5
 
-**Last Updated:** November 26, 2025
+**Last Updated:** December 7, 2025
 
 ---
 
 ## ✅ Recently Completed
+
+### Student Edit Empty Fields Fix (December 7, 2025)
+
+**Status:** ✅ COMPLETED
+
+**Issue:** Optional fields (email, phone, notes) couldn't be cleared when editing students.
+
+**Root Cause:** Frontend was sending `undefined` for empty optional fields, but schema expects `string | undefined`. When undefined was sent, the field wasn't updated.
+
+**Solution:** Frontend now sends empty strings `""` for optional fields when user clears them.
+
+**Files Changed:** `components/student-management.tsx`
+
+### Documentation Cleanup (December 7, 2025)
+
+**Status:** ✅ COMPLETED
+
+**Changes:**
+
+- Archived 4 session-specific files to `docs/archive/2025-Dec/`
+- Moved `QA_SUMMARY_V4.5.32.md` to `docs/`
+- Updated CHANGELOG with recent fixes
+
+---
 
 ### Admin Analytics Dashboard (November 26, 2025)
 
@@ -172,9 +196,7 @@
 
 ---
 
-## 🔧 Priority 2 - Next Week
-
-### 2. Feature Usage Tracking (1 hour setup)
+## 🔧 Priority 3 - Future Improvements
 
 **Purpose:** Understand which features are actually used for data-driven decisions
 
@@ -595,11 +617,11 @@ No known issues at this time
 
 ## 🎯 Priority Matrix
 
-| Priority | Items | Timeline |
-|----------|-------|----------|
-| **HIGH** | Manual Testing 1-6 | This week |
-| **MEDIUM** | Code Splitting | When needed |
-| **LOW** | Advanced Features | Q1 2026 |
+| Priority   | Items              | Timeline    |
+| ---------- | ------------------ | ----------- |
+| **HIGH**   | Manual Testing 1-6 | This week   |
+| **MEDIUM** | Code Splitting     | When needed |
+| **LOW**    | Advanced Features  | Q1 2026     |
 
 ---
 

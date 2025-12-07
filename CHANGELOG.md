@@ -2,6 +2,31 @@
 
 All notable changes to this project are documented here.
 
+## [Unreleased] - December 2025 Updates 🔄
+
+### 🐛 Bug Fixes
+
+- **Student Edit Empty Fields Fix** (Dec 7, 2025)
+  - Fixed issue where optional fields (email, phone, notes) couldn't be cleared
+  - Frontend now sends empty strings `""` instead of `undefined` for optional fields
+  - Backend already supports `v.optional(v.string())` correctly
+  - Files: `components/student-management.tsx`
+
+### 🔧 Developer Experience
+
+- **Markdownlint Configuration** (Dec 7, 2025)
+  - Disabled MD013 (line length) - conflicts with code blocks
+  - Disabled MD033 (inline HTML) - needed for bilingual formatting
+  - File: `.markdownlint.json`
+
+### 📚 Documentation Cleanup (Dec 7, 2025)
+
+- Archived 4 session-specific files from root to `docs/archive/2025-Dec/`
+- Moved QA summary to proper location in `docs/`
+- Consolidated redundant documentation
+
+---
+
 ## [Unreleased] - Guardian to Provider Migration Tools 🔄
 
 ### 🚀 Migration Infrastructure
@@ -149,11 +174,11 @@ All notable changes to this project are documented here.
 
 ### Quality Metrics
 
-| Metric | Before | After |
-| ------ | ------ | ----- |
-| TypeScript Errors | 104 | **0** |
-| ESLint Warnings | 12 | **0** |
-| Build Time | - | **18.7s** |
+| Metric            | Before | After     |
+| ----------------- | ------ | --------- |
+| TypeScript Errors | 104    | **0**     |
+| ESLint Warnings   | 12     | **0**     |
+| Build Time        | -      | **18.7s** |
 
 ---
 
@@ -180,7 +205,6 @@ All notable changes to this project are documented here.
   - State management hook
   - Reusable components
   - Type-safe interfaces
-  
 - **`convex/classes/`** structure documentation
   - Re-export pattern for backward compatibility
   - Queries module (9 functions)
@@ -274,7 +298,7 @@ Moved to `docs/archive/` to reduce documentation clutter:
 - **NEW Component**: 360-line dedicated analytics view for admin users
 - **Summary Cards**: System-wide statistics showing:
   - Total Schools count
-  - Total Teachers count  
+  - Total Teachers count
   - Total Classes count
   - Completion Rate percentage (attended classes)
 - **Classes by School Table**: Breakdown of class counts per school
@@ -1439,11 +1463,9 @@ Moved to `docs/archive/` to reduce documentation clutter:
      - **Once-off**: 30-day interactive calendar
      - **Recurring**: Week count + day/time multi-selector
      - Pre-fills class booking form with wizard data
-  
   2. **ClassCountReportWizard** (`components/class-count-report-wizard.tsx`, 200+ lines)
      - Select Teacher → Date Range → View/Print options
      - Opens analytics modal with filtered data
-  
   3. **MessageWizard** (`components/message-wizard.tsx`, 300+ lines)
      - Select recipient(s) → Compose message → Auto-send
      - Shows "Pending → Sent" status animation
@@ -1726,7 +1748,6 @@ Moved to `docs/archive/` to reduce documentation clutter:
   - New Calculator button in modal header
   - State management for calculator visibility
   - Z-index hierarchy for nested modals
-  
 - **Class Booking**: Provider booking UI integration completed (Phase 4.2) ✅
   - Provider selection added to booking form (teachers/admins)
   - XOR validation enforced in UI (schoolId XOR providerId)

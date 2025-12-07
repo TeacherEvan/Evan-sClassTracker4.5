@@ -12,8 +12,8 @@ import { CollapsibleSection } from "./collapsible-section";
 import { CreateProviderModal } from "./create-provider-modal";
 import { LazyBulkEditStudentsModal, ModalLoadingFallback } from "./lazy-components";
 import { PaginatedList } from "./paginated-list";
-import { StudentListSkeleton } from "./ui/skeleton";
 import { ThailandLocationDropdown } from "./thailand-location-dropdown";
+import { StudentListSkeleton } from "./ui/skeleton";
 
 type Student = {
     _id: Id<"students">;
@@ -251,7 +251,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     schoolId,
                     providerId
                 });
-                
+
                 const result = await updateStudent({
                     id: editingStudent,
                     firstName: nickname, // Use nickname as firstName
@@ -260,30 +260,30 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     class: studentClass && studentClass.trim() ? studentClass.trim() : undefined,
                     schoolId: schoolId || undefined,
                     providerId: providerId || undefined,
-                    guardianName: guardianName || undefined,
-                    guardianPhone: guardianPhone || undefined,
-                    guardianEmail: guardianEmail || undefined,
+                    guardianName: guardianName?.trim() ?? undefined,
+                    guardianPhone: guardianPhone?.trim() ?? undefined,
+                    guardianEmail: guardianEmail?.trim() ?? undefined,
                     updatedBy: currentUser._id,
                     // Optional fields
-                    nickname: nickname || undefined,
+                    nickname: nickname ?? undefined,
                     dateOfBirth: dateOfBirth ? new Date(dateOfBirth).getTime() : undefined,
                     // NEW STRUCTURED LOCATION FIELDS (Dec 2025)
-                    provinceCode: provinceCode || undefined,
-                    districtName: districtName || undefined,
-                    parentName: parentName || undefined,
-                    parentPhone: parentPhone || undefined,
-                    parentEmail: parentEmail || undefined,
-                    secondaryParentName: secondaryParentName || undefined,
-                    secondaryParentPhone: secondaryParentPhone || undefined,
-                    allergies: allergies || undefined,
-                    specialNeeds: specialNeeds || undefined,
-                    medicalNotes: medicalNotes || undefined,
-                    notes: notes || undefined,
+                    provinceCode: provinceCode?.trim() ?? undefined,
+                    districtName: districtName?.trim() ?? undefined,
+                    parentName: parentName?.trim() ?? undefined,
+                    parentPhone: parentPhone?.trim() ?? undefined,
+                    parentEmail: parentEmail?.trim() ?? undefined,
+                    secondaryParentName: secondaryParentName?.trim() ?? undefined,
+                    secondaryParentPhone: secondaryParentPhone?.trim() ?? undefined,
+                    allergies: allergies?.trim() ?? undefined,
+                    specialNeeds: specialNeeds?.trim() ?? undefined,
+                    medicalNotes: medicalNotes?.trim() ?? undefined,
+                    notes: notes?.trim() ?? undefined,
                 });
-                
+
                 console.log('[DEBUG] Update result:', result);
                 setSuccess(t("Student updated successfully!", "อัปเดตข้อมูลนักเรียนสำเร็จ!"));
-                
+
                 // Small delay before reset to ensure user sees success message
                 setTimeout(() => {
                     resetForm();
