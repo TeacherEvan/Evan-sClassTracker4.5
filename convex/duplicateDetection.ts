@@ -330,11 +330,14 @@ export const mergeDuplicateStudents = mutation({
         });
       }
 
-      // Soft delete the duplicate student (we don't actually delete for audit purposes)
-      // Instead, we could mark them in some way or just leave them
-      // For now, we'll actually delete them as requested
-      await ctx.db.delete(deleteId);
-    }
+      // Soft delete the duplicate student (mark as deleted for audit purposes)
+      // See Pattern #8: Soft deletes required for students. This preserves audit trail.
+      await ctx.db.patch(deleteId, {
+        isDeleted: true,
+        deletedAt: Date.now(),
+        deletedBy: args.userId,
+        deletionReason: "Merged into another student record"
+      });
 
     // Update watchlist entry
     await ctx.db.patch(args.entryId, {
