@@ -209,7 +209,6 @@ export const AuditTargetTypes = {
     CLASSES: "classes",
     SCHOOLS: "schools",
     STUDENTS: "students",
-    STUDENT: "student",
     LOCATIONS: "locations",
     NOTIFICATIONS: "notifications",
     NOTIFICATION_WINDOWS: "notificationWindows",
