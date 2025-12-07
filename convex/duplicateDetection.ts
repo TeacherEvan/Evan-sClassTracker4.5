@@ -315,6 +315,17 @@ export const mergeDuplicateStudents = mutation({
       throw new Error("Watchlist entry not found");
     }
 
+    // Validate: Cannot merge a student into itself
+    if (args.deleteStudentIds.includes(args.keepStudentId)) {
+      throw new Error("Cannot merge a student into itself");
+    }
+    // Validate: keepStudentId must be related to this watchlist entry
+    if (
+      entry.studentId !== args.keepStudentId &&
+      !(entry.possibleDuplicateIds && entry.possibleDuplicateIds.includes(args.keepStudentId))
+    ) {
+      throw new Error("Keep student must be part of this duplicate set");
+    }
     // Merge logic: Reassign all classes from deleted students to kept student
     for (const deleteId of args.deleteStudentIds) {
       // Get all classes for the student being deleted
