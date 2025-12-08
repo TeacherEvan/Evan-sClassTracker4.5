@@ -2,8 +2,8 @@
  * Thailand Administrative Location Data
  * Complete bilingual (EN/TH) mapping for dropdowns and analytics
  * 
- * Data Source: Official Thailand Administrative Structure (2024)
- * Last Updated: December 2025
+ * Data Source: Official Thailand Administrative Structure (as of 2024, verified December 2025)
+ * 
  * 
  * Structure:
  * - 6 Regions (ภาค)
