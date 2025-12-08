@@ -46,8 +46,7 @@ export const THAILAND_REGIONS: ThailandRegion[] = [
     nameTh: 'ภาคกลาง',
     provinces: [
       'bangkok', 'samut_prakan', 'nonthaburi', 'pathum_thani', 'phra_nakhon_si_ayutthaya',
-      'ang_thong', 'lop_buri', 'sing_buri', 'chai_nat', 'saraburi', 'chon_buri', 'rayong',
-      'chanthaburi', 'trat', 'chachoengsao', 'prachin_buri', 'nakhon_nayok', 'sa_kaeo',
+      'ang_thong', 'lop_buri', 'sing_buri', 'chai_nat', 'saraburi', 'chachoengsao', 'nakhon_nayok',
       'nakhon_pathom', 'suphan_buri', 'samut_sakhon', 'samut_songkhram', 'phetchaburi',
       'prachuap_khiri_khan', 'kanchanaburi', 'ratchaburi'
     ]
