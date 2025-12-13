@@ -183,7 +183,7 @@ export default defineSchema({
     // NEW OPTIONAL FIELDS
     nickname: v.optional(v.string()), // Preferred name
     dateOfBirth: v.optional(v.number()), // For age calculation - REQUIRED for provider students
-    area: v.optional(v.string()), // Teaching location area (e.g., "Bangkok District 1") - REQUIRED for auto-guardian students
+    area: v.optional(v.string()), // Teaching location area (e.g., "Bangkok District 1") - REQUIRED for provider students
     parentName: v.optional(v.string()), // Primary parent
     parentPhone: v.optional(v.string()), // Contact number
     parentEmail: v.optional(v.string()), // Email contact
@@ -198,7 +198,7 @@ export default defineSchema({
     .index("by_school", ["schoolId"])
     .index("by_provider", ["providerId"]) // Provider queries
     .index("by_created_by", ["createdBy"])
-    .index("by_area", ["area"]) // Area-based queries for auto-guardian students
+    .index("by_area", ["area"]) // Area-based queries for provider students
     .index("by_grade_and_class", ["grade", "class"]), // NEW
 
   notifications: defineTable({

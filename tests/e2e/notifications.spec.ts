@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { login, navigateToTab, TEST_USERS, waitForToast } from './helpers';
 
 test.describe('Notification System', () => {
-    test('post-class notes notification to guardian', async ({ page }) => {
+    test('post-class notes notification to parent/provider', async ({ page }) => {
         // Login as teacher
         await login(page, TEST_USERS.teacher);
 
@@ -24,7 +24,7 @@ test.describe('Notification System', () => {
 
                 // Fill notes textarea
                 const notesTextarea = page.locator('textarea').first();
-                await notesTextarea.fill('Test post-class notes for guardian notification');
+                await notesTextarea.fill('Test post-class notes for parent/provider notification');
 
                 // Submit
                 await page.locator('button:has-text("Send"), button:has-text("ส่ง"), button[type="submit"]').first().click();

@@ -445,7 +445,7 @@ export const remove = mutation({
         studentId: student.studentId,
         grade: student.grade,
         class: student.class,
-        guardianId: student.guardianId,
+        providerId: student.providerId,
         area: student.area,
         affectedClasses: activeClasses.length,
         affectedClassIds: activeClasses.map(c => c._id),
