@@ -710,6 +710,44 @@ export default defineSchema({
     .index("by_user_and_timestamp", ["userId", "timestamp"])
     .index("by_status_and_timestamp", ["status", "timestamp"]),
 
+  duplicateWatchlist: defineTable({
+    studentId: v.id("students"), // The student that was created (flagged as potential duplicate)
+    possibleDuplicateIds: v.array(v.id("students")), // Array of existing student IDs that match
+    matchedFields: v.number(), // Count of fields that matched (4+)
+    matchDetails: v.object({
+      firstName: v.boolean(),
+      lastName: v.boolean(),
+      grade: v.boolean(),
+      dateOfBirth: v.boolean(),
+      guardianPhone: v.boolean(),
+      area: v.boolean(),
+      schoolId: v.boolean(),
+    }),
+    status: v.union(
+      v.literal("pending"), // Awaiting admin review
+      v.literal("reviewed"), // Admin has reviewed (not merged)
+      v.literal("merged"), // Students have been merged
+      v.literal("dismissed") // Admin dismissed as non-duplicate
+    ),
+    reviewedBy: v.optional(v.id("users")), // Admin who reviewed
+    reviewedAt: v.optional(v.number()), // When reviewed
+    notes: v.optional(v.string()), // Admin notes about resolution
+    notesTh: v.optional(v.string()), // Admin notes (Thai)
+    mergedIntoId: v.optional(v.id("students")), // If merged, which student was kept
+    createdAt: v.number(),
+    // User decision context
+    userDecision: v.optional(v.union(
+      v.literal("create_new"), // User chose to create new despite warning
+      v.literal("link_existing") // User chose to link to existing (not implemented yet)
+    )),
+    userDecisionBy: v.optional(v.id("users")), // Who made the decision
+  })
+    .index("by_status", ["status"])
+    .index("by_student", ["studentId"])
+    .index("by_reviewed_by", ["reviewedBy"])
+    .index("by_created_at", ["createdAt"])
+    .index("by_status_and_created_at", ["status", "createdAt"]),
+
   // NEW: Teacher-School Connections (many-to-many relationship)
   // Moderators can only connect/disconnect teachers to their own school
   teacherSchools: defineTable({
