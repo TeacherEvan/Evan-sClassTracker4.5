@@ -58,20 +58,15 @@ export const create = mutation({
   args: {
     firstName: v.string(),
     lastName: v.string(),
-    schoolId: v.optional(v.id("schools")), // Optional for guardian-linked students or provider-linked students
-    providerId: v.optional(v.id("providers")), // NEW - alternative to schoolId
-    guardianId: v.optional(v.id("users")), // Guardian user ID
-    guardianTitle: v.optional(v.string()), // Relationship description
+    schoolId: v.optional(v.id("schools")), // Optional for provider-linked students
+    providerId: v.optional(v.id("providers")), // Alternative to schoolId
     grade: v.string(), // Grade level (K1, K2, K3)
     class: v.optional(v.string()), // Class number (/1, /2, ..., /10)
-    guardianName: v.optional(v.string()),
-    guardianPhone: v.optional(v.string()),
-    guardianEmail: v.optional(v.string()),
     createdBy: v.id("users"), // Teacher who created the student
     // Optional fields
     nickname: v.optional(v.string()),
-    dateOfBirth: v.optional(v.number()), // Timestamp - REQUIRED for guardian students
-    area: v.optional(v.string()), // Teaching location area - REQUIRED for guardian students
+    dateOfBirth: v.optional(v.number()), // Timestamp
+    area: v.optional(v.string()), // Teaching location area
     parentName: v.optional(v.string()),
     parentPhone: v.optional(v.string()),
     parentEmail: v.optional(v.string()),
@@ -90,21 +85,18 @@ export const create = mutation({
       windowMs: 60000, // 1 minute
     });
 
-    // ✅ NEW: XOR VALIDATION - Student must have EITHER schoolId OR providerId OR guardian (not multiple, not none for provider/school)
+    // ✅ XOR VALIDATION - Student must have EITHER schoolId OR providerId (not both, not neither)
     const hasSchool = !!args.schoolId;
     const hasProvider = !!args.providerId;
-    const hasGuardian = !!(args.guardianId || args.guardianName);
 
     // If both school and provider are provided, reject
     if (hasSchool && hasProvider) {
       throw new Error("Student cannot be linked to both a school and a provider. Please choose one.");
     }
 
-    // Guardian students can exist without school or provider
-    // Provider students require providerId
-    // School students require schoolId
-    if (!hasGuardian && !hasSchool && !hasProvider) {
-      throw new Error("Student must be linked to either a school, provider, or guardian");
+    // Student must have either school or provider
+    if (!hasSchool && !hasProvider) {
+      throw new Error("Student must be linked to either a school or provider");
     }
 
     // ✅ SECURITY: Verify user permissions
@@ -125,7 +117,7 @@ export const create = mutation({
         throw new Error("Unauthorized: Only teachers, moderators, and admins can create school-linked students");
       }
     } else if (args.providerId) {
-      // NEW: Provider-linked students (teachers and admins only)
+      // Provider-linked students (teachers and admins only)
       if (creator.role === "moderator") {
         throw new Error("Unauthorized: Moderators cannot create provider-linked students");
       }
@@ -139,11 +131,6 @@ export const create = mutation({
       // Teachers can only use their own providers, admins can use any
       if (creator.role === "teacher" && provider.createdBy !== creator._id) {
         throw new Error("Unauthorized: You can only create students for providers you created");
-      }
-    } else if (hasGuardian) {
-      // Guardian-linked students
-      if (creator.role === "guardian" && args.guardianId !== creator._id) {
-        throw new Error("Guardians can only create students linked to themselves");
       }
     }
 
@@ -162,20 +149,9 @@ export const create = mutation({
       throw new Error("Class is required for students linked to a school");
     }
 
-    // NEW: Validate provider student requirements (grade still required, but class is optional)
+    // Validate provider student requirements (grade still required, but class is optional)
     if (args.providerId && !args.grade) {
       throw new Error("Grade is required for provider-linked students");
-    }
-
-    // NEW: Validate guardian student requirements
-    const isGuardianStudent = hasGuardian;
-    if (isGuardianStudent) {
-      if (!args.dateOfBirth) {
-        throw new Error("Guardian students must have a birth date for unique identification");
-      }
-      if (!args.area) {
-        throw new Error("Guardian students must have a teaching area for unique identification");
-      }
     }
 
     // ✅ PREVENT DUPLICATES: Check if student already exists with same name + grade + class + school
@@ -200,7 +176,7 @@ export const create = mutation({
       }
     }
 
-    // NEW: ✅ PREVENT DUPLICATES for provider students (name + grade + provider)
+    // ✅ PREVENT DUPLICATES for provider students (name + grade + provider)
     if (args.providerId) {
       const providerStudents = await ctx.db
         .query("students")
@@ -222,40 +198,11 @@ export const create = mutation({
       }
     }
 
-    // NEW: ✅ PREVENT DUPLICATES for guardian students (name + birthDate + area)
-    if (isGuardianStudent && args.area) {
-      const areaStudents = await ctx.db
-        .query("students")
-        .withIndex("by_area", (q) => q.eq("area", args.area!))
-        .collect();
-
-      const guardianDuplicate = areaStudents.find(
-        (s) =>
-          s.firstName.toLowerCase() === args.firstName.toLowerCase() &&
-          (s.lastName || "").toLowerCase() === (args.lastName || "").toLowerCase() &&
-          s.dateOfBirth === args.dateOfBirth
-      );
-
-      if (guardianDuplicate) {
-        throw new Error(
-          `Guardian student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" with this birth date already exists in ${args.area} (ID: ${guardianDuplicate.studentId})`
-        );
-      }
-    }
-
-    // Generate unique student ID based on student type
+    // ✅ GENERATE UNIQUE STUDENT ID
     let studentId: string;
 
-    if (isGuardianStudent && args.dateOfBirth && args.area) {
-      // Guardian student: use birthDate + area based ID
-      studentId = generateGuardianStudentId(
-        args.firstName,
-        args.lastName || "",
-        args.dateOfBirth,
-        args.area
-      );
-    } else if (args.providerId) {
-      // NEW: Provider student: use provider-based ID
+    if (args.providerId) {
+      // Provider student: use provider-based ID
       const providerIdForHash = args.providerId;
       studentId = generateStudentId(args.firstName, args.lastName || "", providerIdForHash);
     } else {
@@ -279,9 +226,7 @@ export const create = mutation({
       }
 
       // Regenerate with new random component based on student type
-      if (isGuardianStudent && args.dateOfBirth && args.area) {
-        studentId = generateGuardianStudentId(args.firstName, args.lastName || "", args.dateOfBirth, args.area);
-      } else if (args.providerId) {
+      if (args.providerId) {
         studentId = generateStudentId(args.firstName, args.lastName || "", args.providerId);
       } else {
         const schoolIdForHash = args.schoolId || "NOSCHOOL";
@@ -299,15 +244,10 @@ export const create = mutation({
       lastName: args.lastName,
       studentId,
       schoolId: args.schoolId,
-      providerId: args.providerId, // NEW: Provider support
-      guardianId: args.guardianId,
-      guardianTitle: args.guardianTitle,
+      providerId: args.providerId,
       grade: args.grade,
       class: args.class,
-      guardianName: args.guardianName,
-      guardianPhone: args.guardianPhone,
-      guardianEmail: args.guardianEmail,
-      acknowledged: args.guardianId ? false : true, // Needs guardian acknowledgement if linked
+      acknowledged: true,
       createdBy: args.createdBy,
       createdAt: Date.now(),
       // Optional fields
@@ -325,21 +265,6 @@ export const create = mutation({
       notes: args.notes,
     });
 
-    // If guardian is linked, create notification for guardian
-    if (args.guardianId) {
-      const teacher = await ctx.db.get(args.createdBy);
-      await ctx.db.insert("notifications", {
-        title: `New Student Added: ${args.firstName} ${args.lastName}`,
-        titleTh: `นักเรียนใหม่ถูกเพิ่ม: ${args.firstName} ${args.lastName}`,
-        message: `Teacher ${teacher?.username || "Unknown"} has added you as guardian for ${args.firstName} ${args.lastName}. Please review and acknowledge.`,
-        messageTh: `ครู ${teacher?.username || "Unknown"} ได้เพิ่มคุณเป็นผู้ปกครองของ ${args.firstName} ${args.lastName} กรุณาตรวจสอบและยืนยัน`,
-        type: "info",
-        userId: args.guardianId,
-        read: false,
-        createdAt: Date.now(),
-      });
-    }
-
     return { id, studentId };
   },
 });
@@ -355,11 +280,6 @@ export const update = mutation({
     providerId: v.optional(v.id("providers")),
     grade: v.optional(v.string()),
     class: v.optional(v.string()),
-    guardianId: v.optional(v.id("users")),
-    guardianTitle: v.optional(v.string()),
-    guardianName: v.optional(v.string()),
-    guardianPhone: v.optional(v.string()),
-    guardianEmail: v.optional(v.string()),
     // Optional fields
     nickname: v.optional(v.string()),
     dateOfBirth: v.optional(v.number()), // Timestamp
@@ -415,11 +335,6 @@ export const update = mutation({
       // Teachers/moderators can only modify students from their school
       if (!student.schoolId || student.schoolId !== user.schoolId) {
         throw new Error("Unauthorized: Cannot modify students from other schools");
-      }
-    } else if (user.role === "guardian") {
-      // Guardians can only modify their own students
-      if (student.guardianId !== user._id) {
-        throw new Error("Unauthorized: Can only modify your own students");
       }
     } else if (user.role !== "admin") {
       throw new Error("Unauthorized: Insufficient permissions");
@@ -494,11 +409,6 @@ export const remove = mutation({
       if (!student.schoolId || student.schoolId !== user.schoolId) {
         throw new Error("Unauthorized: Cannot delete students from other schools");
       }
-    } else if (user.role === "guardian") {
-      // Guardians can only delete their own students
-      if (student.guardianId !== user._id) {
-        throw new Error("Unauthorized: Can only delete your own students");
-      }
     } else if (user.role !== "admin") {
       throw new Error("Unauthorized: Insufficient permissions");
     }
@@ -545,69 +455,6 @@ export const remove = mutation({
     await ctx.db.delete(operationArgs.id);
 
     return { success: true };
-  },
-});
-
-// Mutation to duplicate a student (for guardian-linked students)
-export const duplicate = mutation({
-  args: {
-    id: v.id("students"),
-  },
-  handler: async (ctx, args) => {
-    const originalStudent = await ctx.db.get(args.id);
-
-    if (!originalStudent) {
-      throw new Error("Student not found");
-    }
-
-    // Only allow duplication for guardian-linked students
-    if (originalStudent.schoolId) {
-      throw new Error("Can only duplicate guardian-linked students");
-    }
-
-    // Generate new unique student ID
-    const schoolIdForHash = "GUARDIAN";
-    let studentId = generateStudentId(originalStudent.firstName, originalStudent.lastName, schoolIdForHash);
-
-    let attempts = 0;
-    const maxAttempts = 10;
-
-    while (attempts < maxAttempts) {
-      const existing = await ctx.db
-        .query("students")
-        .withIndex("by_student_id", (q) => q.eq("studentId", studentId))
-        .first();
-
-      if (!existing) {
-        break;
-      }
-
-      studentId = generateStudentId(originalStudent.firstName, originalStudent.lastName, schoolIdForHash);
-      attempts++;
-    }
-
-    if (attempts === maxAttempts) {
-      throw new Error("Failed to generate unique student ID after multiple attempts");
-    }
-
-    // Create duplicate with new ID
-    const newId = await ctx.db.insert("students", {
-      firstName: originalStudent.firstName,
-      lastName: originalStudent.lastName,
-      studentId,
-      schoolId: originalStudent.schoolId,
-      guardianId: originalStudent.guardianId,
-      guardianTitle: originalStudent.guardianTitle,
-      grade: originalStudent.grade,
-      guardianName: originalStudent.guardianName,
-      guardianPhone: originalStudent.guardianPhone,
-      guardianEmail: originalStudent.guardianEmail,
-      acknowledged: originalStudent.acknowledged,
-      createdBy: originalStudent.createdBy,
-      createdAt: Date.now(),
-    });
-
-    return { id: newId, studentId };
   },
 });
 
