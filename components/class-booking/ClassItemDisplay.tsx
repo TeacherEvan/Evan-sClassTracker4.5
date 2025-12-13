@@ -248,19 +248,16 @@ export const ClassItemDisplay = memo(function ClassItemDisplay({
               {classItem.approvalSource && classItem.status === "approved" && (
                 <div className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${classItem.approvalSource === "auto_provider"
                   ? "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400"
-                  : classItem.approvalSource === "auto_guardian"
-                    ? "bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-400"
-                    : classItem.approvalSource === "moderator"
-                      ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
-                      : classItem.approvalSource === "admin"
-                        ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
-                        : "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400"
+                  : classItem.approvalSource === "moderator"
+                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
+                    : classItem.approvalSource === "admin"
+                      ? "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
+                      : "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400"
                   }`}>
                   <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                   {classItem.approvalSource === "auto_provider" && t("Auto-approved (Provider)", "อนุมัติอัตโนมัติ (ผู้ให้บริการ)")}
-                  {classItem.approvalSource === "auto_guardian" && t("Auto-approved (Guardian)", "อนุมัติอัตโนมัติ (ผู้ปกครอง)")}
                   {classItem.approvalSource === "moderator" && t("Moderator Approval", "อนุมัติโดยผู้ดูแล")}
                   {classItem.approvalSource === "admin" && t("Admin Approval", "อนุมัติโดยผู้จัดการ")}
                   {classItem.approvalSource === "system" && t("System Approval", "อนุมัติโดยระบบ")}

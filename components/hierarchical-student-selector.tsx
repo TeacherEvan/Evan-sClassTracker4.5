@@ -55,10 +55,10 @@ export function HierarchicalStudentSelector({
         return students.filter(s => s.grade === selectedGrade && s.class === selectedClass);
     }, [students, selectedGrade, selectedClass]);
 
-    // ✅ PERFORMANCE: Memoize guardian students list
-    const guardianStudents = useMemo(() => {
+    // ✅ PERFORMANCE: Memoize provider students list (students linked to providers, not schools)
+    const providerStudents = useMemo(() => {
         if (!students) return [];
-        return students.filter(s => s.guardianName);
+        return students.filter(s => s.providerId && !s.schoolId);
     }, [students]);
 
     // Reset selections when students change or when school changes
@@ -188,11 +188,11 @@ export function HierarchicalStudentSelector({
                 </div>
             )}
 
-            {/* Guardian Students Section - Show separately */}
-            {students && students.some(s => s.guardianName) && (
+            {/* Provider Students Section - Show separately */}
+            {students && students.some(s => s.providerId && !s.schoolId) && (
                 <div>
                     <label className="block text-xs font-medium mb-1.5 text-purple-600 dark:text-purple-400">
-                        {t("Guardian Students (Auto-approved)", "นักเรียนของผู้ปกครอง (อนุมัติอัตโนมัติ)")}
+                        {t("Provider Students (Auto-approved)", "นักเรียนของผู้ให้บริการ (อนุมัติอัตโนมัติ)")}
                     </label>
                     <select
                         value={value}
@@ -202,20 +202,20 @@ export function HierarchicalStudentSelector({
                         required={required}
                     >
                         <option value="">
-                            {t("Select guardian student", "เลือกนักเรียนของผู้ปกครอง")}
+                            {t("Select provider student", "เลือกนักเรียนของผู้ให้บริการ")}
                         </option>
-                        {guardianStudents.map((student) => (
+                        {providerStudents.map((student) => (
                             <option key={student._id} value={student._id}>
                                 👤 {student.firstName} {student.lastName}
                                 {student.area ? ` [${student.area}]` : ""}
                             </option>
                         ))}
                     </select>
-                    {guardianStudents.length > 0 && (
+                    {providerStudents.length > 0 && (
                         <p className="mt-1 text-xs text-purple-600 dark:text-purple-400">
                             {t(
-                                `${guardianStudents.length} guardian student${guardianStudents.length !== 1 ? 's' : ''} available`,
-                                `มีนักเรียนของผู้ปกครอง ${guardianStudents.length} คน`
+                                `${providerStudents.length} provider student${providerStudents.length !== 1 ? 's' : ''} available`,
+                                `มีนักเรียนของผู้ให้บริการ ${providerStudents.length} คน`
                             )}
                         </p>
                     )}

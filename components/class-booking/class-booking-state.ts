@@ -24,7 +24,6 @@ export type PendingBookingData = {
     pendingLocationNameTh?: string;
     scheduledDate: number;
     bookedByUserId: Id<"users">;
-    guardianTitle?: string;
     duration?: number;
     subject?: string;
     subjectTh?: string;
@@ -98,11 +97,11 @@ export function useClassBookingState(userId: Id<"users">, userRole: UserRole, us
     const [newStudentGrade, setNewStudentGrade] = useState("");
     const [newStudentClass, setNewStudentClass] = useState("");
     const [newStudentSchoolId, setNewStudentSchoolId] = useState<Id<"schools"> | "">("");
-    const [guardianBirthDate, setGuardianBirthDate] = useState("");
-    const [guardianArea, setGuardianArea] = useState("");
-    const [newGuardianName, setNewGuardianName] = useState("");
-    const [newGuardianPhone, setNewGuardianPhone] = useState("");
-    const [guardianTitle, setGuardianTitle] = useState("");
+    const [newStudentBirthDate, setNewStudentBirthDate] = useState("");
+    const [newStudentArea, setNewStudentArea] = useState("");
+    const [newParentName, setNewParentName] = useState("");
+    const [newParentPhone, setNewParentPhone] = useState("");
+    const [newStudentProviderId, setNewStudentProviderId] = useState<Id<"providers"> | "">("");
 
     // Location Creation State
     const [creatingLocation, setCreatingLocation] = useState(false);
@@ -182,11 +181,11 @@ export function useClassBookingState(userId: Id<"users">, userRole: UserRole, us
         newStudentGrade, setNewStudentGrade,
         newStudentClass, setNewStudentClass,
         newStudentSchoolId, setNewStudentSchoolId,
-        guardianBirthDate, setGuardianBirthDate,
-        guardianArea, setGuardianArea,
-        newGuardianName, setNewGuardianName,
-        newGuardianPhone, setNewGuardianPhone,
-        guardianTitle, setGuardianTitle,
+        newStudentBirthDate, setNewStudentBirthDate,
+        newStudentArea, setNewStudentArea,
+        newParentName, setNewParentName,
+        newParentPhone, setNewParentPhone,
+        newStudentProviderId, setNewStudentProviderId,
 
         // Location Creation
         creatingLocation, setCreatingLocation,

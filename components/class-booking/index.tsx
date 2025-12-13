@@ -92,11 +92,11 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     newStudentGrade, setNewStudentGrade,
     newStudentClass, setNewStudentClass,
     newStudentSchoolId, setNewStudentSchoolId,
-    guardianBirthDate, setGuardianBirthDate,
-    guardianArea, setGuardianArea,
-    newGuardianName, setNewGuardianName,
-    newGuardianPhone, setNewGuardianPhone,
-    guardianTitle, setGuardianTitle,
+    newStudentBirthDate, setNewStudentBirthDate,
+    newStudentArea, setNewStudentArea,
+    newParentName, setNewParentName,
+    newParentPhone, setNewParentPhone,
+    newStudentProviderId, setNewStudentProviderId,
 
     // Location Creation
     creatingLocation, setCreatingLocation,
@@ -208,9 +208,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     schoolId ? { schoolId: schoolId as Id<"schools">, activeOnly: true } : "skip"
   );
 
-  // Check if selected location is guardian type
+  // Check if selected location is private/home type
   const selectedLocation = locations?.find(loc => loc._id === locationId);
-  const isGuardianLocation = selectedLocation?.type === "guardian";
+  const isPrivateLocation = selectedLocation?.type === "guardian";
 
   // Form validation
   const isFormValid =
@@ -221,7 +221,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     (schoolId ? (locationId || requestingNewLocation) : true) &&
     (requestingNewLocation ? (pendingLocationName.trim() || pendingLocationNameTh.trim()) : true) &&
     (selectedDates.length > 0 || scheduledDate) &&
-    (isGuardianLocation ? guardianTitle.trim() : true) &&
     // Admin/Moderator must select a teacher
     ((userRole === "admin" || userRole === "moderator") ? selectedTeacherId : true);
 
@@ -298,14 +297,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         throw new Error("Please select at least one date");
       }
 
-      // Validate guardian title if guardian location selected
-      if (isGuardianLocation && !guardianTitle.trim()) {
-        throw new Error(t(
-          "Please enter the guardian's title (e.g., Mom, Dad, Grandma)",
-          "กรุณาระบุความสัมพันธ์กับผู้ปกครอง (เช่น แม่, พ่อ, ยาย)"
-        ));
-      }
-
       // Prepare optional fields (only include if filled)
       const optionalFields = {
         ...(duration ? { duration: Number.parseInt(duration) } : {}),
@@ -334,7 +325,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
             pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
             scheduledDate: timestamp,
             bookedByUserId: userId,
-            guardianTitle: isGuardianLocation ? guardianTitle : undefined,
             ...optionalFields,
           })
         );
@@ -356,7 +346,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
           pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
           scheduledDate: datesToBook[0],
           bookedByUserId: userId,
-          guardianTitle: isGuardianLocation ? guardianTitle : undefined,
           ...optionalFields,
         }) as {
           success: boolean; hasConflicts: boolean; conflicts?: Array<{
@@ -385,7 +374,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
             pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
             scheduledDate: datesToBook[0],
             bookedByUserId: userId,
-            guardianTitle: isGuardianLocation ? guardianTitle : undefined,
           });
           setConflictingClasses((result.conflicts || []).map((c) => ({
             _id: c.classId,
@@ -422,7 +410,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       setRequestingNewLocation(false);
       setShowCalendar(false);
       setShowForm(false);
-      setGuardianTitle("");
       // Reset teacher selection for admin/moderator
       if (userRole === "admin" || userRole === "moderator") {
         setSelectedTeacherId("");
@@ -496,7 +483,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         setRequestingNewLocation(false);
         setShowCalendar(false);
         setShowForm(false);
-        setGuardianTitle("");
         if (userRole === "admin" || userRole === "moderator") {
           setSelectedTeacherId("");
         }
@@ -549,7 +535,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       setRequestingNewLocation(false);
       setShowCalendar(false);
       setShowForm(false);
-      setGuardianTitle("");
       if (userRole === "admin" || userRole === "moderator") {
         setSelectedTeacherId("");
       }
@@ -705,9 +690,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         return;
       }
     } else {
-      // Guardian student requires birthDate and area
-      if (!guardianBirthDate.trim() || !guardianArea.trim()) {
-        setError(t("Birth date and area are required for guardian students", "ต้องกรอกวันเกิดและพื้นที่สำหรับนักเรียนของผู้ปกครอง"));
+      // Provider student requires birthDate and area
+      if (!newStudentBirthDate.trim() || !newStudentArea.trim()) {
+        setError(t("Birth date and area are required for provider students", "ต้องกรอกวันเกิดและพื้นที่สำหรับนักเรียนของผู้ให้บริการ"));
         return;
       }
     }
@@ -715,8 +700,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     setLoading(true);
     try {
       // Convert date string to timestamp for provider students
-      const birthTimestamp = studentType === "provider" && guardianBirthDate
-        ? new Date(guardianBirthDate).getTime()
+      const birthTimestamp = studentType === "provider" && newStudentBirthDate
+        ? new Date(newStudentBirthDate).getTime()
         : undefined;
 
       const newStudentData = await createStudent({
@@ -727,9 +712,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         class: studentType === "school" ? newStudentClass : undefined,
         schoolId: studentType === "school" ? (newStudentSchoolId as Id<"schools">) : undefined,
         dateOfBirth: birthTimestamp,
-        area: studentType === "provider" ? guardianArea : undefined,
-        guardianName: studentType === "provider" && newGuardianName ? newGuardianName : undefined,
-        guardianPhone: studentType === "provider" && newGuardianPhone ? newGuardianPhone : undefined,
+        area: studentType === "provider" ? newStudentArea : undefined,
+        parentName: studentType === "provider" && newParentName ? newParentName : undefined,
+        parentPhone: studentType === "provider" && newParentPhone ? newParentPhone : undefined,
         createdBy: userId,
       });
 
@@ -746,15 +731,15 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       setNewStudentGrade("");
       setNewStudentClass("");
       setNewStudentSchoolId("");
-      setGuardianBirthDate("");
-      setGuardianArea("");
-      setNewGuardianName("");
-      setNewGuardianPhone("");
+      setNewStudentBirthDate("");
+      setNewStudentArea("");
+      setNewParentName("");
+      setNewParentPhone("");
 
       if (studentType === "school") {
         toast.success("Student created successfully!", "สร้างข้อมูลนักเรียนสำเร็จ!");
       } else {
-        toast.success("Guardian student created successfully!", "สร้างข้อมูลนักเรียนของผู้ปกครองสำเร็จ!");
+        toast.success("Guardian student created successfully!", "สร้างข้อมูลนักเรียนของผู้ให้บริการสำเร็จ!");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create student");
@@ -1418,7 +1403,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   </div>
                 )}
 
-                {/* Step 3: Student Selection - Filtered by School (or provider flow for guardian students) */}
+                {/* Step 3: Student Selection - Filtered by School (or provider flow for provider students) */}
                 <div className={`relative transition-opacity ${(schoolId || providerId) ? 'opacity-100' : 'opacity-50'}`}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
@@ -1478,7 +1463,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                             }`}
                           disabled={loading}
                         >
-                          {t("Guardian Student", "นักเรียนของผู้ปกครอง")}
+                          {t("Provider Student", "นักเรียนของผู้ให้บริการ")}
                         </button>
                       </div>
 
@@ -1537,32 +1522,32 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                           <input
                             type="date"
                             placeholder={t("Birth Date *", "วันเกิด *")}
-                            value={guardianBirthDate}
-                            onChange={(e) => setGuardianBirthDate(e.target.value)}
+                            value={newStudentBirthDate}
+                            onChange={(e) => setNewStudentBirthDate(e.target.value)}
                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600"
                             disabled={loading}
                           />
                           <input
                             type="text"
                             placeholder={t("Area (e.g., BKK01, CNX02) *", "พื้นที่ (เช่น BKK01, CNX02) *")}
-                            value={guardianArea}
-                            onChange={(e) => setGuardianArea(e.target.value.toUpperCase())}
+                            value={newStudentArea}
+                            onChange={(e) => setNewStudentArea(e.target.value.toUpperCase())}
                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600"
                             disabled={loading}
                           />
                           <input
                             type="text"
-                            placeholder={t("Guardian Name", "ชื่อผู้ปกครอง")}
-                            value={newGuardianName}
-                            onChange={(e) => setNewGuardianName(e.target.value)}
+                            placeholder={t("Parent Name", "ชื่อผู้ปกครอง")}
+                            value={newParentName}
+                            onChange={(e) => setNewParentName(e.target.value)}
                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600"
                             disabled={loading}
                           />
                           <input
                             type="tel"
-                            placeholder={t("Guardian Phone", "เบอร์ผู้ปกครอง")}
-                            value={newGuardianPhone}
-                            onChange={(e) => setNewGuardianPhone(e.target.value)}
+                            placeholder={t("Parent Phone", "เบอร์ผู้ปกครอง")}
+                            value={newParentPhone}
+                            onChange={(e) => setNewParentPhone(e.target.value)}
                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600"
                             disabled={loading}
                           />
@@ -1580,7 +1565,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       >
                         {studentType === "school"
                           ? t("✓ Create & Select Student", "✓ สร้างและเลือกนักเรียน")
-                          : t("✓ Create Guardian Student", "✓ สร้างนักเรียนของผู้ปกครอง")
+                          : t("✓ Create Provider Student", "✓ สร้างนักเรียนของผู้ให้บริการ")
                         }
                       </button>
                     </div>
@@ -1731,31 +1716,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     </div>
                   )}
                 </div>
-
-                {/* Guardian Title (only if guardian location selected) */}
-                {isGuardianLocation && (
-                  <div>
-                    <label htmlFor="guardianTitle" className="block text-sm font-medium mb-2">
-                      {t("Guardian Title", "ความสัมพันธ์กับผู้ปกครอง")} *
-                    </label>
-                    <input
-                      type="text"
-                      id="guardianTitle"
-                      value={guardianTitle}
-                      onChange={(e) => setGuardianTitle(e.target.value)}
-                      placeholder={t("e.g. Mom, Dad, Grandma", "เช่น แม่, พ่อ, ยาย")}
-                      className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                      required={isGuardianLocation}
-                      disabled={loading}
-                    />
-                    <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
-                      {t(
-                        "Classes at guardian's home are auto-approved",
-                        "ชั้นเรียนที่บ้านผู้ปกครองจะได้รับการอนุมัติอัตโนมัติ"
-                      )}
-                    </p>
-                  </div>
-                )}
 
                 <div>
                   <label htmlFor="date" className="block text-sm font-medium mb-2">

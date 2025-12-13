@@ -43,7 +43,7 @@ export interface ClassItemWithDetails {
   approvedByUserId?: Id<"users">;
   approvedByUsername?: string;
   approvedAt?: number;
-  approvalSource?: "moderator" | "admin" | "auto_provider" | "auto_guardian" | "system";
+  approvalSource?: "moderator" | "admin" | "auto_provider" | "system";
 }
 
 /**

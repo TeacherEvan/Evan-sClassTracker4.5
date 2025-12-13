@@ -177,13 +177,13 @@ export default function LocationProposalForm({
                 disabled={loading}
               >
                 <option value="school">{t("School Location", "สถานที่โรงเรียน")}</option>
-                <option value="guardian">{t("Guardian Home", "บ้านผู้ปกครอง")}</option>
+                <option value="guardian">{t("Private/Home Location", "สถานที่ส่วนตัว/บ้าน")}</option>
               </select>
               {type === "guardian" && (
                 <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
                   {t(
-                    "Guardian locations are auto-approved when booking classes",
-                    "สถานที่ผู้ปกครองจะได้รับการอนุมัติอัตโนมัติเมื่อจองคลาส"
+                    "Private/home locations are auto-approved when booking classes",
+                    "สถานที่ส่วนตัว/บ้านจะได้รับการอนุมัติอัตโนมัติเมื่อจองคลาส"
                   )}
                 </p>
               )}
@@ -261,7 +261,7 @@ export default function LocationProposalForm({
                           {proposal.schoolName} / {proposal.schoolNameTh}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {t("Type", "ประเภท")}: {proposal.type === "guardian" ? t("Guardian", "ผู้ปกครอง") : t("School", "โรงเรียน")}
+                          {t("Type", "ประเภท")}: {proposal.type === "guardian" ? t("Private/Home", "ส่วนตัว/บ้าน") : t("School", "โรงเรียน")}
                         </p>
                         {!proposal.approved && proposal.rejectionReason && (
                           <p className="text-sm text-red-600 dark:text-red-400 mt-2">
