@@ -22,12 +22,9 @@ export const bulkCreateStudents = mutation({
         firstName: v.string(),
         lastName: v.string(),
         schoolId: v.optional(v.id("schools")),
-        guardianId: v.optional(v.id("users")),
-        guardianTitle: v.optional(v.string()),
+        providerId: v.optional(v.id("providers")),
         grade: v.string(),
-        guardianName: v.optional(v.string()),
-        guardianPhone: v.optional(v.string()),
-        guardianEmail: v.optional(v.string()),
+        class: v.optional(v.string()),
       })
     ),
     createdBy: v.id("users"),
@@ -68,8 +65,8 @@ export const bulkCreateStudents = mutation({
         }
 
         // Generate unique student ID
-        const schoolIdForHash = student.schoolId || "GUARDIAN";
-        let studentId = generateStudentId(student.firstName, student.lastName, schoolIdForHash);
+        const entityIdForHash = student.schoolId || student.providerId || "NOSCHOOL";
+        let studentId = generateStudentId(student.firstName, student.lastName, entityIdForHash);
 
         // Check for duplicates and regenerate if necessary
         let attempts = 0;
@@ -85,7 +82,7 @@ export const bulkCreateStudents = mutation({
             break;
           }
 
-          studentId = generateStudentId(student.firstName, student.lastName, schoolIdForHash);
+          studentId = generateStudentId(student.firstName, student.lastName, entityIdForHash);
           attempts++;
         }
 
@@ -98,13 +95,10 @@ export const bulkCreateStudents = mutation({
           lastName: student.lastName,
           studentId,
           schoolId: student.schoolId,
-          guardianId: student.guardianId,
-          guardianTitle: student.guardianTitle,
+          providerId: student.providerId,
           grade: student.grade,
-          guardianName: student.guardianName,
-          guardianPhone: student.guardianPhone,
-          guardianEmail: student.guardianEmail,
-          acknowledged: student.guardianId ? false : true,
+          class: student.class,
+          acknowledged: true,
           createdBy: args.createdBy,
           createdAt: Date.now(),
         });
@@ -244,11 +238,6 @@ export const bulkDeleteStudents = mutation({
     // ✅ SECURITY: Role-based authorization
     // - Admins: Can delete any students (with force option)
     // - Moderators/Teachers: Can delete students from their school only
-    // - Guardians: Cannot bulk delete
-    if (user.role === "guardian") {
-      throw new Error("Unauthorized: Guardians cannot bulk delete students");
-    }
-
     if (user.role !== "admin" && user.role !== "moderator" && user.role !== "teacher") {
       throw new Error("Unauthorized: Insufficient permissions for bulk deletion");
     }
@@ -434,11 +423,6 @@ export const bulkUpdateStudents = mutation({
       class: v.optional(v.string()),
       schoolId: v.optional(v.id("schools")),
       providerId: v.optional(v.id("providers")),
-      guardianId: v.optional(v.id("users")),
-      guardianTitle: v.optional(v.string()),
-      guardianName: v.optional(v.string()),
-      guardianPhone: v.optional(v.string()),
-      guardianEmail: v.optional(v.string()),
       dateOfBirth: v.optional(v.number()),
       area: v.optional(v.string()),
       parentName: v.optional(v.string()),
@@ -463,11 +447,6 @@ export const bulkUpdateStudents = mutation({
     // ✅ SECURITY: Role-based authorization
     // - Admins: Can update any students
     // - Moderators/Teachers: Can update students from their school only
-    // - Guardians: Cannot bulk update
-    if (user.role === "guardian") {
-      throw new Error("Unauthorized: Guardians cannot bulk update students");
-    }
-
     if (user.role !== "admin" && user.role !== "moderator" && user.role !== "teacher") {
       throw new Error("Unauthorized: Insufficient permissions for bulk update");
     }
