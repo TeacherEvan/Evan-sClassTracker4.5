@@ -3,25 +3,6 @@ import { mutation, query } from "./_generated/server";
 import { AuditActions, AuditTargetTypes, logAudit } from "./auditHelpers";
 import { checkRateLimit, validateLength } from "./rateLimit";
 
-// Helper function to generate unique ID for GUARDIAN students
-function generateGuardianStudentId(
-  firstName: string,
-  lastName: string,
-  birthDate: number,
-  area: string
-): string {
-  // Area code: first 5 chars of area, uppercase, alphanumeric only
-  const areaCode = area.substring(0, 5).toUpperCase().replace(/[^A-Z0-9]/g, '');
-  // Name hash: first 2 chars of first name + first 2 chars of last name
-  const nameHash = `${firstName.substring(0, 2)}${lastName.substring(0, 2)}`.toUpperCase();
-  // Birth hash: YYYYMMDD format
-  const birthHash = new Date(birthDate).toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
-  // Random component for collision prevention
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-
-  return `${areaCode}-${nameHash}-${birthHash}-${random}`;
-}
-
 // Helper function to generate unique ID for SCHOOL students
 function generateStudentId(firstName: string, lastName: string, schoolId: string): string {
   const timestamp = Date.now().toString(36);
@@ -69,19 +50,6 @@ export const getByStudentId = query({
       .query("students")
       .withIndex("by_student_id", (q) => q.eq("studentId", args.studentId))
       .first();
-  },
-});
-
-// Query to get students by guardian
-export const getByGuardian = query({
-  args: {
-    guardianName: v.string(),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("students")
-      .withIndex("by_guardian", (q) => q.eq("guardianName", args.guardianName))
-      .collect();
   },
 });
 
@@ -653,33 +621,6 @@ export const getByTeacher = query({
       .query("students")
       .withIndex("by_created_by", (q) => q.eq("createdBy", args.teacherId))
       .collect();
-  },
-});
-
-// Query to get students for a guardian
-export const getByGuardianId = query({
-  args: {
-    guardianId: v.id("users"),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("students")
-      .withIndex("by_guardian_id", (q) => q.eq("guardianId", args.guardianId))
-      .collect();
-  },
-});
-
-// Mutation for guardian to acknowledge a student
-export const acknowledgeStudent = mutation({
-  args: {
-    studentId: v.id("students"),
-  },
-  handler: async (ctx, args) => {
-    await ctx.db.patch(args.studentId, {
-      acknowledged: true,
-    });
-
-    return { success: true };
   },
 });
 
