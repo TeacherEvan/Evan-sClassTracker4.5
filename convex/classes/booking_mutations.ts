@@ -12,7 +12,6 @@ export const bookWithConflictCheck = mutation({
     locationId: v.optional(v.id("locations")),
     pendingLocationName: v.optional(v.string()),
     pendingLocationNameTh: v.optional(v.string()),
-    guardianTitle: v.optional(v.string()),
     scheduledDate: v.number(),
     bookedByUserId: v.id("users"),
     // Optional fields
@@ -188,7 +187,6 @@ export const book = mutation({
     locationId: v.optional(v.id("locations")),
     pendingLocationName: v.optional(v.string()),
     pendingLocationNameTh: v.optional(v.string()),
-    guardianTitle: v.optional(v.string()),
     scheduledDate: v.number(),
     bookedByUserId: v.id("users"),
     // Optional fields

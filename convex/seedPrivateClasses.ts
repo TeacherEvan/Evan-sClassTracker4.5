@@ -5,7 +5,7 @@ import { mutation } from "./_generated/server";
 /**
  * Seed Private Classes for T. Che, T. Cale, T. Lee, and T. Evan
  * Duration: 12 weeks (Nov 4, 2025 - Jan 24, 2026)
- * Auto-approved guardian-linked bookings
+ * Auto-approved provider-linked bookings
  */
 
 // Type definition for schedule day
@@ -300,7 +300,7 @@ export const seedPrivateClasses = mutation({
             grade: gradeStr,
             class: classStr,
             schoolId: teacherSchoolId,
-            guardianId: teacher._id, // Teacher is guardian for private students
+            // Note: providerId should be set for provider-linked students
             area: "Private Tutoring",
             dateOfBirth: Date.now(), // Placeholder
             createdAt: Date.now(),
@@ -424,8 +424,6 @@ export const seedPrivateClasses = mutation({
                 locationId: locationId,
                 scheduledDate: classDate.getTime(),
                 status: "approved", // Auto-approved
-                isGuardianLinked: true, // Private tutoring
-                guardianTitle: "Private Student",
                 createdAt: Date.now(),
               });
 
@@ -480,8 +478,6 @@ export const seedPrivateClasses = mutation({
                   locationId: locationId,
                   scheduledDate: classDate.getTime(),
                   status: "approved",
-                  isGuardianLinked: true,
-                  guardianTitle: "Private Student (One-Time)",
                   createdAt: Date.now(),
                 });
 
@@ -541,8 +537,6 @@ export const seedPrivateClasses = mutation({
                     locationId: locationId,
                     scheduledDate: classDate.getTime(),
                     status: "approved",
-                    isGuardianLinked: true,
-                    guardianTitle: "Private Student (Date Range)",
                     createdAt: Date.now(),
                   });
 

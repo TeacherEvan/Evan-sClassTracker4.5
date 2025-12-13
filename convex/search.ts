@@ -25,14 +25,14 @@ export const searchStudents = query({
             const lastName = student.lastName.toLowerCase();
             const studentId = student.studentId.toLowerCase();
             const grade = student.grade.toLowerCase();
-            const guardianName = student.guardianName?.toLowerCase() || "";
+            const parentName = student.parentName?.toLowerCase() || "";
 
             return (
                 firstName.includes(searchLower) ||
                 lastName.includes(searchLower) ||
                 studentId.includes(searchLower) ||
                 grade.includes(searchLower) ||
-                guardianName.includes(searchLower)
+                parentName.includes(searchLower)
             );
         });
 

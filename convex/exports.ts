@@ -79,9 +79,9 @@ export const exportStudents = query({
                     grade: student.grade,
                     schoolName: school?.name || "N/A",
                     schoolNameTh: school?.nameTh || "N/A",
-                    guardianName: student.guardianName || "N/A",
-                    guardianPhone: student.guardianPhone || "N/A",
-                    guardianEmail: student.guardianEmail || "N/A",
+                    parentName: student.parentName || "N/A",
+                    parentPhone: student.parentPhone || "N/A",
+                    parentEmail: student.parentEmail || "N/A",
                     createdAt: new Date(student.createdAt).toISOString(),
                 };
             })
