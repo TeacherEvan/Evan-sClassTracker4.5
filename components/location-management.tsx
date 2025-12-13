@@ -254,7 +254,7 @@ export function LocationManagement({ userId, schoolId }: LocationManagementProps
                                             {t("School", "โรงเรียน")}: {proposal.schoolName} / {proposal.schoolNameTh}
                                         </p>
                                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            {t("Type", "ประเภท")}: {proposal.type === "guardian" ? t("Guardian", "ผู้ปกครอง") : t("School", "โรงเรียน")}
+                                            {t("Type", "ประเภท")}: {proposal.type === "guardian" ? t("Private/Home", "ส่วนตัว/บ้าน") : t("School", "โรงเรียน")}
                                         </p>
                                         <p className="text-xs text-gray-500 mt-2">
                                             {t("Proposed by", "เสนอโดย")}: {proposal.proposerUsername}

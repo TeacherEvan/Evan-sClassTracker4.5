@@ -73,9 +73,10 @@ export type Student = {
   lastName: string;
   studentId: string;
   schoolId?: Id<"schools">;
+  providerId?: Id<"providers">;
   grade: string;
-  guardianName?: string;
-  guardianPhone?: string;
-  guardianEmail?: string;
+  parentName?: string;
+  parentPhone?: string;
+  parentEmail?: string;
   createdAt: number;
 };

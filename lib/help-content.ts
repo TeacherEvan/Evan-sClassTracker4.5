@@ -303,8 +303,8 @@ export const helpCategories: HelpCategory[] = [
         titleTh: "จัดการนักเรียน",
         shortDescription: "Create and manage student profiles",
         shortDescriptionTh: "สร้างและจัดการโปรไฟล์นักเรียน",
-        detailedDescription: "Add new students with bilingual names, assign them to schools, and manage their information. Each student gets a unique auto-generated ID. You can also link students to guardian accounts for direct booking. Search and filter students by school, name, or ID.",
-        detailedDescriptionTh: "เพิ่มนักเรียนใหม่ด้วยชื่อสองภาษา กำหนดพวกเขาให้กับโรงเรียน และจัดการข้อมูลของพวกเขา นักเรียนแต่ละคนจะได้รับ ID ที่สร้างอัตโนมัติที่ไม่ซ้ำ คุณยังสามารถเชื่อมโยงนักเรียนกับบัญชีผู้ปกครองเพื่อการจองโดยตรง ค้นหาและกรองนักเรียนตามโรงเรียน ชื่อ หรือ ID",
+        detailedDescription: "Add new students with bilingual names, assign them to schools or providers, and manage their information. Each student gets a unique auto-generated ID. Search and filter students by school, provider, name, or ID.",
+        detailedDescriptionTh: "เพิ่มนักเรียนใหม่ด้วยชื่อสองภาษา กำหนดพวกเขาให้กับโรงเรียนหรือผู้ให้บริการ และจัดการข้อมูลของพวกเขา นักเรียนแต่ละคนจะได้รับ ID ที่สร้างอัตโนมัติที่ไม่ซ้ำ ค้นหาและกรองนักเรียนตามโรงเรียน ผู้ให้บริการ ชื่อ หรือ ID",
         steps: [
           {
             step: 1,

@@ -44,7 +44,6 @@ type ClassWithDetails = {
   additionalStudentIds?: Id<"students">[];
   pendingLocationName?: string;
   pendingLocationNameTh?: string;
-  guardianTitle?: string;
   duration?: number;
   subject?: string;
   subjectTh?: string;
@@ -471,11 +470,6 @@ export function ClassDetailModal({
                         : t("Not specified", "ไม่ระบุ")
                     }
                   </p>
-                  {locationData?.type === "guardian" && classData.guardianTitle && (
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
-                      {t("Guardian:", "ผู้ปกครอง:")} {classData.guardianTitle}
-                    </p>
-                  )}
                 </div>
               </div>
 

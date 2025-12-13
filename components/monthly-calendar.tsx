@@ -52,7 +52,6 @@ export function MonthlyCalendar({ currentUser }: MonthlyCalendarProps) {
         additionalStudentIds?: Id<"students">[];
         pendingLocationName?: string;
         pendingLocationNameTh?: string;
-        guardianTitle?: string;
         duration?: number;
         subject?: string;
         subjectTh?: string;

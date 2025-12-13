@@ -226,7 +226,6 @@ export function TeacherClassCountModal({
         }
 
         // Generate print content
-        // Type assertion: guardian role has been migrated to provider system, all users are now valid UserRole types
         const printContent = generatePrintHTML(classCountData as ClassCountData, selectedTeacherUsername, startDate, endDate, printLanguage);
 
         printWindow.document.write(printContent);
