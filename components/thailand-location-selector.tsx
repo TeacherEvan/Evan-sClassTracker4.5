@@ -32,6 +32,7 @@ import {
   isValidLocation,
   searchLocations,
 } from '@/lib/thailand-locations';
+import { toast } from '@/lib/toast';
 
 interface LocationValue {
   provinceId: string;
@@ -127,7 +128,7 @@ export function ThailandLocationSelector({
     
     // Validate location
     if (!isValidLocation(selectedProvince, districtId)) {
-      console.error('Invalid location combination');
+      toast.error('Invalid location combination. Please try again.', 'ตัวเลือกสถานที่ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
       return;
     }
     
@@ -147,7 +148,7 @@ export function ThailandLocationSelector({
     const [provinceId, districtId] = areaValue.split(':');
     
     if (!isValidLocation(provinceId, districtId)) {
-      console.error('Invalid popular area');
+      toast.error('Invalid location selection. Please try again.', 'การเลือกสถานที่ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง');
       return;
     }
     
