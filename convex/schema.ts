@@ -8,8 +8,7 @@ export default defineSchema({
     role: v.union(
       v.literal("teacher"),
       v.literal("moderator"),
-      v.literal("admin"),
-      v.literal("guardian") // DEPRECATED - Data migration in progress, DO NOT USE for new users
+      v.literal("admin")
     ),
     schoolId: v.optional(v.id("schools")),
     requirePasswordChange: v.boolean(),
@@ -107,8 +106,6 @@ export default defineSchema({
     locationId: v.optional(v.id("locations")), // Optional if using pending location
     pendingLocationName: v.optional(v.string()), // For teacher-requested locations (English)
     pendingLocationNameTh: v.optional(v.string()), // For teacher-requested locations (Thai)
-    guardianTitle: v.optional(v.string()), // Contact person title (Parent, Tutor, etc.)
-    isGuardianLinked: v.optional(v.boolean()), // DEPRECATED - Use providerId instead (bypasses moderator approval)
     status: v.union(
       v.literal("pending"),
       v.literal("acknowledged"),
@@ -157,7 +154,6 @@ export default defineSchema({
       v.literal("moderator"),
       v.literal("admin"),
       v.literal("auto_provider"),
-      v.literal("auto_guardian"),
       v.literal("system")
     )),
   })
@@ -170,7 +166,6 @@ export default defineSchema({
     .index("by_school_and_date", ["schoolId", "scheduledDate"])
     .index("by_teacher_and_date", ["teacherId", "scheduledDate"])
     .index("by_teacher_and_status", ["teacherId", "status"]) // NEW - Optimize approved class queries
-    .index("by_teacher_and_guardian_linked", ["teacherId", "isGuardianLinked"]) // NEW - Guardian class queries
     .index("by_edited", ["isEdited"])
     .index("by_last_edited", ["lastEditedAt"]),
 
@@ -179,14 +174,9 @@ export default defineSchema({
     lastName: v.string(),
     studentId: v.string(), // Unique identifier
     schoolId: v.optional(v.id("schools")), // Optional - null if linked to provider
-    providerId: v.optional(v.id("providers")), // Provider ID (use this instead of guardianId)
-    guardianId: v.optional(v.id("users")), // DEPRECATED - Guardian user ID (migrating to providerId)
-    guardianTitle: v.optional(v.string()), // Generic contact role (Parent, Tutor, etc.)
+    providerId: v.optional(v.id("providers")), // Provider ID
     grade: v.string(), // Grade level (e.g., "K1", "K2", "K3")
     class: v.optional(v.string()), // Class number (e.g., "/1", "/2", "/3", ..., "/10") - required for school-linked students
-    guardianName: v.optional(v.string()), // Contact person name
-    guardianPhone: v.optional(v.string()), // Contact phone
-    guardianEmail: v.optional(v.string()), // Contact email
     acknowledged: v.optional(v.boolean()), // For backward compatibility
     createdBy: v.optional(v.id("users")), // Teacher who created the student (optional for backward compatibility)
     createdAt: v.number(),
@@ -207,8 +197,6 @@ export default defineSchema({
     .index("by_student_id", ["studentId"])
     .index("by_school", ["schoolId"])
     .index("by_provider", ["providerId"]) // Provider queries
-    .index("by_guardian", ["guardianName"])
-    .index("by_guardian_id", ["guardianId"]) // DEPRECATED - will be removed
     .index("by_created_by", ["createdBy"])
     .index("by_area", ["area"]) // Area-based queries for auto-guardian students
     .index("by_grade_and_class", ["grade", "class"]), // NEW

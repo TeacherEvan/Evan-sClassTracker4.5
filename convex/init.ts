@@ -38,13 +38,6 @@ export const initializeDatabase = mutation({
       createdAt: Date.now(),
     });
 
-    // Create special "Guardian" school for guardian-linked students
-    const guardianSchoolId = await ctx.db.insert("schools", {
-      name: "Guardian",
-      nameTh: "ผู้ปกครอง",
-      createdAt: Date.now(),
-    });
-
     // Create sample moderator for school 1
     const moderatorPassword = await hashPassword("TeacherModerator1");
     const moderator1Id = await ctx.db.insert("users", {
@@ -94,7 +87,6 @@ export const initializeDatabase = mutation({
       schools: [
         { id: school1Id, name: "Bangkok International School" },
         { id: school2Id, name: "Chiang Mai Academy" },
-        { id: guardianSchoolId, name: "Guardian (Special)" },
       ],
     };
   },
