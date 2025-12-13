@@ -21,13 +21,11 @@ type Student = {
     studentId: string;
     schoolId?: Id<"schools">;
     providerId?: Id<"providers">;
-    guardianId?: Id<"users">;
-    guardianTitle?: string;
     grade: string;
     class?: string;
-    guardianName?: string;
-    guardianPhone?: string;
-    guardianEmail?: string;
+    parentName?: string;
+    parentPhone?: string;
+    parentEmail?: string;
     acknowledged: boolean;
     createdBy: Id<"users">;
     createdAt: number;
@@ -61,9 +59,9 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
     const [studentClass, setStudentClass] = useState("");
     const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
     const [providerId, setProviderId] = useState<Id<"providers"> | "">("");
-    const [guardianName, setGuardianName] = useState("");
-    const [guardianPhone, setGuardianPhone] = useState("");
-    const [guardianEmail, setGuardianEmail] = useState("");
+    const [parentName, setParentName] = useState("");
+    const [parentPhone, setParentPhone] = useState("");
+    const [parentEmail, setParentEmail] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -112,7 +110,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
         return students.filter((student) => {
             if (selectedSchoolId === "provider") {
-                return !student.schoolId && student.guardianName;
+                return !student.schoolId && student.parentName;
             }
 
             // Apply grade filter
@@ -197,10 +195,10 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
             return;
         }
 
-        // XOR Validation: Student must be linked to EITHER school OR provider OR guardian (not multiple, not none)
+        // XOR Validation: Student must be linked to EITHER school OR provider (not multiple, not none)
         const hasSchool = !!schoolId;
         const hasProvider = !!providerId;
-        const hasGuardian = !!guardianName.trim();
+        const hasGuardian = !!parentName.trim();
 
         if (hasSchool && hasProvider) {
             setError(
@@ -216,7 +214,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         if (!hasSchool && !hasProvider && !hasGuardian) {
             setError(
                 t(
-                    "Student must be linked to either a school, provider, or guardian",
+                    "Student must be linked to either a school or provider",
                     "นักเรียนต้องเชื่อมโยงกับโรงเรียน ผู้ให้บริการ หรือผู้ปกครอง"
                 )
             );
@@ -256,9 +254,9 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     class: studentClass && studentClass.trim() ? studentClass.trim() : undefined,
                     schoolId: schoolId || undefined,
                     providerId: providerId || undefined,
-                    guardianName: guardianName || undefined,
-                    guardianPhone: guardianPhone || undefined,
-                    guardianEmail: guardianEmail || undefined,
+                    parentName: parentName || undefined,
+                    parentPhone: parentPhone || undefined,
+                    parentEmail: parentEmail || undefined,
                     updatedBy: currentUser._id,
                     // Optional fields
                     nickname: nickname || undefined,
@@ -290,9 +288,9 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                     ...(providerId && { providerId }),
                     grade,
                     class: studentClass && studentClass.trim() ? studentClass.trim() : undefined,
-                    guardianName: guardianName || undefined,
-                    guardianPhone: guardianPhone || undefined,
-                    guardianEmail: guardianEmail || undefined,
+                    parentName: parentName || undefined,
+                    parentPhone: parentPhone || undefined,
+                    parentEmail: parentEmail || undefined,
                     createdBy: currentUser._id,
                     // Optional fields
                     nickname: nickname || undefined,
@@ -336,9 +334,9 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         setStudentClass(student.class || "");
         setSchoolId(student.schoolId || "");
         setProviderId(student.providerId || "");
-        setGuardianName(student.guardianName || "");
-        setGuardianPhone(student.guardianPhone || "");
-        setGuardianEmail(student.guardianEmail || "");
+        setParentName(student.parentName || "");
+        setParentPhone(student.parentPhone || "");
+        setParentEmail(student.parentEmail || "");
 
         // Load optional fields
         setDateOfBirth(student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : "");
@@ -487,9 +485,9 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
         setStudentClass("");
         setSchoolId("");
         setProviderId("");
-        setGuardianName("");
-        setGuardianPhone("");
-        setGuardianEmail("");
+        setParentName("");
+        setParentPhone("");
+        setParentEmail("");
         setShowForm(false);
         setEditingStudent(null);
 
@@ -794,7 +792,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
 
                                         <p className="text-xs text-gray-500 dark:text-gray-400">
                                             {t(
-                                                "Select either a school OR a provider (not both). Leave both empty to link to guardian only.",
+                                                "Select either a school OR a provider (not both). Leave both empty to link directly to parent/provider.",
                                                 "เลือกโรงเรียนหรือผู้ให้บริการ (ไม่ใช่ทั้งสองอย่าง) เว้นว่างทั้งสองเพื่อเชื่อมโยงกับผู้ปกครองเท่านั้น"
                                             )}
                                         </p>
@@ -841,8 +839,8 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                     </label>
                                     <input
                                         type="text"
-                                        value={guardianName}
-                                        onChange={(e) => setGuardianName(e.target.value)}
+                                        value={parentName}
+                                        onChange={(e) => setParentName(e.target.value)}
                                         className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                                     />
                                 </div>
@@ -854,8 +852,8 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                         </label>
                                         <input
                                             type="tel"
-                                            value={guardianPhone}
-                                            onChange={(e) => setGuardianPhone(e.target.value)}
+                                            value={parentPhone}
+                                            onChange={(e) => setParentPhone(e.target.value)}
                                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                                         />
                                     </div>
@@ -866,8 +864,8 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                         </label>
                                         <input
                                             type="email"
-                                            value={guardianEmail}
-                                            onChange={(e) => setGuardianEmail(e.target.value)}
+                                            value={parentEmail}
+                                            onChange={(e) => setParentEmail(e.target.value)}
                                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                                         />
                                     </div>
@@ -1182,9 +1180,9 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                                                 <td className="px-6 py-4 whitespace-nowrap" style={{ width: "200px" }}>
                                                                     <div className="text-sm">
                                                                         <div className="font-medium text-gray-900 dark:text-white">
-                                                                            {student.schoolId ? getSchoolName(student.schoolId) : student.guardianName}
+                                                                            {student.schoolId ? getSchoolName(student.schoolId) : student.parentName}
                                                                         </div>
-                                                                        {!student.schoolId && student.guardianName && (
+                                                                        {!student.schoolId && student.parentName && (
                                                                             <div className="text-xs text-gray-500 dark:text-gray-400">
                                                                                 {t("Guardian", "ผู้ปกครอง")}
                                                                             </div>
@@ -1192,22 +1190,22 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                                                     </div>
                                                                 </td>
                                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300" style={{ width: "180px" }}>
-                                                                    {student.guardianPhone && (
+                                                                    {student.parentPhone && (
                                                                         <div className="flex items-center gap-1 text-xs">
                                                                             <Phone className="w-3 h-3" />
-                                                                            {student.guardianPhone}
+                                                                            {student.parentPhone}
                                                                         </div>
                                                                     )}
-                                                                    {student.guardianEmail && (
+                                                                    {student.parentEmail && (
                                                                         <div className="flex items-center gap-1 text-xs mt-1">
                                                                             <Mail className="w-3 h-3" />
-                                                                            {student.guardianEmail}
+                                                                            {student.parentEmail}
                                                                         </div>
                                                                     )}
                                                                 </td>
                                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" style={{ width: "150px" }}>
                                                                     <div className="flex items-center justify-end gap-2">
-                                                                        {!student.schoolId && student.guardianName && (
+                                                                        {!student.schoolId && student.parentName && (
                                                                             <button
                                                                                 onClick={() => handleDuplicate(student._id, `${student.firstName} ${student.lastName}`)}
                                                                                 className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"

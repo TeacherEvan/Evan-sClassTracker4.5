@@ -32,9 +32,9 @@ export function BulkEditStudentsModal({
     const [updateClass, setUpdateClass] = useState(false);
     const [updateSchool, setUpdateSchool] = useState(false);
     const [updateProvider, setUpdateProvider] = useState(false);
-    const [updateGuardianName, setUpdateGuardianName] = useState(false);
-    const [updateGuardianPhone, setUpdateGuardianPhone] = useState(false);
-    const [updateGuardianEmail, setUpdateGuardianEmail] = useState(false);
+    const [updateParentName, setUpdateGuardianName] = useState(false);
+    const [updateParentPhone, setUpdateGuardianPhone] = useState(false);
+    const [updateParentEmail, setUpdateGuardianEmail] = useState(false);
     const [updateParentName, setUpdateParentName] = useState(false);
     const [updateParentPhone, setUpdateParentPhone] = useState(false);
     const [updateParentEmail, setUpdateParentEmail] = useState(false);
@@ -49,9 +49,9 @@ export function BulkEditStudentsModal({
     const [studentClass, setStudentClass] = useState("");
     const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
     const [providerId, setProviderId] = useState<Id<"providers"> | "">("");
-    const [guardianName, setGuardianName] = useState("");
-    const [guardianPhone, setGuardianPhone] = useState("");
-    const [guardianEmail, setGuardianEmail] = useState("");
+    const [parentName, setParentName] = useState("");
+    const [parentPhone, setParentPhone] = useState("");
+    const [parentEmail, setParentEmail] = useState("");
     const [parentName, setParentName] = useState("");
     const [parentPhone, setParentPhone] = useState("");
     const [parentEmail, setParentEmail] = useState("");
@@ -84,9 +84,9 @@ export function BulkEditStudentsModal({
         if (updateClass) updates.class = studentClass;
         if (updateSchool && schoolId) updates.schoolId = schoolId;
         if (updateProvider && providerId) updates.providerId = providerId;
-        if (updateGuardianName) updates.guardianName = guardianName;
-        if (updateGuardianPhone) updates.guardianPhone = guardianPhone;
-        if (updateGuardianEmail) updates.guardianEmail = guardianEmail;
+        if (updateParentName) updates.parentName = parentName;
+        if (updateParentPhone) updates.parentPhone = parentPhone;
+        if (updateParentEmail) updates.parentEmail = parentEmail;
         if (updateParentName) updates.parentName = parentName;
         if (updateParentPhone) updates.parentPhone = parentPhone;
         if (updateParentEmail) updates.parentEmail = parentEmail;
@@ -144,9 +144,9 @@ export function BulkEditStudentsModal({
         updateClass,
         updateSchool,
         updateProvider,
-        updateGuardianName,
-        updateGuardianPhone,
-        updateGuardianEmail,
+        updateParentName,
+        updateParentPhone,
+        updateParentEmail,
         updateParentName,
         updateParentPhone,
         updateParentEmail,
@@ -388,20 +388,20 @@ export function BulkEditStudentsModal({
                         <div className="flex items-start gap-3">
                             <input
                                 type="checkbox"
-                                id="update-guardian-name"
-                                checked={updateGuardianName}
+                                id="update-parent-name"
+                                checked={updateParentName}
                                 onChange={(e) => setUpdateGuardianName(e.target.checked)}
                                 className="mt-1"
                             />
                             <div className="grow">
-                                <label htmlFor="update-guardian-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {t("Guardian Name", "ชื่อผู้ปกครอง")}
+                                <label htmlFor="update-parent-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t("Parent Name", "ชื่อผู้ปกครอง")}
                                 </label>
                                 <input
                                     type="text"
-                                    value={guardianName}
-                                    onChange={(e) => setGuardianName(e.target.value)}
-                                    disabled={!updateGuardianName}
+                                    value={parentName}
+                                    onChange={(e) => setParentName(e.target.value)}
+                                    disabled={!updateParentName}
                                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
@@ -410,20 +410,20 @@ export function BulkEditStudentsModal({
                         <div className="flex items-start gap-3">
                             <input
                                 type="checkbox"
-                                id="update-guardian-phone"
-                                checked={updateGuardianPhone}
+                                id="update-parent-phone"
+                                checked={updateParentPhone}
                                 onChange={(e) => setUpdateGuardianPhone(e.target.checked)}
                                 className="mt-1"
                             />
                             <div className="grow">
-                                <label htmlFor="update-guardian-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {t("Guardian Phone", "เบอร์ผู้ปกครอง")}
+                                <label htmlFor="update-parent-phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t("Parent Phone", "เบอร์ผู้ปกครอง")}
                                 </label>
                                 <input
                                     type="tel"
-                                    value={guardianPhone}
-                                    onChange={(e) => setGuardianPhone(e.target.value)}
-                                    disabled={!updateGuardianPhone}
+                                    value={parentPhone}
+                                    onChange={(e) => setParentPhone(e.target.value)}
+                                    disabled={!updateParentPhone}
                                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
@@ -432,20 +432,20 @@ export function BulkEditStudentsModal({
                         <div className="flex items-start gap-3">
                             <input
                                 type="checkbox"
-                                id="update-guardian-email"
-                                checked={updateGuardianEmail}
+                                id="update-parent-email"
+                                checked={updateParentEmail}
                                 onChange={(e) => setUpdateGuardianEmail(e.target.checked)}
                                 className="mt-1"
                             />
                             <div className="grow">
-                                <label htmlFor="update-guardian-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    {t("Guardian Email", "อีเมลผู้ปกครอง")}
+                                <label htmlFor="update-parent-email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    {t("Parent Email", "อีเมลผู้ปกครอง")}
                                 </label>
                                 <input
                                     type="email"
-                                    value={guardianEmail}
-                                    onChange={(e) => setGuardianEmail(e.target.value)}
-                                    disabled={!updateGuardianEmail}
+                                    value={parentEmail}
+                                    onChange={(e) => setParentEmail(e.target.value)}
+                                    disabled={!updateParentEmail}
                                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
