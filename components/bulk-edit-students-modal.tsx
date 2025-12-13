@@ -32,9 +32,6 @@ export function BulkEditStudentsModal({
     const [updateClass, setUpdateClass] = useState(false);
     const [updateSchool, setUpdateSchool] = useState(false);
     const [updateProvider, setUpdateProvider] = useState(false);
-    const [updateParentName, setUpdateGuardianName] = useState(false);
-    const [updateParentPhone, setUpdateGuardianPhone] = useState(false);
-    const [updateParentEmail, setUpdateGuardianEmail] = useState(false);
     const [updateParentName, setUpdateParentName] = useState(false);
     const [updateParentPhone, setUpdateParentPhone] = useState(false);
     const [updateParentEmail, setUpdateParentEmail] = useState(false);
