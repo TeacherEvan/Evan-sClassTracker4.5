@@ -48,7 +48,7 @@ export const THAILAND_REGIONS: ThailandRegion[] = [
       'bangkok', 'samut_prakan', 'nonthaburi', 'pathum_thani', 'phra_nakhon_si_ayutthaya',
       'ang_thong', 'lop_buri', 'sing_buri', 'chai_nat', 'saraburi', 'chachoengsao', 'nakhon_nayok',
       'nakhon_pathom', 'suphan_buri', 'samut_sakhon', 'samut_songkhram', 'phetchaburi',
-      'prachuap_khiri_khan', 'kanchanaburi', 'ratchaburi'
+      'prachuap_khiri_khan'
     ]
   },
   {
@@ -85,7 +85,7 @@ export const THAILAND_REGIONS: ThailandRegion[] = [
     name: 'Western Thailand',
     nameTh: 'ภาคตะวันตก',
     provinces: [
-      'kanchanaburi', 'tak', 'ratchaburi'
+      'kanchanaburi', 'ratchaburi'
     ]
   },
   {
@@ -105,7 +105,7 @@ export const THAILAND_REGIONS: ThailandRegion[] = [
  * Complete list with official codes, EN/TH names, and region mapping
  */
 export const THAILAND_PROVINCES: ThailandProvince[] = [
-  // Central Region (26 provinces)
+  // Central Region (18 provinces)
   { id: 'bangkok', code: '10', name: 'Bangkok', nameTh: 'กรุงเทพมหานคร', regionId: 'central', isCapital: true, commonAreas: ['bangkok_01', 'bangkok_02', 'bangkok_03', 'bangkok_04', 'bangkok_05'] },
   { id: 'samut_prakan', code: '11', name: 'Samut Prakan', nameTh: 'สมุทรปราการ', regionId: 'central' },
   { id: 'nonthaburi', code: '12', name: 'Nonthaburi', nameTh: 'นนทบุรี', regionId: 'central' },
@@ -116,22 +116,26 @@ export const THAILAND_PROVINCES: ThailandProvince[] = [
   { id: 'sing_buri', code: '17', name: 'Sing Buri', nameTh: 'สิงห์บุรี', regionId: 'central' },
   { id: 'chai_nat', code: '18', name: 'Chai Nat', nameTh: 'ชัยนาท', regionId: 'central' },
   { id: 'saraburi', code: '19', name: 'Saraburi', nameTh: 'สระบุรี', regionId: 'central' },
-  { id: 'chon_buri', code: '20', name: 'Chon Buri', nameTh: 'ชลบุรี', regionId: 'central' },
-  { id: 'rayong', code: '21', name: 'Rayong', nameTh: 'ระยอง', regionId: 'central' },
-  { id: 'chanthaburi', code: '22', name: 'Chanthaburi', nameTh: 'จันทบุรี', regionId: 'central' },
-  { id: 'trat', code: '23', name: 'Trat', nameTh: 'ตราด', regionId: 'central' },
   { id: 'chachoengsao', code: '24', name: 'Chachoengsao', nameTh: 'ฉะเชิงเทรา', regionId: 'central' },
-  { id: 'prachin_buri', code: '25', name: 'Prachin Buri', nameTh: 'ปราจีนบุรี', regionId: 'central' },
   { id: 'nakhon_nayok', code: '26', name: 'Nakhon Nayok', nameTh: 'นครนายก', regionId: 'central' },
-  { id: 'sa_kaeo', code: '27', name: 'Sa Kaeo', nameTh: 'สระแก้ว', regionId: 'central' },
   { id: 'nakhon_pathom', code: '73', name: 'Nakhon Pathom', nameTh: 'นครปฐม', regionId: 'central' },
   { id: 'suphan_buri', code: '72', name: 'Suphan Buri', nameTh: 'สุพรรณบุรี', regionId: 'central' },
   { id: 'samut_sakhon', code: '74', name: 'Samut Sakhon', nameTh: 'สมุทรสาคร', regionId: 'central' },
   { id: 'samut_songkhram', code: '75', name: 'Samut Songkhram', nameTh: 'สมุทรสงคราม', regionId: 'central' },
   { id: 'phetchaburi', code: '76', name: 'Phetchaburi', nameTh: 'เพชรบุรี', regionId: 'central' },
   { id: 'prachuap_khiri_khan', code: '77', name: 'Prachuap Khiri Khan', nameTh: 'ประจวบคีรีขันธ์', regionId: 'central' },
-  { id: 'kanchanaburi', code: '71', name: 'Kanchanaburi', nameTh: 'กาญจนบุรี', regionId: 'central' },
-  { id: 'ratchaburi', code: '70', name: 'Ratchaburi', nameTh: 'ราชบุรี', regionId: 'central' },
+
+  // Eastern Region (6 provinces)
+  { id: 'chon_buri', code: '20', name: 'Chon Buri', nameTh: 'ชลบุรี', regionId: 'eastern', commonAreas: ['chon_buri_01', 'chon_buri_02', 'chon_buri_03'] },
+  { id: 'rayong', code: '21', name: 'Rayong', nameTh: 'ระยอง', regionId: 'eastern' },
+  { id: 'chanthaburi', code: '22', name: 'Chanthaburi', nameTh: 'จันทบุรี', regionId: 'eastern' },
+  { id: 'trat', code: '23', name: 'Trat', nameTh: 'ตราด', regionId: 'eastern' },
+  { id: 'prachin_buri', code: '25', name: 'Prachin Buri', nameTh: 'ปราจีนบุรี', regionId: 'eastern' },
+  { id: 'sa_kaeo', code: '27', name: 'Sa Kaeo', nameTh: 'สระแก้ว', regionId: 'eastern' },
+
+  // Western Region (2 provinces)
+  { id: 'kanchanaburi', code: '71', name: 'Kanchanaburi', nameTh: 'กาญจนบุรี', regionId: 'western' },
+  { id: 'ratchaburi', code: '70', name: 'Ratchaburi', nameTh: 'ราชบุรี', regionId: 'western' },
 
   // Northern Region (17 provinces)
   { id: 'chiang_mai', code: '50', name: 'Chiang Mai', nameTh: 'เชียงใหม่', regionId: 'northern', commonAreas: ['chiang_mai_01', 'chiang_mai_02'] },
