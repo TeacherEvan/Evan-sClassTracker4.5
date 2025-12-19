@@ -349,6 +349,7 @@ export const mergeDuplicateStudents = mutation({
         deletedBy: args.userId,
         deletionReason: "Merged into another student record"
       });
+    }
 
     // Update watchlist entry
     await ctx.db.patch(args.entryId, {

@@ -3,6 +3,7 @@
 import BottomPanel from "@/components/bottom-panel";
 import RightPanel from "@/components/right-panel";
 import SidebarNav from "@/components/sidebar-nav";
+import { LazyErrorBoundary } from "@/components/lazy-error-boundary";
 import { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import type { User, UserRole } from "@/lib/types";
@@ -67,28 +68,59 @@ interface WorkspaceLayoutProps {
     children?: React.ReactNode;
 }
 
-// Enhanced loading fallback with better UX
+// Enhanced loading fallback with skeleton loaders for better UX
 const LoadingFallback = () => {
     const { t } = useLanguage();
     return (
-        <div className="flex items-center justify-center h-full min-h-[400px]">
-            <div className="flex flex-col items-center gap-4">
-                {/* Premium animated spinner with gradient glow */}
-                <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-xl opacity-30 animate-pulse" />
-                    <div className="relative animate-spin rounded-full h-16 w-16 border-4 border-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 bg-clip-border">
-                        <div className="absolute inset-1 bg-white dark:bg-gray-900 rounded-full" />
-                    </div>
+        <div className="h-full p-6 space-y-6 animate-in fade-in duration-300">
+            {/* Header skeleton */}
+            <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                    <div className="h-8 w-64 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded-lg animate-shimmer bg-[length:200%_100%]" />
+                    <div className="h-4 w-48 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded animate-shimmer bg-[length:200%_100%]" />
                 </div>
-                {/* Loading message */}
-                <p className="text-base font-medium text-gray-600 dark:text-gray-400 animate-pulse">
+                <div className="flex gap-2">
+                    <div className="h-10 w-24 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded-lg animate-shimmer bg-[length:200%_100%]" />
+                    <div className="h-10 w-24 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded-lg animate-shimmer bg-[length:200%_100%]" />
+                </div>
+            </div>
+
+            {/* Stats cards skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[...Array(4)].map((_, i) => (
+                    <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="h-12 w-12 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded-full animate-shimmer bg-[length:200%_100%]" />
+                            <div className="h-6 w-16 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded animate-shimmer bg-[length:200%_100%]" />
+                        </div>
+                        <div className="h-4 w-24 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded animate-shimmer bg-[length:200%_100%]" />
+                        <div className="h-8 w-20 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded animate-shimmer bg-[length:200%_100%]" />
+                    </div>
+                ))}
+            </div>
+
+            {/* Main content skeleton */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 space-y-4">
+                <div className="h-6 w-32 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded animate-shimmer bg-[length:200%_100%]" />
+                <div className="space-y-3">
+                    {[...Array(5)].map((_, i) => (
+                        <div key={i} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                            <div className="h-10 w-10 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded-full animate-shimmer bg-[length:200%_100%]" />
+                            <div className="flex-1 space-y-2">
+                                <div className="h-4 w-full bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded animate-shimmer bg-[length:200%_100%]" />
+                                <div className="h-3 w-3/4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded animate-shimmer bg-[length:200%_100%]" />
+                            </div>
+                            <div className="h-8 w-20 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 rounded animate-shimmer bg-[length:200%_100%]" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* Loading indicator text */}
+            <div className="text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400 animate-pulse">
                     {t("Loading", "กำลังโหลด")}...
                 </p>
-                {/* Progress indicator */}
-                <div className="w-48 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 rounded-full animate-[shimmer_2s_ease-in-out_infinite]" 
-                         style={{ width: '50%' }} />
-                </div>
             </div>
         </div>
     );
@@ -115,52 +147,64 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
         switch (activeView) {
             case "calendar":
                 return (
-                    <Suspense fallback={<LoadingFallback />}>
-                        <MonthlyCalendar currentUser={currentUser} />
-                    </Suspense>
+                    <LazyErrorBoundary componentName="MonthlyCalendar">
+                        <Suspense fallback={<LoadingFallback />}>
+                            <MonthlyCalendar currentUser={currentUser} />
+                        </Suspense>
+                    </LazyErrorBoundary>
                 );
 
             case "classes":
                 return (
-                    <Suspense fallback={<LoadingFallback />}>
-                        <ClassBooking userId={userId} userRole={userRole} userSchoolId={userSchoolId} />
-                    </Suspense>
+                    <LazyErrorBoundary componentName="ClassBooking">
+                        <Suspense fallback={<LoadingFallback />}>
+                            <ClassBooking userId={userId} userRole={userRole} userSchoolId={userSchoolId} />
+                        </Suspense>
+                    </LazyErrorBoundary>
                 );
 
             case "events":
                 return (
-                    <Suspense fallback={<LoadingFallback />}>
-                        <EventManagement userId={userId} userRole={userRole} schoolId={userSchoolId} />
-                    </Suspense>
+                    <LazyErrorBoundary componentName="EventManagement">
+                        <Suspense fallback={<LoadingFallback />}>
+                            <EventManagement userId={userId} userRole={userRole} schoolId={userSchoolId} />
+                        </Suspense>
+                    </LazyErrorBoundary>
                 );
 
             case "messages":
                 return (
-                    <Suspense fallback={<LoadingFallback />}>
-                        <MessagingHub currentUser={currentUser} />
-                    </Suspense>
+                    <LazyErrorBoundary componentName="MessagingHub">
+                        <Suspense fallback={<LoadingFallback />}>
+                            <MessagingHub currentUser={currentUser} />
+                        </Suspense>
+                    </LazyErrorBoundary>
                 );
 
             case "analytics":
                 // Moderators see their school analytics, Admins see all schools analytics
                 if (userRole === "moderator" && userSchoolId) {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <SimpleAnalytics
-                                schoolId={userSchoolId}
-                                currentUserId={userId}
-                                currentUserRole={userRole}
-                                currentUser={currentUser}
-                            />
-                        </Suspense>
+                        <LazyErrorBoundary componentName="SimpleAnalytics">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <SimpleAnalytics
+                                    schoolId={userSchoolId}
+                                    currentUserId={userId}
+                                    currentUserRole={userRole}
+                                    currentUser={currentUser}
+                                />
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 // Admin analytics - show class analytics modal or admin-specific view
                 if (userRole === "admin") {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <AdminAnalyticsDashboard userId={userId} currentUser={currentUser} />
-                        </Suspense>
+                        <LazyErrorBoundary componentName="AdminAnalyticsDashboard">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <AdminAnalyticsDashboard userId={userId} currentUser={currentUser} />
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 return null;
@@ -168,9 +212,11 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
             case "activity":
                 if (userRole === "moderator" && userSchoolId) {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <TeacherActivityDashboard schoolId={userSchoolId} moderatorId={userId} />
-                        </Suspense>
+                        <LazyErrorBoundary componentName="TeacherActivityDashboard">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <TeacherActivityDashboard schoolId={userSchoolId} moderatorId={userId} />
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 return null;
@@ -178,31 +224,37 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
             case "resources":
                 if (userRole === "admin" || userRole === "teacher") {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            {userRole === "admin" ? (
-                                <TeacherHelperAdmin currentUser={currentUser} />
-                            ) : (
-                                <TeacherHelper currentUser={currentUser} />
-                            )}
-                        </Suspense>
+                        <LazyErrorBoundary componentName={userRole === "admin" ? "TeacherHelperAdmin" : "TeacherHelper"}>
+                            <Suspense fallback={<LoadingFallback />}>
+                                {userRole === "admin" ? (
+                                    <TeacherHelperAdmin currentUser={currentUser} />
+                                ) : (
+                                    <TeacherHelper currentUser={currentUser} />
+                                )}
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 return null;
 
             case "notifications":
                 return (
-                    <Suspense fallback={<LoadingFallback />}>
-                        {userRole === "admin" && <NotificationForm />}
-                        <NotificationList userId={userId} currentUser={currentUser} />
-                    </Suspense>
+                    <LazyErrorBoundary componentName="Notifications">
+                        <Suspense fallback={<LoadingFallback />}>
+                            {userRole === "admin" && <NotificationForm />}
+                            <NotificationList userId={userId} currentUser={currentUser} />
+                        </Suspense>
+                    </LazyErrorBoundary>
                 );
 
             case "schools":
                 if (userRole === "admin") {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <SchoolManagement currentUser={currentUser} />
-                        </Suspense>
+                        <LazyErrorBoundary componentName="SchoolManagement">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <SchoolManagement currentUser={currentUser} />
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 return null;
@@ -210,12 +262,14 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
             case "locations":
                 if (userRole === "admin" || userRole === "moderator") {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <LocationManagement
-                                userId={userId}
-                                schoolId={userRole === "moderator" ? userSchoolId : undefined}
-                            />
-                        </Suspense>
+                        <LazyErrorBoundary componentName="LocationManagement">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <LocationManagement
+                                    userId={userId}
+                                    schoolId={userRole === "moderator" ? userSchoolId : undefined}
+                                />
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 return null;
@@ -223,9 +277,11 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
             case "students":
                 if (userRole === "admin" || userRole === "moderator") {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <StudentManagement currentUser={currentUser} />
-                        </Suspense>
+                        <LazyErrorBoundary componentName="StudentManagement">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <StudentManagement currentUser={currentUser} />
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 return null;
@@ -233,9 +289,11 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
             case "moderators":
                 if (userRole === "admin") {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <ModeratorListView />
-                        </Suspense>
+                        <LazyErrorBoundary componentName="ModeratorListView">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <ModeratorListView />
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 return null;
@@ -243,9 +301,11 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
             case "users":
                 if (userRole === "admin") {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <UserManagement currentUserId={userId} />
-                        </Suspense>
+                        <LazyErrorBoundary componentName="UserManagement">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <UserManagement currentUserId={userId} />
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 return null;
@@ -253,9 +313,11 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
             case "testing":
                 if (userRole === "admin") {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <DeviceTestingDashboard />
-                        </Suspense>
+                        <LazyErrorBoundary componentName="DeviceTestingDashboard">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <DeviceTestingDashboard />
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 return null;
@@ -263,9 +325,11 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
             case "contact_requests":
                 if (userRole === "admin") {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <AdminContactRequests currentUserId={userId} />
-                        </Suspense>
+                        <LazyErrorBoundary componentName="AdminContactRequests">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <AdminContactRequests currentUserId={userId} />
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 return null;
@@ -273,12 +337,14 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
             case "deleted_students":
                 if (userRole === "admin" || userRole === "moderator") {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <AdminDeletedStudentsDashboard
-                                userId={userId}
-                                onClose={() => setActiveView("calendar")}
-                            />
-                        </Suspense>
+                        <LazyErrorBoundary componentName="AdminDeletedStudentsDashboard">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <AdminDeletedStudentsDashboard
+                                    userId={userId}
+                                    onClose={() => setActiveView("calendar")}
+                                />
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 return null;
@@ -286,9 +352,11 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
             case "notification_windows":
                 if (userRole === "admin") {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <AdminNotificationWindows currentUserId={userId} />
-                        </Suspense>
+                        <LazyErrorBoundary componentName="AdminNotificationWindows">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <AdminNotificationWindows currentUserId={userId} />
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 return null;
@@ -296,9 +364,11 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
             case "app_updates":
                 if (userRole === "admin") {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <AdminAppUpdates currentUserId={userId} />
-                        </Suspense>
+                        <LazyErrorBoundary componentName="AdminAppUpdates">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <AdminAppUpdates currentUserId={userId} />
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 return null;
@@ -306,30 +376,32 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
             case "data_import":
                 if (userRole === "admin") {
                     return (
-                        <Suspense fallback={<LoadingFallback />}>
-                            <div className="max-w-4xl mx-auto p-4">
-                                <div className="space-y-6">
-                                    <div>
-                                        <h2 className="text-2xl font-bold mb-2">
-                                            {t("Data Import & Seeding", "นำเข้าและเพิ่มข้อมูล")}
-                                        </h2>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                                            {t(
-                                                "Import bulk data from external sources or seed test data",
-                                                "นำเข้าข้อมูลจำนวนมากจากแหล่งภายนอกหรือเพิ่มข้อมูลทดสอบ"
-                                            )}
-                                        </p>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <SangsomSeedButton />
-                                        <PrivateClassesSeedButton />
-                                        <SangsomStudentImportButton />
-                                        <SangsomMigrationButton userId={userId} />
-                                        <SangsomDeleteButton userId={userId} />
+                        <LazyErrorBoundary componentName="DataImport">
+                            <Suspense fallback={<LoadingFallback />}>
+                                <div className="max-w-4xl mx-auto p-4">
+                                    <div className="space-y-6">
+                                        <div>
+                                            <h2 className="text-2xl font-bold mb-2">
+                                                {t("Data Import & Seeding", "นำเข้าและเพิ่มข้อมูล")}
+                                            </h2>
+                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                                {t(
+                                                    "Import bulk data from external sources or seed test data",
+                                                    "นำเข้าข้อมูลจำนวนมากจากแหล่งภายนอกหรือเพิ่มข้อมูลทดสอบ"
+                                                )}
+                                            </p>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <SangsomSeedButton />
+                                            <PrivateClassesSeedButton />
+                                            <SangsomStudentImportButton />
+                                            <SangsomMigrationButton userId={userId} />
+                                            <SangsomDeleteButton userId={userId} />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </Suspense>
+                            </Suspense>
+                        </LazyErrorBoundary>
                     );
                 }
                 return null;
