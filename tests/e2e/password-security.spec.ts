@@ -153,7 +153,7 @@ test.describe('Password Security', () => {
   });
 
   test('should sanitize error messages to prevent information disclosure', async ({ page }) => {
-    await page.goto('/, { timeout: 60000 });
+    await page.goto('/', { timeout: 60000 });
 
     // Try with non-existent user
     await page.locator('#username, input[type="text"]').first().fill('nonexistentuser12345');
