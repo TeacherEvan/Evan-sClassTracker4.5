@@ -1726,4 +1726,174 @@ export const isClassOwner = (classData, userId) => { /* ... */ };
 
 ---
 
+### 31. Lazy Component Error Boundary Pattern (NEW Dec 2025)
+
+**Wrap lazy-loaded components with error boundaries** to prevent blank screens on chunk load failures.
+
+**Problem**: React.lazy() can fail when:
+
+- Network issues during chunk download
+- Deployment updates (old chunks deleted while user active)
+- Browser cache corruption
+- CDN failures
+
+**Solution**: LazyErrorBoundary component
+
+```tsx
+import { LazyErrorBoundary } from "@/components/lazy-error-boundary";
+import { lazy, Suspense } from "react";
+
+const LazyComponent = lazy(() => import("./HeavyComponent"));
+
+// ❌ BAD: No error boundary
+<Suspense fallback={<LoadingSpinner />}>
+  <LazyComponent />
+</Suspense>
+
+// ✅ GOOD: Error boundary prevents blank screen
+<LazyErrorBoundary componentName="HeavyComponent">
+  <Suspense fallback={<SkeletonLoader />}>
+    <LazyComponent />
+  </Suspense>
+</LazyErrorBoundary>
+```
+
+**Features**:
+
+- **User-friendly fallback UI** with reload and retry options
+- **Bilingual error messages** (EN/TH)
+- **Component name tracking** for better debugging
+- **Automatic error reporting** (if error monitoring enabled)
+- **Development mode** shows technical details
+
+**HOC variant** for reusable wrapped components:
+
+```tsx
+import { withLazyErrorBoundary } from "@/components/lazy-error-boundary";
+
+const LazyComponent = lazy(() => import("./HeavyComponent"));
+const SafeLazyComponent = withLazyErrorBoundary(LazyComponent, "HeavyComponent");
+
+// Use SafeLazyComponent directly
+<Suspense fallback={<SkeletonLoader />}>
+  <SafeLazyComponent />
+</Suspense>
+```
+
+**When to use**:
+
+- All lazy-loaded route components
+- Heavy admin/moderator panels
+- Analytics dashboards
+- Large modals/dialogs
+- Code-split feature modules
+
+**Example**: `app/workspace-layout.tsx` wraps all 15+ lazy-loaded views
+
+**Benefits**:
+
+- **No blank screens** - graceful degradation
+- **Clear user guidance** - reload/retry options
+- **Better debugging** - component name + error details
+- **Professional UX** - premium error fallback UI
+
+---
+
+### 32. Skeleton Loading Pattern (NEW Dec 2025)
+
+**Use skeleton loaders instead of spinners** to reduce layout shift and improve perceived performance.
+
+**Problem**: Spinners provide no context and cause layout shift when content loads.
+
+**Solution**: Content-aware skeleton loaders
+
+```tsx
+// ❌ BAD: Generic spinner
+<div className="flex justify-center p-8">
+  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+</div>
+
+// ✅ GOOD: Skeleton matches actual content structure
+<div className="p-6 space-y-6">
+  {/* Header skeleton */}
+  <div className="flex items-center justify-between">
+    <div className="h-8 w-64 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-lg animate-shimmer" />
+    <div className="h-10 w-24 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-lg animate-shimmer" />
+  </div>
+  
+  {/* Stats cards skeleton */}
+  <div className="grid grid-cols-4 gap-4">
+    {[...Array(4)].map((_, i) => (
+      <div key={i} className="bg-white rounded-xl p-6 space-y-3">
+        <div className="h-12 w-12 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-full animate-shimmer" />
+        <div className="h-4 w-24 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded animate-shimmer" />
+      </div>
+    ))}
+  </div>
+</div>
+```
+
+**Shimmer animation** (already in globals.css):
+
+```css
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+  background-size: 200% 100%;
+}
+```
+
+**Pre-built skeletons** in `components/ui/skeleton.tsx`:
+
+```tsx
+import { 
+  Skeleton, 
+  TableRowSkeleton, 
+  StudentCardSkeleton,
+  ClassCardSkeleton,
+  DashboardCardSkeleton,
+  StudentListSkeleton 
+} from "@/components/ui/skeleton";
+
+// Use pre-built patterns
+<StudentListSkeleton rows={10} />
+<DashboardCardSkeleton />
+<ClassCardSkeleton />
+```
+
+**Benefits**:
+
+- **Zero layout shift** - skeleton matches final content
+- **Perceived performance** - users see structure immediately
+- **Better UX** - less jarring than spinner → content
+- **Reduced CLS** (Cumulative Layout Shift) metric
+- **Professional feel** - modern loading pattern
+
+**When to use**:
+
+- Lazy-loaded components (Suspense fallback)
+- Data fetching states
+- Pagination loading
+- Infinite scroll loading
+- Modal/dialog loading
+
+**Example**: 
+- `app/workspace-layout.tsx` - LoadingFallback component
+- `components/lazy-components.tsx` - AdminLoadingFallback
+
+**Dark mode support**:
+
+```tsx
+// Automatically adapts to dark mode
+<div className="bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 
+                dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 
+                rounded animate-shimmer" />
+```
+
+---
+
 [← Back to Index](../copilot-instructions.md)

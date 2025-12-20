@@ -1,6 +1,6 @@
 {
   "name": "class-tracker",
-  "version": "4.5.32",
+  "version": "4.5.33",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 3001",

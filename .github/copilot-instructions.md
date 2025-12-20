@@ -1,8 +1,8 @@
 ﻿# AI Agent Instructions - Index
 
 **Evan's Class Tracker 4.5** - Bilingual (English/Thai) class tracking system  
-**Version:** 4.5.31 (Dec 3, 2025 - Documentation Consolidation)  
-**🔴 CRITICAL**: Bcrypt migration required - see Security Considerations
+**Version:** 4.5.33 (Dec 19, 2025 - Security & UX Refactor)  
+**✅ RESOLVED**: Bcrypt password rejection implemented - production-safe
 
 ---
 
@@ -201,23 +201,35 @@ This documentation is split into focused sections for efficient knowledge discov
 ## 📊 Documentation Stats
 
 - **Documentation Stats**: ~6,000 lines split into 15 focused files
-- **Code Patterns**: 30 non-negotiable patterns documented
+- **Code Patterns**: 32 non-negotiable patterns documented (NEW: Error Boundaries, Skeleton Loading)
 - **Architecture Diagrams**: 12 ASCII diagrams across integration docs
 - **Test Best Practices**: 7 E2E testing patterns + 4 performance optimizations
-- **Security Warnings**: 1 CRITICAL - Bcrypt migration required immediately (Nov 9, 2025)
+- **Security Status**: ✅ RESOLVED - Bcrypt password rejection implemented (Dec 19, 2025)
 - **Disaster Recovery**: 10 critical failure scenarios with step-by-step recovery
 - **Operational Guides**: 5 practical how-to procedures with copy-paste commands
 - **Refactoring Candidates**: 2 files remaining (1,193 to 1,065 lines each)
 - **Refactoring Complete**: class-booking.tsx (2,930→modular), classes.ts (2,213→modular)
-- **Recent Updates**: Dec 3, 2025 (v4.5.31) - Documentation Consolidation & Architecture Updates
+- **Recent Updates**: Dec 19, 2025 (v4.5.33) - Security & UX Refactor
 
 ---
 
 ## 🔄 Last Updated
 
-**December 3, 2025** - Version 4.5.31 - Documentation Consolidation 📚
+**December 19, 2025** - Version 4.5.33 - Security & UX Refactor 🔐
 
-- **Documentation Overhaul**: Comprehensive update and consolidation of all documentation
+- **Security Resolution**: Bcrypt password bypass removed - production-safe
+  - Bcrypt hashes properly rejected with clear error message
+  - Users directed to admin for password reset
+  - PBKDF2 verification working correctly
+  - btoa auto-upgrade to PBKDF2 verified
+  - Comprehensive E2E security test suite added
+- **UX Improvements**: Enhanced loading states and error handling
+  - Error boundaries added around all lazy-loaded components
+  - Skeleton loaders replace spinners (reduced layout shift)
+  - Premium fallback UI for chunk load failures
+  - Bilingual error messages (EN/TH)
+- **New Patterns**: Added Pattern #31 (Lazy Error Boundaries) and #32 (Skeleton Loading)
+- **Previous (v4.5.31)**: Documentation Consolidation (Dec 3, 2025)
   - Updated to v4.5.31 across all documentation files
   - Clarified bilingual pattern (developer UI vs user content)
   - Updated guardian deprecation notices (migrated to Provider system Oct 2025)
@@ -293,7 +305,7 @@ This documentation is split into focused sections for efficient knowledge discov
 
 3. **Always use `.withIndex()`** for Convex queries - check `convex/schema.ts` for indexes. NEVER query inside loops - use batch fetch + Map pattern. This is critical for performance.
 
-4. **Custom auth with PBKDF2** - Uses localStorage sessions (24hr expiry), PBKDF2 password hashing (Web Crypto API, 100,000 iterations), and explicit userId passing. See `lib/session-utils.ts` and `convex/users.ts`. ⚠️ **CRITICAL**: Bcrypt users can login with ANY password until migration completes - run `.\scripts\migrate-bcrypt-passwords.ps1` immediately!
+4. **Custom auth with PBKDF2** - Uses localStorage sessions (24hr expiry), PBKDF2 password hashing (Web Crypto API, 100,000 iterations), and explicit userId passing. See `lib/session-utils.ts` and `convex/users.ts`. ✅ **Security Fixed (Dec 19, 2025)**: Bcrypt passwords now properly rejected with clear error message directing users to admin for password reset. Migration tools remain available for batch resets if needed.
 
 5. **All components need `"use client"`** - Next.js App Router requires this directive for client-side hooks (`useQuery`, `useMutation`, `useState`).
 
