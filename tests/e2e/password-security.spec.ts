@@ -194,20 +194,20 @@ test.describe('Password Security', () => {
 });
 
 test.describe('Password Migration Security', () => {
-  test('should reject bcrypt password hashes with clear error', async ({ page }) => {
-    // This test verifies that if any user still has bcrypt hash,
-    // they get a clear error message directing them to admin
+  test('should show error when logging in with non-existent user', async ({ page }) => {
+    // This test verifies that attempting to log in with an unknown user
+    // results in a visible error toast from the login system.
+    // Note: Testing actual bcrypt rejection would require creating a test user
+    // with a bcrypt hash, which is not feasible in the current test setup.
     
     await page.goto('/', { timeout: 60000 });
     
-    // If there are users with bcrypt hashes, they should see migration error
-    // For now, we test that the login system handles the error gracefully
-    
-    await page.locator('#username, input[type="text"]').first().fill('testbcryptuser');
+    // Use a username that should not exist to trigger a generic login error
+    await page.locator('#username, input[type="text"]').first().fill('nonexistentuser');
     await page.locator('#password, input[type="password"]').first().fill('anypassword');
     await page.locator('button:has-text("Sign In"), button:has-text("ลงชื่อเข้าใช้")').first().click();
     
-    // Should show error (either user not found OR outdated password format)
+    // Should show an error toast (e.g., user not found or invalid credentials)
     await waitForToast(page, undefined, 'error');
   });
 
