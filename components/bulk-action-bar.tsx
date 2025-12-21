@@ -3,16 +3,17 @@
 import type { Id } from "@/convex/_generated/dataModel";
 import { ACCESSIBLE_BUTTON } from "@/lib/accessibility-utils";
 import { useLanguage } from "@/lib/language-context";
-import { Check, X } from "lucide-react";
+import { Check, Trash2, X } from "lucide-react";
 import { useState } from "react";
 
 interface BulkActionBarProps {
-  selectedIds: Set<Id<"classes">>;
-  onApprove: (ids: Id<"classes">[]) => Promise<void>;
-  onReject: (ids: Id<"classes">[]) => Promise<void>;
+  selectedIds: Set<string> | Set<Id<"classes">> | Set<Id<"students">>;
+  onApprove?: (ids: string[]) => Promise<void>;
+  onReject?: (ids: string[]) => Promise<void>;
   onClearSelection: () => void;
   entityType?: "class" | "student";
-  onEdit?: (ids: Id<"students">[]) => void;
+  onEdit?: (ids: string[]) => void;
+  onDelete?: (ids: string[]) => void | Promise<void>;
 }
 
 export function BulkActionBar({
@@ -22,6 +23,7 @@ export function BulkActionBar({
   onClearSelection,
   entityType = "class",
   onEdit: _onEdit,
+  onDelete,
 }: BulkActionBarProps) {
   const { language } = useLanguage();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -31,6 +33,7 @@ export function BulkActionBar({
   if (selectedIds.size === 0) return null;
 
   const handleApprove = async () => {
+    if (!onApprove) return;
     setIsProcessing(true);
     try {
       await onApprove(Array.from(selectedIds));
@@ -44,6 +47,7 @@ export function BulkActionBar({
   };
 
   const handleReject = async () => {
+    if (!onReject) return;
     setIsProcessing(true);
     try {
       await onReject(Array.from(selectedIds));
@@ -54,6 +58,12 @@ export function BulkActionBar({
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleDelete = async () => {
+    if (!onDelete) return;
+    // For delete, we just trigger the callback which should handle confirmation
+    await onDelete(Array.from(selectedIds));
   };
 
   const countText = language === "en"
@@ -70,7 +80,7 @@ export function BulkActionBar({
 
         {/* Action buttons */}
         <div className="flex items-center gap-2">
-          {entityType === "class" && (
+          {entityType === "class" && onApprove && onReject && (
             <>
               <button
                 onClick={() => setShowConfirmApprove(true)}
@@ -92,6 +102,18 @@ export function BulkActionBar({
                 {language === "en" ? "Reject" : "ปฏิเสธ"}
               </button>
             </>
+          )}
+
+          {onDelete && (
+            <button
+              onClick={handleDelete}
+              disabled={isProcessing}
+              className={`${ACCESSIBLE_BUTTON} bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white`}
+              aria-label={language === "en" ? "Delete selected" : "ลบรายการที่เลือก"}
+            >
+              <Trash2 className="w-4 h-4 mr-1.5" />
+              {language === "en" ? "Delete" : "ลบ"}
+            </button>
           )}
 
           <button
@@ -194,6 +216,7 @@ export function BulkActionBar({
           </div>
         </div>
       )}
+
     </>
   );
 }

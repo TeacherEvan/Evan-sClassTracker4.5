@@ -279,7 +279,11 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
                     return (
                         <LazyErrorBoundary componentName="StudentManagement">
                             <Suspense fallback={<LoadingFallback />}>
-                                <StudentManagement currentUser={currentUser} />
+                                <StudentManagement
+                                    userId={currentUser._id}
+                                    userRole={currentUser.role as "admin" | "moderator" | "teacher"}
+                                    userSchoolId={currentUser.schoolId}
+                                />
                             </Suspense>
                         </LazyErrorBoundary>
                     );
