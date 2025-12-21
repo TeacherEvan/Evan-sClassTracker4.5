@@ -311,7 +311,7 @@ export function AdminDuplicateWatchlist({
                                                         {t("Possible duplicates:", "ข้อมูลซ้ำที่อาจเป็นไปได้:")}
                                                     </p>
                                                     <div className="space-y-1">
-                                                        {entry.possibleDuplicates.slice(0, 2).map((dup) => (
+                                                        {entry.possibleDuplicates.slice(0, 2).map((dup) => dup && (
                                                             <div key={dup._id} className="text-sm text-gray-600">
                                                                 → {dup.firstName} {dup.lastName} ({dup.studentId})
                                                             </div>

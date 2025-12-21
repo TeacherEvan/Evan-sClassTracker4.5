@@ -15,6 +15,7 @@ import type * as auditHelpers from "../auditHelpers.js";
 import type * as auditLogs from "../auditLogs.js";
 import type * as bulkOperations from "../bulkOperations.js";
 import type * as cancellationRequests from "../cancellationRequests.js";
+import type * as classReview from "../classReview.js";
 import type * as classes from "../classes.js";
 import type * as classes_approval_mutations from "../classes/approval_mutations.js";
 import type * as classes_booking_mutations from "../classes/booking_mutations.js";
@@ -27,6 +28,7 @@ import type * as classes_queries from "../classes/queries.js";
 import type * as classes_student_operations from "../classes/student_operations.js";
 import type * as crons from "../crons.js";
 import type * as deleteSangsomData from "../deleteSangsomData.js";
+import type * as duplicateDetection from "../duplicateDetection.js";
 import type * as errorReports from "../errorReports.js";
 import type * as events from "../events.js";
 import type * as exports from "../exports.js";
@@ -61,6 +63,7 @@ import type * as students from "../students.js";
 import type * as teacherClassCount from "../teacherClassCount.js";
 import type * as teacherLogs from "../teacherLogs.js";
 import type * as teacherResources from "../teacherResources.js";
+import type * as teacherSchools from "../teacherSchools.js";
 import type * as users from "../users.js";
 
 import type {
@@ -77,6 +80,7 @@ declare const fullApi: ApiFromModules<{
   auditLogs: typeof auditLogs;
   bulkOperations: typeof bulkOperations;
   cancellationRequests: typeof cancellationRequests;
+  classReview: typeof classReview;
   classes: typeof classes;
   "classes/approval_mutations": typeof classes_approval_mutations;
   "classes/booking_mutations": typeof classes_booking_mutations;
@@ -89,6 +93,7 @@ declare const fullApi: ApiFromModules<{
   "classes/student_operations": typeof classes_student_operations;
   crons: typeof crons;
   deleteSangsomData: typeof deleteSangsomData;
+  duplicateDetection: typeof duplicateDetection;
   errorReports: typeof errorReports;
   events: typeof events;
   exports: typeof exports;
@@ -123,6 +128,7 @@ declare const fullApi: ApiFromModules<{
   teacherClassCount: typeof teacherClassCount;
   teacherLogs: typeof teacherLogs;
   teacherResources: typeof teacherResources;
+  teacherSchools: typeof teacherSchools;
   users: typeof users;
 }>;
 

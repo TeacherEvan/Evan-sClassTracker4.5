@@ -222,6 +222,11 @@ export default defineSchema({
     specialNeeds: v.optional(v.string()), // Learning accommodations
     medicalNotes: v.optional(v.string()), // Medical conditions/medications
     notes: v.optional(v.string()), // General notes
+    // SOFT DELETE FIELDS (Pattern #8)
+    isDeleted: v.optional(v.boolean()), // Soft delete flag
+    deletedAt: v.optional(v.number()), // Timestamp when deleted
+    deletedBy: v.optional(v.id("users")), // User who deleted
+    deletionReason: v.optional(v.string()), // Reason for deletion
   })
     .index("by_student_id", ["studentId"])
     .index("by_school", ["schoolId"])

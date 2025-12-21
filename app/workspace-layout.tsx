@@ -12,7 +12,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 
 // Lazy-loaded components (same as page.tsx)
 const MonthlyCalendar = lazy(() => import("@/components/monthly-calendar").then(m => ({ default: m.MonthlyCalendar })));
-const ClassBooking = lazy(() => import("@/components/class-booking").then(m => ({ default: m.ClassBooking })));
+const ClassBooking = lazy(() => import("@/components/class-booking"));
 const MessagingHub = lazy(() => import("@/components/messaging-hub").then(m => ({ default: m.MessagingHub })));
 const NotificationForm = lazy(() => import("@/components/notification-form").then(m => ({ default: m.NotificationForm })));
 const NotificationList = lazy(() => import("@/components/notification-list").then(m => ({ default: m.NotificationList })));
