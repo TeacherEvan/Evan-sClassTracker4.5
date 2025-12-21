@@ -9,6 +9,7 @@ import { useMutation, useQuery } from "convex/react";
 import { AlertTriangle, Check, Clock, Edit2, Info, MapPin, Trash2, UserMinus, UserPlus, Users, X } from "lucide-react";
 import { memo, useState } from "react";
 import { HierarchicalStudentSelector } from "../hierarchical-student-selector";
+import { QuickActionButton } from "../quick-action-button";
 import type { ClassItemDisplayProps } from "./types";
 
 /**
@@ -164,7 +165,7 @@ export const ClassItemDisplay = memo(function ClassItemDisplay({
   ) || [];
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 hover:shadow-lg transition-shadow ${hasConflicts ? 'ring-2 ring-yellow-500' : ''}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 hover:shadow-lg transition-shadow quick-action-parent ${hasConflicts ? 'ring-2 ring-yellow-500' : ''}`}>
       {/* Conflict Warning Banner */}
       {hasConflicts && (
         <div className="mb-2 -mt-1 -mx-1 p-2 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 rounded-t-lg">
@@ -392,10 +393,10 @@ export const ClassItemDisplay = memo(function ClassItemDisplay({
       {/* Edit and Delete Buttons - Available to Admin/Moderator/Teacher */}
       {(userRole === "admin" || userRole === "moderator" || userRole === "teacher") && (
         <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex flex-wrap gap-2">
+          <div className="quick-action-container flex flex-wrap gap-2">
             <button
               onClick={() => onEdit(classItem)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:scale-95 transition-all text-sm"
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:scale-95 transition-all text-sm touch-target interactive-hover interactive-touch"
             >
               <Edit2 className="w-4 h-4" />
               {t("Edit Class", "แก้ไขคลาส")}
@@ -403,7 +404,7 @@ export const ClassItemDisplay = memo(function ClassItemDisplay({
             {(userRole === "admin" || userRole === "moderator") && classItem.scheduledDate >= Date.now() && (
               <button
                 onClick={() => onDelete(classItem._id)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all text-sm"
+                className="flex items-center gap-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all text-sm touch-target interactive-hover interactive-touch"
               >
                 <Trash2 className="w-4 h-4" />
                 {t("Delete Class", "ลบคラส")}

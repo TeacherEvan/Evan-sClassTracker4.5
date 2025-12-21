@@ -12,6 +12,7 @@ import { CollapsibleSection } from "./collapsible-section";
 import { CreateProviderModal } from "./create-provider-modal";
 import { LazyBulkEditStudentsModal, ModalLoadingFallback } from "./lazy-components";
 import { PaginatedList } from "./paginated-list";
+import { QuickActionButton } from "./quick-action-button";
 import { ThailandLocationDropdown } from "./thailand-location-dropdown";
 import { StudentListSkeleton } from "./ui/skeleton";
 
@@ -1185,7 +1186,7 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                                 return (
                                                     <table className="w-full">
                                                         <tbody>
-                                                            <tr className={`hover:bg-gray-50 dark:hover:bg-gray-900 ${isSelected ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}>
+                                                            <tr className={`hover:bg-gray-50 dark:hover:bg-gray-900 quick-action-parent transition-colors ${isSelected ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}>
                                                                 <td className="px-3 py-4 w-12">
                                                                     <input
                                                                         type="checkbox"
@@ -1239,30 +1240,27 @@ export function StudentManagement({ currentUser }: StudentManagementProps) {
                                                                     )}
                                                                 </td>
                                                                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" style={{ width: "150px" }}>
-                                                                    <div className="flex items-center justify-end gap-2">
+                                                                    <div className="quick-action-container flex items-center justify-end gap-2">
                                                                         {!student.schoolId && student.guardianName && (
-                                                                            <button
+                                                                            <QuickActionButton
+                                                                                icon={Copy}
+                                                                                label={t("Duplicate", "คัดลอก")}
+                                                                                variant="duplicate"
                                                                                 onClick={() => handleDuplicate(student._id, `${student.firstName} ${student.lastName}`)}
-                                                                                className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                                                                                title={t("Duplicate", "คัดลอก")}
-                                                                            >
-                                                                                <Copy className="w-4 h-4" />
-                                                                            </button>
+                                                                            />
                                                                         )}
-                                                                        <button
+                                                                        <QuickActionButton
+                                                                            icon={Pencil}
+                                                                            label={t("Edit", "แก้ไข")}
+                                                                            variant="edit"
                                                                             onClick={() => handleEdit(student)}
-                                                                            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                                                                            title={t("Edit", "แก้ไข")}
-                                                                        >
-                                                                            <Pencil className="w-4 h-4" />
-                                                                        </button>
-                                                                        <button
+                                                                        />
+                                                                        <QuickActionButton
+                                                                            icon={Trash2}
+                                                                            label={t("Delete", "ลบ")}
+                                                                            variant="delete"
                                                                             onClick={() => handleDelete(student._id, `${student.firstName} ${student.lastName}`)}
-                                                                            className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                                                                            title={t("Delete", "ลบ")}
-                                                                        >
-                                                                            <Trash2 className="w-4 h-4" />
-                                                                        </button>
+                                                                        />
                                                                     </div>
                                                                 </td>
                                                             </tr>

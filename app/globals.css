@@ -338,3 +338,127 @@ h3 {
 .animate-shimmer {
   animation: shimmer 1.5s ease-in-out infinite;
 }
+
+/* ========================================
+ * UX Enhancement: Hover & Touch Interactions
+ * Following WCAG 2.1 AA + Mobile Best Practices
+ * ======================================== */
+
+/* Accessible pulsating animation for interactive elements */
+@keyframes pulsate-interactive {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+  }
+}
+
+/* Apply pulsate only on devices that support hover (desktop) */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .interactive-hover:hover {
+    animation: pulsate-interactive 1.2s ease-in-out infinite;
+  }
+}
+
+/* Touch-friendly active states for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .interactive-touch:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease-out;
+  }
+}
+
+/* Respect reduced motion preferences - disable all pulsating */
+@media (prefers-reduced-motion: reduce) {
+  .interactive-hover:hover,
+  .interactive-touch:active,
+  .animate-pulse-blue,
+  .pulse-red,
+  .pulse-gold,
+  .animate-pulse-gold {
+    animation: none !important;
+  }
+  
+  /* Provide static visual feedback instead */
+  .interactive-hover:hover,
+  .interactive-touch:active {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.6);
+  }
+}
+
+/* Touch target size enforcement (44x44px minimum) */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Enhanced button states with smooth transitions */
+.btn-interactive {
+  @apply touch-target transition-all duration-200 ease-out;
+}
+
+@media (hover: hover) {
+  .btn-interactive:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.btn-interactive:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Quick action button - visible on hover (desktop) or always visible (mobile) */
+.quick-action-btn {
+  @apply btn-interactive rounded-lg font-medium transition-all;
+}
+
+/* Desktop: show on row hover with pulsate */
+@media (hover: hover) {
+  .quick-action-container {
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+  }
+  
+  .quick-action-parent:hover .quick-action-container {
+    opacity: 1;
+  }
+  
+  .quick-action-parent:hover .quick-action-btn {
+    @apply interactive-hover;
+  }
+}
+
+/* Mobile: always visible, larger touch targets */
+@media (hover: none) and (pointer: coarse) {
+  .quick-action-container {
+    opacity: 1;
+  }
+  
+  .quick-action-btn {
+    @apply interactive-touch;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 8px;
+  }
+}
+
+/* Inline edit mode transition */
+.inline-edit-active {
+  background-color: rgba(59, 130, 246, 0.05);
+  border-color: rgba(59, 130, 246, 0.3);
+  transition: all 0.2s ease-out;
+}
+
+/* Focus visible for keyboard navigation */
+.quick-action-btn:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
