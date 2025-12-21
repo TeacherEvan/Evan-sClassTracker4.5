@@ -228,6 +228,11 @@ button:active {
 h1,
 h2,
 h3 {
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.3), 0 0 15px rgba(212, 175, 55, 0.2);
+}
+
+/* Opt-in animated heading glow (avoid animating all headings globally) */
+.heading-golden-glow {
   animation: goldenGlow 4s ease-in-out infinite;
 }
 
@@ -375,13 +380,14 @@ h3 {
 @media (prefers-reduced-motion: reduce) {
   .interactive-hover:hover,
   .interactive-touch:active,
+  .quick-action-parent:hover .quick-action-btn,
   .animate-pulse-blue,
   .pulse-red,
   .pulse-gold,
   .animate-pulse-gold {
     animation: none !important;
   }
-  
+
   /* Provide static visual feedback instead */
   .interactive-hover:hover,
   .interactive-touch:active {
@@ -401,7 +407,14 @@ h3 {
 
 /* Enhanced button states with smooth transitions */
 .btn-interactive {
-  @apply touch-target transition-all duration-200 ease-out;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition-property: all;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
 }
 
 @media (hover: hover) {
@@ -417,7 +430,16 @@ h3 {
 
 /* Quick action button - visible on hover (desktop) or always visible (mobile) */
 .quick-action-btn {
-  @apply btn-interactive rounded-lg font-medium transition-all;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition-property: all;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
 }
 
 /* Desktop: show on row hover with pulsate */
@@ -426,13 +448,14 @@ h3 {
     opacity: 0;
     transition: opacity 0.2s ease-out;
   }
-  
+
   .quick-action-parent:hover .quick-action-container {
     opacity: 1;
   }
-  
+
   .quick-action-parent:hover .quick-action-btn {
-    @apply interactive-hover;
+    /* Match .interactive-hover:hover behavior when parent row is hovered */
+    animation: pulsate-interactive 1.2s ease-in-out infinite;
   }
 }
 
@@ -441,12 +464,16 @@ h3 {
   .quick-action-container {
     opacity: 1;
   }
-  
+
   .quick-action-btn {
-    @apply interactive-touch;
     min-width: 48px;
     min-height: 48px;
     padding: 8px;
+  }
+
+  .quick-action-btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease-out;
   }
 }
 

@@ -205,6 +205,41 @@ export function MonthlyCalendar({ currentUser }: MonthlyCalendarProps) {
         );
     }, [classes, monthStart, monthEnd]);
 
+    const getDayKey = (day: Date) => {
+        const d = new Date(day);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime();
+    };
+
+    const classesByDayKey = useMemo(() => {
+        const map = new Map<number, ClassWithDetails[]>();
+        for (const classItem of monthClasses) {
+            const key = getDayKey(new Date(classItem.scheduledDate));
+            const existing = map.get(key);
+            if (existing) {
+                existing.push(classItem);
+            } else {
+                map.set(key, [classItem]);
+            }
+        }
+        return map;
+    }, [monthClasses]);
+
+    const eventsByDayKey = useMemo(() => {
+        const map = new Map<number, Doc<"events">[]>();
+        if (!events) return map;
+        for (const event of events) {
+            const key = getDayKey(new Date(event.eventDate));
+            const existing = map.get(key);
+            if (existing) {
+                existing.push(event);
+            } else {
+                map.set(key, [event]);
+            }
+        }
+        return map;
+    }, [events]);
+
     // Swipe gestures for month navigation
     useSwipeGesture({
         onSwipeLeft: goToNextMonth,
@@ -279,27 +314,11 @@ export function MonthlyCalendar({ currentUser }: MonthlyCalendarProps) {
     };
 
     const getClassesForDay = (day: Date) => {
-        if (!monthClasses) return [];
-        const dayStart = new Date(day);
-        dayStart.setHours(0, 0, 0, 0);
-        const dayEnd = new Date(day);
-        dayEnd.setHours(23, 59, 59, 999);
-
-        return monthClasses.filter(
-            (c) => c.scheduledDate >= dayStart.getTime() && c.scheduledDate <= dayEnd.getTime()
-        );
+        return classesByDayKey.get(getDayKey(day)) ?? [];
     };
 
     const getEventsForDay = (day: Date) => {
-        if (!events) return [];
-        const dayStart = new Date(day);
-        dayStart.setHours(0, 0, 0, 0);
-        const dayEnd = new Date(day);
-        dayEnd.setHours(23, 59, 59, 999);
-
-        return events.filter(
-            (e) => e.eventDate >= dayStart.getTime() && e.eventDate <= dayEnd.getTime()
-        );
+        return eventsByDayKey.get(getDayKey(day)) ?? [];
     };
 
     const getEventIcon = (type: string) => {

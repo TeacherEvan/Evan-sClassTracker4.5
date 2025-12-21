@@ -1,9 +1,9 @@
 "use client";
 
 import BottomPanel from "@/components/bottom-panel";
+import { LazyErrorBoundary } from "@/components/lazy-error-boundary";
 import RightPanel from "@/components/right-panel";
 import SidebarNav from "@/components/sidebar-nav";
-import { LazyErrorBoundary } from "@/components/lazy-error-boundary";
 import { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import type { User, UserRole } from "@/lib/types";
@@ -72,7 +72,7 @@ interface WorkspaceLayoutProps {
 const LoadingFallback = () => {
     const { t } = useLanguage();
     return (
-        <div className="h-full p-6 space-y-6 animate-in fade-in duration-300">
+        <div className="h-full space-y-6">
             {/* Header skeleton */}
             <div className="flex items-center justify-between">
                 <div className="space-y-2">
@@ -443,7 +443,7 @@ export default function WorkspaceLayout({ userId, userRole, userSchoolId, childr
                                 id="main-content"
                                 order={1}
                             >
-                                <div className="h-full p-4 md:p-6 animate-pulse-blue">
+                                <div className="h-full p-4 md:p-6">
                                     {renderContent}
                                 </div>
                             </Panel>                            {/* Bottom Panel (Collapsible) */}
