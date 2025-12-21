@@ -2,6 +2,7 @@
 
 import type { ViewType } from "@/app/workspace-layout";
 import { useLanguage } from "@/lib/language-context";
+import { LineContactButton } from "./line-contact-button";
 import {
     BarChart3,
     BookOpen,
@@ -178,10 +179,14 @@ export default function SidebarNav({
                 })}
             </ul>
 
-            {/* Footer (optional) */}
+            {/* Footer with LINE contact */}
             {!compact && (
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                <div className="mt-auto space-y-3 p-4 border-t border-gray-200 dark:border-gray-700">
+                    {/* LINE Support Button */}
+                    <LineContactButton variant="sidebar" showLabel={true} />
+                    
+                    {/* Workspace label */}
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
                         {t("Workspace", "พื้นที่ทำงาน")}
                     </p>
                 </div>

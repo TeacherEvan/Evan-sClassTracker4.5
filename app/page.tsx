@@ -13,6 +13,7 @@ import { ToastContainer, type ToastNotification } from "@/components/desktop-not
 import { DesktopNotificationWindow } from "@/components/desktop-notification-window";
 import { FishSchoolBackground } from "@/components/fish-school-background";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { LineContactButton } from "@/components/line-contact-button";
 import { LoginForm } from "@/components/login-form";
 import { NotificationWindow } from "@/components/notification-window";
 import { PasswordChangeDialog } from "@/components/password-change-dialog";
@@ -484,6 +485,9 @@ export default function Home() {
           />
         </Suspense>
       )}
+
+      {/* LINE Contact Button - Floating (all logged-in users) */}
+      <LineContactButton variant="floating" showLabel={true} />
 
       <div className="mt-8">
         <ImageUploader />
