@@ -2,8 +2,8 @@
 
 import { api } from "@/convex/_generated/api";
 import type { Doc } from "@/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
 import { createContext, useContext, type ReactNode } from "react";
+import { usePollingQuery } from "./use-polling-query";
 
 interface DataContextValue {
     schools: Doc<"schools">[] | undefined;
@@ -12,9 +12,18 @@ interface DataContextValue {
 
 const DataContext = createContext<DataContextValue | undefined>(undefined);
 
+/**
+ * DataProvider - Provides shared static data across the app
+ * 
+ * OPTIMIZATION: Uses polling instead of real-time subscriptions
+ * Schools data changes infrequently, so polling every 60 seconds is sufficient
+ * This prevents root-level re-renders on every school update
+ */
 export function DataProvider({ children }: { children: ReactNode }) {
-    // Load commonly used data once at the top level
-    const schools = useQuery(api.schools.list, {});
+    // Schools: Poll every 60 seconds (static data)
+    // BEFORE: useQuery(api.schools.list, {}) - real-time, caused root re-renders
+    // AFTER: Poll every 60s - stable, only updates when polling interval hits
+    const schools = usePollingQuery(api.schools.list, {}, { interval: 60000 });
 
     const value: DataContextValue = {
         schools,
