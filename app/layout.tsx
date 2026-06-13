@@ -3,6 +3,7 @@ import { ConvexClientProvider } from "@/lib/convex-provider";
 import { DataProvider } from "@/lib/data-context";
 import { DeviceProvider } from "@/lib/device-context";
 import { LanguageProvider } from "@/lib/language-context";
+import { Providers } from "./providers";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
@@ -30,7 +31,9 @@ export default function RootLayout({
           <ConvexClientProvider>
             <DeviceProvider>
               <DataProvider>
-                <LanguageProvider>{children}</LanguageProvider>
+                <LanguageProvider>
+                  <Providers>{children}</Providers>
+                </LanguageProvider>
               </DataProvider>
             </DeviceProvider>
           </ConvexClientProvider>
