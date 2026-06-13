@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
     test: {
-    environment: 'node',
+    environment: 'jsdom',
     include: ['**/*.{test,spec}.?(c|m)[jt]s?(x)'],
     exclude: [
             '**/node_modules/**',
@@ -10,5 +10,7 @@ export default defineConfig({
             '**/.{idea,git,cache,output,temp}/**',
             'tests/e2e/**'
         ],
+    globals: true,
+    setupFiles: ['tests/setup.ts'],
     },
 });
