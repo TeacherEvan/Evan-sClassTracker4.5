@@ -25,29 +25,28 @@
 
 ### For Developers
 
-| Document | Purpose |
-|----------|---------|
-| [.github/copilot-instructions.md](../.github/copilot-instructions.md) | **START HERE** - AI agent guidelines, critical patterns |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System diagrams, data flows, tech stack details |
-| [OPTIMIZATION_ANALYSIS_2025.md](OPTIMIZATION_ANALYSIS_2025.md) | Performance fixes, N+1 elimination, benchmarks |
-| [FEATURES_DOCUMENTATION.md](FEATURES_DOCUMENTATION.md) | API reference, all Convex functions |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Production deployment guide |
+| Document                                                                  | Purpose                                                 |
+| ------------------------------------------------------------------------- | ------------------------------------------------------- |
+| [.github/copilot-instructions.md](../.github/copilot-instructions.md)     | **START HERE** - AI agent guidelines, critical patterns |
+| [ARCHITECTURE.md](ARCHITECTURE.md)                                        | System diagrams, data flows, tech stack details         |
+| [OPTIMIZATION_ANALYSIS_2025.md](../archive/OPTIMIZATION_ANALYSIS_2025.md) | Performance fixes, N+1 elimination, benchmarks          |
+| [FEATURES_DOCUMENTATION.md](../features/FEATURES_DOCUMENTATION.md)        | API reference, all Convex functions                     |
+| [DEPLOYMENT_GUIDE.md](../guides/deployment/DEPLOYMENT_GUIDE.md)           | Production deployment guide                             |
 
 ### For Users
 
-| Document | Purpose |
-|----------|---------|
-| [../README.md](../README.md) | Quick start, setup, default credentials |
-| [QUICK_REFERENCE.md](QUICK_REFERENCE.md) | User guide for all roles |
-| [MOBILE_UI_GUIDE.md](MOBILE_UI_GUIDE.md) | Mobile device usage |
+| Document                                              | Purpose                                 |
+| ----------------------------------------------------- | --------------------------------------- |
+| [../README.md](../README.md)                          | Quick start, setup, default credentials |
+| [QUICK_REFERENCE.md](../archive/QUICK_REFERENCE.md)   | User guide for all roles                |
+| [MOBILE_UI_GUIDE.md](../ui-design/MOBILE_UI_GUIDE.md) | Mobile device usage                     |
 
 ### For Project Management
 
-| Document | Purpose |
-|----------|---------|
-| [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md) | Complete file listing with summaries |
-| [IMPLEMENTATION_REVIEW_2025.md](IMPLEMENTATION_REVIEW_2025.md) | Latest status review |
-| [FEATURE_COMPLETION_SUMMARY.md](FEATURE_COMPLETION_SUMMARY.md) | What's been built |
+| Document                                                                           | Purpose                              |
+| ---------------------------------------------------------------------------------- | ------------------------------------ |
+| [DOCUMENTATION_INDEX.md](../.github/copilot-docs/DOCUMENTATION_INDEX.md)           | Complete file listing with summaries |
+| [IMPLEMENTATION_REVIEW_2025.md](../archive/COMPLETE_IMPLEMENTATION_NOV_18_2025.md) | Latest status review                 |
 
 ---
 
@@ -77,14 +76,13 @@ Every user-facing string needs **English + Thai**:
 
 ```typescript
 // ✅ CORRECT
-ctx.db.query("classes")
-  .withIndex("by_school_and_date", q => 
-    q.eq("schoolId", schoolId).gte("scheduledDate", start)
-  )
+ctx.db.query("classes").withIndex("by_school_and_date", (q) => q.eq("schoolId", schoolId).gte("scheduledDate", start));
 
 // ❌ WRONG
-ctx.db.query("classes").collect()
-  .filter(c => c.schoolId === schoolId)
+ctx.db
+  .query("classes")
+  .collect()
+  .filter((c) => c.schoolId === schoolId);
 ```
 
 ### 4. No N+1 Queries
@@ -98,9 +96,9 @@ for (const msg of messages) {
 }
 
 // ✅ GOOD
-const userIds = new Set(messages.map(m => m.senderId));
-const users = await Promise.all([...userIds].map(id => ctx.db.get(id)));
-const userMap = new Map(users.map(u => [u._id, u]));
+const userIds = new Set(messages.map((m) => m.senderId));
+const users = await Promise.all([...userIds].map((id) => ctx.db.get(id)));
+const userMap = new Map(users.map((u) => [u._id, u]));
 ```
 
 ### 5. Custom Authentication
@@ -272,4 +270,4 @@ Contains:
 
 ---
 
-*Last Updated: October 22, 2025*
+_Last Updated: October 22, 2025_

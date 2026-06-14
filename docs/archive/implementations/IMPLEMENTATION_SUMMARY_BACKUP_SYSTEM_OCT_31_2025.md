@@ -3,7 +3,7 @@
 **Date:** October 31, 2025  
 **Version:** 4.5.12  
 **Status:** ✅ Complete - Production Ready  
-**Implementation Time:** ~2 hours  
+**Implementation Time:** ~2 hours
 
 ---
 
@@ -15,7 +15,7 @@ Implemented a comprehensive automated backup system that exports all Convex data
 
 ## 🎯 Problem Solved
 
-**User Request:** *"Is it possible to create a complete system backup that is updated every day at 00:00 and stored in MongoDB? If Convex ever crashes that I don't lose all my data and user data."*
+**User Request:** _"Is it possible to create a complete system backup that is updated every day at 00:00 and stored in MongoDB? If Convex ever crashes that I don't lose all my data and user data."_
 
 **Solution:** Full-featured backup system with:
 
@@ -103,16 +103,7 @@ Implemented a comprehensive automated backup system that exports all Convex data
 ### Convex Tables Backed Up (19 total)
 
 ```typescript
-[
-  "users", "schools", "providers",
-  "classes", "students", "locations",
-  "teacherResources", "messages", "notifications",
-  "notificationWindows", "appUpdates",
-  "postClassNotes", "teacherClassCountCycles",
-  "adminContactRequests", "errorReports",
-  "auditLogs", "teacherLogs",
-  "sangsomEvents", "sangsomDeletedStudents"
-]
+["users", "schools", "providers", "classes", "students", "locations", "teacherResources", "messages", "notifications", "notificationWindows", "appUpdates", "postClassNotes", "teacherClassCountCycles", "adminContactRequests", "errorReports", "auditLogs", "teacherLogs", "sangsomEvents", "sangsomDeletedStudents"];
 ```
 
 ### MongoDB Schema
@@ -148,9 +139,9 @@ Implemented a comprehensive automated backup system that exports all Convex data
 ### Indexes Created
 
 ```javascript
-db.backups.createIndex({ "metadata.timestamp": -1 })  // Latest first
-db.backups.createIndex({ "metadata.status": 1 })      // Filter by status
-db.backups.createIndex({ "metadata.date": 1 })        // Query by date
+db.backups.createIndex({ "metadata.timestamp": -1 }); // Latest first
+db.backups.createIndex({ "metadata.status": 1 }); // Filter by status
+db.backups.createIndex({ "metadata.date": 1 }); // Query by date
 ```
 
 ---
@@ -245,11 +236,11 @@ Get-ScheduledTask -TaskName "ConvexBackupToMongoDB" | Get-ScheduledTaskInfo
 
 ### Backup Performance
 
-| Records | Size | Duration | MongoDB Storage |
-|---------|------|----------|-----------------|
-| 1,000 | ~3 MB | ~1.5s | 3 MB × 30 = 90 MB |
-| 5,000 | ~15 MB | ~4s | 15 MB × 30 = 450 MB |
-| 10,000 | ~30 MB | ~8s | 30 MB × 30 = 900 MB |
+| Records | Size   | Duration | MongoDB Storage     |
+| ------- | ------ | -------- | ------------------- |
+| 1,000   | ~3 MB  | ~1.5s    | 3 MB × 30 = 90 MB   |
+| 5,000   | ~15 MB | ~4s      | 15 MB × 30 = 450 MB |
+| 10,000  | ~30 MB | ~8s      | 30 MB × 30 = 900 MB |
 
 ### MongoDB Atlas Free Tier
 
@@ -318,7 +309,7 @@ Get-ScheduledTask -TaskName "ConvexBackupToMongoDB" | Get-ScheduledTaskInfo
 
 ### What This Does NOT Back Up
 
-❌ **Convex Storage files** (_storage) - file attachments not included  
+❌ **Convex Storage files** (\_storage) - file attachments not included  
 ❌ **Convex Functions** (backend code) - already in Git  
 ❌ **Environment variables** - must be documented separately  
 ❌ **Scheduled jobs** - Convex cron configuration not backed up

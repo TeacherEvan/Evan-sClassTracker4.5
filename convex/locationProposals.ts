@@ -46,8 +46,8 @@ export const proposeLocation = mutation({
       .filter((q) =>
         q.or(
           q.eq(q.field("role"), "moderator"),
-          q.eq(q.field("role"), "admin")
-        )
+          q.eq(q.field("role"), "admin"),
+        ),
       )
       .collect();
 
@@ -103,12 +103,12 @@ export const listPendingProposals = query({
           schoolNameTh: school?.nameTh || "ไม่ทราบ",
           proposerUsername: proposer?.username || "Unknown",
         };
-      })
+      }),
     );
 
     // Sort by proposal date (newest first)
-    return enrichedProposals.sort((a, b) =>
-      (b.proposalDate || 0) - (a.proposalDate || 0)
+    return enrichedProposals.sort(
+      (a, b) => (b.proposalDate || 0) - (a.proposalDate || 0),
     );
   },
 });
@@ -124,7 +124,9 @@ export const approveProposal = mutation({
     const user = await ctx.db.get(args.userId);
 
     if (!user || !["moderator", "admin"].includes(user.role)) {
-      throw new Error("Unauthorized: Only moderators and admins can approve proposals");
+      throw new Error(
+        "Unauthorized: Only moderators and admins can approve proposals",
+      );
     }
 
     const location = await ctx.db.get(args.locationId);
@@ -173,7 +175,9 @@ export const rejectProposal = mutation({
     const user = await ctx.db.get(args.userId);
 
     if (!user || !["moderator", "admin"].includes(user.role)) {
-      throw new Error("Unauthorized: Only moderators and admins can reject proposals");
+      throw new Error(
+        "Unauthorized: Only moderators and admins can reject proposals",
+      );
     }
 
     const location = await ctx.db.get(args.locationId);
@@ -245,12 +249,12 @@ export const myProposals = query({
           schoolName: school?.name || "Unknown",
           schoolNameTh: school?.nameTh || "ไม่ทราบ",
         };
-      })
+      }),
     );
 
     // Sort by proposal date (newest first)
-    return enrichedProposals.sort((a, b) =>
-      (b.proposalDate || 0) - (a.proposalDate || 0)
+    return enrichedProposals.sort(
+      (a, b) => (b.proposalDate || 0) - (a.proposalDate || 0),
     );
   },
 });

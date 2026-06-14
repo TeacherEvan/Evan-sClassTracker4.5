@@ -87,7 +87,7 @@ npx convex dev --once
    ```powershell
    # Vercel production
    vercel env pull .env.vercel.production
-   
+
    # Compare with local
    Compare-Object (Get-Content .env.local) (Get-Content .env.vercel.production)
    ```
@@ -192,7 +192,7 @@ vercel inspect your-deployment-url
    ```powershell
    # List recent deployments
    vercel ls
-   
+
    # Promote stable version
    vercel promote your-stable-deployment-url
    ```
@@ -202,7 +202,7 @@ vercel inspect your-deployment-url
    ```powershell
    npm run build
    # Fix any TypeScript/ESLint errors
-   
+
    # Test production build locally
    npm run start
    ```
@@ -292,20 +292,20 @@ npm run dev
    export function loadUserSession(): User | null {
      const stored = localStorage.getItem("classTrackerUser");
      if (!stored) return null;
-     
+
      try {
        const data = JSON.parse(stored);
-       
+
        // Migration for old format
        if (data.user && !data.expiresAt) {
          const migrated = {
            ...data.user,
-           expiresAt: Date.now() + SESSION_DURATION_MS
+           expiresAt: Date.now() + SESSION_DURATION_MS,
          };
          saveUserSession(migrated);
          return migrated;
        }
-       
+
        return data;
      } catch {
        return null;
@@ -373,11 +373,11 @@ node -e "const bcrypt = require('bcrypt'); bcrypt.hash('NEW_SECURE_PASSWORD_HERE
 // Check audit logs for unauthorized actions
 const suspiciousLogs = await ctx.db
   .query("auditLog")
-  .filter(q => 
+  .filter((q) =>
     q.and(
       q.eq(q.field("userId"), adminId),
-      q.gte(q.field("timestamp"), Date.now() - 86400000) // Last 24hr
-    )
+      q.gte(q.field("timestamp"), Date.now() - 86400000), // Last 24hr
+    ),
   )
   .collect();
 
@@ -395,8 +395,8 @@ const suspiciousLogs = await ctx.db
    ```typescript
    // In Convex dashboard or via mutation
    await ctx.db.patch(adminId, {
-     accountLockedUntil: Date.now() + (24 * 60 * 60 * 1000),
-     failedLoginAttempts: 5
+     accountLockedUntil: Date.now() + 24 * 60 * 60 * 1000,
+     failedLoginAttempts: 5,
    });
    ```
 
@@ -411,7 +411,7 @@ const suspiciousLogs = await ctx.db
    ```powershell
    # List available backups
    npm run backup:list
-   
+
    # Restore from specific backup
    npm run backup:restore
    # Select backup from before compromise
@@ -501,15 +501,15 @@ export const emergencyAdminReset = mutation({
       .query("users")
       .filter(q => q.eq(q.field("role"), "admin"))
       .first();
-    
+
     if (!admin) throw new Error("No admin found");
-    
+
     // Reset lockout
     await ctx.db.patch(admin._id, {
       failedLoginAttempts: 0,
       accountLockedUntil: undefined,
     });
-    
+
     return { success: true, username: admin.username };
   }
 });
@@ -555,7 +555,7 @@ export const emergencyAdminReset = mutation({
 // Via Convex dashboard
 await ctx.db.patch(userId, {
   isActive: true,
-  deletedAt: undefined
+  deletedAt: undefined,
 });
 ```
 
@@ -578,7 +578,7 @@ await ctx.db.patch(userId, {
 ```typescript
 // Update user's schoolId to valid school
 await ctx.db.patch(userId, {
-  schoolId: validSchoolId
+  schoolId: validSchoolId,
 });
 ```
 
@@ -617,17 +617,17 @@ await ctx.db.patch(userId, {
 // Find available moderator
 const availableModerator = await ctx.db
   .query("users")
-  .withIndex("by_role", q => q.eq("role", "moderator"))
+  .withIndex("by_role", (q) => q.eq("role", "moderator"))
   .first();
 
 // Assign to school
 await ctx.db.patch(schoolId, {
-  moderatorId: availableModerator._id
+  moderatorId: availableModerator._id,
 });
 
 // Update moderator's school
 await ctx.db.patch(availableModerator._id, {
-  schoolId: schoolId
+  schoolId: schoolId,
 });
 ```
 
@@ -641,12 +641,12 @@ const newModerator = await ctx.db.insert("users", {
   role: "moderator",
   schoolId: schoolId,
   requirePasswordChange: true,
-  createdAt: Date.now()
+  createdAt: Date.now(),
 });
 
 // Assign to school
 await ctx.db.patch(schoolId, {
-  moderatorId: newModerator
+  moderatorId: newModerator,
 });
 ```
 
@@ -780,7 +780,7 @@ npx convex export --path ./backup-$(Get-Date -Format yyyy-MM-dd).zip
 
 ```javascript
 // Browser Console
-localStorage.removeItem('classTrackerUser');
+localStorage.removeItem("classTrackerUser");
 location.reload();
 
 // If persists, check Convex URL
@@ -844,6 +844,7 @@ If you see infinite loading:
 5. **Check internet connection**: Can you access other websites?
 
 If still stuck:
+
 - Contact admin with screenshot
 - Note time when issue started
 - Note which page you were trying to access
@@ -886,24 +887,20 @@ npm run backup
 const invalidClasses = await ctx.db
   .query("classes")
   .collect()
-  .then(classes => 
-    classes.filter(c => 
-      !c.teacherId || !c.studentId || !c.status
-    )
-  );
+  .then((classes) => classes.filter((c) => !c.teacherId || !c.studentId || !c.status));
 
 // Check for orphaned references
 const classesWithInvalidStudent = await ctx.db
   .query("classes")
   .collect()
-  .then(async classes => {
+  .then(async (classes) => {
     const checks = await Promise.all(
-      classes.map(async c => ({
+      classes.map(async (c) => ({
         classId: c._id,
-        studentExists: await ctx.db.get(c.studentId) !== null
-      }))
+        studentExists: (await ctx.db.get(c.studentId)) !== null,
+      })),
     );
-    return checks.filter(c => !c.studentExists);
+    return checks.filter((c) => !c.studentExists);
   });
 ```
 
@@ -927,30 +924,30 @@ export const repairCorruptedClasses = mutation({
 
     for (const classItem of classes) {
       const issues: string[] = [];
-      
+
       // Check student exists
       if (classItem.studentId) {
         const student = await ctx.db.get(classItem.studentId);
         if (!student) issues.push("Invalid studentId");
       }
-      
+
       // Check school exists (if not provider)
       if (classItem.schoolId) {
         const school = await ctx.db.get(classItem.schoolId);
         if (!school) issues.push("Invalid schoolId");
       }
-      
+
       // Check required fields
       if (!classItem.status) issues.push("Missing status");
-      
+
       if (issues.length > 0) {
         repairs.push({ classId: classItem._id, issues });
-        
+
         if (!args.dryRun) {
           // Apply fixes
           if (!classItem.status) {
-            await ctx.db.patch(classItem._id, { 
-              status: "pending" 
+            await ctx.db.patch(classItem._id, {
+              status: "pending",
             });
           }
         }
@@ -958,7 +955,7 @@ export const repairCorruptedClasses = mutation({
     }
 
     return { repairsNeeded: repairs.length, repairs };
-  }
+  },
 });
 ```
 

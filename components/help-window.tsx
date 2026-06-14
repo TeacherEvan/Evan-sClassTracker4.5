@@ -15,14 +15,18 @@ interface HelpWindowProps {
 
 export function HelpWindow({ userRole, onClose }: HelpWindowProps) {
   const { t, language } = useLanguage();
-  const [selectedFeature, setSelectedFeature] = useState<HelpFeature | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [selectedFeature, setSelectedFeature] = useState<HelpFeature | null>(
+    null,
+  );
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Get help content filtered by user role (memoized to prevent recalculation)
   const helpCategories = useMemo(() => getHelpForRole(userRole), [userRole]);
 
   const toggleCategory = (categoryId: string) => {
-    setExpandedCategories(prev => {
+    setExpandedCategories((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(categoryId)) {
         newSet.delete(categoryId);
@@ -88,7 +92,10 @@ export function HelpWindow({ userRole, onClose }: HelpWindowProps) {
                 {t("Help & Guide", "ความช่วยเหลือและคู่มือ")}
               </h1>
               <p className="text-white/90 text-lg mt-1">
-                {t(`Welcome ${getRoleDisplay()}! What would you like to do?`, `ยินดีต้อนรับ ${getRoleDisplay()}! คุณต้องการทำอะไร?`)}
+                {t(
+                  `Welcome ${getRoleDisplay()}! What would you like to do?`,
+                  `ยินดีต้อนรับ ${getRoleDisplay()}! คุณต้องการทำอะไร?`,
+                )}
               </p>
             </div>
           </div>
@@ -100,7 +107,7 @@ export function HelpWindow({ userRole, onClose }: HelpWindowProps) {
             <p className="text-gray-600 dark:text-gray-400 text-base">
               {t(
                 "Browse the features below to learn how to use the Class Tracker system. Click any feature to see detailed instructions.",
-                "เรียกดูฟีเจอร์ด้านล่างเพื่อเรียนรู้วิธีใช้ระบบติดตามชั้นเรียน คลิกฟีเจอร์ใดก็ได้เพื่อดูคำแนะนำโดยละเอียด"
+                "เรียกดูฟีเจอร์ด้านล่างเพื่อเรียนรู้วิธีใช้ระบบติดตามชั้นเรียน คลิกฟีเจอร์ใดก็ได้เพื่อดูคำแนะนำโดยละเอียด",
               )}
             </p>
           </div>
@@ -110,7 +117,8 @@ export function HelpWindow({ userRole, onClose }: HelpWindowProps) {
             {helpCategories.map((category) => {
               const isExpanded = expandedCategories.has(category.id);
               const CategoryIcon = getHelpIcon(category.icon);
-              const categoryTitle = language === "th" ? category.titleTh : category.title;
+              const categoryTitle =
+                language === "th" ? category.titleTh : category.title;
 
               return (
                 <div
@@ -134,8 +142,9 @@ export function HelpWindow({ userRole, onClose }: HelpWindowProps) {
                       </span>
                     </div>
                     <ChevronRight
-                      className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${isExpanded ? "rotate-90" : ""
-                        }`}
+                      className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${
+                        isExpanded ? "rotate-90" : ""
+                      }`}
                     />
                   </button>
 
@@ -144,8 +153,12 @@ export function HelpWindow({ userRole, onClose }: HelpWindowProps) {
                     <div className="p-5 pt-0 space-y-3 animate-in slide-in-from-top duration-300">
                       {category.features.map((feature) => {
                         const FeatureIcon = getHelpIcon(feature.icon);
-                        const featureTitle = language === "th" ? feature.titleTh : feature.title;
-                        const featureDesc = language === "th" ? feature.shortDescriptionTh : feature.shortDescription;
+                        const featureTitle =
+                          language === "th" ? feature.titleTh : feature.title;
+                        const featureDesc =
+                          language === "th"
+                            ? feature.shortDescriptionTh
+                            : feature.shortDescription;
 
                         return (
                           <button
@@ -188,7 +201,7 @@ export function HelpWindow({ userRole, onClose }: HelpWindowProps) {
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {t(
                     "Click the 'Contact Admin' button in the top right to send a message to the system administrators.",
-                    "คลิกปุ่ม 'ติดต่อผู้จัดการ' ที่มุมขวาบนเพื่อส่งข้อความถึงผู้จัดการระบบ"
+                    "คลิกปุ่ม 'ติดต่อผู้จัดการ' ที่มุมขวาบนเพื่อส่งข้อความถึงผู้จัดการระบบ",
                   )}
                 </p>
               </div>

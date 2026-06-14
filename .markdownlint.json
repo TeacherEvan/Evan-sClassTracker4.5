@@ -1,32 +1,25 @@
 {
-    "$schema": "https://raw.githubusercontent.com/DavidAnson/markdownlint/main/schema/markdownlint-config-schema.json",
-    "default": true,
-    "MD013": false,
-    "MD033": {
-        "allowed_elements": [
-            "br",
-            "details",
-            "summary",
-            "sup",
-            "sub",
-            "kbd"
-        ]
-    },
-    "MD035": {
-        "style": "---"
-    },
-    "MD041": false,
-    "MD024": {
-        "siblings_only": true
-    },
-    "MD046": {
-        "style": "fenced"
-    },
-    "MD060": false,
-    "MD022": false,
-    "MD032": false,
-    "MD036": false,
-    "MD040": false,
-    "MD026": false,
-    "MD031": false
+  "$schema": "https://raw.githubusercontent.com/DavidAnson/markdownlint/main/schema/markdownlint-config-schema.json",
+  "default": true,
+  "MD013": false,
+  "MD033": {
+    "allowed_elements": ["br", "details", "summary", "sup", "sub", "kbd"]
+  },
+  "MD035": {
+    "style": "---"
+  },
+  "MD041": false,
+  "MD024": {
+    "siblings_only": true
+  },
+  "MD046": {
+    "style": "fenced"
+  },
+  "MD060": false,
+  "MD022": false,
+  "MD032": false,
+  "MD036": false,
+  "MD040": false,
+  "MD026": false,
+  "MD031": false
 }

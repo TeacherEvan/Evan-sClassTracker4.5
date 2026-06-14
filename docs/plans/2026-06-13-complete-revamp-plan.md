@@ -15,12 +15,14 @@
 ### Task 0.1: Project Setup & Tooling
 
 **Files:**
+
 - Create: `vitest.config.ts` (update for new structure)
 - Create: `tests/convex/helpers.ts`
 - Create: `tests/convex/factories.ts`
 - Modify: `package.json` (add `@tanstack/react-query`, `@tanstack/react-query-devtools`, `workbox-cli`)
 
 **Step 1: Write failing test**
+
 ```bash
 # Test that test infrastructure works
 npm test -- tests/convex/helpers.test.ts
@@ -30,6 +32,7 @@ npm test -- tests/convex/helpers.test.ts
 Expected: Module not found / no tests
 
 **Step 3: Write minimal implementation**
+
 ```typescript
 // tests/convex/helpers.ts
 import { ConvexTest } from "convex-test";
@@ -95,11 +98,13 @@ Expected: PASS
 ### Task 0.2: TanStack Query Provider Setup
 
 **Files:**
+
 - Create: `lib/query-provider.tsx`
 - Create: `lib/query-client.ts`
 - Modify: `app/providers.tsx` (wrap with QueryClientProvider)
 
 **Step 1: Write failing test**
+
 ```bash
 npm test -- tests/unit/hooks/query-client.test.ts
 ```
@@ -107,6 +112,7 @@ npm test -- tests/unit/hooks/query-client.test.ts
 **Step 2: Run test — confirm it fails**
 
 **Step 3: Write minimal implementation**
+
 ```typescript
 // lib/query-client.ts
 import { QueryClient } from "@tanstack/react-query";
@@ -163,10 +169,12 @@ export function QueryProvider({ children }: { children: ReactNode }) {
 ### Task 1.1: Define Schema v2 Tables
 
 **Files:**
+
 - Create: `convex/schemaV2.ts`
 - Modify: `convex/schema.ts` (import and merge)
 
 **Step 1: Write failing test**
+
 ```bash
 npm test -- tests/convex/schemaV2.test.ts
 ```
@@ -174,6 +182,7 @@ npm test -- tests/convex/schemaV2.test.ts
 **Step 2: Run test — confirm it fails**
 
 **Step 3: Write minimal implementation**
+
 ```typescript
 // convex/schemaV2.ts
 import { defineSchema, defineTable } from "convex/server";
@@ -201,10 +210,12 @@ export default schemaV2;
 ### Task 1.2: Migration Actions
 
 **Files:**
+
 - Create: `convex/migrateToV2.ts`
 - Create: `convex/migrateToV2.test.ts`
 
 **Step 1: Write failing test**
+
 ```bash
 npm test -- tests/convex/migrateToV2.test.ts
 ```
@@ -212,6 +223,7 @@ npm test -- tests/convex/migrateToV2.test.ts
 **Step 2: Run test — confirm it fails**
 
 **Step 3: Write minimal implementation**
+
 ```typescript
 // convex/migrateToV2.ts
 import { internalAction } from "./_generated/server";
@@ -240,6 +252,7 @@ export const migrateProviders = internalAction({ ... });
 ### Task 1.3: Dual-Write Mutations
 
 **Files:**
+
 - Modify: `convex/classes/crud_mutations.ts`
 - Modify: `convex/students.ts`
 - Create: `convex/dualWrite.ts`
@@ -249,6 +262,7 @@ export const migrateProviders = internalAction({ ... });
 **Step 2: Run test — confirm it fails**
 
 **Step 3: Write minimal implementation**
+
 ```typescript
 // convex/dualWrite.ts
 export async function dualWriteStudent(ctx, oldArgs, newArgs) {
@@ -270,10 +284,12 @@ export async function dualWriteStudent(ctx, oldArgs, newArgs) {
 ### Task 2.1: Generated Convex Hooks
 
 **Files:**
+
 - Create: `lib/convex/hooks.ts` (auto-generated via script)
 - Create: `scripts/generate-hooks.ts`
 
 **Step 1: Write failing test**
+
 ```bash
 npm test -- tests/unit/hooks/useStudents.test.ts
 ```
@@ -281,18 +297,14 @@ npm test -- tests/unit/hooks/useStudents.test.ts
 **Step 2: Run test — confirm it fails**
 
 **Step 3: Write minimal implementation**
+
 ```typescript
 // lib/convex/hooks.ts
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../_generated/api";
 import { Id } from "../_generated/dataModel";
 
-export function useStudents(filters?: {
-  providerId?: Id<"providers">;
-  schoolId?: Id<"schools">;
-  grade?: string;
-  includeDeleted?: boolean;
-}) {
+export function useStudents(filters?: { providerId?: Id<"providers">; schoolId?: Id<"schools">; grade?: string; includeDeleted?: boolean }) {
   return useQuery(api.students.list, filters);
 }
 
@@ -313,6 +325,7 @@ export function useCreateStudent() {
 ### Task 2.2: Optimistic Mutation Hooks
 
 **Files:**
+
 - Create: `lib/hooks/useOptimisticMutation.ts`
 - Create: `tests/unit/hooks/useOptimisticMutation.test.ts`
 
@@ -321,6 +334,7 @@ export function useCreateStudent() {
 **Step 2: Run test — confirm it fails**
 
 **Step 3: Write minimal implementation**
+
 ```typescript
 // lib/hooks/useOptimisticMutation.ts
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -354,6 +368,7 @@ export function useOptimisticMutation(mutationFn, options) {
 ### Task 3.1: UI Primitive Library
 
 **Files (create all):**
+
 - `components/ui/Button.tsx`
 - `components/ui/Input.tsx`
 - `components/ui/Select.tsx`
@@ -371,6 +386,7 @@ export function useOptimisticMutation(mutationFn, options) {
 - `components/ui/index.ts`
 
 **Step 1: Write failing test per component**
+
 ```bash
 npm test -- tests/unit/ui/Button.test.tsx
 ```
@@ -378,6 +394,7 @@ npm test -- tests/unit/ui/Button.test.tsx
 **Step 2: Run test — confirm it fails**
 
 **Step 3: Write minimal implementation** (per component, e.g., Button)
+
 ```tsx
 // components/ui/Button.tsx
 import { ButtonHTMLAttributes, forwardRef } from "react";
@@ -388,34 +405,27 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
 }
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ variant = "primary", size = "md", loading, children, disabled, className, ...props }, ref) => {
-    const base = "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:pointer-events-none";
-    const variants = {
-      primary: "bg-primary text-primary-foreground hover:bg-primary/90",
-      secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-      outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-      ghost: "hover:bg-accent hover:text-accent-foreground",
-      destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-    };
-    const sizes = {
-      sm: "h-9 px-3 text-sm",
-      md: "h-10 px-4 py-2",
-      lg: "h-11 px-8 text-lg",
-    };
-    return (
-      <button
-        ref={ref}
-        className={`${base} ${variants[variant]} ${sizes[size]} ${className || ""}`}
-        disabled={disabled || loading}
-        {...props}
-      >
-        {loading && <Spinner className="mr-2 h-4 w-4" />}
-        {children}
-      </button>
-    );
-  }
-);
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ variant = "primary", size = "md", loading, children, disabled, className, ...props }, ref) => {
+  const base = "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:pointer-events-none";
+  const variants = {
+    primary: "bg-primary text-primary-foreground hover:bg-primary/90",
+    secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+    outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+    ghost: "hover:bg-accent hover:text-accent-foreground",
+    destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+  };
+  const sizes = {
+    sm: "h-9 px-3 text-sm",
+    md: "h-10 px-4 py-2",
+    lg: "h-11 px-8 text-lg",
+  };
+  return (
+    <button ref={ref} className={`${base} ${variants[variant]} ${sizes[size]} ${className || ""}`} disabled={disabled || loading} {...props}>
+      {loading && <Spinner className="mr-2 h-4 w-4" />}
+      {children}
+    </button>
+  );
+});
 Button.displayName = "Button";
 ```
 
@@ -429,6 +439,7 @@ Button.displayName = "Button";
 ### Task 3.2: I18n Input Components
 
 **Files:**
+
 - Create: `components/ui/I18nInput.tsx`
 - Create: `components/ui/I18nTextarea.tsx`
 - Create: `components/ui/I18nSelect.tsx`
@@ -439,6 +450,7 @@ Button.displayName = "Button";
 **Step 2: Run test — confirm it fails**
 
 **Step 3: Write minimal implementation**
+
 ```typescript
 // lib/hooks/useI18n.ts
 export function useI18n(value: { en: string; th: string }, language: "en" | "th") {
@@ -455,17 +467,13 @@ export function useSetI18n(setValue: (val: { en: string; th: string }) => void, 
 export function I18nInput({ label, value, onChange, language, ...props }) {
   const [localValue, setLocalValue] = useState(value?.[language] || "");
   const setI18n = useSetI18n(onChange, language);
-  
+
   useEffect(() => setLocalValue(value?.[language] || ""), [value, language]);
-  
+
   return (
     <div className="space-y-1">
       <Label>{label[language]}</Label>
-      <Input
-        value={localValue}
-        onChange={(e) => setI18n(e.target.value)}
-        {...props}
-      />
+      <Input value={localValue} onChange={(e) => setI18n(e.target.value)} {...props} />
     </div>
   );
 }
@@ -483,6 +491,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 4.1: Dashboard Layout (Desktop)
 
 **Files:**
+
 - Create: `app/(dashboard)/layout.tsx`
 - Create: `components/layout/Sidebar.tsx`
 - Create: `components/layout/Header.tsx`
@@ -504,6 +513,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 4.2: Mobile Layout (`/mobile`)
 
 **Files:**
+
 - Create: `app/(dashboard)/mobile/layout.tsx`
 - Create: `components/mobile/MobileLayout.tsx`
 - Create: `components/mobile/MobileBottomNav.tsx`
@@ -529,6 +539,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 5.1: Teacher Home (`/teacher`)
 
 **Files:**
+
 - Create: `app/(dashboard)/teacher/page.tsx`
 - Create: `components/teacher/TeacherHome.tsx`
 - Create: `components/teacher/UpcomingClasses.tsx`
@@ -551,6 +562,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 5.2: Teacher Classes (`/teacher/classes`)
 
 **Files:**
+
 - Create: `app/(dashboard)/teacher/classes/page.tsx`
 - Create: `components/teacher/class-booking/ClassList.tsx`
 - Create: `components/teacher/class-booking/ClassFilters.tsx`
@@ -574,6 +586,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 5.3: Teacher Students (`/teacher/students`)
 
 **Files:**
+
 - Create: `app/(dashboard)/teacher/students/page.tsx`
 - Create: `components/teacher/students/StudentTabs.tsx` (School | Private)
 - Create: `components/teacher/students/StudentList.tsx`
@@ -596,6 +609,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 5.4: Teacher Analytics (`/teacher/analytics`)
 
 **Files:**
+
 - Create: `app/(dashboard)/teacher/analytics/page.tsx`
 - Create: `components/teacher/analytics/AnalyticsDashboard.tsx`
 - Create: `components/teacher/analytics/AttendanceChart.tsx`
@@ -620,6 +634,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 6.1: Moderator Home & Approvals
 
 **Files:**
+
 - Create: `app/(dashboard)/moderator/page.tsx`
 - Create: `app/(dashboard)/moderator/approvals/page.tsx`
 - Create: `components/moderator/ApprovalQueue.tsx`
@@ -642,6 +657,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 6.2: Moderator Schools & Analytics
 
 **Files:**
+
 - Create: `app/(dashboard)/moderator/schools/page.tsx`
 - Create: `app/(dashboard)/moderator/analytics/page.tsx`
 - Create: `components/moderator/SchoolManagement.tsx`
@@ -665,6 +681,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 7.1: Admin Users & Schools
 
 **Files:**
+
 - Create: `app/(dashboard)/admin/users/page.tsx`
 - Create: `app/(dashboard)/admin/schools/page.tsx`
 - Create: `components/admin/UserManagement.tsx`
@@ -687,6 +704,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 7.2: Admin Analytics & Settings
 
 **Files:**
+
 - Create: `app/(dashboard)/admin/analytics/page.tsx`
 - Create: `app/(dashboard)/admin/settings/page.tsx`
 - Create: `components/admin/SystemAnalytics.tsx`
@@ -710,6 +728,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 8.1: Mobile Home (`/mobile`)
 
 **Files:**
+
 - Create: `app/(dashboard)/mobile/page.tsx`
 - Create: `components/mobile/MobileHome.tsx`
 - Create: `components/mobile/TodayClasses.tsx`
@@ -732,6 +751,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 8.2: Mobile Log Class (`/mobile/log`)
 
 **Files:**
+
 - Create: `app/(dashboard)/mobile/log/page.tsx`
 - Create: `components/mobile/MobileLogForm.tsx`
 - Create: `components/mobile/MobileStudentPicker.tsx`
@@ -754,6 +774,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 8.3: Mobile History & Events
 
 **Files:**
+
 - Create: `app/(dashboard)/mobile/history/page.tsx`
 - Create: `app/(dashboard)/mobile/events/page.tsx`
 - Create: `components/mobile/MobileHistoryList.tsx`
@@ -776,6 +797,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 8.4: Mobile Private Students
 
 **Files:**
+
 - Create: `app/(dashboard)/mobile/students/page.tsx`
 - Create: `components/mobile/MobilePrivateStudents.tsx`
 - Create: `components/mobile/MobileStudentCard.tsx`
@@ -796,6 +818,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 8.5: PWA Configuration
 
 **Files:**
+
 - Modify: `next.config.ts` (PWA plugin)
 - Create: `public/sw.js` (complete)
 - Create: `components/mobile/PWAInstallPrompt.tsx`
@@ -818,6 +841,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 ### Task 9.1: i18n Data Migration
 
 **Files:**
+
 - Create: `convex/migrateI18n.ts`
 - Create: `scripts/run-i18n-migration.ts`
 
@@ -826,6 +850,7 @@ export function I18nInput({ label, value, onChange, language, ...props }) {
 **Step 2: Run test — confirm it fails**
 
 **Step 3: Write minimal implementation**
+
 ```typescript
 // convex/migrateI18n.ts
 export const migrateAllI18nFields = internalAction({
@@ -848,6 +873,7 @@ export const migrateAllI18nFields = internalAction({
 ### Task 9.2: Component i18n Adoption
 
 **Files:**
+
 - Modify: All components using bilingual fields
 - Use `I18nInput`, `I18nTextarea`, `useI18n` hook
 
@@ -869,6 +895,7 @@ export const migrateAllI18nFields = internalAction({
 ### Task 10.1: Personal Provider Creation Flow
 
 **Files:**
+
 - Create: `components/teacher/providers/PersonalProviderSetup.tsx`
 - Create: `components/teacher/providers/ProviderSelector.tsx`
 - Modify: `convex/providers.ts` (add `createPersonalProvider` mutation)
@@ -889,6 +916,7 @@ export const migrateAllI18nFields = internalAction({
 ### Task 10.2: Unified Student/Class Logic
 
 **Files:**
+
 - Modify: `convex/classes/booking_mutations.ts` (XOR validation)
 - Modify: `convex/students.ts` (providerId required)
 - Modify: Teacher booking form (provider dropdown)
@@ -911,10 +939,12 @@ export const migrateAllI18nFields = internalAction({
 ### Task 11.1: Unit Test Coverage
 
 **Files:**
+
 - Create missing tests for all hooks, utils, components
 - Target: 80% coverage
 
 **Step 1: Run coverage**
+
 ```bash
 npm run test:coverage
 ```
@@ -929,6 +959,7 @@ npm run test:coverage
 ### Task 11.2: Integration Tests
 
 **Files:**
+
 - Create: `tests/integration/mobile-log-flow.test.ts`
 - Create: `tests/integration/private-student-flow.test.ts`
 - Create: `tests/integration/approval-workflow.test.ts`
@@ -949,6 +980,7 @@ npm run test:coverage
 ### Task 11.3: E2E Tests (Playwright)
 
 **Files:**
+
 - Modify: `tests/e2e/auth.spec.ts`
 - Create: `tests/e2e/teacher-class-booking.spec.ts`
 - Create: `tests/e2e/moderator-approval.spec.ts`
@@ -970,6 +1002,7 @@ npm run test:coverage
 ### Task 11.4: Performance Audit
 
 **Files:**
+
 - Run: `npm run build && npm run analyze`
 - Verify bundle sizes, FCP, TTI targets
 
@@ -985,6 +1018,7 @@ npm run test:coverage
 ### Task 11.5: Accessibility Audit
 
 **Files:**
+
 - Run: `npm run test:a11y` (axe-core)
 - Fix violations
 
@@ -1002,6 +1036,7 @@ npm run test:coverage
 ### Task 12.1: Feature Flags & Legacy Routes
 
 **Files:**
+
 - Create: `lib/feature-flags.ts`
 - Create: `app/(dashboard)/legacy/...` (old routes)
 - Modify: `middleware.ts` (feature flag routing)
@@ -1022,6 +1057,7 @@ npm run test:coverage
 ### Task 12.2: Staging Deploy & UAT
 
 **Files:**
+
 - Configure: Vercel preview deployments
 - Document: `UAT_CHECKLIST.md`
 
@@ -1039,6 +1075,7 @@ npm run test:coverage
 ### Task 12.3: Production Deploy
 
 **Files:**
+
 - Merge to main
 - Tag release
 - Monitor
@@ -1056,29 +1093,29 @@ npm run test:coverage
 
 ## Execution Order Summary
 
-| Phase | Tasks | Est. Days |
-|-------|-------|-----------|
-| 0: Foundation | 0.1, 0.2 | 2 |
-| 1: Schema v2 | 1.1, 1.2, 1.3 | 5 |
-| 2: Hooks | 2.1, 2.2 | 3 |
-| 3: UI Primitives | 3.1, 3.2 | 5 |
-| 4: Layout | 4.1, 4.2 | 3 |
-| 5: Teacher Pages | 5.1-5.4 | 5 |
-| 6: Moderator | 6.1, 6.2 | 3 |
-| 7: Admin | 7.1, 7.2 | 3 |
-| 8: Mobile PWA | 8.1-8.5 | 5 |
-| 9: i18n | 9.1, 9.2 | 2 |
-| 10: Private Students | 10.1, 10.2 | 2 |
-| 11: Testing | 11.1-11.5 | 5 |
-| 12: Deploy | 12.1-12.3 | 3 |
+| Phase                | Tasks         | Est. Days |
+| -------------------- | ------------- | --------- |
+| 0: Foundation        | 0.1, 0.2      | 2         |
+| 1: Schema v2         | 1.1, 1.2, 1.3 | 5         |
+| 2: Hooks             | 2.1, 2.2      | 3         |
+| 3: UI Primitives     | 3.1, 3.2      | 5         |
+| 4: Layout            | 4.1, 4.2      | 3         |
+| 5: Teacher Pages     | 5.1-5.4       | 5         |
+| 6: Moderator         | 6.1, 6.2      | 3         |
+| 7: Admin             | 7.1, 7.2      | 3         |
+| 8: Mobile PWA        | 8.1-8.5       | 5         |
+| 9: i18n              | 9.1, 9.2      | 2         |
+| 10: Private Students | 10.1, 10.2    | 2         |
+| 11: Testing          | 11.1-11.5     | 5         |
+| 12: Deploy           | 12.1-12.3     | 3         |
 
 **Total: ~44 working days (~9 weeks with buffer)**
 
 ---
 
-*Plan saved. Two execution options:*
+_Plan saved. Two execution options:_
 
 1. **Subagent-Driven** — I dispatch a fresh sub-agent per task, review between tasks
 2. **Manual** — You run the tasks yourself
 
-*Which approach?*
+_Which approach?_

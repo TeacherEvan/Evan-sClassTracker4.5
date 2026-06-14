@@ -394,7 +394,7 @@ Edit `desktop-notification-window.tsx`:
 
 ```typescript
 // Main gradient
-background: "linear-gradient(135deg, #f6e05e 0%, #d69e2e 25%, ...)"
+background: "linear-gradient(135deg, #f6e05e 0%, #d69e2e 25%, ...)";
 
 // Adjust amber/orange shades as desired
 ```

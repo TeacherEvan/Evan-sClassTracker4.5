@@ -8,13 +8,13 @@
 
 ## Class Rosters
 
-| Class | Grade Level | Total Students | Status | File |
-|-------|-------------|----------------|--------|------|
-| K1/1 | Kindergarten 1 | 28 | ✅ Active | [K1-1-roster.md](./K1-1-roster.md) |
-| K1/5 | Kindergarten 1 | 27 | ✅ Active | [K1-5-roster.md](./K1-5-roster.md) |
-| K1/6 | Kindergarten 1 | 28 | ✅ Active | [K1-6-roster.md](./K1-6-roster.md) |
-| K1/9 | Kindergarten 1 | 28 | ✅ Active | [K1-9-roster.md](./K1-9-roster.md) |
-| K2/6 | Kindergarten 2 | 27 | ✅ Active | [K2-6-roster.md](./K2-6-roster.md) |
+| Class | Grade Level    | Total Students | Status    | File                               |
+| ----- | -------------- | -------------- | --------- | ---------------------------------- |
+| K1/1  | Kindergarten 1 | 28             | ✅ Active | [K1-1-roster.md](./K1-1-roster.md) |
+| K1/5  | Kindergarten 1 | 27             | ✅ Active | [K1-5-roster.md](./K1-5-roster.md) |
+| K1/6  | Kindergarten 1 | 28             | ✅ Active | [K1-6-roster.md](./K1-6-roster.md) |
+| K1/9  | Kindergarten 1 | 28             | ✅ Active | [K1-9-roster.md](./K1-9-roster.md) |
+| K2/6  | Kindergarten 2 | 27             | ✅ Active | [K2-6-roster.md](./K2-6-roster.md) |
 
 ## Summary Statistics
 

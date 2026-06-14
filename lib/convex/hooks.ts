@@ -6,7 +6,9 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 
 // Type definitions for Convex API (used at compile time)
 type Id<TableName> = string;
-type FunctionReference<Type, Visibility, Args, ReturnType> = (args: Args) => Promise<ReturnType>;
+type FunctionReference<Type, Visibility, Args, ReturnType> = (
+  args: Args,
+) => Promise<ReturnType>;
 type Api = Record<string, unknown>;
 
 // Mock API for type safety - actual implementation uses Convex's generated api

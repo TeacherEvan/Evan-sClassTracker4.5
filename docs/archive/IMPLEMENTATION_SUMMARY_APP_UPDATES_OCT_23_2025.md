@@ -10,6 +10,7 @@
 ## Issue Identified
 
 **User Report:**
+
 > "the notification window is not showing users the latest feature enhancements and updates.... Keep to information users will find productive and not intilectually tedious"
 
 **Root Cause:**

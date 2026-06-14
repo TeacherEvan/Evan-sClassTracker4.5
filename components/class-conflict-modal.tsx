@@ -15,8 +15,20 @@ interface ClassConflictModalProps {
     locationId?: Id<"locations">;
     scheduledDate: number;
     status: string;
-    student: Partial<Doc<"students">> & { _id: Id<"students">; firstName: string; lastName: string } | null;
-    location: Partial<Doc<"locations">> & { _id: Id<"locations">; name: string; nameTh: string } | null;
+    student:
+      | (Partial<Doc<"students">> & {
+          _id: Id<"students">;
+          firstName: string;
+          lastName: string;
+        })
+      | null;
+    location:
+      | (Partial<Doc<"locations">> & {
+          _id: Id<"locations">;
+          name: string;
+          nameTh: string;
+        })
+      | null;
     teacherId: Id<"users">;
     schoolId?: Id<"schools">; // Optional for provider classes
   }>;
@@ -41,15 +53,20 @@ export function ClassConflictModal({
 }: ClassConflictModalProps) {
   const { t, language } = useLanguage();
 
-  const [selectedAction, setSelectedAction] = useState<"merge" | "separate" | null>(null);
-  const [selectedTargetClass, setSelectedTargetClass] = useState<Id<"classes"> | "">(
-    conflicts.length > 0 ? conflicts[0]._id : ""
-  );
+  const [selectedAction, setSelectedAction] = useState<
+    "merge" | "separate" | null
+  >(null);
+  const [selectedTargetClass, setSelectedTargetClass] = useState<
+    Id<"classes"> | ""
+  >(conflicts.length > 0 ? conflicts[0]._id : "");
   const [loading, setLoading] = useState(false);
 
   const handleMerge = async () => {
     if (!selectedTargetClass) {
-      toast.error("Please select a class to merge into", "กรุณาเลือกคลาสที่จะรวม");
+      toast.error(
+        "Please select a class to merge into",
+        "กรุณาเลือกคลาสที่จะรวม",
+      );
       return;
     }
 
@@ -60,7 +77,7 @@ export function ClassConflictModal({
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to merge classes",
-        err instanceof Error ? err.message : "ไม่สามารถรวมคลาสได้"
+        err instanceof Error ? err.message : "ไม่สามารถรวมคลาสได้",
       );
     } finally {
       setLoading(false);
@@ -75,7 +92,7 @@ export function ClassConflictModal({
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to create class",
-        err instanceof Error ? err.message : "ไม่สามารถสร้างคลาสได้"
+        err instanceof Error ? err.message : "ไม่สามารถสร้างคลาสได้",
       );
     } finally {
       setLoading(false);
@@ -98,7 +115,7 @@ export function ClassConflictModal({
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 {t(
                   "A class is already scheduled at this time",
-                  "มีคลาสที่กำหนดไว้ในเวลานี้แล้ว"
+                  "มีคลาสที่กำหนดไว้ในเวลานี้แล้ว",
                 )}
               </p>
             </div>
@@ -110,14 +127,19 @@ export function ClassConflictModal({
           {/* New Class Info */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <h3 className="font-semibold mb-2 text-blue-900 dark:text-blue-100">
-              {t("New Class You're Trying to Book:", "คลาสใหม่ที่คุณกำลังจะจอง:")}
+              {t(
+                "New Class You're Trying to Book:",
+                "คลาสใหม่ที่คุณกำลังจะจอง:",
+              )}
             </h3>
             <div className="space-y-1 text-sm">
               <p>
-                <strong>{t("Student:", "นักเรียน:")}</strong> {newClassData.studentName}
+                <strong>{t("Student:", "นักเรียน:")}</strong>{" "}
+                {newClassData.studentName}
               </p>
               <p>
-                <strong>{t("Location:", "สถานที่:")}</strong> {newClassData.locationName}
+                <strong>{t("Location:", "สถานที่:")}</strong>{" "}
+                {newClassData.locationName}
               </p>
               <p>
                 <strong>{t("Date/Time:", "วัน/เวลา:")}</strong>{" "}
@@ -136,7 +158,8 @@ export function ClassConflictModal({
               {conflicts.map((conflict) => {
                 const student = conflict.student;
                 const location = conflict.location;
-                const totalStudents = 1 + (conflict.additionalStudentIds?.length || 0);
+                const totalStudents =
+                  1 + (conflict.additionalStudentIds?.length || 0);
 
                 return (
                   <div
@@ -156,7 +179,9 @@ export function ClassConflictModal({
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                           {t("Location:", "สถานที่:")}{" "}
-                          {language === "en" ? location?.name : location?.nameTh}
+                          {language === "en"
+                            ? location?.name
+                            : location?.nameTh}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-500">
                           {new Date(conflict.scheduledDate).toLocaleString()}
@@ -180,10 +205,11 @@ export function ClassConflictModal({
             <div className="space-y-3">
               {/* Option 1: Merge */}
               <label
-                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedAction === "merge"
-                  ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
-                  : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                  }`}
+                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                  selectedAction === "merge"
+                    ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                }`}
               >
                 <input
                   type="radio"
@@ -201,7 +227,7 @@ export function ClassConflictModal({
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {t(
                       "Add the new student to one of the existing classes. This is recommended when students can be taught together.",
-                      "เพิ่มนักเรียนใหม่เข้าไปในคลาสที่มีอยู่แล้ว แนะนำเมื่อสามารถสอนนักเรียนร่วมกันได้"
+                      "เพิ่มนักเรียนใหม่เข้าไปในคลาสที่มีอยู่แล้ว แนะนำเมื่อสามารถสอนนักเรียนร่วมกันได้",
                     )}
                   </p>
                   {selectedAction === "merge" && conflicts.length > 1 && (
@@ -211,12 +237,17 @@ export function ClassConflictModal({
                       </label>
                       <select
                         value={selectedTargetClass}
-                        onChange={(e) => setSelectedTargetClass(e.target.value as Id<"classes">)}
+                        onChange={(e) =>
+                          setSelectedTargetClass(
+                            e.target.value as Id<"classes">,
+                          )
+                        }
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800"
                       >
                         {conflicts.map((conflict) => (
                           <option key={conflict._id} value={conflict._id}>
-                            {conflict.student?.firstName} {conflict.student?.lastName} -{" "}
+                            {conflict.student?.firstName}{" "}
+                            {conflict.student?.lastName} -{" "}
                             {conflict.location?.name}
                           </option>
                         ))}
@@ -228,10 +259,11 @@ export function ClassConflictModal({
 
               {/* Option 2: Create Separate */}
               <label
-                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${selectedAction === "separate"
-                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                  : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
-                  }`}
+                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                  selectedAction === "separate"
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                }`}
               >
                 <input
                   type="radio"
@@ -249,14 +281,14 @@ export function ClassConflictModal({
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {t(
                       "Keep both classes separate. Use this when students need individual attention or are at different levels.",
-                      "เก็บทั้งสองคลาสแยกกัน ใช้เมื่อนักเรียนต้องการความสนใจเป็นรายบุคคลหรืออยู่ในระดับที่แตกต่างกัน"
+                      "เก็บทั้งสองคลาสแยกกัน ใช้เมื่อนักเรียนต้องการความสนใจเป็นรายบุคคลหรืออยู่ในระดับที่แตกต่างกัน",
                     )}
                   </p>
                   <div className="mt-2 text-xs text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
                     <AlertTriangle className="w-3 h-3 inline mr-1" />
                     {t(
                       "Warning: You will have multiple classes at the same time",
-                      "คำเตือน: คุณจะมีหลายคลาสในเวลาเดียวกัน"
+                      "คำเตือน: คุณจะมีหลายคลาสในเวลาเดียวกัน",
                     )}
                   </div>
                 </div>
@@ -275,7 +307,9 @@ export function ClassConflictModal({
                 className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
               >
                 <Users className="w-5 h-5" />
-                {loading ? t("Merging...", "กำลังรวม...") : t("Merge Classes", "รวมคลาส")}
+                {loading
+                  ? t("Merging...", "กำลังรวม...")
+                  : t("Merge Classes", "รวมคลาส")}
               </button>
             ) : selectedAction === "separate" ? (
               <button
@@ -284,7 +318,9 @@ export function ClassConflictModal({
                 className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
               >
                 <Check className="w-5 h-5" />
-                {loading ? t("Creating...", "กำลังสร้าง...") : t("Create Separate", "สร้างแยก")}
+                {loading
+                  ? t("Creating...", "กำลังสร้าง...")
+                  : t("Create Separate", "สร้างแยก")}
               </button>
             ) : (
               <button

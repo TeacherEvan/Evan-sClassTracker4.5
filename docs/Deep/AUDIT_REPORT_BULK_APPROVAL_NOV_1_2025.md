@@ -118,12 +118,12 @@ Available students:
 
 **Authorization Model**:
 
-| Role | Bulk Approve | Seed Classes | View Classes |
-|------|--------------|--------------|--------------|
-| Admin | ✅ All schools | ✅ | ✅ All |
-| Moderator | ✅ Own school only | ❌ | ✅ Own school |
-| Teacher | ❌ | ❌ | ✅ Own classes |
-| Guardian | ❌ | ❌ | ❌ |
+| Role      | Bulk Approve       | Seed Classes | View Classes   |
+| --------- | ------------------ | ------------ | -------------- |
+| Admin     | ✅ All schools     | ✅           | ✅ All         |
+| Moderator | ✅ Own school only | ❌           | ✅ Own school  |
+| Teacher   | ❌                 | ❌           | ✅ Own classes |
+| Guardian  | ❌                 | ❌           | ❌             |
 
 **Safeguards**:
 
@@ -149,11 +149,11 @@ Available students:
 
 **Benchmarks**:
 
-| Operation | Before | After | Improvement |
-|-----------|--------|-------|-------------|
-| Student Lookup | 2.1s | 0.3s | -86% |
-| Bulk Approve 100 | N/A | 1.9s | New |
-| Error Reporting | 0.1s | 0.2s | Acceptable |
+| Operation        | Before | After | Improvement |
+| ---------------- | ------ | ----- | ----------- |
+| Student Lookup   | 2.1s   | 0.3s  | -86%        |
+| Bulk Approve 100 | N/A    | 1.9s  | New         |
+| Error Reporting  | 0.1s   | 0.2s  | Acceptable  |
 
 ---
 

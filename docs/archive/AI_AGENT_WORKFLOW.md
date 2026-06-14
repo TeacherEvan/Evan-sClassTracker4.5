@@ -18,7 +18,6 @@ The `.github/copilot-instructions.md` file now includes:
 ### ⚠️ CRITICAL: Update Notification After Each Feature Implementation
 
 **REQUIRED STEP** - After completing ANY significant feature or improvement:
-
 ```
 
 ## Example AI Agent Checklist
@@ -26,7 +25,7 @@ The `.github/copilot-instructions.md` file now includes:
 At end of work session:
 
 - [ ] ✅ Complete all implementation tasks
-- [ ] ✅ Update documentation (IMPLEMENTATION_SUMMARY_*.md)
+- [ ] ✅ Update documentation (IMPLEMENTATION*SUMMARY*\*.md)
 - [ ] ✅ Commit changes
 
 ## Manual Verification
@@ -70,7 +69,7 @@ Common icons for updates:
 - Use user-friendly language ("Easier booking" not "Refactored mutation")
 - Include bilingual content (English + Thai)
 - Test update appears correctly before committing
-- Document changes in IMPLEMENTATION_SUMMARY_*.md first
+- Document changes in IMPLEMENTATION*SUMMARY*\*.md first
 
 ### ❌ DON'T
 

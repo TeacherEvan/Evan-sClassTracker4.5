@@ -3,7 +3,7 @@
 **Date:** November 1, 2025  
 **Status:** Phase 5 Implementation COMPLETE ✅ | Testing & Documentation PENDING  
 **Previous Agent:** Phase 5 Analytics Dashboard Implementation  
-**Next Agent:** Complete Testing, Documentation, and Deployment  
+**Next Agent:** Complete Testing, Documentation, and Deployment
 
 ---
 
@@ -91,7 +91,7 @@ Route (app)                         Size  First Load JS
    // Current: No validation
    const startDate = args.startDate || thirtyDaysAgo;
    const endDate = args.endDate || now;
-   
+
    // Recommended: Validate date range
    if (args.startDate && args.endDate && args.startDate > args.endDate) {
      throw new Error("Start date must be before end date");
@@ -110,16 +110,16 @@ Route (app)                         Size  First Load JS
 
    ```typescript
    import { checkRateLimit } from "./rateLimit";
-   
+
    export const getSummaryAnalytics = query({
      handler: async (ctx, args) => {
        await checkRateLimit(ctx, {
          key: `analytics-summary-${args.userId}`,
-         limit: 60,      // 60 requests
-         windowMs: 60000 // per minute
+         limit: 60, // 60 requests
+         windowMs: 60000, // per minute
        });
        // ... rest of handler
-     }
+     },
    });
    ```
 
@@ -147,11 +147,11 @@ Route (app)                         Size  First Load JS
    ```typescript
    // Current: No error state handling
    const summaryData = useQuery(api.analytics.getSummaryAnalytics, { ... });
-   
+
    // Recommended: Handle query errors
    const summaryData = useQuery(api.analytics.getSummaryAnalytics, { ... });
    const [queryError, setQueryError] = useState<string | null>(null);
-   
+
    useEffect(() => {
      if (summaryData === undefined) {
        // Still loading
@@ -169,17 +169,17 @@ Route (app)                         Size  First Load JS
      const newDate = new Date(e.target.value).getTime();
      if (!isNaN(newDate)) setStartDate(newDate);
    };
-   
+
    // Recommended: Debounce to prevent excessive queries
    const [debouncedStartDate, setDebouncedStartDate] = useState(startDate);
-   
+
    useEffect(() => {
      const timer = setTimeout(() => {
        setDebouncedStartDate(startDate);
      }, 500);
      return () => clearTimeout(timer);
    }, [startDate]);
-   
+
    // Use debouncedStartDate in query
    ```
 
@@ -188,7 +188,7 @@ Route (app)                         Size  First Load JS
    ```typescript
    const [sortBy, setSortBy] = useState<"totalClasses" | "attendanceRate" | "avgClassCount">("totalClasses");
    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-   
+
    const sortedData = useMemo(() => {
      if (!studentPerformanceData) return [];
      return [...studentPerformanceData].sort((a, b) => {
@@ -204,7 +204,7 @@ Route (app)                         Size  First Load JS
    ```typescript
    // Current: Generic filename
    link.setAttribute("download", `class-analytics-${new Date().toISOString().split("T")[0]}.csv`);
-   
+
    // Recommended: Include date range
    const startStr = new Date(startDate).toISOString().split("T")[0];
    const endStr = new Date(endDate).toISOString().split("T")[0];
@@ -220,7 +220,7 @@ Route (app)                         Size  First Load JS
      // ...
    ]);
    const csvContent = rows.map((row) => row.join(",")).join("\n");
-   
+
    // Recommended: Escape commas and quotes
    const escapeCSV = (value: string | number) => {
      if (typeof value === "string" && (value.includes(",") || value.includes('"'))) {
@@ -237,7 +237,7 @@ Route (app)                         Size  First Load JS
    const handlePrint = () => {
      window.print(); // Or use react-to-print library
    };
-   
+
    // Add Print button next to CSV export
    <button onClick={handlePrint} className="...">
      <Printer className="w-4 h-4" />
@@ -430,20 +430,20 @@ Screen Reader (if available):
 
 - **Class Analytics Dashboard**: Educational performance metrics with visual insights
   - 4 Summary Cards:
-    * Total Classes (blue gradient)
-    * Attendance Rate (green gradient)
-    * Active Students (purple gradient)
-    * Avg ClassCount (orange gradient)
+    - Total Classes (blue gradient)
+    - Attendance Rate (green gradient)
+    - Active Students (purple gradient)
+    - Avg ClassCount (orange gradient)
   - Student Performance Table with color-coded ratings:
-    * Excellent (≥90% attendance): Green
-    * Good (≥70% attendance): Blue
-    * Needs Improvement (<70%): Yellow
+    - Excellent (≥90% attendance): Green
+    - Good (≥70% attendance): Blue
+    - Needs Improvement (<70%): Yellow
   - Date range filtering (defaults to last 30 days)
   - Export to CSV functionality with bilingual headers
   - Role-based access control:
-    * Teachers: See own students only
-    * Moderators: See school-wide data
-    * Admins: See system-wide data
+    - Teachers: See own students only
+    - Moderators: See school-wide data
+    - Admins: See system-wide data
   - Responsive design with mobile-friendly cards
   - Dark mode support
   - Component: `components/class-analytics.tsx` (352 lines)
@@ -497,7 +497,7 @@ Screen Reader (if available):
 **Version:** 4.5.13  
 **Status:** ✅ COMPLETE  
 **Build:** Successful  
-**Type Errors:** None  
+**Type Errors:** None
 
 ---
 
@@ -524,6 +524,7 @@ Phase 5 of the Class Booking UX Overhaul introduces a comprehensive Analytics Da
    - Sorted by total classes (most active first)
 
 **Key Features:**
+
 - Index-based queries (no table scans)
 - Batch fetching with Promise.all (avoids N+1)
 - Map-based lookups (O(1) access)
@@ -559,19 +560,21 @@ Phase 5 of the Class Booking UX Overhaul introduces a comprehensive Analytics Da
    - Includes all student data
 
 **Key Features:**
+
 - Loading states
 - Empty states ("No student data available")
 - Bilingual support (EN/TH)
 - Dark mode compatible
 - Responsive design (mobile-friendly)
 - Performance ratings:
-  * Excellent: ≥90% (green)
-  * Good: ≥70% (blue)
-  * Needs Improvement: <70% (yellow)
+  - Excellent: ≥90% (green)
+  - Good: ≥70% (blue)
+  - Needs Improvement: <70% (yellow)
 
 ### Integration (components/class-booking.tsx)
 
 **Changes:**
+
 - Added Analytics button to header (indigo gradient)
 - Added showAnalytics state in ClassBooking component
 - Opens ClassAnalytics modal on click
@@ -582,10 +585,12 @@ Phase 5 of the Class Booking UX Overhaul introduces a comprehensive Analytics Da
 ## Files Modified/Created
 
 **Created:**
+
 - `convex/analytics.ts` (294 lines)
 - `components/class-analytics.tsx` (352 lines)
 
 **Modified:**
+
 - `components/class-booking.tsx`:
   - Line 10: Added BarChart3 icon import
   - Line 12: Added ClassAnalytics import
@@ -607,7 +612,7 @@ Phase 5 of the Class Booking UX Overhaul introduces a comprehensive Analytics Da
 
 ```
 
-**Type Errors:** None  
+**Type Errors:** None
 **Lint Warnings:** 1 minor (unused variable in create-provider-modal.tsx)
 
 **Manual Testing:** PENDING (see AGENT_HANDOFF_PHASE_5_COMPLETION_NOV_1_2025.md)
@@ -722,97 +727,97 @@ Phase 5 Analytics Dashboard is feature-complete, builds successfully, and is rea
 **File:** `tests/e2e/analytics.spec.ts`
 
 ```typescript
-import { test, expect } from '@playwright/test';
-import { login, navigateToTab, logout } from './helpers';
+import { test, expect } from "@playwright/test";
+import { login, navigateToTab, logout } from "./helpers";
 
-test.describe('Analytics Dashboard', () => {
-  test.describe('Teacher Role', () => {
-    test('should open analytics modal', async ({ page }) => {
-      await login(page, { username: 'Evan', password: 'TeacherEvan' });
-      await navigateToTab(page, 'Classes');
-      
+test.describe("Analytics Dashboard", () => {
+  test.describe("Teacher Role", () => {
+    test("should open analytics modal", async ({ page }) => {
+      await login(page, { username: "Evan", password: "TeacherEvan" });
+      await navigateToTab(page, "Classes");
+
       // Click Analytics button
       const analyticsButton = page.locator('button:has-text("Analytics"), button:has-text("การวิเคราะห์")').first();
       await analyticsButton.click();
-      
+
       // Verify modal opens
-      await expect(page.locator('text=Class Analytics, text=การวิเคราะห์คลาส')).toBeVisible();
+      await expect(page.locator("text=Class Analytics, text=การวิเคราะห์คลาส")).toBeVisible();
     });
 
-    test('should display summary cards', async ({ page }) => {
-      await login(page, { username: 'Evan', password: 'TeacherEvan' });
-      await navigateToTab(page, 'Classes');
+    test("should display summary cards", async ({ page }) => {
+      await login(page, { username: "Evan", password: "TeacherEvan" });
+      await navigateToTab(page, "Classes");
       await page.locator('button:has-text("Analytics")').first().click();
-      
+
       // Verify all 4 cards visible
-      await expect(page.locator('text=Total Classes, text=คลาสทั้งหมด')).toBeVisible();
-      await expect(page.locator('text=Attendance Rate, text=อัตราเข้าเรียน')).toBeVisible();
-      await expect(page.locator('text=Active Students, text=นักเรียนที่ใช้งาน')).toBeVisible();
-      await expect(page.locator('text=Avg ClassCount, text=ClassCount เฉลี่ย')).toBeVisible();
+      await expect(page.locator("text=Total Classes, text=คลาสทั้งหมด")).toBeVisible();
+      await expect(page.locator("text=Attendance Rate, text=อัตราเข้าเรียน")).toBeVisible();
+      await expect(page.locator("text=Active Students, text=นักเรียนที่ใช้งาน")).toBeVisible();
+      await expect(page.locator("text=Avg ClassCount, text=ClassCount เฉลี่ย")).toBeVisible();
     });
 
-    test('should filter by date range', async ({ page }) => {
-      await login(page, { username: 'Evan', password: 'TeacherEvan' });
-      await navigateToTab(page, 'Classes');
+    test("should filter by date range", async ({ page }) => {
+      await login(page, { username: "Evan", password: "TeacherEvan" });
+      await navigateToTab(page, "Classes");
       await page.locator('button:has-text("Analytics")').first().click();
-      
+
       // Get initial total classes
-      const initialTotal = await page.locator('text=/\\d+/').first().textContent();
-      
+      const initialTotal = await page.locator("text=/\\d+/").first().textContent();
+
       // Change date range to last 7 days
-      const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
       await page.locator('input[type="date"]').first().fill(startDate);
-      
+
       // Wait for data to update
       await page.waitForTimeout(1000);
-      
+
       // Verify total changed
-      const newTotal = await page.locator('text=/\\d+/').first().textContent();
+      const newTotal = await page.locator("text=/\\d+/").first().textContent();
       // Note: Might be same if all classes are within 7 days
     });
 
-    test('should export CSV', async ({ page }) => {
-      await login(page, { username: 'Evan', password: 'TeacherEvan' });
-      await navigateToTab(page, 'Classes');
+    test("should export CSV", async ({ page }) => {
+      await login(page, { username: "Evan", password: "TeacherEvan" });
+      await navigateToTab(page, "Classes");
       await page.locator('button:has-text("Analytics")').first().click();
-      
+
       // Set up download listener
-      const downloadPromise = page.waitForEvent('download');
-      
+      const downloadPromise = page.waitForEvent("download");
+
       // Click export button
       await page.locator('button:has-text("Export CSV"), button:has-text("ส่งออก CSV")').click();
-      
+
       // Verify download starts
       const download = await downloadPromise;
       expect(download.suggestedFilename()).toMatch(/class-analytics-.*\.csv/);
     });
   });
 
-  test.describe('Role-Based Access', () => {
-    test('teacher sees only own data', async ({ page }) => {
-      await login(page, { username: 'Evan', password: 'TeacherEvan' });
-      await navigateToTab(page, 'Classes');
+  test.describe("Role-Based Access", () => {
+    test("teacher sees only own data", async ({ page }) => {
+      await login(page, { username: "Evan", password: "TeacherEvan" });
+      await navigateToTab(page, "Classes");
       await page.locator('button:has-text("Analytics")').first().click();
-      
+
       // Verify student table shows only Evan's students
       // This requires knowledge of test data
       // Example: await expect(page.locator('text=Other Teacher Student')).not.toBeVisible();
     });
 
-    test('moderator sees school-wide data', async ({ page }) => {
-      await login(page, { username: 'moderator1', password: 'TeacherModerator1' });
-      await navigateToTab(page, 'Classes');
+    test("moderator sees school-wide data", async ({ page }) => {
+      await login(page, { username: "moderator1", password: "TeacherModerator1" });
+      await navigateToTab(page, "Classes");
       await page.locator('button:has-text("Analytics")').first().click();
-      
+
       // Verify shows data from multiple teachers at same school
       // This requires knowledge of test data
     });
 
-    test('admin sees all data', async ({ page }) => {
-      await login(page, { username: 'admin', password: 'TeacherAdmin' });
-      await navigateToTab(page, 'Classes');
+    test("admin sees all data", async ({ page }) => {
+      await login(page, { username: "admin", password: "TeacherAdmin" });
+      await navigateToTab(page, "Classes");
       await page.locator('button:has-text("Analytics")').first().click();
-      
+
       // Verify shows data from all schools
       // This requires knowledge of test data
     });
@@ -975,7 +980,7 @@ Phase 5 is considered COMPLETE when:
 ✅ Implementation summary created  
 ✅ Deployed to production successfully  
 ✅ Production testing confirms functionality  
-✅ TODO.md updated to mark Phase 5 complete  
+✅ TODO.md updated to mark Phase 5 complete
 
 ---
 
@@ -990,10 +995,7 @@ Phase 5 is considered COMPLETE when:
 5. Production deployment verification
 6. Updated TODO.md
 
-**Optional (if time permits):**
-7. E2E tests (analytics.spec.ts)
-8. Enhanced features (date validation, table sorting, etc.)
-9. Performance optimizations
+**Optional (if time permits):** 7. E2E tests (analytics.spec.ts) 8. Enhanced features (date validation, table sorting, etc.) 9. Performance optimizations
 
 ---
 

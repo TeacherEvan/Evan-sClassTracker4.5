@@ -26,7 +26,10 @@ export function AdminNotificationWindows({
 }: AdminNotificationWindowsProps) {
   const { t, language } = useLanguage();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingWindow, setEditingWindow] = useState<{ _id: Id<"notificationWindows">;[key: string]: unknown } | null>(null);
+  const [editingWindow, setEditingWindow] = useState<{
+    _id: Id<"notificationWindows">;
+    [key: string]: unknown;
+  } | null>(null);
 
   // Form state
   const [title, setTitle] = useState("");
@@ -36,10 +39,14 @@ export function AdminNotificationWindows({
   const [message, setMessage] = useState("");
   const [messageTh, setMessageTh] = useState("");
   const [showUpdateSummary, setShowUpdateSummary] = useState(true);
-  const [targetRole, setTargetRole] = useState<"all" | "teacher" | "moderator" | "admin">("all");
+  const [targetRole, setTargetRole] = useState<
+    "all" | "teacher" | "moderator" | "admin"
+  >("all");
   const [priority, setPriority] = useState(5);
 
-  const windows = useQuery(api.notificationWindows.list, { userId: currentUserId });
+  const windows = useQuery(api.notificationWindows.list, {
+    userId: currentUserId,
+  });
   const createWindow = useMutation(api.notificationWindows.create);
   const updateWindow = useMutation(api.notificationWindows.update);
   const toggleActive = useMutation(api.notificationWindows.toggleActive);
@@ -58,7 +65,10 @@ export function AdminNotificationWindows({
     setEditingWindow(null);
   };
 
-  const openEditModal = (window: { _id: Id<"notificationWindows">;[key: string]: unknown }) => {
+  const openEditModal = (window: {
+    _id: Id<"notificationWindows">;
+    [key: string]: unknown;
+  }) => {
     setEditingWindow(window);
     setTitle((window.title as string) || "");
     setTitleTh((window.titleTh as string) || "");
@@ -67,7 +77,9 @@ export function AdminNotificationWindows({
     setMessage((window.message as string) || "");
     setMessageTh((window.messageTh as string) || "");
     setShowUpdateSummary((window.showUpdateSummary as boolean) ?? true);
-    setTargetRole((window.targetRole as "all" | "teacher" | "moderator" | "admin") || "all");
+    setTargetRole(
+      (window.targetRole as "all" | "teacher" | "moderator" | "admin") || "all",
+    );
     setPriority((window.priority as number) || 5);
     setShowCreateModal(true);
   };
@@ -101,7 +113,7 @@ export function AdminNotificationWindows({
         });
         toast.success(
           "Notification window updated successfully",
-          "อัปเดตหน้าต่างประกาศสำเร็จ"
+          "อัปเดตหน้าต่างประกาศสำเร็จ",
         );
       } else {
         await createWindow({
@@ -118,7 +130,7 @@ export function AdminNotificationWindows({
         });
         toast.success(
           "Notification window created successfully",
-          "สร้างหน้าต่างประกาศสำเร็จ"
+          "สร้างหน้าต่างประกาศสำเร็จ",
         );
       }
 
@@ -128,7 +140,7 @@ export function AdminNotificationWindows({
       console.error("Failed to save notification window:", error);
       toast.error(
         "Failed to save notification window",
-        "บันทึกหน้าต่างประกาศล้มเหลว"
+        "บันทึกหน้าต่างประกาศล้มเหลว",
       );
     }
   };
@@ -152,15 +164,12 @@ export function AdminNotificationWindows({
         userId: currentUserId,
         windowId,
       });
-      toast.success(
-        "Notification window deleted",
-        "ลบหน้าต่างประกาศแล้ว"
-      );
+      toast.success("Notification window deleted", "ลบหน้าต่างประกาศแล้ว");
     } catch (error) {
       console.error("Failed to delete notification window:", error);
       toast.error(
         "Failed to delete notification window",
-        "ลบหน้าต่างประกาศล้มเหลว"
+        "ลบหน้าต่างประกาศล้มเหลว",
       );
     }
   };
@@ -198,10 +207,11 @@ export function AdminNotificationWindows({
           windows.map((window) => (
             <div
               key={window._id}
-              className={`bg-white dark:bg-gray-800 border-2 rounded-xl p-4 md:p-6 transition-all ${window.isActive
-                ? "border-indigo-500 shadow-lg"
-                : "border-gray-200 dark:border-gray-700"
-                }`}
+              className={`bg-white dark:bg-gray-800 border-2 rounded-xl p-4 md:p-6 transition-all ${
+                window.isActive
+                  ? "border-indigo-500 shadow-lg"
+                  : "border-gray-200 dark:border-gray-700"
+              }`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
@@ -224,11 +234,15 @@ export function AdminNotificationWindows({
                   </div>
 
                   <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">
-                    {language === "en" ? window.title : window.titleTh || window.title}
+                    {language === "en"
+                      ? window.title
+                      : window.titleTh || window.title}
                   </h3>
 
                   <p className="text-gray-700 dark:text-gray-300 mb-3 line-clamp-2">
-                    {language === "en" ? window.message : window.messageTh || window.message}
+                    {language === "en"
+                      ? window.message
+                      : window.messageTh || window.message}
                   </p>
 
                   <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
@@ -257,11 +271,16 @@ export function AdminNotificationWindows({
                   </button>
                   <button
                     onClick={() => handleToggleActive(window._id)}
-                    className={`p-2 rounded-lg transition-all ${window.isActive
-                      ? "text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
-                      : "text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
-                      }`}
-                    title={window.isActive ? t("Deactivate", "ปิดใช้งาน") : t("Activate", "เปิดใช้งาน")}
+                    className={`p-2 rounded-lg transition-all ${
+                      window.isActive
+                        ? "text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-900/20"
+                        : "text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
+                    }`}
+                    title={
+                      window.isActive
+                        ? t("Deactivate", "ปิดใช้งาน")
+                        : t("Activate", "เปิดใช้งาน")
+                    }
                   >
                     <Power className="w-5 h-5" />
                   </button>
@@ -327,7 +346,10 @@ export function AdminNotificationWindows({
               {/* Greeting */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  {t("Greeting (use {username} as placeholder)", "คำทักทาย (ใช้ {username} เป็นตัวแทน)")}
+                  {t(
+                    "Greeting (use {username} as placeholder)",
+                    "คำทักทาย (ใช้ {username} เป็นตัวแทน)",
+                  )}
                 </label>
                 <input
                   type="text"
@@ -374,13 +396,29 @@ export function AdminNotificationWindows({
                   </label>
                   <select
                     value={targetRole}
-                    onChange={(e) => setTargetRole(e.target.value as "all" | "teacher" | "moderator" | "admin")}
+                    onChange={(e) =>
+                      setTargetRole(
+                        e.target.value as
+                          | "all"
+                          | "teacher"
+                          | "moderator"
+                          | "admin",
+                      )
+                    }
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
                   >
-                    <option value="all">{t("All users", "ผู้ใช้ทั้งหมด")}</option>
-                    <option value="teacher">{t("Teachers only", "ครูเท่านั้น")}</option>
-                    <option value="moderator">{t("Moderators only", "ผู้ดูแลเท่านั้น")}</option>
-                    <option value="admin">{t("Admins only", "ผู้จัดการเท่านั้น")}</option>
+                    <option value="all">
+                      {t("All users", "ผู้ใช้ทั้งหมด")}
+                    </option>
+                    <option value="teacher">
+                      {t("Teachers only", "ครูเท่านั้น")}
+                    </option>
+                    <option value="moderator">
+                      {t("Moderators only", "ผู้ดูแลเท่านั้น")}
+                    </option>
+                    <option value="admin">
+                      {t("Admins only", "ผู้จัดการเท่านั้น")}
+                    </option>
                   </select>
                 </div>
 

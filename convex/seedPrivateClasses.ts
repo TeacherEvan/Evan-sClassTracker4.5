@@ -82,7 +82,7 @@ const CALE_SCHEDULE: ScheduleDay[] = [
       {
         code: "1718", // MILIN
         startDate: new Date("2025-11-07").getTime(), // Nov 7, 2025
-        endDate: new Date("2026-01-30").getTime(),   // Jan 30, 2026
+        endDate: new Date("2026-01-30").getTime(), // Jan 30, 2026
       },
     ],
   },
@@ -146,18 +146,26 @@ const EVAN_SCHEDULE: ScheduleDay[] = [
 
 export const seedPrivateClasses = mutation({
   args: {
-    teacherUsername: v.union(v.literal("Che"), v.literal("Cale"), v.literal("Lee"), v.literal("Evan")),
+    teacherUsername: v.union(
+      v.literal("Che"),
+      v.literal("Cale"),
+      v.literal("Lee"),
+      v.literal("Evan"),
+    ),
     weeksCount: v.optional(v.number()), // Default 12 weeks
     testMode: v.optional(v.boolean()), // If true, only creates Week 1
   },
   handler: async (ctx, args) => {
     try {
-      const weeksCount = args.testMode ? 1 : (args.weeksCount || 12);
+      const weeksCount = args.testMode ? 1 : args.weeksCount || 12;
       const schedule =
-        args.teacherUsername === "Che" ? CHE_SCHEDULE :
-          args.teacherUsername === "Cale" ? CALE_SCHEDULE :
-            args.teacherUsername === "Lee" ? LEE_SCHEDULE :
-              EVAN_SCHEDULE;
+        args.teacherUsername === "Che"
+          ? CHE_SCHEDULE
+          : args.teacherUsername === "Cale"
+            ? CALE_SCHEDULE
+            : args.teacherUsername === "Lee"
+              ? LEE_SCHEDULE
+              : EVAN_SCHEDULE;
 
       // 1. Get teacher by username
       const teacher = await ctx.db
@@ -166,7 +174,9 @@ export const seedPrivateClasses = mutation({
         .first();
 
       if (!teacher) {
-        throw new Error(`Teacher "${args.teacherUsername}" not found. Please ensure teacher account exists with username: ${args.teacherUsername}`);
+        throw new Error(
+          `Teacher "${args.teacherUsername}" not found. Please ensure teacher account exists with username: ${args.teacherUsername}`,
+        );
       }
 
       // Get teacher's school (or use first available school for private classes)
@@ -188,36 +198,41 @@ export const seedPrivateClasses = mutation({
         ...CALE_SCHEDULE,
         ...LEE_SCHEDULE,
         ...EVAN_SCHEDULE,
-      ].flatMap(s => [
+      ].flatMap((s) => [
         ...s.students,
         ...(s.oneTimeStudents || []),
-        ...(s.dateRangeStudents?.map(dr => dr.code) || [])
+        ...(s.dateRangeStudents?.map((dr) => dr.code) || []),
       ]);
       const uniqueStudentCodes = [...new Set(allStudentCodes)];
 
       // Get unique grade/class combinations from codes
-      const uniqueGradeClasses = [...new Set(uniqueStudentCodes.map(code => {
-        const gradeDigit = code[0];
-        const classDigit = code[1];
-        const gradeStr = gradeDigit === "1" ? "K1" : "K2";
-        const classStr = `${gradeStr}/${classDigit}`;
-        return classStr;
-      }))];
+      const uniqueGradeClasses = [
+        ...new Set(
+          uniqueStudentCodes.map((code) => {
+            const gradeDigit = code[0];
+            const classDigit = code[1];
+            const gradeStr = gradeDigit === "1" ? "K1" : "K2";
+            const classStr = `${gradeStr}/${classDigit}`;
+            return classStr;
+          }),
+        ),
+      ];
 
       // Fetch students for only the required grade/class combinations
       const studentsByGradeClass = new Map<string, Doc<"students">[]>();
       for (const gradeClass of uniqueGradeClasses) {
-        const [grade] = gradeClass.split('/');
+        const [grade] = gradeClass.split("/");
         const students = await ctx.db
           .query("students")
           .withIndex("by_grade_and_class", (q) =>
-            q.eq("grade", grade).eq("class", gradeClass)
+            q.eq("grade", grade).eq("class", gradeClass),
           )
           .collect();
         studentsByGradeClass.set(gradeClass, students);
       }
-      console.log(`✅ Fetched students for ${uniqueGradeClasses.length} grade/class groups`);
-
+      console.log(
+        `✅ Fetched students for ${uniqueGradeClasses.length} grade/class groups`,
+      );
 
       // Name mapping for student codes (code → English name)
       const STUDENT_NAME_MAP: { [code: string]: string } = {
@@ -260,8 +275,10 @@ export const seedPrivateClasses = mutation({
         "1623": "DARIN",
         "1403": "MAYU",
         "1618": "MICKEY",
-      };      // Helper function for student lookup or creation
-      const findOrCreateStudent = async (studentCode: string): Promise<Doc<"students"> | null> => {
+      }; // Helper function for student lookup or creation
+      const findOrCreateStudent = async (
+        studentCode: string,
+      ): Promise<Doc<"students"> | null> => {
         const gradeDigit = studentCode[0];
         const classDigit = studentCode[1];
         const gradeStr = gradeDigit === "1" ? "K1" : "K2";
@@ -278,8 +295,8 @@ export const seedPrivateClasses = mutation({
         const students = studentsByGradeClass.get(classStr) || [];
 
         // Find by name match (case-insensitive) in specific grade/class
-        let student = students.find(s =>
-          s.firstName.toUpperCase() === studentName.toUpperCase()
+        let student = students.find(
+          (s) => s.firstName.toUpperCase() === studentName.toUpperCase(),
         );
 
         if (!student) {
@@ -290,7 +307,10 @@ export const seedPrivateClasses = mutation({
           const timestamp = Date.now().toString(36);
           const nameHash = `${studentName.substring(0, 2)}`.toUpperCase();
           const schoolHash = teacherSchoolId.substring(0, 4).toUpperCase();
-          const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+          const random = Math.random()
+            .toString(36)
+            .substring(2, 6)
+            .toUpperCase();
           const generatedStudentId = `${schoolHash}-${nameHash}-${timestamp}-${random}`;
 
           const newStudentId = await ctx.db.insert("students", {
@@ -324,14 +344,14 @@ export const seedPrivateClasses = mutation({
 
       // 3. ✅ FETCH LOCATIONS EFFICIENTLY (using new index)
       console.log("📍 Fetching required locations using indexes...");
-      const locationNames = [...new Set(schedule.map(s => s.location))];
+      const locationNames = [...new Set(schedule.map((s) => s.location))];
       const locations = new Map<string, Id<"locations">>();
 
       for (const locationName of locationNames) {
         const location = await ctx.db
           .query("locations")
           .withIndex("by_name_and_active", (q) =>
-            q.eq("name", locationName).eq("isActive", true)
+            q.eq("name", locationName).eq("isActive", true),
           )
           .first();
 
@@ -354,7 +374,6 @@ export const seedPrivateClasses = mutation({
       }
       console.log(`✅ Fetched or created ${locations.size} locations`);
 
-
       // 4. Fetch existing classes for this teacher to avoid duplicates
       console.log("📅 Checking existing classes...");
       const existingClasses = await ctx.db
@@ -365,9 +384,11 @@ export const seedPrivateClasses = mutation({
 
       // Create a Set of existing class keys (date-student combination)
       const existingClassKeys = new Set(
-        existingClasses.map(c => `${c.scheduledDate}-${c.studentId}`)
+        existingClasses.map((c) => `${c.scheduledDate}-${c.studentId}`),
       );
-      console.log(`✅ Found ${existingClasses.length} existing private classes`);
+      console.log(
+        `✅ Found ${existingClasses.length} existing private classes`,
+      );
 
       // 5. Loop through weeks and create bookings (skip duplicates)
       const createdBookings = [];
@@ -378,7 +399,9 @@ export const seedPrivateClasses = mutation({
       for (let week = 0; week < weeksCount; week++) {
         for (const daySchedule of schedule) {
           const classDate = new Date(startDate);
-          classDate.setDate(startDate.getDate() + (week * 7) + (daySchedule.day - 1));
+          classDate.setDate(
+            startDate.getDate() + week * 7 + (daySchedule.day - 1),
+          );
           classDate.setHours(15, 0, 0, 0); // 15:00 (3:00 PM)
 
           const locationId = locations.get(daySchedule.location);
@@ -452,7 +475,8 @@ export const seedPrivateClasses = mutation({
               const student = await findOrCreateStudent(studentCode);
 
               if (!student) {
-                const studentName = STUDENT_NAME_MAP[studentCode] || studentCode;
+                const studentName =
+                  STUDENT_NAME_MAP[studentCode] || studentCode;
                 errors.push({
                   error: `One-time student ${studentName} (${studentCode}) could not be created`,
                   week: week + 1,
@@ -509,11 +533,15 @@ export const seedPrivateClasses = mutation({
               const classTimestamp = classDate.getTime();
 
               // Only create if within date range
-              if (classTimestamp >= rangeStudent.startDate && classTimestamp <= rangeStudent.endDate) {
+              if (
+                classTimestamp >= rangeStudent.startDate &&
+                classTimestamp <= rangeStudent.endDate
+              ) {
                 const student = await findOrCreateStudent(rangeStudent.code);
 
                 if (!student) {
-                  const studentName = STUDENT_NAME_MAP[rangeStudent.code] || rangeStudent.code;
+                  const studentName =
+                    STUDENT_NAME_MAP[rangeStudent.code] || rangeStudent.code;
                   errors.push({
                     error: `Date-range student ${studentName} (${rangeStudent.code}) could not be created`,
                     week: week + 1,
@@ -569,12 +597,14 @@ export const seedPrivateClasses = mutation({
 
       // 5. Generate summary with detailed error reporting
       const scheduleDetails = `${args.teacherUsername}: ${schedule.length} days/week, ${schedule.reduce((sum, d) => sum + d.students.length, 0)} regular students`;
-      const errorSummary = errors.length > 0
-        ? `\n⚠️  ${errors.length} errors occurred:\n${errors.map(e => `  - Week ${e.week}, Day ${e.day}: ${e.error}`).join('\n')}`
-        : '';
-      const duplicateSummary = skippedDuplicates.length > 0
-        ? `\n⏭️  Skipped ${skippedDuplicates.length} duplicates (already exist)`
-        : '';
+      const errorSummary =
+        errors.length > 0
+          ? `\n⚠️  ${errors.length} errors occurred:\n${errors.map((e) => `  - Week ${e.week}, Day ${e.day}: ${e.error}`).join("\n")}`
+          : "";
+      const duplicateSummary =
+        skippedDuplicates.length > 0
+          ? `\n⏭️  Skipped ${skippedDuplicates.length} duplicates (already exist)`
+          : "";
 
       return {
         success: errors.length === 0,
@@ -583,16 +613,22 @@ export const seedPrivateClasses = mutation({
         weeksCreated: weeksCount,
         bookingsCreated: createdBookings.length,
         skippedDuplicates: skippedDuplicates.length,
-        expectedBookings: schedule.reduce((sum, d) => sum + d.students.length, 0) * weeksCount,
+        expectedBookings:
+          schedule.reduce((sum, d) => sum + d.students.length, 0) * weeksCount,
         scheduleDetails,
         bookings: args.testMode ? createdBookings.slice(0, 10) : undefined, // Only show sample in test mode
-        duplicates: args.testMode && skippedDuplicates.length > 0 ? skippedDuplicates.slice(0, 10) : undefined,
+        duplicates:
+          args.testMode && skippedDuplicates.length > 0
+            ? skippedDuplicates.slice(0, 10)
+            : undefined,
         errors: errors.length > 0 ? errors : undefined,
         errorCount: errors.length,
       };
     } catch (error) {
       console.error("❌ Error in seedPrivateClasses:", error);
-      throw new Error(`Failed to seed private classes: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to seed private classes: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   },
 });
@@ -600,7 +636,12 @@ export const seedPrivateClasses = mutation({
 // Query to check existing private classes
 export const checkPrivateClasses = mutation({
   args: {
-    teacherUsername: v.union(v.literal("Che"), v.literal("Cale"), v.literal("Lee"), v.literal("Evan")),
+    teacherUsername: v.union(
+      v.literal("Che"),
+      v.literal("Cale"),
+      v.literal("Lee"),
+      v.literal("Evan"),
+    ),
   },
   handler: async (ctx, args) => {
     const teacher = await ctx.db
@@ -609,7 +650,10 @@ export const checkPrivateClasses = mutation({
       .first();
 
     if (!teacher) {
-      return { exists: false, message: `Teacher "${args.teacherUsername}" not found` };
+      return {
+        exists: false,
+        message: `Teacher "${args.teacherUsername}" not found`,
+      };
     }
 
     const classes = await ctx.db

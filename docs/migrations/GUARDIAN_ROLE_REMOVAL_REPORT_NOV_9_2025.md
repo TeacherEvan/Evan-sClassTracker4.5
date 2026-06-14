@@ -68,8 +68,8 @@ roles: ["admin", "moderator", "teacher", "guardian"],
 - Rename file to `provider-dashboard.tsx`
 - Update component logic to use provider queries
 - Add "Auto-Guardian" mode support
-**Phase**: 2 (UI migration)  
-**Lines of Code**: ~300-500 (estimated)
+  **Phase**: 2 (UI migration)  
+  **Lines of Code**: ~300-500 (estimated)
 
 #### 5. `lib/help-content.ts` (Lines 16, 580)
 
@@ -119,11 +119,7 @@ test('post-class notes notification to guardian', async ({ page }) => {
 1. ✅ Add deprecation comment to `lib/types.ts`:
 
    ```typescript
-   export type UserRole = 
-     | "teacher" 
-     | "moderator" 
-     | "admin" 
-     | "guardian"; // DEPRECATED - Migrate to provider system. See docs/migrations/GUARDIAN_PROVIDER_IMPLEMENTATION_PLAN.md
+   export type UserRole = "teacher" | "moderator" | "admin" | "guardian"; // DEPRECATED - Migrate to provider system. See docs/migrations/GUARDIAN_PROVIDER_IMPLEMENTATION_PLAN.md
    ```
 
 2. ✅ Create migration script scaffold:
@@ -141,10 +137,10 @@ test('post-class notes notification to guardian', async ({ page }) => {
        v.literal("private"),
        v.literal("language_school"),
        v.literal("educational_camp"),
-       v.literal("guardian") // NEW - supports migration
+       v.literal("guardian"), // NEW - supports migration
      ),
      // ... other fields
-   })
+   });
    ```
 
 4. ✅ Document migration in `TAB_CONSOLIDATION_REVIEW_NOV_9_2025.md` (DONE)
@@ -171,9 +167,9 @@ test('post-class notes notification to guardian', async ({ page }) => {
    ```typescript
    // convex/migrations/migrateGuardianToProvider.ts
    export const migrateGuardiansToProviders = mutation({
-     args: { 
+     args: {
        adminId: v.id("users"),
-       dryRun: v.boolean() 
+       dryRun: v.boolean(),
      },
      handler: async (ctx, args) => {
        // 1. Verify admin authorization
@@ -185,7 +181,7 @@ test('post-class notes notification to guardian', async ({ page }) => {
        // 2. Find all guardian users
        const guardians = await ctx.db
          .query("users")
-         .withIndex("by_role", q => q.eq("role", "guardian"))
+         .withIndex("by_role", (q) => q.eq("role", "guardian"))
          .collect();
 
        const report = {
@@ -193,7 +189,7 @@ test('post-class notes notification to guardian', async ({ page }) => {
          providersCreated: 0,
          studentsUpdated: 0,
          classesUpdated: 0,
-         errors: []
+         errors: [],
        };
 
        // 3. For each guardian, create provider
@@ -206,13 +202,13 @@ test('post-class notes notification to guardian', async ({ page }) => {
                category: "guardian",
                createdBy: args.adminId,
                isActive: true,
-               createdAt: Date.now()
+               createdAt: Date.now(),
              });
 
              // 4. Update students
              const students = await ctx.db
                .query("students")
-               .withIndex("by_guardian_id", q => q.eq("guardianId", guardian._id))
+               .withIndex("by_guardian_id", (q) => q.eq("guardianId", guardian._id))
                .collect();
 
              for (const student of students) {
@@ -226,7 +222,7 @@ test('post-class notes notification to guardian', async ({ page }) => {
              // 5. Update classes
              const classes = await ctx.db
                .query("classes")
-               .filter(q => q.eq(q.field("isGuardianLinked"), true))
+               .filter((q) => q.eq(q.field("isGuardianLinked"), true))
                .collect();
 
              for (const classItem of classes) {
@@ -234,7 +230,7 @@ test('post-class notes notification to guardian', async ({ page }) => {
                  const student = await ctx.db.get(classItem.studentId);
                  if (student?.guardianId === guardian._id) {
                    await ctx.db.patch(classItem._id, {
-                     providerId
+                     providerId,
                    });
                    report.classesUpdated++;
                  }
@@ -247,13 +243,13 @@ test('post-class notes notification to guardian', async ({ page }) => {
            report.errors.push({
              guardianId: guardian._id,
              username: guardian.username,
-             error: error.message
+             error: error.message,
            });
          }
        }
 
        return report;
-     }
+     },
    });
    ```
 
@@ -263,7 +259,7 @@ test('post-class notes notification to guardian', async ({ page }) => {
    # In Convex Dashboard → Functions
    # Call: migrations.migrateGuardiansToProviders
    # Args: { adminId: "<admin_id>", dryRun: true }
-   
+
    # Review report
    # If looks good, run with dryRun: false
    ```
@@ -274,14 +270,14 @@ test('post-class notes notification to guardian', async ({ page }) => {
    // Count providers created
    const providers = await ctx.db
      .query("providers")
-     .filter(q => q.eq(q.field("category"), "guardian"))
+     .filter((q) => q.eq(q.field("category"), "guardian"))
      .collect();
    console.log(`Created ${providers.length} guardian providers`);
 
    // Verify student migration
    const studentsWithProvider = await ctx.db
      .query("students")
-     .filter(q => q.neq(q.field("providerId"), undefined))
+     .filter((q) => q.neq(q.field("providerId"), undefined))
      .collect();
    console.log(`${studentsWithProvider.length} students have providerId`);
    ```
@@ -324,7 +320,7 @@ test('post-class notes notification to guardian', async ({ page }) => {
 
    ```typescript
    export type UserRole = "teacher" | "moderator" | "admin"; // Removed "guardian"
-   
+
    export function getHelpForRole(role: "teacher" | "moderator" | "admin"): HelpCategory[] {
      // Remove guardian-specific help
    }
@@ -531,14 +527,14 @@ test('post-class notes notification to guardian', async ({ page }) => {
 
 ## Estimated Effort Summary
 
-| Phase | Hours | Risk | Dependencies |
-|-------|-------|------|--------------|
-| Phase 0 | 1-2 | None | None |
-| Phase 1 | 3-4 | Medium | Backup, Convex stable |
-| Phase 2 | 4-6 | Low | Phase 1 complete |
-| Phase 3 | 2-3 | High | Phase 2 complete, E2E passing |
-| Phase 4 | 1-2 | None | Phase 3 complete |
-| **Total** | **12-16** | **Medium** | Sequential execution |
+| Phase     | Hours     | Risk       | Dependencies                  |
+| --------- | --------- | ---------- | ----------------------------- |
+| Phase 0   | 1-2       | None       | None                          |
+| Phase 1   | 3-4       | Medium     | Backup, Convex stable         |
+| Phase 2   | 4-6       | Low        | Phase 1 complete              |
+| Phase 3   | 2-3       | High       | Phase 2 complete, E2E passing |
+| Phase 4   | 1-2       | None       | Phase 3 complete              |
+| **Total** | **12-16** | **Medium** | Sequential execution          |
 
 ---
 

@@ -57,7 +57,7 @@ export const create = mutation({
 ```typescript
 // ✅ Admin-only with rate limiting and audit logging
 export const create = mutation({
-  args: { 
+  args: {
     adminId: v.id("users"), // Required
     // ... other fields
   },
@@ -67,16 +67,16 @@ export const create = mutation({
     if (!admin || admin.role !== "admin") {
       throw new Error("Unauthorized: Only admins can create schools");
     }
-    
+
     // Rate limiting (10/min)
     await checkRateLimit(ctx, { ... });
-    
+
     // Input validation
     validateLength(args.name, "School name (English)", 200, 1);
-    
+
     // Create school
     const schoolId = await ctx.db.insert("schools", { ... });
-    
+
     // Audit logging
     await logAudit(ctx, { ... });
   }
@@ -126,7 +126,7 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const student = await ctx.db.get(args.id);
     const user = await ctx.db.get(args.updatedBy);
-    
+
     // Role-based permission checks
     if (user.role === "teacher" || user.role === "moderator") {
       // Can only modify students from their school
@@ -141,10 +141,10 @@ export const update = mutation({
     } else if (user.role !== "admin") {
       throw new Error("Unauthorized");
     }
-    
+
     // Input validation
     if (updates.firstName) validateLength(updates.firstName, "First name", 100, 1);
-    
+
     await ctx.db.patch(args.id, { ... });
   }
 });
@@ -199,18 +199,18 @@ export const bulkDeleteStudents = mutation({
     if (user.role !== "admin") {
       throw new Error("Unauthorized: Only admins can bulk delete students");
     }
-    
+
     // Batch size limit (DoS prevention)
     if (args.studentIds.length > 100) {
       throw new Error("Maximum 100 students per bulk deletion");
     }
-    
+
     // Reason validation (audit trail)
     validateLength(args.reason, "Deletion reason", 500, 10);
-    
+
     // Rate limiting (5/min)
     await checkRateLimit(ctx, { ... });
-    
+
     // Delete students
   }
 });
@@ -242,7 +242,7 @@ export const changePassword = mutation({
   handler: async (ctx, args) => {
     // Verify current password
     // Update to new password
-  }
+  },
 });
 ```
 
@@ -258,19 +258,19 @@ export const changePassword = mutation({
       limit: 5,
       windowMs: 3600000, // 1 hour
     });
-    
+
     // Minimum password length (8 chars)
     if (args.newPassword.length < 8) {
       throw new Error("Password must be at least 8 characters long");
     }
-    
+
     // Account lockout check
     if (user.accountLockedUntil && user.accountLockedUntil > Date.now()) {
       throw new Error("Account is locked");
     }
-    
+
     // Verify and update password
-  }
+  },
 });
 ```
 
@@ -287,28 +287,28 @@ export const changePassword = mutation({
 
 ### Permission Checks Added
 
-| Endpoint | Before | After |
-|----------|--------|-------|
-| `schools.create` | ❌ None | ✅ Admin-only |
-| `schools.updateModerator` | ❌ None | ✅ Admin-only |
-| `schools.remove` | ❌ None | ✅ Admin-only + data validation |
-| `students.create` | ❌ None | ✅ Role-based (admin/moderator/teacher/guardian) |
-| `students.update` | ❌ None | ✅ Role-based + school-scoped |
-| `students.remove` | ❌ None | ✅ Role-based + active class check |
-| `bulkCreateStudents` | ❌ None | ✅ Admin/Moderator only |
-| `bulkDeleteStudents` | ❌ None | ✅ Admin-only + reason required |
-| `users.changePassword` | ⚠️ No limit | ✅ 5/hour + 8 char min |
+| Endpoint                  | Before      | After                                            |
+| ------------------------- | ----------- | ------------------------------------------------ |
+| `schools.create`          | ❌ None     | ✅ Admin-only                                    |
+| `schools.updateModerator` | ❌ None     | ✅ Admin-only                                    |
+| `schools.remove`          | ❌ None     | ✅ Admin-only + data validation                  |
+| `students.create`         | ❌ None     | ✅ Role-based (admin/moderator/teacher/guardian) |
+| `students.update`         | ❌ None     | ✅ Role-based + school-scoped                    |
+| `students.remove`         | ❌ None     | ✅ Role-based + active class check               |
+| `bulkCreateStudents`      | ❌ None     | ✅ Admin/Moderator only                          |
+| `bulkDeleteStudents`      | ❌ None     | ✅ Admin-only + reason required                  |
+| `users.changePassword`    | ⚠️ No limit | ✅ 5/hour + 8 char min                           |
 
 ### Rate Limits Added
 
-| Endpoint | Limit | Window | Purpose |
-|----------|-------|--------|---------|
-| `schools.create` | 10 | 1 min | Prevent school spam |
-| `schools.updateModerator` | 20 | 1 min | Prevent assignment spam |
-| `schools.remove` | 5 | 1 min | Prevent deletion DoS |
-| `bulkCreateStudents` | 5 | 1 min | Prevent bulk spam |
-| `bulkDeleteStudents` | 5 | 1 min | Prevent bulk deletion DoS |
-| `users.changePassword` | 5 | 1 hour | Prevent password spam |
+| Endpoint                  | Limit | Window | Purpose                   |
+| ------------------------- | ----- | ------ | ------------------------- |
+| `schools.create`          | 10    | 1 min  | Prevent school spam       |
+| `schools.updateModerator` | 20    | 1 min  | Prevent assignment spam   |
+| `schools.remove`          | 5     | 1 min  | Prevent deletion DoS      |
+| `bulkCreateStudents`      | 5     | 1 min  | Prevent bulk spam         |
+| `bulkDeleteStudents`      | 5     | 1 min  | Prevent bulk deletion DoS |
+| `users.changePassword`    | 5     | 1 hour | Prevent password spam     |
 
 ### Audit Logging Added
 
@@ -371,10 +371,10 @@ Update frontend calls to include new required parameters:
 await createSchool({ name: "...", nameTh: "..." });
 
 // NEW (required)
-await createSchool({ 
-  name: "...", 
-  nameTh: "...", 
-  adminId: currentUser._id 
+await createSchool({
+  name: "...",
+  nameTh: "...",
+  adminId: currentUser._id,
 });
 ```
 
@@ -450,7 +450,7 @@ await createSchool({
 **Status**: ✅ **APPROVED FOR PRODUCTION**  
 **Blocker Issues**: 0  
 **Critical Issues**: 0  
-**High Issues**: 0  
+**High Issues**: 0
 
 All Phase 1 critical security fixes have been implemented and tested. System is now safe for production deployment.
 

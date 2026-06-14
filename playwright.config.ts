@@ -1,9 +1,9 @@
-import { defineConfig, devices } from '@playwright/test';
-import dotenv from 'dotenv';
-import path from 'path';
+import { defineConfig, devices } from "@playwright/test";
+import dotenv from "dotenv";
+import path from "path";
 
 // Load environment variables from .env.local
-dotenv.config({ path: path.resolve(__dirname, '.env.local') });
+dotenv.config({ path: path.resolve(__dirname, ".env.local") });
 
 /**
  * Playwright Configuration for Evan's Class Tracker
@@ -12,7 +12,7 @@ dotenv.config({ path: path.resolve(__dirname, '.env.local') });
  * Tests all critical user workflows and features.
  */
 export default defineConfig({
-  testDir: './tests/e2e',
+  testDir: "./tests/e2e",
 
   /* Maximum time one test can run - OPTIMIZED: Reduced from 60s to 45s */
   timeout: 45 * 1000,
@@ -34,24 +34,24 @@ export default defineConfig({
 
   /* Reporter to use */
   reporter: [
-    ['html'],
-    ['list'],
-    ['github'], // GitHub Actions annotations
+    ["html"],
+    ["list"],
+    ["github"], // GitHub Actions annotations
   ],
 
   /* Shared settings for all the projects below */
   use: {
     /* Base URL - will be overridden by STAGING_URL env var in CI */
-    baseURL: process.env.STAGING_URL || 'http://localhost:3001',
+    baseURL: process.env.STAGING_URL || "http://localhost:3001",
 
     /* OPTIMIZED: Disable trace locally (25-30% faster), enable on CI retry */
-    trace: process.env.CI ? 'on-first-retry' : 'off',
+    trace: process.env.CI ? "on-first-retry" : "off",
 
     /* Screenshot on failure */
-    screenshot: 'only-on-failure',
+    screenshot: "only-on-failure",
 
     /* OPTIMIZED: Disable video locally (saves overhead), enable on CI failures */
-    video: process.env.CI ? 'retain-on-failure' : 'off',
+    video: process.env.CI ? "retain-on-failure" : "off",
 
     /* Default timeout for each action (click, fill, etc.) - OPTIMIZED: Reduced from 10s to 8s */
     actionTimeout: 8 * 1000,
@@ -60,11 +60,12 @@ export default defineConfig({
   /* Configure projects for different browsers */
   projects: [
     {
-      name: 'chromium',
+      name: "chromium",
       use: {
-        ...devices['Desktop Chrome'],
+        ...devices["Desktop Chrome"],
         // Explicitly set Windows User Agent for platform detection testing
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        userAgent:
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
     },
 
@@ -95,18 +96,20 @@ export default defineConfig({
     //    2. Then run: npm run test:e2e
     //
     // Or use the helper script: .\\scripts\\start-test-servers.ps1
-    command: 'npm run dev',
-    url: 'http://localhost:3001',
+    command: "npm run dev",
+    url: "http://localhost:3001",
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000, // 2 minutes for Next.js to start
     env: {
       // Ensure Convex URL is set for tests (reads from .env.local)
-      NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL || 'https://greedy-partridge-29.convex.cloud',
+      NEXT_PUBLIC_CONVEX_URL:
+        process.env.NEXT_PUBLIC_CONVEX_URL ||
+        "https://greedy-partridge-29.convex.cloud",
       // Disable Next.js telemetry and dev overlays during tests
-      NEXT_TELEMETRY_DISABLED: '1',
+      NEXT_TELEMETRY_DISABLED: "1",
       // This tells Next.js we're in a "production-like" testing environment
       // which disables dev overlays while still using dev mode
-      __NEXT_TEST_MODE: 'true',
+      __NEXT_TEST_MODE: "true",
     },
   },
 });

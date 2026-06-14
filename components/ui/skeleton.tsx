@@ -24,9 +24,9 @@ export function Skeleton({
     "from-gray-200 via-gray-100 to-gray-200",
     "dark:from-gray-700 dark:via-gray-600 dark:to-gray-700",
     "bg-[length:200%_100%]",
-    "animate-shimmer"
+    "animate-shimmer",
   ].join(" ");
-  
+
   const variantClasses = {
     text: "h-4 rounded",
     circular: "rounded-full",
@@ -35,8 +35,16 @@ export function Skeleton({
   };
 
   const style = {
-    width: width ? (typeof width === "number" ? `${width}px` : width) : undefined,
-    height: height ? (typeof height === "number" ? `${height}px` : height) : undefined,
+    width: width
+      ? typeof width === "number"
+        ? `${width}px`
+        : width
+      : undefined,
+    height: height
+      ? typeof height === "number"
+        ? `${height}px`
+        : height
+      : undefined,
   };
 
   if (lines > 1) {
@@ -45,7 +53,11 @@ export function Skeleton({
         {Array.from({ length: lines }).map((_, i) => (
           <div
             key={i}
-            className={cn(baseClasses, variantClasses.text, i === lines - 1 ? "w-3/4" : "w-full")}
+            className={cn(
+              baseClasses,
+              variantClasses.text,
+              i === lines - 1 ? "w-3/4" : "w-full",
+            )}
             style={{ height: height || DEFAULT_LINE_HEIGHT }}
           />
         ))}
@@ -67,7 +79,10 @@ export function TableRowSkeleton({ columns = 5 }: { columns?: number }) {
     <tr className="border-b border-gray-200 dark:border-gray-700">
       {Array.from({ length: columns }).map((_, i) => (
         <td key={i} className="px-6 py-4">
-          <Skeleton variant="text" width={i === 0 ? 40 : i === columns - 1 ? 80 : "100%"} />
+          <Skeleton
+            variant="text"
+            width={i === 0 ? 40 : i === columns - 1 ? 80 : "100%"}
+          />
         </td>
       ))}
     </tr>
@@ -97,7 +112,12 @@ export function ClassCardSkeleton() {
     <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="flex justify-between items-start mb-3">
         <Skeleton variant="text" width={120} height={20} />
-        <Skeleton variant="rectangular" width={60} height={24} className="rounded-full" />
+        <Skeleton
+          variant="rectangular"
+          width={60}
+          height={24}
+          className="rounded-full"
+        />
       </div>
       <div className="space-y-2 mb-4">
         <div className="flex items-center gap-2">
@@ -137,14 +157,30 @@ export function StudentListSkeleton({ rows = 10 }: { rows?: number }) {
         <table className="w-full">
           <thead className="bg-gray-50 dark:bg-gray-900">
             <tr>
-              <th className="px-3 py-3"><Skeleton width={16} height={16} /></th>
-              <th className="px-6 py-3"><Skeleton variant="text" width={80} /></th>
-              <th className="px-6 py-3"><Skeleton variant="text" width={60} /></th>
-              <th className="px-6 py-3"><Skeleton variant="text" width={50} /></th>
-              <th className="px-6 py-3"><Skeleton variant="text" width={50} /></th>
-              <th className="px-6 py-3"><Skeleton variant="text" width={100} /></th>
-              <th className="px-6 py-3"><Skeleton variant="text" width={80} /></th>
-              <th className="px-6 py-3"><Skeleton variant="text" width={60} /></th>
+              <th className="px-3 py-3">
+                <Skeleton width={16} height={16} />
+              </th>
+              <th className="px-6 py-3">
+                <Skeleton variant="text" width={80} />
+              </th>
+              <th className="px-6 py-3">
+                <Skeleton variant="text" width={60} />
+              </th>
+              <th className="px-6 py-3">
+                <Skeleton variant="text" width={50} />
+              </th>
+              <th className="px-6 py-3">
+                <Skeleton variant="text" width={50} />
+              </th>
+              <th className="px-6 py-3">
+                <Skeleton variant="text" width={100} />
+              </th>
+              <th className="px-6 py-3">
+                <Skeleton variant="text" width={80} />
+              </th>
+              <th className="px-6 py-3">
+                <Skeleton variant="text" width={60} />
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">

@@ -343,21 +343,21 @@ npm run lint:md:fix
 
 ### Markdown Rules (via .markdownlint.json)
 
-| Rule ID | Description | Enforcement | Auto-Fix |
-|---------|-------------|-------------|----------|
-| MD035 | Horizontal rule style (3-dash) | ✅ Enabled | ✅ Yes |
-| MD003 | Heading style (ATX) | ✅ Enabled | ✅ Yes |
-| MD004 | List marker consistency | ✅ Enabled | ✅ Yes |
-| MD046 | Code block style (fenced) | ✅ Enabled | ✅ Yes |
-| MD009 | No trailing spaces | ✅ Enabled | ✅ Yes |
-| MD010 | No hard tabs | ✅ Enabled | ✅ Yes |
-| MD031 | Blank lines around fences | ✅ Enabled | ✅ Yes |
-| MD032 | Blank lines around lists | ✅ Enabled | ✅ Yes |
-| MD040 | Fenced code language | ✅ Enabled | ❌ No (manual) |
-| MD013 | Line length | ❌ Disabled | N/A |
-| MD033 | Inline HTML | ⚠️ Limited | N/A |
-| MD041 | First line heading | ❌ Disabled | N/A |
-| MD024 | Duplicate headings | ⚠️ Siblings only | N/A |
+| Rule ID | Description                    | Enforcement      | Auto-Fix       |
+| ------- | ------------------------------ | ---------------- | -------------- |
+| MD035   | Horizontal rule style (3-dash) | ✅ Enabled       | ✅ Yes         |
+| MD003   | Heading style (ATX)            | ✅ Enabled       | ✅ Yes         |
+| MD004   | List marker consistency        | ✅ Enabled       | ✅ Yes         |
+| MD046   | Code block style (fenced)      | ✅ Enabled       | ✅ Yes         |
+| MD009   | No trailing spaces             | ✅ Enabled       | ✅ Yes         |
+| MD010   | No hard tabs                   | ✅ Enabled       | ✅ Yes         |
+| MD031   | Blank lines around fences      | ✅ Enabled       | ✅ Yes         |
+| MD032   | Blank lines around lists       | ✅ Enabled       | ✅ Yes         |
+| MD040   | Fenced code language           | ✅ Enabled       | ❌ No (manual) |
+| MD013   | Line length                    | ❌ Disabled      | N/A            |
+| MD033   | Inline HTML                    | ⚠️ Limited       | N/A            |
+| MD041   | First line heading             | ❌ Disabled      | N/A            |
+| MD024   | Duplicate headings             | ⚠️ Siblings only | N/A            |
 
 **Total Rules**: 13 rules configured  
 **Auto-Fixable**: 8 rules (62%)  
@@ -365,14 +365,14 @@ npm run lint:md:fix
 
 ### EditorConfig Rules (via .editorconfig)
 
-| Setting | Value | Applies To | Auto-Applied |
-|---------|-------|------------|--------------|
-| `charset` | `utf-8` | All files | ✅ Yes |
-| `end_of_line` | `lf` | All files | ✅ Yes |
-| `insert_final_newline` | `true` | All files | ✅ Yes |
-| `trim_trailing_whitespace` | `true` | All files | ✅ Yes |
-| `indent_style` | `space` | All code | ✅ Yes |
-| `indent_size` | `2` | All code | ✅ Yes |
+| Setting                    | Value   | Applies To | Auto-Applied |
+| -------------------------- | ------- | ---------- | ------------ |
+| `charset`                  | `utf-8` | All files  | ✅ Yes       |
+| `end_of_line`              | `lf`    | All files  | ✅ Yes       |
+| `insert_final_newline`     | `true`  | All files  | ✅ Yes       |
+| `trim_trailing_whitespace` | `true`  | All files  | ✅ Yes       |
+| `indent_style`             | `space` | All code   | ✅ Yes       |
+| `indent_size`              | `2`     | All code   | ✅ Yes       |
 
 **Total Settings**: 6 settings  
 **Auto-Applied**: 100% (all settings enforced by IDE)
@@ -478,7 +478,7 @@ If linting causes issues:
 
 ```json
 {
-  "MD035": false  // Disable separator rule temporarily
+  "MD035": false // Disable separator rule temporarily
 }
 ```
 
@@ -570,8 +570,8 @@ All existing files are already compliant. Continue working normally.
 ### When Writing Markdown
 
 1. **Use 3-dash separators**: `---` (not `----` or `___`)
-2. **Use fenced code blocks**: ````markdown ```typescript```` (not indented)
-3. **Specify code block language**: ````markdown ```bash```` (not ````markdown ``` ````)
+2. **Use fenced code blocks**: `markdown ```typescript` (not indented)
+3. **Specify code block language**: `markdown ```bash` (not `markdown ``` `)
 4. **Use ATX headings**: `## Heading` (not `Heading\n======`)
 5. **Consistent list markers**: `- Item` (not mixing `-`, `*`, `+`)
 

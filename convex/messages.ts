@@ -18,9 +18,9 @@ export const list = query({
           q.eq(q.field("isGroupMessage"), false),
           q.or(
             q.eq(q.field("senderId"), args.userId),
-            q.eq(q.field("recipientId"), args.userId)
-          )
-        )
+            q.eq(q.field("recipientId"), args.userId),
+          ),
+        ),
       )
       .order("desc")
       .collect();
@@ -28,16 +28,16 @@ export const list = query({
     // Get group messages for user's school
     const groupMessages = args.schoolId
       ? await ctx.db
-        .query("messages")
-        .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId))
-        .filter((q) => q.eq(q.field("isGroupMessage"), true))
-        .order("desc")
-        .collect()
+          .query("messages")
+          .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId))
+          .filter((q) => q.eq(q.field("isGroupMessage"), true))
+          .order("desc")
+          .collect()
       : [];
 
     // Combine and sort by creation time
     const allMessages = [...directMessages, ...groupMessages].sort(
-      (a, b) => b.createdAt - a.createdAt
+      (a, b) => b.createdAt - a.createdAt,
     );
 
     // Populate sender information
@@ -53,7 +53,7 @@ export const list = query({
           senderUsername: sender?.username || "Unknown",
           recipientUsername: recipient?.username || null,
         };
-      })
+      }),
     );
 
     return messagesWithSenders;
@@ -75,14 +75,14 @@ export const getConversation = query({
           q.or(
             q.and(
               q.eq(q.field("senderId"), args.userId1),
-              q.eq(q.field("recipientId"), args.userId2)
+              q.eq(q.field("recipientId"), args.userId2),
             ),
             q.and(
               q.eq(q.field("senderId"), args.userId2),
-              q.eq(q.field("recipientId"), args.userId1)
-            )
-          )
-        )
+              q.eq(q.field("recipientId"), args.userId1),
+            ),
+          ),
+        ),
       )
       .order("desc")
       .collect();
@@ -95,7 +95,7 @@ export const getConversation = query({
           ...message,
           senderUsername: sender?.username || "Unknown",
         };
-      })
+      }),
     );
 
     return messagesWithSenders.sort((a, b) => a.createdAt - b.createdAt);
@@ -123,7 +123,7 @@ export const getGroupMessages = query({
           ...message,
           senderUsername: sender?.username || "Unknown",
         };
-      })
+      }),
     );
 
     return messagesWithSenders.sort((a, b) => a.createdAt - b.createdAt);
@@ -141,8 +141,8 @@ export const unreadCount = query({
       .filter((q) =>
         q.and(
           q.eq(q.field("recipientId"), args.userId),
-          q.eq(q.field("read"), false)
-        )
+          q.eq(q.field("read"), false),
+        ),
       )
       .collect();
 
@@ -164,18 +164,19 @@ export const getConversations = query({
           q.eq(q.field("isGroupMessage"), false),
           q.or(
             q.eq(q.field("senderId"), args.userId),
-            q.eq(q.field("recipientId"), args.userId)
-          )
-        )
+            q.eq(q.field("recipientId"), args.userId),
+          ),
+        ),
       )
       .collect();
 
     // ✅ PERFORMANCE FIX: Batch fetch all unique partner IDs first
     const partnerIds = new Set<string>();
     for (const message of allMessages) {
-      const partnerId = message.senderId === args.userId
-        ? message.recipientId
-        : message.senderId;
+      const partnerId =
+        message.senderId === args.userId
+          ? message.recipientId
+          : message.senderId;
       if (partnerId) {
         partnerIds.add(partnerId.toString());
       }
@@ -191,29 +192,31 @@ export const getConversations = query({
       return null;
     });
     const partners = (await Promise.all(partnerPromises)).filter(
-      (p): p is NonNullable<typeof p> => p !== null
+      (p): p is NonNullable<typeof p> => p !== null,
     );
 
     // Create lookup map for O(1) access
-    const partnerMap = new Map(
-      partners.map(p => [p._id.toString(), p])
-    );
+    const partnerMap = new Map(partners.map((p) => [p._id.toString(), p]));
 
     // Group messages by conversation partner
-    const conversationMap = new Map<string, {
-      partnerId: string;
-      partnerUsername: string;
-      lastMessage: string;
-      lastMessageTh: string;
-      lastMessageTime: number;
-      unreadCount: number;
-      messages: typeof allMessages;
-    }>();
+    const conversationMap = new Map<
+      string,
+      {
+        partnerId: string;
+        partnerUsername: string;
+        lastMessage: string;
+        lastMessageTh: string;
+        lastMessageTime: number;
+        unreadCount: number;
+        messages: typeof allMessages;
+      }
+    >();
 
     for (const message of allMessages) {
-      const partnerId = message.senderId === args.userId
-        ? message.recipientId
-        : message.senderId;
+      const partnerId =
+        message.senderId === args.userId
+          ? message.recipientId
+          : message.senderId;
 
       if (!partnerId) continue;
 
@@ -259,10 +262,10 @@ export const getConversations = query({
       if (a.unreadCount > 0 && b.unreadCount > 0) {
         // Find oldest unread message in each conversation
         const aOldestUnread = a.messages
-          .filter(m => m.recipientId === args.userId && !m.read)
+          .filter((m) => m.recipientId === args.userId && !m.read)
           .sort((x, y) => x.createdAt - y.createdAt)[0];
         const bOldestUnread = b.messages
-          .filter(m => m.recipientId === args.userId && !m.read)
+          .filter((m) => m.recipientId === args.userId && !m.read)
           .sort((x, y) => x.createdAt - y.createdAt)[0];
 
         if (aOldestUnread && bOldestUnread) {
@@ -324,14 +327,14 @@ export const sendDirectMessage = mutation({
           q.or(
             q.and(
               q.eq(q.field("senderId"), args.senderId),
-              q.eq(q.field("recipientId"), args.recipientId)
+              q.eq(q.field("recipientId"), args.recipientId),
             ),
             q.and(
               q.eq(q.field("senderId"), args.recipientId),
-              q.eq(q.field("recipientId"), args.senderId)
-            )
-          )
-        )
+              q.eq(q.field("recipientId"), args.senderId),
+            ),
+          ),
+        ),
       )
       .collect();
 
@@ -342,8 +345,10 @@ export const sendDirectMessage = mutation({
       await ctx.db.insert("messages", {
         senderId: args.senderId,
         recipientId: args.recipientId,
-        content: "⚠️ Messages will be cleared from the server automatically every 2 weeks.",
-        contentTh: "⚠️ ข้อความจะถูกลบออกจากเซิร์ฟเวอร์โดยอัตโนมัติทุก 2 สัปดาห์",
+        content:
+          "⚠️ Messages will be cleared from the server automatically every 2 weeks.",
+        contentTh:
+          "⚠️ ข้อความจะถูกลบออกจากเซิร์ฟเวอร์โดยอัตโนมัติทุก 2 สัปดาห์",
         isGroupMessage: false,
         read: false,
         acknowledged: true,
@@ -498,22 +503,20 @@ export const getAvailableUsers = query({
     // Get users based on filter - if filterSchoolId provided, filter by school, otherwise get all
     const allUsers = args.filterSchoolId
       ? await ctx.db
-        .query("users")
-        .withIndex("by_school", (q) => q.eq("schoolId", args.filterSchoolId))
-        .collect()
+          .query("users")
+          .withIndex("by_school", (q) => q.eq("schoolId", args.filterSchoolId))
+          .collect()
       : await ctx.db.query("users").collect();
 
     // Filter out current user
     const filteredUsers = allUsers.filter(
-      (user) => user._id !== args.currentUserId
+      (user) => user._id !== args.currentUserId,
     );
 
     // Fetch school information for each user
     const usersWithSchools = await Promise.all(
       filteredUsers.map(async (user) => {
-        const school = user.schoolId
-          ? await ctx.db.get(user.schoolId)
-          : null;
+        const school = user.schoolId ? await ctx.db.get(user.schoolId) : null;
 
         const { passwordHash: _passwordHash, ...userWithoutPassword } = user;
         return {
@@ -521,7 +524,7 @@ export const getAvailableUsers = query({
           schoolName: school?.name || "No School",
           schoolNameTh: school?.nameTh || "ไม่มีโรงเรียน",
         };
-      })
+      }),
     );
 
     return usersWithSchools;
@@ -531,13 +534,11 @@ export const getAvailableUsers = query({
 // Internal mutation to delete old messages (called by cron job)
 export const deleteOldMessages = internalMutation({
   handler: async (ctx) => {
-    const twoWeeksAgo = Date.now() - (14 * 24 * 60 * 60 * 1000);
+    const twoWeeksAgo = Date.now() - 14 * 24 * 60 * 60 * 1000;
 
     const oldMessages = await ctx.db
       .query("messages")
-      .withIndex("by_created_at", (q) =>
-        q.lt("createdAt", twoWeeksAgo)
-      )
+      .withIndex("by_created_at", (q) => q.lt("createdAt", twoWeeksAgo))
       .collect();
 
     // Delete in batches to avoid timeout

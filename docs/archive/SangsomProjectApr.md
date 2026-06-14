@@ -1,5 +1,7 @@
 # Sangsom Project - April/May 2025 Schedule
 
+<!-- markdownlint-disable MD049 -->
+
 ## ตารางวันและเวลา / การจัดโครงการกิจกรรมและชุดการสอน
 
 This document contains the class schedule transcribed from the Sangsom Project paper schedule for April-May 2025 (พ.ศ. 2568).
@@ -13,12 +15,12 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **K.1/1** โครงงานเรื่อง ข้าว
-- ชุดกิจกรรมสอง *"Roll your hands"*
+- ชุดกิจกรรมสอง _"Roll your hands"_
 
 **เวลา 10.30 - 12.00 น.**
 
 - **อ. 2/1** โครงงานเรื่อง ที่กิน*บัว*
-- ชุดกิจกรรมสอง *"เปิดเพลงมา"*
+- ชุดกิจกรรมสอง _"เปิดเพลงมา"_
 
 ---
 
@@ -27,12 +29,12 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **อ.1/2** โครงงานเรื่อง กล้วย
-- ชุดกิจกรรมสอง *"OK มะคอะ"*
+- ชุดกิจกรรมสอง _"OK มะคอะ"_
 
 **เวลา 10.30 - 12.00 น.**
 
 - **อ.2/2** โครงงานเรื่อง ผลไม้*ต่างๆ*
-- ชุดกิจกรรมสอง *"จับ*กับผล*ปีต*"*
+- ชุดกิจกรรมสอง *"จับ*กับผล*ปีต*"\*
 
 ---
 
@@ -41,12 +43,12 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **อ.1/3** โครงงานเรื่อง ผลไม้
-- ชุดกิจกรรมสอง *"เปิดเพลงมา"*
+- ชุดกิจกรรมสอง _"เปิดเพลงมา"_
 
 **เวลา 10.30 - 12.00 น.**
 
 - **อ.2/3** โครงงานเรื่อง อาหาร*ที่*ต่างๆ
-- ชุดกิจกรรมสอง *"ยึดกัน*ผล*ปี*ต*โชน*"*
+- ชุดกิจกรรมสอง *"ยึดกัน*ผล*ปี*ต*โชน*"\*
 
 ---
 
@@ -55,7 +57,7 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **อ.1/4** โครงงานเรื่อง พักทอง
-- ชุดกิจกรรมสอง *"Too much so much very much"*
+- ชุดกิจกรรมสอง _"Too much so much very much"_
 
 **เวลา 10.30 - 12.00 น.**
 
@@ -71,12 +73,12 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **K.1/5** โครงงานเรื่อง ข้าวโพด
-- ชุดกิจกรรมสอง *"Action song"*
+- ชุดกิจกรรมสอง _"Action song"_
 
 **เวลา 10.30 - 12.00 น.**
 
 - **K.2/5** โครงงานเรื่อง แมลง
-- ชุดกิจกรรมสอง *"The cha cha slide dance"*
+- ชุดกิจกรรมสอง _"The cha cha slide dance"_
 
 ---
 
@@ -85,12 +87,12 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **K.1/6** โครงงานเรื่อง แตงโม
-- ชุดกิจกรรมสอง *"Five little ducks"*
+- ชุดกิจกรรมสอง _"Five little ducks"_
 
 **เวลา 10.30 - 12.00 น.**
 
 - **K.2/6** โครงงานเรื่อง ผีเสื้อ
-- ชุดกิจกรรมสอง *"Learn the butterfly dance"*
+- ชุดกิจกรรมสอง _"Learn the butterfly dance"_
 
 ---
 
@@ -99,12 +101,12 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **K.1/7** โครงงานเรื่อง ดอกไม้
-- ชุดกิจกรรมสอง *"If you are happy"*
+- ชุดกิจกรรมสอง _"If you are happy"_
 
 **เวลา 10.30 - 12.00 น.**
 
 - **K.2/7** โครงงานเรื่อง ไม่ไม้
-- ชุดกิจกรรมสอง *"Zumba dance for kids"*
+- ชุดกิจกรรมสอง _"Zumba dance for kids"_
 
 ---
 
@@ -113,12 +115,12 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **K.1/8** โครงงานเรื่อง สัตว์เลี้ยง
-- ชุดกิจกรรมสอง *"Hokey Pokey"*
+- ชุดกิจกรรมสอง _"Hokey Pokey"_
 
 **เวลา 10.30 - 12.00 น.**
 
 - **K.2/8** โครงงานเรื่อง ข้าว
-- ชุดกิจกรรมสอง *"N-one cowboy"*
+- ชุดกิจกรรมสอง _"N-one cowboy"_
 
 ---
 
@@ -127,12 +129,12 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **K.1/9** โครงงานเรื่อง แมลง
-- ชุดกิจกรรมสอง *"Wheels on the bus"*
+- ชุดกิจกรรมสอง _"Wheels on the bus"_
 
 **เวลา 10.30 - 12.00 น.**
 
 - **K.2/9** โครงงานเรื่อง ต้นไม้
-- ชุดกิจกรรมสอง *"Planting a tree"*
+- ชุดกิจกรรมสอง _"Planting a tree"_
 
 ---
 
@@ -143,12 +145,12 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **K.1/10** โครงงานเรื่อง ส้ม
-- ชุดกิจกรรมสอง *"Old Macdonald had a farm"*
+- ชุดกิจกรรมสอง _"Old Macdonald had a farm"_
 
 **เวลา 10.30 - 12.00 น.**
 
 - **K.2/10** โครงงานเรื่อง มะพร้าว
-- ชุดกิจกรรมสอง *"Do re mi, the sound of music"*
+- ชุดกิจกรรมสอง _"Do re mi, the sound of music"_
 
 ---
 
@@ -157,12 +159,12 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **อ.3/1** โครงงานเรื่อง สัตว์เลี้ยง
-- ชุดกิจกรรมสอง *"มะลิชักกีกี้อยู่"*
+- ชุดกิจกรรมสอง _"มะลิชักกีกี้อยู่"_
 
 **เวลา 10.30 - 12.00 น.**
 
 - **อ.3/2** โครงงานเรื่อง ยานพาหนะทางบก
-- ชุดกิจกรรมสอง *"เอองหมูมอบอื้น จันหมูมอบเอง"*
+- ชุดกิจกรรมสอง _"เอองหมูมอบอื้น จันหมูมอบเอง"_
 
 ---
 
@@ -171,12 +173,12 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **อ.3/3** โครงงานเรื่อง ดอกไม้กินได้
-- ชุดกิจกรรมสอง *"แม่มด"*
+- ชุดกิจกรรมสอง _"แม่มด"_
 
 **เวลา 10.30 - 12.00 น.**
 
 - **อ.3/4** โครงงานเรื่อง น้ำ
-- ชุดกิจกรรมสอง *"ลูล่ามอมริบคุย"*
+- ชุดกิจกรรมสอง _"ลูล่ามอมริบคุย"_
 
 ---
 
@@ -185,12 +187,12 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **อ.3/5** โครงงานเรื่อง กบ
-- ชุดกิจกรรมสอง *"เข้าข้าเอยั"*
+- ชุดกิจกรรมสอง _"เข้าข้าเอยั"_
 
 **เวลา 10.30 - 12.00 น.**
 
 - **K.3/6** โครงงานเรื่อง ปลาลองงาม
-- ชุดกิจกรรมสอง *"Banana Chacha"*
+- ชุดกิจกรรมสอง _"Banana Chacha"_
 
 ---
 
@@ -199,12 +201,12 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **K.3/7** โครงงานเรื่อง ชูเด
-- ชุดกิจกรรมสอง *"Baby"*
+- ชุดกิจกรรมสอง _"Baby"_
 
 **เวลา 10.30 - 12.00 น.**
 
 - **K.3/8** โครงงานเรื่อง สัตว์เลี้ยงลูกด้วยแม
-- ชุดกิจกรรมสอง *"Dynamite"*
+- ชุดกิจกรรมสอง _"Dynamite"_
 
 ---
 
@@ -213,19 +215,19 @@ This document contains the class schedule transcribed from the Sangsom Project p
 **เวลา 9.00 - 10.30 น.**
 
 - **K.3/9** โครงงานเรื่อง ดอกไม้
-- ชุดกิจกรรมสอง *"AH YAY!"*
+- ชุดกิจกรรมสอง _"AH YAY!"_
 
 **เวลา 10.30 - 12.00 น.**
 
 - **K.3/10** โครงงานเรื่อง สัตว์ไซเล
-- ชุดกิจกรรมสอง *"Shake It off"*
+- ชุดกิจกรรมสอง _"Shake It off"_
 
 ---
 
 ## Notes
 
 ขอแสดงความนับถือ
-*พงศกร* หน่อไฟ
+_พงศกร_ หน่อไฟ
 (อ. มณทิรา หลังลุง) ผู้อำนวยการ
 
 **Date Period:** November 3-24, 2025 (3-24 พฤศจิกายน พ.ศ. 2568)

@@ -21,12 +21,12 @@ This PR restructures teacher account functionality to enable **frictionless book
 
 ## ✅ Acceptance Criteria Status
 
-| Criteria | Status | Notes |
-| -------- | ------ | ----- |
-| Teachers experience no booking/creation blocks | ✅ Complete | Auto-approval for provider classes |
-| Duplicate modal works as specified | 🔄 Partial | Backend ready, frontend modal pending |
-| Admin has list view of flagged duplicates | ✅ Complete | Full dashboard with filtering/search |
-| Backend supports connections, merges, watchlist | ✅ Complete | All mutations implemented |
+| Criteria                                        | Status      | Notes                                 |
+| ----------------------------------------------- | ----------- | ------------------------------------- |
+| Teachers experience no booking/creation blocks  | ✅ Complete | Auto-approval for provider classes    |
+| Duplicate modal works as specified              | 🔄 Partial  | Backend ready, frontend modal pending |
+| Admin has list view of flagged duplicates       | ✅ Complete | Full dashboard with filtering/search  |
+| Backend supports connections, merges, watchlist | ✅ Complete | All mutations implemented             |
 
 ---
 
@@ -252,7 +252,7 @@ const result = await ctx.runMutation(api.duplicateDetection.detectDuplicates, {
 ```typescript
 const entries = await ctx.runQuery(api.duplicateDetection.listWatchlist, {
   userId: adminId,
-  status: "pending" // optional: "pending" | "reviewed" | "merged" | "dismissed"
+  status: "pending", // optional: "pending" | "reviewed" | "merged" | "dismissed"
 });
 ```
 
@@ -260,7 +260,7 @@ const entries = await ctx.runQuery(api.duplicateDetection.listWatchlist, {
 
 ```typescript
 const stats = await ctx.runQuery(api.duplicateDetection.getWatchlistStats, {
-  userId: adminId
+  userId: adminId,
 });
 
 // Returns: { total, pending, reviewed, merged, dismissed }
@@ -273,7 +273,7 @@ await ctx.runMutation(api.duplicateDetection.dismissDuplicate, {
   entryId: "...",
   userId: adminId,
   notes: "Reason for dismissal",
-  notesTh: "เหตุผลในการปิด"
+  notesTh: "เหตุผลในการปิด",
 });
 ```
 
@@ -286,7 +286,7 @@ await ctx.runMutation(api.duplicateDetection.mergeDuplicateStudents, {
   deleteStudentIds: ["...", "..."], // Students to merge and delete
   userId: adminId,
   notes: "Merge reason",
-  notesTh: "เหตุผลในการรวม"
+  notesTh: "เหตุผลในการรวม",
 });
 
 // Process:
@@ -309,12 +309,9 @@ import { AdminDuplicateWatchlist } from "@/components/admin-duplicate-watchlist"
 // In admin panel
 const [showWatchlist, setShowWatchlist] = useState(false);
 
-{showWatchlist && (
-  <AdminDuplicateWatchlist 
-    userId={currentUserId} 
-    onClose={() => setShowWatchlist(false)} 
-  />
-)}
+{
+  showWatchlist && <AdminDuplicateWatchlist userId={currentUserId} onClose={() => setShowWatchlist(false)} />;
+}
 ```
 
 ### Student Creation Form (Pending Implementation)
@@ -331,12 +328,12 @@ if (student.checkDuplicates) {
     studentId: student.id,
     userId: currentUserId
   });
-  
+
   if (duplicates.hasDuplicates) {
     // Show modal with options:
     // 1. "Create New Anyway" (proceeds, flags to admin)
     // 2. "Link to Existing" (not yet implemented)
-    
+
     if (userChoosesCreateNew) {
       // Duplicate is already flagged in watchlist
       // Admin will review later

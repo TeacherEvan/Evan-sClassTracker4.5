@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { dualWriteStudent, dualWriteClass, dualWriteProvider } from "../../convex/dualWrite";
+import {
+  dualWriteStudent,
+  dualWriteClass,
+  dualWriteProvider,
+} from "../../convex/dualWrite";
 
 describe("Dual-Write Mutations", () => {
   it("exports dualWrite functions", () => {

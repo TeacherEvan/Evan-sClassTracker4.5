@@ -25,12 +25,14 @@ export const bookWithConflictCheck = mutation({
     materialsTh: v.optional(v.string()),
     preparationNotes: v.optional(v.string()),
     preparationNotesTh: v.optional(v.string()),
-    classType: v.optional(v.union(
-      v.literal("regular"),
-      v.literal("makeup"),
-      v.literal("trial"),
-      v.literal("assessment")
-    )),
+    classType: v.optional(
+      v.union(
+        v.literal("regular"),
+        v.literal("makeup"),
+        v.literal("trial"),
+        v.literal("assessment"),
+      ),
+    ),
     // Conflict handling
     forceCreate: v.optional(v.boolean()), // If true, create despite conflicts
   },
@@ -39,7 +41,9 @@ export const bookWithConflictCheck = mutation({
     const hasSchoolArg = args.schoolId !== undefined;
     const hasProviderArg = args.providerId !== undefined;
     if (hasSchoolArg && hasProviderArg) {
-      throw new Error("Class cannot be linked to both school and provider - choose one");
+      throw new Error(
+        "Class cannot be linked to both school and provider - choose one",
+      );
     }
     if (!hasSchoolArg && !hasProviderArg) {
       throw new Error("Class must be linked to either a school or a provider");
@@ -47,7 +51,11 @@ export const bookWithConflictCheck = mutation({
 
     // Check for time conflicts first
     const scheduledDate = new Date(args.scheduledDate);
-    const dayStart = new Date(scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate()).getTime();
+    const dayStart = new Date(
+      scheduledDate.getFullYear(),
+      scheduledDate.getMonth(),
+      scheduledDate.getDate(),
+    ).getTime();
     const dayEnd = dayStart + 24 * 60 * 60 * 1000; // End of day
 
     // Use proper index for teacher + date range query
@@ -57,7 +65,7 @@ export const bookWithConflictCheck = mutation({
         q
           .eq("teacherId", args.teacherId)
           .gte("scheduledDate", dayStart)
-          .lt("scheduledDate", dayEnd)
+          .lt("scheduledDate", dayEnd),
       )
       .collect();
 
@@ -89,7 +97,7 @@ export const bookWithConflictCheck = mutation({
     const isModerator = bookedBy.role === "moderator";
     const isAdmin = bookedBy.role === "admin";
     const isTeacher = bookedBy.role === "teacher";
-    
+
     // ✅ NEW: Validate teacher permissions for provider classes
     if (isTeacher && args.providerId) {
       const provider = await ctx.db.get(args.providerId);
@@ -98,7 +106,9 @@ export const bookWithConflictCheck = mutation({
       }
       // Teachers can only book for THEIR providers
       if (provider.createdBy !== args.bookedByUserId) {
-        throw new Error("Unauthorized: You can only book classes for providers you created");
+        throw new Error(
+          "Unauthorized: You can only book classes for providers you created",
+        );
       }
     }
 
@@ -106,22 +116,28 @@ export const bookWithConflictCheck = mutation({
     if (isTeacher && args.schoolId) {
       // Teachers can only book for THEIR school
       if (bookedBy.schoolId !== args.schoolId) {
-        throw new Error("Unauthorized: You can only book classes for your assigned school");
+        throw new Error(
+          "Unauthorized: You can only book classes for your assigned school",
+        );
       }
     }
 
     // ✅ NEW: Validate moderator school boundaries (CRITICAL)
     if (isModerator && args.schoolId) {
       if (bookedBy.schoolId !== args.schoolId) {
-        throw new Error("Unauthorized: Moderators can only book classes for their assigned school");
+        throw new Error(
+          "Unauthorized: Moderators can only book classes for their assigned school",
+        );
       }
     }
 
     // ✅ NEW: Moderators CANNOT book provider classes
     if (isModerator && args.providerId) {
-      throw new Error("Unauthorized: Moderators cannot book provider classes. Providers are for teachers and admins only.");
+      throw new Error(
+        "Unauthorized: Moderators cannot book provider classes. Providers are for teachers and admins only.",
+      );
     }
-    
+
     // ✅ NEW: Auto-approve provider classes (teacher's own provider students)
     const hasProvider = args.providerId !== undefined;
     const isProviderAutoApprove = hasProvider && isTeacher;
@@ -129,9 +145,14 @@ export const bookWithConflictCheck = mutation({
     // Auto-approve if:
     // 1. Booked by moderator or admin (existing logic)
     // 2. Teacher booking their own provider class (NEW logic)
-    const status = isModerator || isAdmin || isProviderAutoApprove ? "approved" : "pending";
-    const approvedAt = isModerator || isAdmin || isProviderAutoApprove ? Date.now() : undefined;
-    const approvedByUserId = isModerator || isAdmin || isProviderAutoApprove ? args.bookedByUserId : undefined;
+    const status =
+      isModerator || isAdmin || isProviderAutoApprove ? "approved" : "pending";
+    const approvedAt =
+      isModerator || isAdmin || isProviderAutoApprove ? Date.now() : undefined;
+    const approvedByUserId =
+      isModerator || isAdmin || isProviderAutoApprove
+        ? args.bookedByUserId
+        : undefined;
 
     const classId = await ctx.db.insert("classes", {
       teacherId: args.teacherId,
@@ -148,7 +169,13 @@ export const bookWithConflictCheck = mutation({
       approvedByUsername: approvedByUserId ? bookedBy.username : undefined,
       bookedByUserId: args.bookedByUserId,
       bookedByUsername: bookedBy.username,
-      approvalSource: isModerator ? "moderator" : isAdmin ? "admin" : isProviderAutoApprove ? "auto_provider" : undefined,
+      approvalSource: isModerator
+        ? "moderator"
+        : isAdmin
+          ? "admin"
+          : isProviderAutoApprove
+            ? "auto_provider"
+            : undefined,
       duration: args.duration,
       subject: args.subject,
       subjectTh: args.subjectTh,
@@ -185,7 +212,8 @@ export const bookWithConflictCheck = mutation({
     // Create audit log
     await logAudit(ctx, {
       userId: args.bookedByUserId,
-      action: isModerator || isProviderAutoApprove ? "book_class" : "request_class",
+      action:
+        isModerator || isProviderAutoApprove ? "book_class" : "request_class",
       targetType: "classes",
       targetId: classId.toString(),
       details: {
@@ -240,19 +268,23 @@ export const book = mutation({
     materialsTh: v.optional(v.string()),
     preparationNotes: v.optional(v.string()),
     preparationNotesTh: v.optional(v.string()),
-    classType: v.optional(v.union(
-      v.literal("regular"),
-      v.literal("makeup"),
-      v.literal("trial"),
-      v.literal("assessment")
-    )),
+    classType: v.optional(
+      v.union(
+        v.literal("regular"),
+        v.literal("makeup"),
+        v.literal("trial"),
+        v.literal("assessment"),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     // XOR validation - must have EITHER schoolId OR providerId (not both, not neither)
     const hasSchoolArg = args.schoolId !== undefined;
     const hasProviderArg = args.providerId !== undefined;
     if (hasSchoolArg && hasProviderArg) {
-      throw new Error("Class cannot be linked to both school and provider - choose one");
+      throw new Error(
+        "Class cannot be linked to both school and provider - choose one",
+      );
     }
     if (!hasSchoolArg && !hasProviderArg) {
       throw new Error("Class must be linked to either a school or a provider");
@@ -311,13 +343,24 @@ export const book = mutation({
 
     // ✅ SECURITY: Input validation
     if (args.subject) validateLength(args.subject, "Subject", 200, 0);
-    if (args.subjectTh) validateLength(args.subjectTh, "Subject (Thai)", 200, 0);
-    if (args.lessonTopic) validateLength(args.lessonTopic, "Lesson Topic", 500, 0);
-    if (args.lessonTopicTh) validateLength(args.lessonTopicTh, "Lesson Topic (Thai)", 500, 0);
+    if (args.subjectTh)
+      validateLength(args.subjectTh, "Subject (Thai)", 200, 0);
+    if (args.lessonTopic)
+      validateLength(args.lessonTopic, "Lesson Topic", 500, 0);
+    if (args.lessonTopicTh)
+      validateLength(args.lessonTopicTh, "Lesson Topic (Thai)", 500, 0);
     if (args.materials) validateLength(args.materials, "Materials", 1000, 0);
-    if (args.materialsTh) validateLength(args.materialsTh, "Materials (Thai)", 1000, 0);
-    if (args.preparationNotes) validateLength(args.preparationNotes, "Preparation Notes", 2000, 0);
-    if (args.preparationNotesTh) validateLength(args.preparationNotesTh, "Preparation Notes (Thai)", 2000, 0);
+    if (args.materialsTh)
+      validateLength(args.materialsTh, "Materials (Thai)", 1000, 0);
+    if (args.preparationNotes)
+      validateLength(args.preparationNotes, "Preparation Notes", 2000, 0);
+    if (args.preparationNotesTh)
+      validateLength(
+        args.preparationNotesTh,
+        "Preparation Notes (Thai)",
+        2000,
+        0,
+      );
 
     // ✅ NEW: Validate teacher permissions for provider classes
     if (isTeacher && args.providerId) {
@@ -327,7 +370,9 @@ export const book = mutation({
       }
       // Teachers can only book for THEIR providers
       if (provider.createdBy !== args.bookedByUserId) {
-        throw new Error("Unauthorized: You can only book classes for providers you created");
+        throw new Error(
+          "Unauthorized: You can only book classes for providers you created",
+        );
       }
     }
 
@@ -335,20 +380,26 @@ export const book = mutation({
     if (isTeacher && args.schoolId) {
       // Teachers can only book for THEIR school
       if (bookedBy.schoolId !== args.schoolId) {
-        throw new Error("Unauthorized: You can only book classes for your assigned school");
+        throw new Error(
+          "Unauthorized: You can only book classes for your assigned school",
+        );
       }
     }
 
     // ✅ NEW: Validate moderator school boundaries (CRITICAL)
     if (isModerator && args.schoolId) {
       if (bookedBy.schoolId !== args.schoolId) {
-        throw new Error("Unauthorized: Moderators can only book classes for their assigned school");
+        throw new Error(
+          "Unauthorized: Moderators can only book classes for their assigned school",
+        );
       }
     }
 
     // ✅ NEW: Moderators CANNOT book provider classes
     if (isModerator && args.providerId) {
-      throw new Error("Unauthorized: Moderators cannot book provider classes. Providers are for teachers and admins only.");
+      throw new Error(
+        "Unauthorized: Moderators cannot book provider classes. Providers are for teachers and admins only.",
+      );
     }
 
     // ✅ NEW: Auto-approve provider classes (teacher's own provider students)
@@ -358,9 +409,14 @@ export const book = mutation({
     // Auto-approve if:
     // 1. Booked by moderator or admin (existing logic)
     // 2. Teacher booking their own provider class (NEW logic)
-    const status = isModerator || isAdmin || isProviderAutoApprove ? "approved" : "pending";
-    const approvedAt = isModerator || isAdmin || isProviderAutoApprove ? Date.now() : undefined;
-    const approvedByUserId = isModerator || isAdmin || isProviderAutoApprove ? args.bookedByUserId : undefined;
+    const status =
+      isModerator || isAdmin || isProviderAutoApprove ? "approved" : "pending";
+    const approvedAt =
+      isModerator || isAdmin || isProviderAutoApprove ? Date.now() : undefined;
+    const approvedByUserId =
+      isModerator || isAdmin || isProviderAutoApprove
+        ? args.bookedByUserId
+        : undefined;
 
     // Insert class - use schema-compliant fields
     const classId = await ctx.db.insert("classes", {
@@ -378,7 +434,13 @@ export const book = mutation({
       approvedByUsername: approvedByUserId ? bookedBy.username : undefined,
       bookedByUserId: args.bookedByUserId,
       bookedByUsername: bookedBy.username,
-      approvalSource: isModerator ? "moderator" : isAdmin ? "admin" : isProviderAutoApprove ? "auto_provider" : undefined,
+      approvalSource: isModerator
+        ? "moderator"
+        : isAdmin
+          ? "admin"
+          : isProviderAutoApprove
+            ? "auto_provider"
+            : undefined,
       duration: args.duration,
       subject: args.subject,
       subjectTh: args.subjectTh,
@@ -406,7 +468,8 @@ export const book = mutation({
     // ✅ AUDIT LOG
     await logAudit(ctx, {
       userId: args.bookedByUserId,
-      action: isModerator || isProviderAutoApprove ? "book_class" : "request_class",
+      action:
+        isModerator || isProviderAutoApprove ? "book_class" : "request_class",
       targetType: "classes",
       targetId: classId.toString(),
       details: {
@@ -450,7 +513,9 @@ export const acknowledge = mutation({
 
     // ✅ SECURITY: Verify it's the teacher's class
     if (cls.teacherId !== args.userId) {
-      throw new Error("Unauthorized: Only the assigned teacher can acknowledge");
+      throw new Error(
+        "Unauthorized: Only the assigned teacher can acknowledge",
+      );
     }
 
     // Update class status to acknowledged

@@ -4,56 +4,76 @@ import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
 
 // Lazy load admin-only components
 export const LazyAdminAnalyticsDashboard = lazy(() =>
-  import("./admin-analytics-dashboard").then(mod => ({ default: mod.AdminAnalyticsDashboard }))
+  import("./admin-analytics-dashboard").then((mod) => ({
+    default: mod.AdminAnalyticsDashboard,
+  })),
 );
 
 export const LazyAdminAppUpdates = lazy(() =>
-  import("./admin-app-updates").then(mod => ({ default: mod.AdminAppUpdates }))
+  import("./admin-app-updates").then((mod) => ({
+    default: mod.AdminAppUpdates,
+  })),
 );
 
 export const LazyAdminContactButton = lazy(() =>
-  import("./admin-contact-button").then(mod => ({ default: mod.AdminContactButton }))
+  import("./admin-contact-button").then((mod) => ({
+    default: mod.AdminContactButton,
+  })),
 );
 
 export const LazyAdminContactRequests = lazy(() =>
-  import("./admin-contact-requests").then(mod => ({ default: mod.AdminContactRequests }))
+  import("./admin-contact-requests").then((mod) => ({
+    default: mod.AdminContactRequests,
+  })),
 );
 
 export const LazyAdminDeletedStudentsDashboard = lazy(() =>
-  import("./admin-deleted-students-dashboard").then(mod => ({ default: mod.AdminDeletedStudentsDashboard }))
+  import("./admin-deleted-students-dashboard").then((mod) => ({
+    default: mod.AdminDeletedStudentsDashboard,
+  })),
 );
 
 export const LazyAdminErrorReports = lazy(() =>
-  import("./admin-error-reports").then(mod => ({ default: mod.AdminErrorReports }))
+  import("./admin-error-reports").then((mod) => ({
+    default: mod.AdminErrorReports,
+  })),
 );
 
 export const LazyAdminNotificationWindows = lazy(() =>
-  import("./admin-notification-windows").then(mod => ({ default: mod.AdminNotificationWindows }))
+  import("./admin-notification-windows").then((mod) => ({
+    default: mod.AdminNotificationWindows,
+  })),
 );
 
 export const LazyAuditLogs = lazy(() =>
-  import("./audit-logs").then(mod => ({ default: mod.AuditLogs }))
+  import("./audit-logs").then((mod) => ({ default: mod.AuditLogs })),
 );
 
 // Note: DeviceTestingDashboard uses 'export default' so no transformation needed
-export const LazyDeviceTestingDashboard = lazy(() =>
-  import("./device-testing-dashboard")
+export const LazyDeviceTestingDashboard = lazy(
+  () => import("./device-testing-dashboard"),
 );
 
 export const LazyBulkEditStudentsModal = lazy(() =>
-  import("./bulk-edit-students-modal").then(mod => ({ default: mod.BulkEditStudentsModal }))
+  import("./bulk-edit-students-modal").then((mod) => ({
+    default: mod.BulkEditStudentsModal,
+  })),
 );
 
 export const LazyClassPaymentCalculator = lazy(() =>
-  import("./class-payment-calculator").then(mod => ({ default: mod.ClassPaymentCalculator }))
+  import("./class-payment-calculator").then((mod) => ({
+    default: mod.ClassPaymentCalculator,
+  })),
 );
 
 export const LazyTeacherClassCountModal = lazy(() =>
-  import("./teacher-class-count-modal").then(mod => ({ default: mod.TeacherClassCountModal }))
+  import("./teacher-class-count-modal").then((mod) => ({
+    default: mod.TeacherClassCountModal,
+  })),
 );
 
 export const LazyClassAnalytics = lazy(() =>
-  import("./class-analytics").then(mod => ({ default: mod.ClassAnalytics }))
+  import("./class-analytics").then((mod) => ({ default: mod.ClassAnalytics })),
 );
 
 // Fallback loading components
@@ -62,7 +82,10 @@ interface SuspenseWrapperProps {
   fallback?: ReactNode;
 }
 
-export function AdminComponentWrapper({ children, fallback }: SuspenseWrapperProps) {
+export function AdminComponentWrapper({
+  children,
+  fallback,
+}: SuspenseWrapperProps) {
   return (
     <Suspense fallback={fallback || <AdminLoadingFallback />}>
       {children}
@@ -138,7 +161,7 @@ function DashboardCardSkeleton() {
 // Helper HOC for wrapping lazy components with Suspense
 export function withSuspense<P extends object>(
   LazyComponent: ComponentType<P>,
-  FallbackComponent: ComponentType = AdminLoadingFallback
+  FallbackComponent: ComponentType = AdminLoadingFallback,
 ) {
   return function WrappedComponent(props: P) {
     return (

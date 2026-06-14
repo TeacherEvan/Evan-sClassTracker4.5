@@ -104,7 +104,7 @@
 **Good Enough Security**:
 
 - ✅ Rate limiting
-- ✅ Input validation  
+- ✅ Input validation
 - ✅ Audit trails
 - ✅ HTTPS (Vercel)
 

@@ -84,12 +84,10 @@ npm run test:e2e
   - Password change dialog: 3s → 1.5s wait
   - Wizard dismissal: 1s → 0.5s waits
   - Monthly Calendar verification: 10s → 5s timeout
-  
 - `navigateToTab(page, tabName)` - Navigate sidebar (streamlined)
   - Tab button timeout: 10s → 5s
   - Retry attempts: 3 → 2
   - Content load wait: 1s → 0.5s
-  
 - `logout(page)` - Sign out
 - `switchLanguage(page, language)` - Toggle English/Thai
 - `waitForToast(page, message, type)` - Wait for notifications
@@ -154,10 +152,10 @@ Tests run automatically after staging deployment completes:
 ```typescript
 // From helpers.ts
 TEST_USERS = {
-  admin: { username: 'admin', password: 'TeacherAdmin' },
-  moderator: { username: 'moderator1', password: 'TeacherModerator1' },
-  teacher: { username: 'Evan', password: 'TeacherEvan' }
-}
+  admin: { username: "admin", password: "TeacherAdmin" },
+  moderator: { username: "moderator1", password: "TeacherModerator1" },
+  teacher: { username: "Evan", password: "TeacherEvan" },
+};
 ```
 
 **⚠️ Security Note:** These are test credentials only. Do NOT use in production.
@@ -167,22 +165,22 @@ TEST_USERS = {
 ### Basic Test Template
 
 ```typescript
-import { test, expect } from '@playwright/test';
-import { login, TEST_USERS } from './helpers';
+import { test, expect } from "@playwright/test";
+import { login, TEST_USERS } from "./helpers";
 
-test.describe('Feature Name', () => {
-  test('should do something', async ({ page }) => {
+test.describe("Feature Name", () => {
+  test("should do something", async ({ page }) => {
     // Login
     await login(page, TEST_USERS.teacher);
-    
+
     // Navigate
-    await page.locator('text=Tab Name').click();
-    
+    await page.locator("text=Tab Name").click();
+
     // Interact
     await page.locator('button:has-text("Action")').click();
-    
+
     // Assert
-    await expect(page.locator('text=Success')).toBeVisible();
+    await expect(page.locator("text=Success")).toBeVisible();
   });
 });
 ```
@@ -194,8 +192,8 @@ test.describe('Feature Name', () => {
 await page.locator('button:has-text("Book Class"), button:has-text("จองคลาส")').click();
 
 // Use helpers for bilingual inputs
-import { fillBilingualInput } from './helpers';
-await fillBilingualInput(page, 'Name', 'John', 'จอห์น');
+import { fillBilingualInput } from "./helpers";
+await fillBilingualInput(page, "Name", "John", "จอห์น");
 ```
 
 ### Handling Optional Elements
@@ -266,13 +264,13 @@ Opens HTML report with:
 1. Increase timeout in `playwright.config.ts`:
 
    ```typescript
-   timeout: 120000  // 2 minutes
+   timeout: 120000; // 2 minutes
    ```
 
 2. Use specific waits instead of generic timeouts:
 
    ```typescript
-   await page.waitForSelector('text=Expected', { timeout: 10000 });
+   await page.waitForSelector("text=Expected", { timeout: 10000 });
    ```
 
 ### Element Not Found
@@ -285,7 +283,7 @@ Opens HTML report with:
 
    ```typescript
    // Both English and Thai
-   await page.locator('text=Book, text=จอง').click();
+   await page.locator("text=Book, text=จอง").click();
    ```
 
 2. Wait for element explicitly:
@@ -311,7 +309,7 @@ Opens HTML report with:
 2. Check if session storage is working:
 
    ```typescript
-   await page.evaluate(() => localStorage.getItem('currentUser'));
+   await page.evaluate(() => localStorage.getItem("currentUser"));
    ```
 
 3. Verify login form selectors haven't changed
@@ -331,7 +329,7 @@ Opens HTML report with:
 2. Or hardcode in `playwright.config.ts`:
 
    ```typescript
-   baseURL: 'https://your-staging-url.vercel.app'
+   baseURL: "https://your-staging-url.vercel.app";
    ```
 
 ### CI Tests Fail but Local Pass
@@ -343,7 +341,7 @@ Opens HTML report with:
 1. Enable retries (already configured):
 
    ```typescript
-   retries: process.env.CI ? 2 : 0
+   retries: process.env.CI ? 2 : 0;
    ```
 
 2. Check CI logs for specific errors
@@ -359,22 +357,22 @@ Opens HTML report with:
 await page.locator('[data-testid="book-class-button"]').click();
 
 // Bad - fragile selector
-await page.locator('div > button.btn-primary').click();
+await page.locator("div > button.btn-primary").click();
 ```
 
 ### 2. Test User Flows, Not Implementation
 
 ```typescript
 // Good - tests user journey
-test('user can book and complete class', async ({ page }) => {
+test("user can book and complete class", async ({ page }) => {
   await login(page, TEST_USERS.teacher);
   await bookClass(page);
   await completeClass(page);
-  await expect(page.locator('text=Completed')).toBeVisible();
+  await expect(page.locator("text=Completed")).toBeVisible();
 });
 
 // Bad - tests internal state
-test('booking sets status to pending', async ({ page }) => {
+test("booking sets status to pending", async ({ page }) => {
   // Too implementation-specific
 });
 ```
@@ -392,7 +390,7 @@ test.afterEach(async ({ page }) => {
 
 ```typescript
 // Good - wait for specific condition
-await page.waitForSelector('text=Success');
+await page.waitForSelector("text=Success");
 
 // Bad - arbitrary timeout
 await page.waitForTimeout(3000);
@@ -401,14 +399,14 @@ await page.waitForTimeout(3000);
 ### 5. Test Both Languages
 
 ```typescript
-test('bilingual support', async ({ page }) => {
+test("bilingual support", async ({ page }) => {
   // Test in English
-  await switchLanguage(page, 'en');
-  await expect(page.locator('text=Book Class')).toBeVisible();
-  
+  await switchLanguage(page, "en");
+  await expect(page.locator("text=Book Class")).toBeVisible();
+
   // Test in Thai
-  await switchLanguage(page, 'th');
-  await expect(page.locator('text=จองคลาส')).toBeVisible();
+  await switchLanguage(page, "th");
+  await expect(page.locator("text=จองคลาส")).toBeVisible();
 });
 ```
 
@@ -434,11 +432,11 @@ test('bilingual support', async ({ page }) => {
 ### Response Time Assertions
 
 ```typescript
-test('page loads within 3 seconds', async ({ page }) => {
+test("page loads within 3 seconds", async ({ page }) => {
   const start = Date.now();
   await login(page, TEST_USERS.teacher);
   const duration = Date.now() - start;
-  
+
   expect(duration).toBeLessThan(3000);
 });
 ```
@@ -446,14 +444,14 @@ test('page loads within 3 seconds', async ({ page }) => {
 ### Database Query Performance
 
 ```typescript
-test('student list loads quickly', async ({ page }) => {
+test("student list loads quickly", async ({ page }) => {
   await login(page, TEST_USERS.teacher);
-  
+
   const start = Date.now();
-  await page.locator('text=Students').click();
+  await page.locator("text=Students").click();
   await page.waitForSelector('[data-testid="student-list"]');
   const duration = Date.now() - start;
-  
+
   expect(duration).toBeLessThan(2000);
 });
 ```

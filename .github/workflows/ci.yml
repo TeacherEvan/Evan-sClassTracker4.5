@@ -11,65 +11,180 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  type-check-and-lint:
-    runs-on: self-hosted
-
+  # Job 1: Lint (fast, runs first)
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Cache node modules
-        id: cache-npm
-        uses: actions/cache@v4
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: TypeScript Check
-        run: npx tsc --noEmit
-
-      - name: Run ESLint
-        run: npm run lint
-
-      - name: Build check (Next.js)
-        run: npm run build
-        env:
-          # Use a dummy Convex URL for build validation
-          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL || 'https://dummy.convex.cloud' }}
-          # Disable Next.js telemetry in CI
-          NEXT_TELEMETRY_DISABLED: 1
-
-  convex-check:
-    runs-on: self-hosted
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate Convex schema
-        run: |
-          echo "Checking Convex schema syntax..."
-          npx tsc convex/schema.ts --noEmit --skipLibCheck
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run Markdownlint
+        run: npm run lint:md
+
+      - name: Check Prettier formatting
+        run: npx prettier --check .
+
+  # Job 2: Type check (can run parallel with lint)
+  typecheck:
+    name: TypeScript Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript Check
+        run: npx tsc --noEmit
+
+  # Job 3: Unit tests (can run parallel)
+  unit-test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test -- --coverage
+
+  # Job 4: Build (depends on lint + typecheck passing)
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [lint, typecheck]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build check (Next.js)
+        run: npm run build
+        env:
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL || 'https://dummy.convex.cloud' }}
+          NEXT_TELEMETRY_DISABLED: 1
+
+  # Job 5: Security audit
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: npm audit
+        run: npm audit --audit-level=high
+
+  # Job 6: Convex validation
+  convex-validation:
+    name: Convex Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Convex schema syntax
+        run: npx tsc convex/schema.ts --noEmit --skipLibCheck
 
       - name: Check Convex functions
         run: |
-          echo "Checking all Convex functions..."
           find convex -name "*.ts" -not -path "convex/_generated/*" -exec npx tsc {} --noEmit --skipLibCheck \;
+
+  # Job 7: E2E tests (requires build, runs last)
+  e2e-test:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL || 'https://dummy.convex.cloud' }}
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Start dev server
+        run: |
+          npm run dev &
+          sleep 10
+
+      - name: Run E2E tests
+        run: npm run test:e2e:raw
+        env:
+          NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL || 'https://dummy.convex.cloud' }}
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/

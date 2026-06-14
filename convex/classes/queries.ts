@@ -7,12 +7,14 @@ export const list = query({
   args: {
     teacherId: v.optional(v.id("users")),
     schoolId: v.optional(v.id("schools")),
-    status: v.optional(v.union(
-      v.literal("pending"),
-      v.literal("acknowledged"),
-      v.literal("approved"),
-      v.literal("rejected")
-    )),
+    status: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("acknowledged"),
+        v.literal("approved"),
+        v.literal("rejected"),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     if (args.teacherId) {
@@ -35,10 +37,7 @@ export const list = query({
         .collect();
     }
 
-    return await ctx.db
-      .query("classes")
-      .order("desc")
-      .collect();
+    return await ctx.db.query("classes").order("desc").collect();
   },
 });
 
@@ -67,9 +66,10 @@ export const getByDateRange = query({
       const classes = await ctx.db
         .query("classes")
         .withIndex("by_school_and_date", (q) =>
-          q.eq("schoolId", args.schoolId!)
+          q
+            .eq("schoolId", args.schoolId!)
             .gte("scheduledDate", args.startDate)
-            .lte("scheduledDate", args.endDate)
+            .lte("scheduledDate", args.endDate),
         )
         .collect();
       return classes;
@@ -79,9 +79,10 @@ export const getByDateRange = query({
       const classes = await ctx.db
         .query("classes")
         .withIndex("by_teacher_and_date", (q) =>
-          q.eq("teacherId", args.teacherId!)
+          q
+            .eq("teacherId", args.teacherId!)
             .gte("scheduledDate", args.startDate)
-            .lte("scheduledDate", args.endDate)
+            .lte("scheduledDate", args.endDate),
         )
         .collect();
       return classes;
@@ -91,8 +92,9 @@ export const getByDateRange = query({
     const classes = await ctx.db
       .query("classes")
       .withIndex("by_scheduled_date", (q) =>
-        q.gte("scheduledDate", args.startDate)
-          .lte("scheduledDate", args.endDate)
+        q
+          .gte("scheduledDate", args.startDate)
+          .lte("scheduledDate", args.endDate),
       )
       .collect();
     return classes;
@@ -105,12 +107,14 @@ export const listWithDetails = query({
   args: {
     teacherId: v.optional(v.id("users")),
     schoolId: v.optional(v.id("schools")),
-    status: v.optional(v.union(
-      v.literal("pending"),
-      v.literal("acknowledged"),
-      v.literal("approved"),
-      v.literal("rejected")
-    )),
+    status: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("acknowledged"),
+        v.literal("approved"),
+        v.literal("rejected"),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     // First, get all classes based on filter
@@ -135,14 +139,11 @@ export const listWithDetails = query({
         .order("desc")
         .collect();
     } else {
-      classes = await ctx.db
-        .query("classes")
-        .order("desc")
-        .collect();
+      classes = await ctx.db.query("classes").order("desc").collect();
     }
 
     // Batch fetch all related entities
-    const studentIds = [...new Set(classes.map(c => c.studentId))];
+    const studentIds = [...new Set(classes.map((c) => c.studentId))];
     // Also collect additional student IDs
     const additionalStudentIds = new Set<Id<"students">>();
     for (const cls of classes) {
@@ -152,26 +153,41 @@ export const listWithDetails = query({
         }
       }
     }
-    const allStudentIds = [...new Set([...studentIds, ...additionalStudentIds])];
+    const allStudentIds = [
+      ...new Set([...studentIds, ...additionalStudentIds]),
+    ];
 
-    const locationIds = [...new Set(classes.map(c => c.locationId).filter(Boolean))];
+    const locationIds = [
+      ...new Set(classes.map((c) => c.locationId).filter(Boolean)),
+    ];
 
-    const students = await Promise.all(allStudentIds.map(id => ctx.db.get(id)));
-    const locations = await Promise.all(locationIds.map(id => ctx.db.get(id!)));
+    const students = await Promise.all(
+      allStudentIds.map((id) => ctx.db.get(id)),
+    );
+    const locations = await Promise.all(
+      locationIds.map((id) => ctx.db.get(id!)),
+    );
 
     // Create lookup maps
     const studentMap = new Map(
-      students.filter((s): s is NonNullable<typeof s> => s !== null).map(s => [s._id, s])
+      students
+        .filter((s): s is NonNullable<typeof s> => s !== null)
+        .map((s) => [s._id, s]),
     );
     const locationMap = new Map(
-      locations.filter((l): l is NonNullable<typeof l> => l !== null).map(l => [l._id, l])
+      locations
+        .filter((l): l is NonNullable<typeof l> => l !== null)
+        .map((l) => [l._id, l]),
     );
 
     // Return enriched data with additional students
-    return classes.map(c => ({
+    return classes.map((c) => ({
       ...c,
       student: studentMap.get(c.studentId) || null,
-      additionalStudents: c.additionalStudentIds?.map(id => studentMap.get(id) || null).filter(Boolean) || [],
+      additionalStudents:
+        c.additionalStudentIds
+          ?.map((id) => studentMap.get(id) || null)
+          .filter(Boolean) || [],
       location: c.locationId ? locationMap.get(c.locationId) || null : null,
     }));
   },
@@ -196,9 +212,10 @@ export const checkTimeConflicts = query({
     const potentialConflicts = await ctx.db
       .query("classes")
       .withIndex("by_teacher_and_date", (q) =>
-        q.eq("teacherId", args.teacherId)
+        q
+          .eq("teacherId", args.teacherId)
           .gte("scheduledDate", startRange)
-          .lte("scheduledDate", endRange)
+          .lte("scheduledDate", endRange),
       )
       .filter((q) =>
         q.and(
@@ -207,9 +224,9 @@ export const checkTimeConflicts = query({
           q.or(
             q.eq(q.field("status"), "approved"),
             q.eq(q.field("status"), "pending"),
-            q.eq(q.field("status"), "acknowledged")
-          )
-        )
+            q.eq(q.field("status"), "acknowledged"),
+          ),
+        ),
       )
       .collect();
 
@@ -227,21 +244,29 @@ export const checkTimeConflicts = query({
     });
 
     // Batch fetch student and location data for conflicts
-    const studentIds = [...new Set(conflicts.map(c => c.studentId))];
-    const locationIds = [...new Set(conflicts.map(c => c.locationId).filter(Boolean))];
+    const studentIds = [...new Set(conflicts.map((c) => c.studentId))];
+    const locationIds = [
+      ...new Set(conflicts.map((c) => c.locationId).filter(Boolean)),
+    ];
 
-    const students = await Promise.all(studentIds.map(id => ctx.db.get(id)));
-    const locations = await Promise.all(locationIds.map(id => ctx.db.get(id!)));
+    const students = await Promise.all(studentIds.map((id) => ctx.db.get(id)));
+    const locations = await Promise.all(
+      locationIds.map((id) => ctx.db.get(id!)),
+    );
 
     const studentMap = new Map(
-      students.filter((s): s is NonNullable<typeof s> => s !== null).map(s => [s._id, s])
+      students
+        .filter((s): s is NonNullable<typeof s> => s !== null)
+        .map((s) => [s._id, s]),
     );
     const locationMap = new Map(
-      locations.filter((l): l is NonNullable<typeof l> => l !== null).map(l => [l._id, l])
+      locations
+        .filter((l): l is NonNullable<typeof l> => l !== null)
+        .map((l) => [l._id, l]),
     );
 
     // Return enriched conflict data
-    return conflicts.map(c => ({
+    return conflicts.map((c) => ({
       ...c,
       student: studentMap.get(c.studentId) || null,
       location: c.locationId ? locationMap.get(c.locationId) || null : null,
@@ -261,14 +286,18 @@ export const getEditAnalytics = query({
     // Verify user is mod/admin
     const user = await ctx.db.get(args.userId);
     if (!user || !["admin", "moderator"].includes(user.role)) {
-      throw new Error("Unauthorized: Only admins and moderators can view edit analytics");
+      throw new Error(
+        "Unauthorized: Only admins and moderators can view edit analytics",
+      );
     }
 
     // If moderator, verify they manage this school
     if (user.role === "moderator") {
       const school = await ctx.db.get(args.schoolId);
       if (school?.moderatorId !== args.userId) {
-        throw new Error("Unauthorized: You can only view analytics for your school");
+        throw new Error(
+          "Unauthorized: You can only view analytics for your school",
+        );
       }
     }
 
@@ -287,7 +316,7 @@ export const getEditAnalytics = query({
         (cls) =>
           cls.lastEditedAt &&
           cls.lastEditedAt >= args.startDate! &&
-          cls.lastEditedAt <= args.endDate!
+          cls.lastEditedAt <= args.endDate!,
       );
     }
 
@@ -335,29 +364,37 @@ export const getUpcomingForNotification = query({
     const classes = await ctx.db
       .query("classes")
       .withIndex("by_teacher_and_date", (q) =>
-        q.eq("teacherId", args.userId).gte("scheduledDate", now)
+        q.eq("teacherId", args.userId).gte("scheduledDate", now),
       )
       .filter((q) =>
         q.and(
           q.eq(q.field("status"), "approved"),
-          q.lte(q.field("scheduledDate"), sevenDaysFromNow)
-        )
+          q.lte(q.field("scheduledDate"), sevenDaysFromNow),
+        ),
       )
       .order("asc")
       .take(5);
 
     // Batch fetch student and location data
     const studentIds = [...new Set(classes.map((c) => c.studentId))];
-    const locationIds = [...new Set(classes.map((c) => c.locationId).filter(Boolean))];
+    const locationIds = [
+      ...new Set(classes.map((c) => c.locationId).filter(Boolean)),
+    ];
 
     const students = await Promise.all(studentIds.map((id) => ctx.db.get(id)));
-    const locations = await Promise.all(locationIds.map((id) => ctx.db.get(id!)));
+    const locations = await Promise.all(
+      locationIds.map((id) => ctx.db.get(id!)),
+    );
 
     const studentMap = new Map(
-      students.filter((s): s is NonNullable<typeof s> => s !== null).map((s) => [s._id, s])
+      students
+        .filter((s): s is NonNullable<typeof s> => s !== null)
+        .map((s) => [s._id, s]),
     );
     const locationMap = new Map(
-      locations.filter((l): l is NonNullable<typeof l> => l !== null).map((l) => [l._id, l])
+      locations
+        .filter((l): l is NonNullable<typeof l> => l !== null)
+        .map((l) => [l._id, l]),
     );
 
     // Enrich with student and location data
@@ -413,10 +450,13 @@ export const findRecurringSeries = query({
     }
 
     const isTeacherOwner = seedClass.teacherId === args.userId;
-    const isModeratorOrAdmin = user.role === "moderator" || user.role === "admin";
+    const isModeratorOrAdmin =
+      user.role === "moderator" || user.role === "admin";
 
     if (!isTeacherOwner && !isModeratorOrAdmin) {
-      throw new Error("Unauthorized: You can only view recurring series for your own classes");
+      throw new Error(
+        "Unauthorized: You can only view recurring series for your own classes",
+      );
     }
 
     // Find all classes matching pattern
@@ -424,7 +464,7 @@ export const findRecurringSeries = query({
     const allClasses = await ctx.db
       .query("classes")
       .withIndex("by_teacher_and_date", (q) =>
-        q.eq("teacherId", seedClass.teacherId)
+        q.eq("teacherId", seedClass.teacherId),
       )
       .filter((q) => q.eq(q.field("studentId"), seedClass.studentId))
       .collect();
@@ -434,7 +474,7 @@ export const findRecurringSeries = query({
       const locationMatch = cls.locationId === seedClass.locationId;
       const dayMatch = new Date(cls.scheduledDate).getDay() === seedDayOfWeek;
       const daysDiff = Math.abs(
-        (cls.scheduledDate - seedClass.scheduledDate) / 86400000
+        (cls.scheduledDate - seedClass.scheduledDate) / 86400000,
       );
       const weeklyPattern = daysDiff % 7 <= 1;
       return locationMatch && dayMatch && weeklyPattern;

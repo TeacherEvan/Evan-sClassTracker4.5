@@ -6,19 +6,26 @@ import { forwardRef } from "react";
 
 /**
  * InteractiveButton Component
- * 
+ *
  * A production-grade button component with:
  * - Smooth transitions and micro-interactions
  * - Loading states with spinner
  * - Hover effects and visual feedback
  * - Multiple variants and sizes
  * - Accessibility support
- * 
+ *
  * Follows latest UX best practices for 2024
  */
 
-export interface InteractiveButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "success" | "danger" | "ghost" | "outline";
+export interface InteractiveButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?:
+    | "primary"
+    | "secondary"
+    | "success"
+    | "danger"
+    | "ghost"
+    | "outline";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   loadingText?: string;
@@ -27,7 +34,10 @@ export interface InteractiveButtonProps extends React.ButtonHTMLAttributes<HTMLB
   fullWidth?: boolean;
 }
 
-export const InteractiveButton = forwardRef<HTMLButtonElement, InteractiveButtonProps>(
+export const InteractiveButton = forwardRef<
+  HTMLButtonElement,
+  InteractiveButtonProps
+>(
   (
     {
       children,
@@ -42,7 +52,7 @@ export const InteractiveButton = forwardRef<HTMLButtonElement, InteractiveButton
       disabled,
       ...props
     },
-    ref
+    ref,
   ) => {
     const baseClasses = [
       "relative inline-flex items-center justify-center gap-2 font-medium",
@@ -110,7 +120,7 @@ export const InteractiveButton = forwardRef<HTMLButtonElement, InteractiveButton
           variantClasses[variant],
           sizeClasses[size],
           fullWidth && "w-full",
-          className
+          className,
         )}
         disabled={disabled || isLoading}
         {...props}
@@ -130,7 +140,9 @@ export const InteractiveButton = forwardRef<HTMLButtonElement, InteractiveButton
           )}
 
           {/* Button text */}
-          <span className={cn(isLoading && loadingText && "opacity-0 absolute")}>
+          <span
+            className={cn(isLoading && loadingText && "opacity-0 absolute")}
+          >
             {children}
           </span>
           {isLoading && loadingText && (
@@ -144,17 +156,18 @@ export const InteractiveButton = forwardRef<HTMLButtonElement, InteractiveButton
         </span>
       </button>
     );
-  }
+  },
 );
 
 InteractiveButton.displayName = "InteractiveButton";
 
 /**
  * IconButton Component
- * 
+ *
  * Specialized button for icon-only actions
  */
-interface IconButtonProps extends Omit<InteractiveButtonProps, "leftIcon" | "rightIcon"> {
+interface IconButtonProps
+  extends Omit<InteractiveButtonProps, "leftIcon" | "rightIcon"> {
   icon: React.ReactNode;
   "aria-label": string;
 }
@@ -178,7 +191,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
         {icon}
       </InteractiveButton>
     );
-  }
+  },
 );
 
 IconButton.displayName = "IconButton";

@@ -83,7 +83,7 @@ docs/
 - Implementation plans = not yet built (future reference)
 - Audit reports = >30 days old (historical)
 - Consolidation reports = meta-documentation
-- Redundant guides = covered elsewhere (copilot-docs/03-patterns.md)
+- Redundant guides = covered elsewhere ([../.github/copilot-docs/03-patterns.md](../.github/copilot-docs/03-patterns.md))
 
 ### 4. Removed Obsolete Documentation
 
@@ -276,13 +276,13 @@ Write-Host "Archival complete. Run 'npm run update-archive-index' to update READ
 
 ### Documentation Health Score
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| Active Docs | 43 | 23 | -46% ✅ |
-| Orphaned Docs | 12 | 0 | -100% ✅ |
-| Master Index | No | Yes | +100% ✅ |
-| Archive Structure | Flat | 3-tier | +200% ✅ |
-| Findability | 3/10 | 8/10 | +167% ✅ |
+| Metric            | Before | After  | Change   |
+| ----------------- | ------ | ------ | -------- |
+| Active Docs       | 43     | 23     | -46% ✅  |
+| Orphaned Docs     | 12     | 0      | -100% ✅ |
+| Master Index      | No     | Yes    | +100% ✅ |
+| Archive Structure | Flat   | 3-tier | +200% ✅ |
+| Findability       | 3/10   | 8/10   | +167% ✅ |
 
 ---
 

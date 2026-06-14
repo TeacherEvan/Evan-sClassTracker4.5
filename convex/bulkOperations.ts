@@ -5,9 +5,14 @@ import { checkRateLimit, validateLength } from "./rateLimit";
 import { hashPassword } from "./users";
 
 // Helper function to generate unique student ID
-function generateStudentId(firstName: string, lastName: string, schoolId: string): string {
+function generateStudentId(
+  firstName: string,
+  lastName: string,
+  schoolId: string,
+): string {
   const timestamp = Date.now().toString(36);
-  const nameHash = `${firstName.substring(0, 2)}${lastName.substring(0, 2)}`.toUpperCase();
+  const nameHash =
+    `${firstName.substring(0, 2)}${lastName.substring(0, 2)}`.toUpperCase();
   const schoolHash = schoolId.substring(0, 4).toUpperCase();
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
 
@@ -28,7 +33,7 @@ export const bulkCreateStudents = mutation({
         guardianName: v.optional(v.string()),
         guardianPhone: v.optional(v.string()),
         guardianEmail: v.optional(v.string()),
-      })
+      }),
     ),
     createdBy: v.id("users"),
   },
@@ -41,7 +46,9 @@ export const bulkCreateStudents = mutation({
 
     // ✅ SECURITY: Only admins and moderators can bulk create students
     if (creator.role !== "admin" && creator.role !== "moderator") {
-      throw new Error("Unauthorized: Only admins and moderators can bulk create students");
+      throw new Error(
+        "Unauthorized: Only admins and moderators can bulk create students",
+      );
     }
 
     // ✅ SECURITY: Validate batch size to prevent DoS
@@ -69,7 +76,11 @@ export const bulkCreateStudents = mutation({
 
         // Generate unique student ID
         const schoolIdForHash = student.schoolId || "GUARDIAN";
-        let studentId = generateStudentId(student.firstName, student.lastName, schoolIdForHash);
+        let studentId = generateStudentId(
+          student.firstName,
+          student.lastName,
+          schoolIdForHash,
+        );
 
         // Check for duplicates and regenerate if necessary
         let attempts = 0;
@@ -85,7 +96,11 @@ export const bulkCreateStudents = mutation({
             break;
           }
 
-          studentId = generateStudentId(student.firstName, student.lastName, schoolIdForHash);
+          studentId = generateStudentId(
+            student.firstName,
+            student.lastName,
+            schoolIdForHash,
+          );
           attempts++;
         }
 
@@ -138,10 +153,10 @@ export const bulkCreateUsers = mutation({
         role: v.union(
           v.literal("teacher"),
           v.literal("moderator"),
-          v.literal("admin")
+          v.literal("admin"),
         ),
         schoolId: v.optional(v.id("schools")),
-      })
+      }),
     ),
   },
   handler: async (ctx, args) => {
@@ -168,7 +183,8 @@ export const bulkCreateUsers = mutation({
 
         // Generate default password
         const defaultPassword = `Teacher${user.username}`;
-        const passwordHash = await hashPassword(defaultPassword); const id = await ctx.db.insert("users", {
+        const passwordHash = await hashPassword(defaultPassword);
+        const id = await ctx.db.insert("users", {
           username: user.username,
           passwordHash,
           role: user.role,
@@ -249,13 +265,21 @@ export const bulkDeleteStudents = mutation({
       throw new Error("Unauthorized: Guardians cannot bulk delete students");
     }
 
-    if (user.role !== "admin" && user.role !== "moderator" && user.role !== "teacher") {
-      throw new Error("Unauthorized: Insufficient permissions for bulk deletion");
+    if (
+      user.role !== "admin" &&
+      user.role !== "moderator" &&
+      user.role !== "teacher"
+    ) {
+      throw new Error(
+        "Unauthorized: Insufficient permissions for bulk deletion",
+      );
     }
 
     // ✅ SECURITY: Only admins can use force mode
     if (operationArgs.force && user.role !== "admin") {
-      throw new Error("Unauthorized: Only admins can force delete students with classes");
+      throw new Error(
+        "Unauthorized: Only admins can force delete students with classes",
+      );
     }
 
     // ✅ SECURITY: Validate batch size to prevent DoS
@@ -316,14 +340,17 @@ export const bulkDeleteStudents = mutation({
           if (classCount > 0) {
             // Count active/pending classes
             const activeClasses = classes.filter(
-              (c) => c.status === "pending" || c.status === "acknowledged" || c.status === "approved"
+              (c) =>
+                c.status === "pending" ||
+                c.status === "acknowledged" ||
+                c.status === "approved",
             );
 
             errors.push({
               index: i,
               studentId,
               studentName: `${student.firstName} ${student.lastName}`,
-              error: `Has ${classCount} class${classCount > 1 ? 'es' : ''} (${activeClasses.length} active). Please cancel classes first or use force option (admin only).`,
+              error: `Has ${classCount} class${classCount > 1 ? "es" : ""} (${activeClasses.length} active). Please cancel classes first or use force option (admin only).`,
               classCount,
               activeClassCount: activeClasses.length,
             });
@@ -337,7 +364,7 @@ export const bulkDeleteStudents = mutation({
           index: i,
           studentId,
           studentName: `${student.firstName} ${student.lastName}`,
-          success: true
+          success: true,
         });
       } catch (error) {
         errors.push({
@@ -386,7 +413,7 @@ export const bulkUpdateClassStatus = mutation({
       v.literal("pending"),
       v.literal("acknowledged"),
       v.literal("approved"),
-      v.literal("rejected")
+      v.literal("rejected"),
     ),
   },
   handler: async (ctx, args) => {
@@ -468,7 +495,11 @@ export const bulkUpdateStudents = mutation({
       throw new Error("Unauthorized: Guardians cannot bulk update students");
     }
 
-    if (user.role !== "admin" && user.role !== "moderator" && user.role !== "teacher") {
+    if (
+      user.role !== "admin" &&
+      user.role !== "moderator" &&
+      user.role !== "teacher"
+    ) {
       throw new Error("Unauthorized: Insufficient permissions for bulk update");
     }
 
@@ -481,8 +512,10 @@ export const bulkUpdateStudents = mutation({
     validateLength(args.reason, "Update reason", 500, 3);
 
     // ✅ SECURITY: Validate update fields
-    if (args.updates.nickname) validateLength(args.updates.nickname, "Nickname", 100, 0);
-    if (args.updates.notes) validateLength(args.updates.notes, "Notes", 2000, 0);
+    if (args.updates.nickname)
+      validateLength(args.updates.nickname, "Nickname", 100, 0);
+    if (args.updates.notes)
+      validateLength(args.updates.notes, "Notes", 2000, 0);
     if (args.updates.area) validateLength(args.updates.area, "Area", 100, 0);
 
     // ✅ SECURITY: Rate limiting (5 operations per minute)
@@ -494,7 +527,7 @@ export const bulkUpdateStudents = mutation({
 
     // Filter out undefined values from updates
     const filteredUpdates = Object.fromEntries(
-      Object.entries(args.updates).filter(([, v]) => v !== undefined)
+      Object.entries(args.updates).filter(([, v]) => v !== undefined),
     );
 
     // Ensure no updates if all fields are undefined

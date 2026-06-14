@@ -13,7 +13,7 @@ Focused UX improvements for Class Booking based on **user-approved scope** and v
 ### ✅ Approved Scope (User Confirmed)
 
 1. **Terminology standardization** - "Req/Book Class" → "Book Class" (consistency)
-2. **School filter for teachers** - Support multi-school teachers  
+2. **School filter for teachers** - Support multi-school teachers
 3. **Filter panel chip-based redesign** - Material Design 3 horizontal layout
 4. **Metadata display** - Show who booked/approved classes
 5. **Analytics dashboard** - Educational performance insights
@@ -50,24 +50,28 @@ Remove role-based terminology differences - all users see "Book Class"
 
 ```typescript
 // BEFORE
-{userRole === "moderator" || userRole === "admin"
-  ? t("Book Class", "จองชั้นเรียน")
-  : t("Req/Book Class", "ขอ/จองชั้นเรียน")}
+{
+  userRole === "moderator" || userRole === "admin" ? t("Book Class", "จองชั้นเรียน") : t("Req/Book Class", "ขอ/จองชั้นเรียน");
+}
 
 // AFTER
-{t("Book Class", "จองชั้นเรียน")}
+{
+  t("Book Class", "จองชั้นเรียน");
+}
 ```
 
 **Location 2** (Lines ~1021-1022):
 
 ```typescript
 // BEFORE
-{userRole === "moderator" || userRole === "admin"
-  ? t("Book a New Class", "จองชั้นเรียนใหม่")
-  : t("Request a New Class", "ขอชั้นเรียนใหม่")}
+{
+  userRole === "moderator" || userRole === "admin" ? t("Book a New Class", "จองชั้นเรียนใหม่") : t("Request a New Class", "ขอชั้นเรียนใหม่");
+}
 
 // AFTER
-{t("Book a New Class", "จองชั้นเรียนใหม่")}
+{
+  t("Book a New Class", "จองชั้นเรียนใหม่");
+}
 ```
 
 ### Testing Checklist
@@ -145,9 +149,9 @@ const [filterSchoolId, setFilterSchoolId] = useState<Id<"schools"> | "all">("all
 **Update filter count** (around line 978):
 
 ```typescript
-const filterCount = 
+const filterCount =
   (filterTeacherId !== "all" ? 1 : 0) +
-  (filterSchoolId !== "all" ? 1 : 0) +  // NEW
+  (filterSchoolId !== "all" ? 1 : 0) + // NEW
   (filterStudentId !== "all" ? 1 : 0) +
   (filterGrade !== "all" ? 1 : 0) +
   (filterClass !== "all" ? 1 : 0);
@@ -158,7 +162,7 @@ const filterCount =
 ```typescript
 const clearAllFilters = () => {
   setFilterTeacherId("all");
-  setFilterSchoolId("all");  // NEW
+  setFilterSchoolId("all"); // NEW
   setFilterStudentId("all");
   setFilterGrade("all");
   setFilterClass("all");
@@ -488,7 +492,7 @@ function ClassItemDisplay({ classItem, ... }) {
     api.users.getById,
     classItem.bookedByUserId ? { id: classItem.bookedByUserId } : "skip"
   );
-  
+
   const approvedByUser = useQuery(
     api.users.getById,
     classItem.approvedByUserId ? { id: classItem.approvedByUserId } : "skip"
@@ -496,11 +500,11 @@ function ClassItemDisplay({ classItem, ... }) {
 
   // Check if past class
   const isPastClass = classItem.scheduledDate < Date.now();
-  
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
       {/* Existing class header/content */}
-      
+
       {/* NEW: Metadata Row */}
       <div className="flex items-center gap-4 px-4 py-2 bg-gray-50 dark:bg-gray-750 border-t text-xs flex-wrap">
         {/* Booked By */}
@@ -517,7 +521,7 @@ function ClassItemDisplay({ classItem, ... }) {
             </span>
           </div>
         )}
-        
+
         {/* Approved By */}
         {classItem.status === "approved" && classItem.approvedByUserId && approvedByUser && (
           <div className="flex items-center gap-1.5">
@@ -537,7 +541,7 @@ function ClassItemDisplay({ classItem, ... }) {
             )}
           </div>
         )}
-        
+
         {/* Auto-Approval Source */}
         {classItem.approvalSource && classItem.approvalSource.startsWith("auto") && (
           <div className="flex items-center gap-1.5">
@@ -554,7 +558,7 @@ function ClassItemDisplay({ classItem, ... }) {
             </span>
           </div>
         )}
-        
+
         {/* Post-Class Notes Button (Past Classes Only) */}
         {isPastClass && (
           <button
@@ -568,7 +572,7 @@ function ClassItemDisplay({ classItem, ... }) {
           </button>
         )}
       </div>
-      
+
       {/* Existing class actions */}
     </div>
   );
@@ -638,117 +642,102 @@ export const getClassAnalytics = query({
       // Teachers see only their classes
       classes = await ctx.db
         .query("classes")
-        .withIndex("by_teacher", q => q.eq("teacherId", args.teacherId))
+        .withIndex("by_teacher", (q) => q.eq("teacherId", args.teacherId))
         .collect();
     } else if (args.schoolId) {
       // Moderators see only their school's classes
       classes = await ctx.db
         .query("classes")
-        .withIndex("by_school", q => q.eq("schoolId", args.schoolId))
+        .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId))
         .collect();
     } else {
       // Admins see all classes
       classes = await ctx.db.query("classes").collect();
     }
-    
+
     // Filter for approved classes only
-    const approvedClasses = classes.filter(c => c.status === "approved");
-    
+    const approvedClasses = classes.filter((c) => c.status === "approved");
+
     // Calculate date ranges
     const now = Date.now();
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
     const endOfMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0, 23, 59, 59).getTime();
-    const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
-    
+    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+
     // Summary calculations
     const totalClasses = approvedClasses.length;
-    const thisMonthClasses = approvedClasses.filter(c => 
-      c.scheduledDate >= startOfMonth && c.scheduledDate <= endOfMonth
-    ).length;
-    
+    const thisMonthClasses = approvedClasses.filter((c) => c.scheduledDate >= startOfMonth && c.scheduledDate <= endOfMonth).length;
+
     // Fetch post-class notes for attendance calculation
-    const completedClasses = approvedClasses.filter(c => c.scheduledDate < now);
+    const completedClasses = approvedClasses.filter((c) => c.scheduledDate < now);
     const postClassNotes = await Promise.all(
-      completedClasses.map(c => 
+      completedClasses.map((c) =>
         ctx.db
           .query("postClassNotes")
-          .withIndex("by_class", q => q.eq("classId", c._id))
-          .first()
-      )
+          .withIndex("by_class", (q) => q.eq("classId", c._id))
+          .first(),
+      ),
     );
-    
-    const attendedClasses = postClassNotes.filter(note => 
-      note && note.attendanceStatus === "present"
-    ).length;
-    
-    const attendanceRate = completedClasses.length > 0
-      ? Math.round((attendedClasses / completedClasses.length) * 100)
-      : 0;
-    
+
+    const attendedClasses = postClassNotes.filter((note) => note && note.attendanceStatus === "present").length;
+
+    const attendanceRate = completedClasses.length > 0 ? Math.round((attendedClasses / completedClasses.length) * 100) : 0;
+
     // Calculate average ClassCount
-    const classCountsFromNotes = postClassNotes
-      .filter(note => note && note.ClassCount)
-      .map(note => note!.ClassCount);
-    const avgClassCount = classCountsFromNotes.length > 0
-      ? Math.round(classCountsFromNotes.reduce((a, b) => a + b, 0) / classCountsFromNotes.length)
-      : 0;
-    
+    const classCountsFromNotes = postClassNotes.filter((note) => note && note.ClassCount).map((note) => note!.ClassCount);
+    const avgClassCount = classCountsFromNotes.length > 0 ? Math.round(classCountsFromNotes.reduce((a, b) => a + b, 0) / classCountsFromNotes.length) : 0;
+
     // Active students (unique students with classes in last 30 days)
-    const recentClasses = approvedClasses.filter(c => c.scheduledDate >= thirtyDaysAgo);
-    const activeStudents = new Set(recentClasses.map(c => c.studentId)).size;
-    
+    const recentClasses = approvedClasses.filter((c) => c.scheduledDate >= thirtyDaysAgo);
+    const activeStudents = new Set(recentClasses.map((c) => c.studentId)).size;
+
     // Student performance data
-    const studentIds = [...new Set(approvedClasses.map(c => c.studentId))];
-    const students = await Promise.all(studentIds.map(id => ctx.db.get(id)));
-    
+    const studentIds = [...new Set(approvedClasses.map((c) => c.studentId))];
+    const students = await Promise.all(studentIds.map((id) => ctx.db.get(id)));
+
     const studentPerformance = await Promise.all(
-      students.filter(s => s !== null).map(async (student) => {
-        const studentClasses = approvedClasses.filter(c => c.studentId === student!._id);
-        const studentNotes = await Promise.all(
-          studentClasses
-            .filter(c => c.scheduledDate < now)
-            .map(c => 
-              ctx.db
-                .query("postClassNotes")
-                .withIndex("by_class", q => q.eq("classId", c._id))
-                .first()
-            )
-        );
-        
-        const validNotes = studentNotes.filter(n => n !== null);
-        const attendedCount = validNotes.filter(n => n!.attendanceStatus === "present").length;
-        const attendanceRate = studentClasses.filter(c => c.scheduledDate < now).length > 0
-          ? Math.round((attendedCount / studentClasses.filter(c => c.scheduledDate < now).length) * 100)
-          : 0;
-        
-        const behaviorRatings = validNotes.filter(n => n!.behaviorRating).map(n => n!.behaviorRating!);
-        const avgBehavior = behaviorRatings.length > 0
-          ? Math.round((behaviorRatings.reduce((a, b) => a + b, 0) / behaviorRatings.length) * 10) / 10
-          : 0;
-        
-        const participationRatings = validNotes.filter(n => n!.participationRating).map(n => n!.participationRating!);
-        const avgParticipation = participationRatings.length > 0
-          ? Math.round((participationRatings.reduce((a, b) => a + b, 0) / participationRatings.length) * 10) / 10
-          : 0;
-        
-        const lastClass = studentClasses
-          .sort((a, b) => b.scheduledDate - a.scheduledDate)[0];
-        
-        return {
-          studentId: student!._id,
-          firstName: student!.firstName,
-          lastName: student!.lastName,
-          grade: student!.grade,
-          class: student!.class,
-          totalClasses: studentClasses.length,
-          attendanceRate,
-          avgBehavior,
-          avgParticipation,
-          lastClassDate: lastClass.scheduledDate,
-        };
-      })
+      students
+        .filter((s) => s !== null)
+        .map(async (student) => {
+          const studentClasses = approvedClasses.filter((c) => c.studentId === student!._id);
+          const studentNotes = await Promise.all(
+            studentClasses
+              .filter((c) => c.scheduledDate < now)
+              .map((c) =>
+                ctx.db
+                  .query("postClassNotes")
+                  .withIndex("by_class", (q) => q.eq("classId", c._id))
+                  .first(),
+              ),
+          );
+
+          const validNotes = studentNotes.filter((n) => n !== null);
+          const attendedCount = validNotes.filter((n) => n!.attendanceStatus === "present").length;
+          const attendanceRate = studentClasses.filter((c) => c.scheduledDate < now).length > 0 ? Math.round((attendedCount / studentClasses.filter((c) => c.scheduledDate < now).length) * 100) : 0;
+
+          const behaviorRatings = validNotes.filter((n) => n!.behaviorRating).map((n) => n!.behaviorRating!);
+          const avgBehavior = behaviorRatings.length > 0 ? Math.round((behaviorRatings.reduce((a, b) => a + b, 0) / behaviorRatings.length) * 10) / 10 : 0;
+
+          const participationRatings = validNotes.filter((n) => n!.participationRating).map((n) => n!.participationRating!);
+          const avgParticipation = participationRatings.length > 0 ? Math.round((participationRatings.reduce((a, b) => a + b, 0) / participationRatings.length) * 10) / 10 : 0;
+
+          const lastClass = studentClasses.sort((a, b) => b.scheduledDate - a.scheduledDate)[0];
+
+          return {
+            studentId: student!._id,
+            firstName: student!.firstName,
+            lastName: student!.lastName,
+            grade: student!.grade,
+            class: student!.class,
+            totalClasses: studentClasses.length,
+            attendanceRate,
+            avgBehavior,
+            avgParticipation,
+            lastClassDate: lastClass.scheduledDate,
+          };
+        }),
     );
-    
+
     return {
       totalClasses,
       thisMonthClasses,
@@ -779,7 +768,7 @@ interface ClassAnalyticsProps {
 
 export function ClassAnalytics({ userId, userRole, userSchoolId }: ClassAnalyticsProps) {
   const { t } = useLanguage();
-  
+
   const analytics = useQuery(
     api.analytics.getClassAnalytics,
     userRole === "teacher"
@@ -788,7 +777,7 @@ export function ClassAnalytics({ userId, userRole, userSchoolId }: ClassAnalytic
         ? { schoolId: userSchoolId }
         : {}
   );
-  
+
   if (!analytics) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -796,7 +785,7 @@ export function ClassAnalytics({ userId, userRole, userSchoolId }: ClassAnalytic
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
@@ -818,7 +807,7 @@ export function ClassAnalytics({ userId, userRole, userSchoolId }: ClassAnalytic
             {t("This month", "เดือนนี้")}: +{analytics.thisMonthClasses}
           </p>
         </div>
-        
+
         {/* Attendance Rate */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-2">
@@ -836,7 +825,7 @@ export function ClassAnalytics({ userId, userRole, userSchoolId }: ClassAnalytic
             {t("Last 30 days", "30 วันที่ผ่านมา")}
           </p>
         </div>
-        
+
         {/* Active Students */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-2">
@@ -854,7 +843,7 @@ export function ClassAnalytics({ userId, userRole, userSchoolId }: ClassAnalytic
             {t("This month", "เดือนนี้")}
           </p>
         </div>
-        
+
         {/* Average ClassCount */}
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-2">
@@ -873,7 +862,7 @@ export function ClassAnalytics({ userId, userRole, userSchoolId }: ClassAnalytic
           </p>
         </div>
       </div>
-      
+
       {/* Student Performance Table */}
       {analytics.studentPerformance.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
@@ -930,7 +919,7 @@ export function ClassAnalytics({ userId, userRole, userSchoolId }: ClassAnalytic
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 min-w-[60px]">
-                          <div 
+                          <div
                             className={`h-2 rounded-full transition-all ${
                               student.attendanceRate >= 90 ? 'bg-green-600' :
                               student.attendanceRate >= 70 ? 'bg-yellow-600' :
@@ -1040,14 +1029,14 @@ Update tab buttons (around line 744):
 
 ## 📅 Implementation Timeline
 
-| Phase | Task | Duration | Start Date | End Date |
-|-------|------|----------|------------|----------|
-| **1** | Terminology Standardization | 0.5 days | Nov 4 | Nov 4 |
-| **2** | School Filter for Teachers | 1 day | Nov 5 | Nov 5 |
-| **3** | Chip-based Filter UI | 2 days | Nov 6 | Nov 7 |
-| **4** | Metadata Display | 1 day | Nov 8 | Nov 8 |
-| **5** | Analytics Dashboard | 5 days | Nov 11 | Nov 15 |
-| **Testing** | E2E Tests + Documentation | 1 day | Nov 18 | Nov 18 |
+| Phase       | Task                        | Duration | Start Date | End Date |
+| ----------- | --------------------------- | -------- | ---------- | -------- |
+| **1**       | Terminology Standardization | 0.5 days | Nov 4      | Nov 4    |
+| **2**       | School Filter for Teachers  | 1 day    | Nov 5      | Nov 5    |
+| **3**       | Chip-based Filter UI        | 2 days   | Nov 6      | Nov 7    |
+| **4**       | Metadata Display            | 1 day    | Nov 8      | Nov 8    |
+| **5**       | Analytics Dashboard         | 5 days   | Nov 11     | Nov 15   |
+| **Testing** | E2E Tests + Documentation   | 1 day    | Nov 18     | Nov 18   |
 
 **Total:** 9.5 days (10.5 days with testing)
 

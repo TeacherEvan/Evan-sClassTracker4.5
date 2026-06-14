@@ -60,16 +60,18 @@ await ctx.db.insert("appUpdates", {
   titleTh: "ชื่อฟีเจอร์",
   description: "Brief description",
   descriptionTh: "คำอธิบายสั้น ๆ",
-  features: [{ 
-    icon: "CheckCircle2", 
-    title: "...", 
-    titleTh: "...", 
-    description: "...", 
-    descriptionTh: "..." 
-  }],
+  features: [
+    {
+      icon: "CheckCircle2",
+      title: "...",
+      titleTh: "...",
+      description: "...",
+      descriptionTh: "...",
+    },
+  ],
   releaseDate: Date.now(),
   isActive: true,
-  showInWindow: true
+  showInWindow: true,
 });
 ```
 
@@ -110,19 +112,15 @@ The notification window system supports targeted distribution:
 // convex/schema.ts - notificationWindows table
 notificationWindows: defineTable({
   // ... existing fields
-  targetRole: v.optional(v.union(
-    v.literal("all"),
-    v.literal("teacher"),
-    v.literal("moderator"),
-    v.literal("admin")
-  )),
-  targetSchool: v.optional(v.union(
-    v.id("schools"),
-    v.literal("everyone") // Broadcast to all schools
-  )),
+  targetRole: v.optional(v.union(v.literal("all"), v.literal("teacher"), v.literal("moderator"), v.literal("admin"))),
+  targetSchool: v.optional(
+    v.union(
+      v.id("schools"),
+      v.literal("everyone"), // Broadcast to all schools
+    ),
+  ),
   // ... rest of fields
-})
-.index("by_school", ["targetSchool"]) // Add index for school filtering
+}).index("by_school", ["targetSchool"]); // Add index for school filtering
 ```
 
 ### Query Logic Update

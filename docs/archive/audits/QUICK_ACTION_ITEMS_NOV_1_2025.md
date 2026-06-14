@@ -12,7 +12,7 @@
 **Issue**: "can't access property 'student', q is undefined"  
 **Location**: `convex/seedPrivateClasses.ts`  
 **Fix**: Converted Convex `.filter()` to JavaScript filter after `.collect()`  
-**Status**: ✅ Deployed  
+**Status**: ✅ Deployed
 
 ---
 
@@ -56,19 +56,19 @@ locations: defineTable({
 ```typescript
 // Create: convex/analytics/featureTracking.ts
 export const trackFeatureUse = mutation({
-    args: {
-        userId: v.id("users"),
-        feature: v.string(),
-        action: v.optional(v.string()),
-    },
-    handler: async (ctx, args) => {
-        await ctx.db.insert("featureUsage", {
-            userId: args.userId,
-            feature: args.feature,
-            action: args.action,
-            timestamp: Date.now(),
-        });
-    },
+  args: {
+    userId: v.id("users"),
+    feature: v.string(),
+    action: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert("featureUsage", {
+      userId: args.userId,
+      feature: args.feature,
+      action: args.action,
+      timestamp: Date.now(),
+    });
+  },
 });
 ```
 
@@ -95,16 +95,16 @@ export const trackFeatureUse = mutation({
 
 ```typescript
 export const getMyClassCountDetailsFiltered = query({
-    args: {
-        teacherId: v.id("users"),
-        startDate: v.number(),
-        endDate: v.number(),
-        providerId: v.optional(v.string()),
-    },
-    handler: async (ctx, args) => {
-        // Query with filters from backend
-        // Reduces data transfer, faster rendering
-    },
+  args: {
+    teacherId: v.id("users"),
+    startDate: v.number(),
+    endDate: v.number(),
+    providerId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Query with filters from backend
+    // Reduces data transfer, faster rendering
+  },
 });
 ```
 
@@ -133,12 +133,12 @@ export const getMyClassCountDetailsFiltered = query({
 ```typescript
 // When error severity is "critical", send notification
 if (severity === "critical") {
-    // Send to admin email or SMS
-    await sendAdminAlert({
-        type: "critical_error",
-        message: error.message,
-        context: error.context,
-    });
+  // Send to admin email or SMS
+  await sendAdminAlert({
+    type: "critical_error",
+    message: error.message,
+    context: error.context,
+  });
 }
 ```
 

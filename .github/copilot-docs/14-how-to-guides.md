@@ -138,6 +138,7 @@ curl https://your-app.vercel.app
 
 ```markdown
 Pre-Deployment:
+
 - [ ] Local build succeeds (npm run build)
 - [ ] TypeScript check passes (npx tsc --noEmit)
 - [ ] Tests pass (npm run test:e2e) - optional for hotfixes
@@ -145,12 +146,14 @@ Pre-Deployment:
 - [ ] CHANGELOG.md updated with version and changes
 
 Deployment:
+
 - [ ] Convex deployed (npx convex deploy)
 - [ ] Convex functions show green in dashboard
 - [ ] Vercel deployed (vercel --prod)
 - [ ] Deployment URL accessible
 
 Post-Deployment:
+
 - [ ] Login works
 - [ ] Critical features tested (book class, view students)
 - [ ] Real-time updates work
@@ -158,6 +161,7 @@ Post-Deployment:
 - [ ] Mobile-friendly (quick check on phone)
 
 Documentation:
+
 - [ ] Update version in README.md
 - [ ] Create implementation summary (if new features)
 - [ ] Create app update notification (npm run create-update)
@@ -376,7 +380,7 @@ node -e "const bcrypt = require('bcrypt'); bcrypt.hash('TeacherTeacher1', 10, (e
 // Via Convex mutation
 await ctx.db.patch(userId, {
   isActive: false,
-  deletedAt: Date.now()
+  deletedAt: Date.now(),
 });
 
 // User cannot login
@@ -406,7 +410,7 @@ const lines = csv.split("\n").slice(1); // Skip header
 for (const line of lines) {
   const [username, role, schoolId, password] = line.split(",");
   const passwordHash = await bcrypt.hash(password, 10);
-  
+
   await client.mutation("users:create", {
     username,
     passwordHash,
@@ -415,7 +419,7 @@ for (const line of lines) {
     requirePasswordChange: true,
     createdAt: Date.now()
   });
-  
+
   console.log(`✅ Created user: ${username}`);
 }
 
@@ -431,6 +435,7 @@ npx tsx scripts/import-users.ts
 
 ```markdown
 When user reports issue, collect:
+
 1. What were they trying to do? (e.g., "Book a class")
 2. What happened? (e.g., "Infinite loading spinner")
 3. What did they expect? (e.g., "Class booking confirmation")
@@ -494,19 +499,19 @@ npm run dev
 export const book = mutation({
   handler: async (ctx, args) => {
     console.log("1. book mutation called", { args });
-    
+
     const teacher = await ctx.db.get(args.teacherId);
     console.log("2. teacher fetched", { teacher });
-    
+
     const student = await ctx.db.get(args.studentId);
     console.log("3. student fetched", { student });
-    
+
     // ... rest of function
-    
+
     console.log("4. about to insert class");
     const classId = await ctx.db.insert("classes", data);
     console.log("5. class inserted", { classId });
-    
+
     return classId;
   }
 });
@@ -595,11 +600,11 @@ export const update = mutation({
       console.error("❌ Update failed", {
         error: error.message,
         stack: error.stack,
-        args
+        args,
       });
       throw new Error(`Update failed: ${error.message}`);
     }
-  }
+  },
 });
 
 // Deploy and check error message
@@ -790,6 +795,7 @@ vercel --prod
 
 ```markdown
 ✅ DO:
+
 - Backup daily (automated)
 - Keep 30 days of backups minimum
 - Test restore quarterly (verify backups work)
@@ -798,6 +804,7 @@ vercel --prod
 - Document backup procedure for team
 
 ❌ DON'T:
+
 - Rely on single backup location (use MongoDB + local files)
 - Skip testing restores (verify backups are valid)
 - Delete old backups without policy (keep 30-90 days)
@@ -811,34 +818,34 @@ vercel --prod
 
 ```markdown
 ┌─────────────────────────────────────────────────────┐
-│  QUICK COMMANDS - Print This!                       │
+│ QUICK COMMANDS - Print This! │
 ├─────────────────────────────────────────────────────┤
-│  Deploy to Production:                              │
-│    npx convex deploy                                │
-│    vercel --prod                                    │
-│                                                     │
-│  Rollback:                                          │
-│    vercel rollback                                  │
-│    (Convex: Use dashboard)                          │
-│                                                     │
-│  Backup:                                            │
-│    npm run backup                                   │
-│    npm run backup:list                              │
-│    npm run backup:restore                           │
-│                                                     │
-│  Logs:                                              │
-│    vercel logs --since 1h                           │
-│    (Convex: dashboard.convex.dev → Logs)            │
-│                                                     │
-│  Build Test:                                        │
-│    npm run build                                    │
-│    npx tsc --noEmit                                 │
-│                                                     │
-│  Emergency:                                         │
-│    1. Check status pages                            │
-│    2. Check logs (Vercel + Convex)                  │
-│    3. Rollback if needed                            │
-│    4. See docs/11-disaster-recovery.md              │
+│ Deploy to Production: │
+│ npx convex deploy │
+│ vercel --prod │
+│ │
+│ Rollback: │
+│ vercel rollback │
+│ (Convex: Use dashboard) │
+│ │
+│ Backup: │
+│ npm run backup │
+│ npm run backup:list │
+│ npm run backup:restore │
+│ │
+│ Logs: │
+│ vercel logs --since 1h │
+│ (Convex: dashboard.convex.dev → Logs) │
+│ │
+│ Build Test: │
+│ npm run build │
+│ npx tsc --noEmit │
+│ │
+│ Emergency: │
+│ 1. Check status pages │
+│ 2. Check logs (Vercel + Convex) │
+│ 3. Rollback if needed │
+│ 4. See docs/11-disaster-recovery.md │
 └─────────────────────────────────────────────────────┘
 ```
 

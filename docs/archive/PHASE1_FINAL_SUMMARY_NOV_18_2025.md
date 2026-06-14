@@ -155,7 +155,7 @@ All utilities are production-ready and can be integrated into existing component
 2. `student-management.tsx` - Add keyboard shortcuts
 3. `class-detail-modal.tsx` - Add undo for deletions
 4. `monthly-calendar.tsx` - Improve touch targets
-5. `messaging-hub.tsx` - Replace console.* with logger
+5. `messaging-hub.tsx` - Replace console.\* with logger
 
 ### 📦 Usage Examples
 
@@ -211,8 +211,8 @@ toast.show({
   action: {
     label: "Undo",
     labelTh: "เลิกทำ",
-    onClick: () => restoreClass(classId)
-  }
+    onClick: () => restoreClass(classId),
+  },
 });
 ```
 
@@ -295,7 +295,7 @@ const [selected, setSelected] = useState<Set<Id<"classes">>>(new Set());
 1. **class-booking.tsx** (2 hours)
    - Replace color-only status with accessibility helpers
    - Add keyboard shortcuts (Ctrl+N, Escape)
-   - Replace console.* with logger
+   - Replace console.\* with logger
    - Add bulk selection checkboxes
 
 2. **student-management.tsx** (1.5 hours)

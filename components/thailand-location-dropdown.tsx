@@ -85,7 +85,7 @@ export function ThailandLocationDropdown({
   // Get selected province details
   const selectedProvince = useMemo(
     () => allProvinces.find((p) => p.code === provinceCode),
-    [allProvinces, provinceCode]
+    [allProvinces, provinceCode],
   );
 
   // Filter provinces based on search
@@ -165,13 +165,13 @@ export function ThailandLocationDropdown({
       case "ArrowDown":
         e.preventDefault();
         setHighlightedProvinceIndex((prev) =>
-          prev < filteredProvinces.length - 1 ? prev + 1 : 0
+          prev < filteredProvinces.length - 1 ? prev + 1 : 0,
         );
         break;
       case "ArrowUp":
         e.preventDefault();
         setHighlightedProvinceIndex((prev) =>
-          prev > 0 ? prev - 1 : filteredProvinces.length - 1
+          prev > 0 ? prev - 1 : filteredProvinces.length - 1,
         );
         break;
       case "Enter":
@@ -196,13 +196,13 @@ export function ThailandLocationDropdown({
       case "ArrowDown":
         e.preventDefault();
         setHighlightedDistrictIndex((prev) =>
-          prev < filteredDistricts.length - 1 ? prev + 1 : 0
+          prev < filteredDistricts.length - 1 ? prev + 1 : 0,
         );
         break;
       case "ArrowUp":
         e.preventDefault();
         setHighlightedDistrictIndex((prev) =>
-          prev > 0 ? prev - 1 : filteredDistricts.length - 1
+          prev > 0 ? prev - 1 : filteredDistricts.length - 1,
         );
         break;
       case "Enter":
@@ -222,11 +222,17 @@ export function ThailandLocationDropdown({
   // Click outside to close dropdowns
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (provinceRef.current && !provinceRef.current.contains(event.target as Node)) {
+      if (
+        provinceRef.current &&
+        !provinceRef.current.contains(event.target as Node)
+      ) {
         setShowProvinceDropdown(false);
         setProvinceSearch("");
       }
-      if (districtRef.current && !districtRef.current.contains(event.target as Node)) {
+      if (
+        districtRef.current &&
+        !districtRef.current.contains(event.target as Node)
+      ) {
         setShowDistrictDropdown(false);
         setDistrictSearch("");
       }
@@ -239,14 +245,18 @@ export function ThailandLocationDropdown({
   // Scroll highlighted item into view
   useEffect(() => {
     if (showProvinceDropdown) {
-      const element = document.getElementById(`province-option-${highlightedProvinceIndex}`);
+      const element = document.getElementById(
+        `province-option-${highlightedProvinceIndex}`,
+      );
       element?.scrollIntoView({ block: "nearest" });
     }
   }, [highlightedProvinceIndex, showProvinceDropdown]);
 
   useEffect(() => {
     if (showDistrictDropdown) {
-      const element = document.getElementById(`district-option-${highlightedDistrictIndex}`);
+      const element = document.getElementById(
+        `district-option-${highlightedDistrictIndex}`,
+      );
       element?.scrollIntoView({ block: "nearest" });
     }
   }, [highlightedDistrictIndex, showDistrictDropdown]);
@@ -300,8 +310,9 @@ export function ThailandLocationDropdown({
           )}
 
           <ChevronDown
-            className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-transform ${showProvinceDropdown ? "rotate-180" : ""
-              }`}
+            className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-transform ${
+              showProvinceDropdown ? "rotate-180" : ""
+            }`}
           />
         </div>
 
@@ -322,13 +333,15 @@ export function ThailandLocationDropdown({
                   key={province.code}
                   id={`province-option-${index}`}
                   onClick={() => handleProvinceSelect(province)}
-                  className={`px-4 py-2 cursor-pointer transition-colors ${index === highlightedProvinceIndex
+                  className={`px-4 py-2 cursor-pointer transition-colors ${
+                    index === highlightedProvinceIndex
                       ? "bg-blue-50 dark:bg-blue-900/20"
                       : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                    } ${province.code === provinceCode
+                  } ${
+                    province.code === provinceCode
                       ? "font-semibold text-blue-600 dark:text-blue-400"
                       : "text-gray-900 dark:text-white"
-                    }`}
+                  }`}
                   role="option"
                   aria-selected={province.code === provinceCode}
                 >
@@ -339,7 +352,8 @@ export function ThailandLocationDropdown({
                     </span>
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    {province.region} • {province.districts.length} {t("districts", "อำเภอ")}
+                    {province.region} • {province.districts.length}{" "}
+                    {t("districts", "อำเภอ")}
                   </div>
                 </div>
               ))
@@ -398,8 +412,9 @@ export function ThailandLocationDropdown({
           )}
 
           <ChevronDown
-            className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-transform ${showDistrictDropdown ? "rotate-180" : ""
-              }`}
+            className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 transition-transform ${
+              showDistrictDropdown ? "rotate-180" : ""
+            }`}
           />
         </div>
 
@@ -420,13 +435,15 @@ export function ThailandLocationDropdown({
                   key={district.nameEn}
                   id={`district-option-${index}`}
                   onClick={() => handleDistrictSelect(district)}
-                  className={`px-4 py-2 cursor-pointer transition-colors ${index === highlightedDistrictIndex
+                  className={`px-4 py-2 cursor-pointer transition-colors ${
+                    index === highlightedDistrictIndex
                       ? "bg-blue-50 dark:bg-blue-900/20"
                       : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                    } ${district.nameEn === districtName
+                  } ${
+                    district.nameEn === districtName
                       ? "font-semibold text-blue-600 dark:text-blue-400"
                       : "text-gray-900 dark:text-white"
-                    }`}
+                  }`}
                   role="option"
                   aria-selected={district.nameEn === districtName}
                 >

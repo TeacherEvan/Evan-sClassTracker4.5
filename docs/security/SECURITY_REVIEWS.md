@@ -16,15 +16,15 @@
 
 **Attack Scenarios**:
 
-- Teacher creates fake school  assigns self as moderator  gains elevated privileges
-- Malicious user deletes all schools  system data loss
+- Teacher creates fake school assigns self as moderator gains elevated privileges
+- Malicious user deletes all schools system data loss
 
 **Required Fix**:
 
 ```typescript
 export const create = mutation({
-  args: { 
-    name: v.string(), 
+  args: {
+    name: v.string(),
     nameTh: v.string(),
     adminId: v.id(\"users\")
   },
@@ -34,14 +34,14 @@ export const create = mutation({
     if (!admin || admin.role !== \"admin\") {
       throw new Error(\"Unauthorized: Admin access required\");
     }
-    
+
     // Rate limiting
     await checkRateLimit(ctx, {
       key: \school-create-\\,
       limit: 10,
       windowMs: 60000
     });
-    
+
     // Audit log
     await logAudit(ctx, {
       userId: args.adminId,
@@ -49,7 +49,7 @@ export const create = mutation({
       targetType: AuditTargetTypes.SCHOOLS,
       targetName: args.name
     });
-    
+
     // Create school logic...
   }
 });
@@ -81,11 +81,11 @@ export const update = mutation({
   handler: async (ctx, args) => {
     const student = await ctx.db.get(args.id);
     const user = await ctx.db.get(args.updatedBy);
-    
+
     if (!student || !user) {
       throw new Error(\"Student or user not found\");
     }
-    
+
     // Permission checks
     if (user.role === \"teacher\" || user.role === \"moderator\") {
       if (student.schoolId !== user.schoolId) {
@@ -98,7 +98,7 @@ export const update = mutation({
     } else if (user.role !== \"admin\") {
       throw new Error(\"Unauthorized\");
     }
-    
+
     // Update logic...
   }
 });
@@ -128,14 +128,18 @@ users: defineTable({
   failedLoginAttempts: v.optional(v.number()),
   accountLockedUntil: v.optional(v.number()), // Unlock timestamp
   lastSuccessfulLogin: v.optional(v.number()),
-  loginHistory: v.optional(v.array(v.object({
-    timestamp: v.number(),
-    userAgent: v.string(),
-    deviceType: v.string(), // mobile/tablet/desktop
-    platform: v.string(), // Windows/macOS/iOS/Android
-    browser: v.string(), // Chrome/Safari/Firefox/Edge
-  }))),
-})
+  loginHistory: v.optional(
+    v.array(
+      v.object({
+        timestamp: v.number(),
+        userAgent: v.string(),
+        deviceType: v.string(), // mobile/tablet/desktop
+        platform: v.string(), // Windows/macOS/iOS/Android
+        browser: v.string(), // Chrome/Safari/Firefox/Edge
+      }),
+    ),
+  ),
+});
 ```
 
 **User Experience**:
@@ -151,25 +155,25 @@ users: defineTable({
 **Status**: Implemented October 2025
 
 **Features**:
- **Authorization Checks**:
+**Authorization Checks**:
 
 - Only admins/moderators can bulk delete
 - Moderators restricted to deleting teachers only
 - Admins cannot delete other admins
 - Users cannot delete themselves
 
- **Rate Limiting**:
+  **Rate Limiting**:
 
 - Bulk user deletion: 5 ops per minute
 - Single user deletion: 10 ops per minute
 
- **Validation**:
+  **Validation**:
 
 - User existence check before deletion
 - Role-based permission validation
 - School moderator cleanup when deleting moderators
 
- **UI Safeguards**:
+  **UI Safeguards**:
 
 - Double confirmation modal
 - Selected items highlighted
@@ -185,10 +189,10 @@ users: defineTable({
 **Status**: Reviewed - No vulnerabilities
 
 **Findings**:
- **Authorization**: Admin-only access via UI
- **Input Validation**: All data hardcoded (no user input)
- **NoSQL Injection**: Type-safe Convex operations
- **Rate Limiting**: Prevents rapid re-seeding (5 ops/min)
+**Authorization**: Admin-only access via UI
+**Input Validation**: All data hardcoded (no user input)
+**NoSQL Injection**: Type-safe Convex operations
+**Rate Limiting**: Prevents rapid re-seeding (5 ops/min)
 
 **Recommendation**: Add backend role verification for defense-in-depth
 
@@ -281,7 +285,7 @@ users: defineTable({
 ### Ongoing Maintenance
 
 - [ ] Weekly dependency vulnerability scans (
-pm audit)
+      pm audit)
 - [ ] Monthly security review of new features
 - [ ] Monitor Convex access logs for anomalies
 - [ ] Review audit logs for suspicious activity
@@ -299,9 +303,9 @@ pm audit)
    - Guardian can only modify own students
 
 2. **Rate Limiting**:
-   - Trigger 6 failed logins  account locks for 24 hours
-   - Attempt 6 bulk deletions in 1 minute  rate limit error
-   - Send 21 messages in 1 minute  rate limit error
+   - Trigger 6 failed logins account locks for 24 hours
+   - Attempt 6 bulk deletions in 1 minute rate limit error
+   - Send 21 messages in 1 minute rate limit error
 
 3. **Audit Trail**:
    - All admin actions logged with timestamp, user, reason
@@ -313,8 +317,8 @@ pm audit)
 ## Related Documentation
 
 - [AUDIT_LOGGING_IMPLEMENTATION.md](AUDIT_LOGGING_IMPLEMENTATION.md) - Audit trail system
-- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Security best practices
-- [TESTING_GUIDE.md](TESTING_GUIDE.md) - Security test procedures
+- [DEPLOYMENT_GUIDE.md](../guides/deployment/DEPLOYMENT_GUIDE.md) - Security best practices
+- [TESTING_GUIDE.md](../guides/testing/TESTING_GUIDE.md) - Security test procedures
 - convex/auditHelpers.ts - Audit logging helpers
 - convex/rateLimit.ts - Rate limiting implementation
 

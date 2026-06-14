@@ -20,12 +20,12 @@
 
 ### Storage & Bandwidth
 
-| Resource | Free Tier Limit | Pro Tier | Cost |
-|----------|----------------|----------|------|
-| **Database Size** | 1 GB | 8 GB | $25/mo |
-| **Bandwidth** | 5 GB/month | 50 GB/month | $25/mo |
-| **Function Calls** | Unlimited | Unlimited | Included |
-| **File Storage** | Included in 1 GB | Included in 8 GB | Included |
+| Resource           | Free Tier Limit  | Pro Tier         | Cost     |
+| ------------------ | ---------------- | ---------------- | -------- |
+| **Database Size**  | 1 GB             | 8 GB             | $25/mo   |
+| **Bandwidth**      | 5 GB/month       | 50 GB/month      | $25/mo   |
+| **Function Calls** | Unlimited        | Unlimited        | Included |
+| **File Storage**   | Included in 1 GB | Included in 8 GB | Included |
 
 ### Critical Analysis
 
@@ -101,12 +101,12 @@ OR ~230 daily active users (assuming 30 days)
 
 ### Deployment & Traffic
 
-| Resource | Free Tier Limit | Pro Tier | Cost |
-|----------|----------------|----------|------|
-| **Bandwidth** | 100 GB/month | 1 TB/month | $20/mo |
-| **Build Minutes** | 6,000 min/month | Unlimited | $20/mo |
-| **Deployments** | Unlimited | Unlimited | Included |
-| **Team Members** | 1 | Unlimited | $20/mo |
+| Resource          | Free Tier Limit | Pro Tier   | Cost     |
+| ----------------- | --------------- | ---------- | -------- |
+| **Bandwidth**     | 100 GB/month    | 1 TB/month | $20/mo   |
+| **Build Minutes** | 6,000 min/month | Unlimited  | $20/mo   |
+| **Deployments**   | Unlimited       | Unlimited  | Included |
+| **Team Members**  | 1               | Unlimited  | $20/mo   |
 
 ### Critical Analysis
 
@@ -154,12 +154,12 @@ Free tier headroom: 6,000 minutes = 600x current usage
 
 ### Usage Multipliers to Hit Limits
 
-| Service | Free Limit | Current Usage | Multiplier to Limit | Time to Limit |
-|---------|-----------|---------------|-------------------|---------------|
-| **Convex Bandwidth** | 5 GB | 250 MB | **20x** | **6-12 months** |
-| **Convex Database** | 1 GB | 100 MB | **10x** | **2-3 years** |
-| **Vercel Bandwidth** | 100 GB | 340 MB | **294x** | **Many years** |
-| **Vercel Build Minutes** | 6,000 min | 10 min | **600x** | **Never** |
+| Service                  | Free Limit | Current Usage | Multiplier to Limit | Time to Limit   |
+| ------------------------ | ---------- | ------------- | ------------------- | --------------- |
+| **Convex Bandwidth**     | 5 GB       | 250 MB        | **20x**             | **6-12 months** |
+| **Convex Database**      | 1 GB       | 100 MB        | **10x**             | **2-3 years**   |
+| **Vercel Bandwidth**     | 100 GB     | 340 MB        | **294x**            | **Many years**  |
+| **Vercel Build Minutes** | 6,000 min  | 10 min        | **600x**            | **Never**       |
 
 ### Growth Scenarios
 
@@ -198,14 +198,14 @@ Free tier headroom: 6,000 minutes = 600x current usage
 
 ## 4. Cost Breakdown by User Count
 
-| Daily Active Users | Convex Plan | Convex Cost | Vercel Plan | Vercel Cost | Total/Month |
-|-------------------|-------------|-------------|-------------|-------------|-------------|
-| 1-50 | Free | $0 | Hobby (Free) | $0 | **$0** |
-| 51-150 | Pro | $25 | Hobby (Free) | $0 | **$25** |
-| 151-300 | Pro | $25 | Hobby (Free) | $0 | **$25** |
-| 301-500 | Enterprise | ~$100+ | Hobby (Free) | $0 | **$100+** |
-| 500-1,500 | Enterprise | ~$300+ | Pro | $20 | **$320+** |
-| 1,500+ | Enterprise | Custom | Pro | $20+ | **Custom** |
+| Daily Active Users | Convex Plan | Convex Cost | Vercel Plan  | Vercel Cost | Total/Month |
+| ------------------ | ----------- | ----------- | ------------ | ----------- | ----------- |
+| 1-50               | Free        | $0          | Hobby (Free) | $0          | **$0**      |
+| 51-150             | Pro         | $25         | Hobby (Free) | $0          | **$25**     |
+| 151-300            | Pro         | $25         | Hobby (Free) | $0          | **$25**     |
+| 301-500            | Enterprise  | ~$100+      | Hobby (Free) | $0          | **$100+**   |
+| 500-1,500          | Enterprise  | ~$300+      | Pro          | $20         | **$320+**   |
+| 1,500+             | Enterprise  | Custom      | Pro          | $20+        | **Custom**  |
 
 ---
 
@@ -226,23 +226,21 @@ Free tier headroom: 6,000 minutes = 600x current usage
 // 1. Implement pagination everywhere
 const students = await ctx.db
   .query("students")
-  .withIndex("by_school", q => q.eq("schoolId", schoolId))
+  .withIndex("by_school", (q) => q.eq("schoolId", schoolId))
   .take(50); // Instead of .collect()
 
 // 2. Add client-side caching
-const [cachedData, setCachedData] = useState(
-  localStorage.getItem('students') || null
-);
+const [cachedData, setCachedData] = useState(localStorage.getItem("students") || null);
 
 // 3. Reduce query frequency
 const data = useQuery(
   api.classes.list,
-  throttle ? { schoolId } : "skip" // Throttle updates
+  throttle ? { schoolId } : "skip", // Throttle updates
 );
 
 // 4. Compress responses (Convex does this automatically, but minimize data)
 // Return only needed fields
-return classes.map(c => ({
+return classes.map((c) => ({
   _id: c._id,
   title: c.title,
   date: c.scheduledDate,
@@ -284,19 +282,19 @@ useEffect(() => {
 // 1. Implement log retention policy
 export const cleanupOldLogs = internalMutation({
   handler: async (ctx) => {
-    const sixMonthsAgo = Date.now() - (180 * 24 * 60 * 60 * 1000);
+    const sixMonthsAgo = Date.now() - 180 * 24 * 60 * 60 * 1000;
     const oldLogs = await ctx.db
       .query("auditLogs")
       .withIndex("by_timestamp")
-      .filter(q => q.lt(q.field("timestamp"), sixMonthsAgo))
+      .filter((q) => q.lt(q.field("timestamp"), sixMonthsAgo))
       .collect();
-    
+
     // Archive to external storage (S3, etc.) before deletion
     await archiveToS3(oldLogs);
-    
+
     // Delete from Convex
-    await Promise.all(oldLogs.map(log => ctx.db.delete(log._id)));
-  }
+    await Promise.all(oldLogs.map((log) => ctx.db.delete(log._id)));
+  },
 });
 
 // 2. Soft-delete old classes (don't store full history)
@@ -342,13 +340,13 @@ await ctx.db.patch(classId, {
 
 ### Budget Planning
 
-| Timeline | Expected Users | Required Plan | Monthly Cost |
-|----------|---------------|---------------|--------------|
-| **Months 1-6** | 15-30 | Free | $0 |
-| **Months 7-12** | 30-60 | Free or Convex Pro | $0-25 |
-| **Year 2** | 60-150 | Convex Pro | $25 |
-| **Year 3** | 150-300 | Convex Pro + Vercel Pro | $45 |
-| **Year 4+** | 300+ | Convex Enterprise | $100+ |
+| Timeline        | Expected Users | Required Plan           | Monthly Cost |
+| --------------- | -------------- | ----------------------- | ------------ |
+| **Months 1-6**  | 15-30          | Free                    | $0           |
+| **Months 7-12** | 30-60          | Free or Convex Pro      | $0-25        |
+| **Year 2**      | 60-150         | Convex Pro              | $25          |
+| **Year 3**      | 150-300        | Convex Pro + Vercel Pro | $45          |
+| **Year 4+**     | 300+           | Convex Enterprise       | $100+        |
 
 ### When to Upgrade
 

@@ -43,22 +43,22 @@ Update the project's Knowledge Graph with the last sync timestamp and asset list
 
 ```typescript
 // Pseudo-code for the sync script
-import { useTools } from 'mcp-sdk';
+import { useTools } from "mcp-sdk";
 
 async function syncAssets() {
   const fileKey = process.env.FIGMA_FILE_KEY;
-  
+
   // 1. Define Asset Mapping
   const assets = [
     { nodeId: "1:2", name: "globe.svg", path: "public/" },
-    { nodeId: "1:3", name: "background.png", path: "public/images/" }
+    { nodeId: "1:3", name: "background.png", path: "public/images/" },
   ];
 
   // 2. Call MCP Tool
   await mcp_figma_download_figma_images({
     fileKey,
-    nodes: assets.map(a => ({ nodeId: a.nodeId, fileName: a.name })),
-    localPath: "public/assets_temp" // Intermediate step
+    nodes: assets.map((a) => ({ nodeId: a.nodeId, fileName: a.name })),
+    localPath: "public/assets_temp", // Intermediate step
   });
 
   // 3. Move to final destinations

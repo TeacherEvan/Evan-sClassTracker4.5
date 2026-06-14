@@ -19,10 +19,12 @@ describe("I18nTextarea", () => {
         valueTh=""
         onChangeEn={vi.fn()}
         onChangeTh={vi.fn()}
-      />
+      />,
     );
 
-    expect(screen.getByLabelText(/description \(english\)/i)).toBeInTheDocument();
+    expect(
+      screen.getByLabelText(/description \(english\)/i),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText(/คำอธิบาย \(ไทย\)/i)).toBeInTheDocument();
     expect(screen.getAllByRole("textbox")).toHaveLength(2);
   });
@@ -36,11 +38,15 @@ describe("I18nTextarea", () => {
         valueTh="บันทึกภาษาไทย"
         onChangeEn={vi.fn()}
         onChangeTh={vi.fn()}
-      />
+      />,
     );
 
-    expect(screen.getByLabelText(/notes \(english\)/i)).toHaveValue("English notes");
-    expect(screen.getByLabelText(/หมายเหตุ \(ไทย\)/i)).toHaveValue("บันทึกภาษาไทย");
+    expect(screen.getByLabelText(/notes \(english\)/i)).toHaveValue(
+      "English notes",
+    );
+    expect(screen.getByLabelText(/หมายเหตุ \(ไทย\)/i)).toHaveValue(
+      "บันทึกภาษาไทย",
+    );
   });
 
   it("calls onChangeEn when English textarea changes", async () => {
@@ -55,7 +61,7 @@ describe("I18nTextarea", () => {
         valueTh=""
         onChangeEn={handleChangeEn}
         onChangeTh={handleChangeTh}
-      />
+      />,
     );
 
     const enTextarea = screen.getByLabelText(/description \(english\)/i);
@@ -79,7 +85,7 @@ describe("I18nTextarea", () => {
         valueTh=""
         onChangeEn={handleChangeEn}
         onChangeTh={handleChangeTh}
-      />
+      />,
     );
 
     const thTextarea = screen.getByLabelText(/คำอธิบาย \(ไทย\)/i);
@@ -101,7 +107,7 @@ describe("I18nTextarea", () => {
         onChangeEn={vi.fn()}
         onChangeTh={vi.fn()}
         rows={5}
-      />
+      />,
     );
 
     const textareas = screen.getAllByRole("textbox");
@@ -120,7 +126,7 @@ describe("I18nTextarea", () => {
         onChangeEn={vi.fn()}
         onChangeTh={vi.fn()}
         disabled={true}
-      />
+      />,
     );
 
     const textareas = screen.getAllByRole("textbox");
@@ -139,7 +145,7 @@ describe("I18nTextarea", () => {
         onChangeEn={vi.fn()}
         onChangeTh={vi.fn()}
         required={true}
-      />
+      />,
     );
 
     const textareas = screen.getAllByRole("textbox");
@@ -159,11 +165,16 @@ describe("I18nTextarea", () => {
         onChangeTh={vi.fn()}
         placeholder="Enter description..."
         placeholderTh="กรอกรายละเอียด..."
-      />
+      />,
     );
 
-    expect(screen.getByLabelText(/description[\s\S]*?\(english\)/i)).toHaveAttribute("placeholder", "Enter description...");
-    expect(screen.getByLabelText(/คำอธิบาย[\s\S]*?\(ไทย\)/i)).toHaveAttribute("placeholder", "กรอกรายละเอียด...");
+    expect(
+      screen.getByLabelText(/description[\s\S]*?\(english\)/i),
+    ).toHaveAttribute("placeholder", "Enter description...");
+    expect(screen.getByLabelText(/คำอธิบาย[\s\S]*?\(ไทย\)/i)).toHaveAttribute(
+      "placeholder",
+      "กรอกรายละเอียด...",
+    );
   });
 
   it("applies custom className", () => {
@@ -176,7 +187,7 @@ describe("I18nTextarea", () => {
         onChangeEn={vi.fn()}
         onChangeTh={vi.fn()}
         className="custom-class"
-      />
+      />,
     );
 
     const container = screen.getByTestId("i18n-textarea-container");
@@ -192,7 +203,7 @@ describe("I18nTextarea", () => {
         valueTh=""
         onChangeEn={vi.fn()}
         onChangeTh={vi.fn()}
-      />
+      />,
     );
 
     expect(screen.getByText(/bio \(english\)/i)).toBeInTheDocument();
@@ -208,10 +219,12 @@ describe("I18nTextarea", () => {
         valueTh="เริ่มต้น"
         onChangeEn={vi.fn()}
         onChangeTh={vi.fn()}
-      />
+      />,
     );
 
-    expect(screen.getByLabelText(/description \(english\)/i)).toHaveValue("Initial");
+    expect(screen.getByLabelText(/description \(english\)/i)).toHaveValue(
+      "Initial",
+    );
     expect(screen.getByLabelText(/คำอธิบาย \(ไทย\)/i)).toHaveValue("เริ่มต้น");
 
     rerender(
@@ -224,10 +237,14 @@ describe("I18nTextarea", () => {
           onChangeEn={vi.fn()}
           onChangeTh={vi.fn()}
         />
-      </LanguageProvider>
+      </LanguageProvider>,
     );
 
-    expect(screen.getByLabelText(/description \(english\)/i)).toHaveValue("Updated");
-    expect(screen.getByLabelText(/คำอธิบาย \(ไทย\)/i)).toHaveValue("อัปเดตแล้ว");
+    expect(screen.getByLabelText(/description \(english\)/i)).toHaveValue(
+      "Updated",
+    );
+    expect(screen.getByLabelText(/คำอธิบาย \(ไทย\)/i)).toHaveValue(
+      "อัปเดตแล้ว",
+    );
   });
 });

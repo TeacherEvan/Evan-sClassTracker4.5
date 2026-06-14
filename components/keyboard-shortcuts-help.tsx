@@ -1,7 +1,10 @@
 "use client";
 
 import { useLanguage } from "@/lib/language-context";
-import { formatShortcut, type KeyboardShortcut } from "@/lib/use-keyboard-shortcuts";
+import {
+  formatShortcut,
+  type KeyboardShortcut,
+} from "@/lib/use-keyboard-shortcuts";
 import { X, Keyboard } from "lucide-react";
 import { useEffect } from "react";
 import { FOCUS_RING } from "@/lib/accessibility-utils";
@@ -103,12 +106,18 @@ export function KeyboardShortcutsHelp({
           <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
             {language === "en" ? (
               <>
-                Press <kbd className="px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-xs">?</kbd> to
-                show this help anytime
+                Press{" "}
+                <kbd className="px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-xs">
+                  ?
+                </kbd>{" "}
+                to show this help anytime
               </>
             ) : (
               <>
-                กด <kbd className="px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-xs">?</kbd>{" "}
+                กด{" "}
+                <kbd className="px-2 py-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-xs">
+                  ?
+                </kbd>{" "}
                 เพื่อแสดงความช่วยเหลือนี้ได้ทุกเมื่อ
               </>
             )}

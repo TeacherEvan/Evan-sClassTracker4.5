@@ -78,11 +78,11 @@ const [selectedSourceIds, setSelectedSourceIds] = useState<Id<"classes">[]>([]);
 
 ```typescript
 interface GroupMergeSelection {
-    enabled: boolean;
-    targetClassId: Id<"classes"> | "";
-    sourceClassIds: Id<"classes">[];
-    status?: "pending" | "merging" | "success" | "error";
-    error?: string;
+  enabled: boolean;
+  targetClassId: Id<"classes"> | "";
+  sourceClassIds: Id<"classes">[];
+  status?: "pending" | "merging" | "success" | "error";
+  error?: string;
 }
 
 const [groupSelections, setGroupSelections] = useState<Map<string, GroupMergeSelection>>(new Map());
@@ -97,7 +97,7 @@ const [groupSelections, setGroupSelections] = useState<Map<string, GroupMergeSel
 
 ### UI Structure (Per Group)
 
-```text
+````text
 ┌─────────────────────────────────────────────────┐
 │ [ ] Group 1                      Status Badge   │  ← Enable checkbox + header
 │     Location: School A                          │
@@ -119,7 +119,7 @@ If enabled:
 │  [ ] Student B - 1 student                      │  ← Checkboxes
 │  [ ] Student C - 1 student                      │
 └─────────────────────────────────────────────────┘
-```
+````
 
 ### Merge Process Flow
 

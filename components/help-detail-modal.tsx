@@ -3,12 +3,7 @@
 import type { HelpFeature } from "@/lib/help-content";
 import { getHelpIcon } from "@/lib/help-icons";
 import { useLanguage } from "@/lib/language-context";
-import {
-  ArrowLeft,
-  CheckCircle,
-  Lightbulb,
-  X,
-} from "lucide-react";
+import { ArrowLeft, CheckCircle, Lightbulb, X } from "lucide-react";
 
 interface HelpDetailModalProps {
   feature: HelpFeature;
@@ -16,11 +11,18 @@ interface HelpDetailModalProps {
   onBack?: () => void;
 }
 
-export function HelpDetailModal({ feature, onClose, onBack }: HelpDetailModalProps) {
+export function HelpDetailModal({
+  feature,
+  onClose,
+  onBack,
+}: HelpDetailModalProps) {
   const { t, language } = useLanguage();
 
   const title = language === "th" ? feature.titleTh : feature.title;
-  const description = language === "th" ? feature.detailedDescriptionTh : feature.detailedDescription;
+  const description =
+    language === "th"
+      ? feature.detailedDescriptionTh
+      : feature.detailedDescription;
 
   const FeatureIcon = getHelpIcon(feature.icon);
 
@@ -53,7 +55,9 @@ export function HelpDetailModal({ feature, onClose, onBack }: HelpDetailModalPro
               <FeatureIcon className="w-10 h-10 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-white">{title}</h1>
+              <h1 className="text-3xl md:text-4xl font-bold text-white">
+                {title}
+              </h1>
             </div>
           </div>
         </div>
@@ -77,14 +81,13 @@ export function HelpDetailModal({ feature, onClose, onBack }: HelpDetailModalPro
 
               <div className="space-y-4">
                 {feature.steps.map((step) => {
-                  const stepDesc = language === "th" ? step.descriptionTh : step.description;
-                  const stepTip = step.tip && (language === "th" ? step.tipTh : step.tip);
+                  const stepDesc =
+                    language === "th" ? step.descriptionTh : step.description;
+                  const stepTip =
+                    step.tip && (language === "th" ? step.tipTh : step.tip);
 
                   return (
-                    <div
-                      key={step.step}
-                      className="group relative"
-                    >
+                    <div key={step.step} className="group relative">
                       {/* Step card */}
                       <div className="flex items-start gap-4 p-5 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 hover:shadow-md transition-all">
                         <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-blue-600 text-white font-bold rounded-full">
@@ -100,7 +103,10 @@ export function HelpDetailModal({ feature, onClose, onBack }: HelpDetailModalPro
                             <div className="mt-3 flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                               <Lightbulb className="w-4 h-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
                               <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                                <span className="font-semibold">{t("Tip:", "เคล็ดลับ:")}</span> {stepTip}
+                                <span className="font-semibold">
+                                  {t("Tip:", "เคล็ดลับ:")}
+                                </span>{" "}
+                                {stepTip}
                               </p>
                             </div>
                           )}
@@ -124,7 +130,7 @@ export function HelpDetailModal({ feature, onClose, onBack }: HelpDetailModalPro
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 {t(
                   "Close this window and start using this feature!",
-                  "ปิดหน้าต่างนี้และเริ่มใช้ฟีเจอร์นี้!"
+                  "ปิดหน้าต่างนี้และเริ่มใช้ฟีเจอร์นี้!",
                 )}
               </p>
             </div>

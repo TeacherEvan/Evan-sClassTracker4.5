@@ -387,7 +387,9 @@ export const seedSangsomProject = mutation({
         .first();
 
       if (!existingTeacher || !existingModerator || !existingLocation) {
-        throw new Error("Sangsom school exists but missing teacher, moderator, or location");
+        throw new Error(
+          "Sangsom school exists but missing teacher, moderator, or location",
+        );
       }
 
       teacherId = existingTeacher._id;
@@ -455,14 +457,15 @@ export const seedSangsomProject = mutation({
       const existingEvent = await ctx.db
         .query("events")
         .withIndex("by_creator_and_date", (q) =>
-          q.eq("createdBy", teacherId)
-            .eq("eventDate", eventDate)
+          q.eq("createdBy", teacherId).eq("eventDate", eventDate),
         )
         .filter((q) => q.eq(q.field("title"), `${classCode} - ${item.topicEn}`))
         .first();
 
       if (existingEvent) {
-        console.log(`Event already exists for ${classCode} on ${item.date} at ${item.time}`);
+        console.log(
+          `Event already exists for ${classCode} on ${item.date} at ${item.time}`,
+        );
         continue;
       }
 
@@ -504,7 +507,10 @@ export const seedSangsomProject = mutation({
       events: createdEvents,
       credentials: {
         teacher: { username: "sangsom_teacher", password: "TeacherPongsak" },
-        moderator: { username: "sangsom_moderator", password: "TeacherSangsomModerator" },
+        moderator: {
+          username: "sangsom_moderator",
+          password: "TeacherSangsomModerator",
+        },
       },
     };
   },

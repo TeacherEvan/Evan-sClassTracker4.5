@@ -90,7 +90,7 @@ const [newStudentGrade, setNewStudentGrade] = useState("");
 <BookingWizard
   onComplete={(data) => {
     // 1. Triggers student selector
-    // 2. Triggers calendar picker  
+    // 2. Triggers calendar picker
     // 3. Triggers recurring configurator
     // 4. Completes to class booking form
   }}
@@ -107,25 +107,25 @@ const [newStudentGrade, setNewStudentGrade] = useState("");
 
 **Existing Composable Components** (Good foundation):
 
-| Component | Lines | Reused In | Independence Score |
-|-----------|-------|-----------|-------------------|
-| BilingualInput | 120 | 15+ files | ✅ 100% (fully independent) |
-| HierarchicalStudentSelector | 220 | 4 files | ✅ 95% (needs schoolId prop) |
-| PaginatedList | 180 | 3 files | ✅ 100% (fully generic) |
-| CollapsibleSection | 85 | 6 files | ✅ 100% (fully generic) |
-| FilterChip | 65 | 1 file | ⚠️ 80% (could be more generic) |
-| CalendarPicker | 190 | 2 files | ⚠️ 70% (coupled to date format) |
-| ClassDetailCard | 280 | 2 files | ⚠️ 60% (coupled to class structure) |
+| Component                   | Lines | Reused In | Independence Score                  |
+| --------------------------- | ----- | --------- | ----------------------------------- |
+| BilingualInput              | 120   | 15+ files | ✅ 100% (fully independent)         |
+| HierarchicalStudentSelector | 220   | 4 files   | ✅ 95% (needs schoolId prop)        |
+| PaginatedList               | 180   | 3 files   | ✅ 100% (fully generic)             |
+| CollapsibleSection          | 85    | 6 files   | ✅ 100% (fully generic)             |
+| FilterChip                  | 65    | 1 file    | ⚠️ 80% (could be more generic)      |
+| CalendarPicker              | 190   | 2 files   | ⚠️ 70% (coupled to date format)     |
+| ClassDetailCard             | 280   | 2 files   | ⚠️ 60% (coupled to class structure) |
 
 **Tightly Coupled Features** (Need composition):
 
-| Feature | Duplicated In | Duplication % |
-|---------|---------------|---------------|
-| Student Creation Form | 3 files | 90% identical |
-| Location Selection | 4 files | 85% identical |
-| Conflict Detection | 2 files | 95% identical |
-| Date/Time Picker | 3 files | 80% identical |
-| Teacher Selection | 3 files | 75% identical |
+| Feature               | Duplicated In | Duplication % |
+| --------------------- | ------------- | ------------- |
+| Student Creation Form | 3 files       | 90% identical |
+| Location Selection    | 4 files       | 85% identical |
+| Conflict Detection    | 2 files       | 95% identical |
+| Date/Time Picker      | 3 files       | 80% identical |
+| Teacher Selection     | 3 files       | 75% identical |
 
 ---
 
@@ -195,12 +195,12 @@ const { book } = useClassBooking();
 
 **Migration Complexity:**
 
-| Refactor Type | Effort (weeks) | Risk | Reward |
-|---------------|----------------|------|--------|
-| Extract duplicate forms | 1 week | Low | High |
-| Create custom hooks | 2 weeks | Low | High |
-| Add event bus | 3 weeks | Medium | Medium |
-| Full composition refactor | 6 weeks | High | Medium |
+| Refactor Type             | Effort (weeks) | Risk   | Reward |
+| ------------------------- | -------------- | ------ | ------ |
+| Extract duplicate forms   | 1 week         | Low    | High   |
+| Create custom hooks       | 2 weeks        | Low    | High   |
+| Add event bus             | 3 weeks        | Medium | Medium |
+| Full composition refactor | 6 weeks        | High   | Medium |
 
 ---
 
@@ -275,7 +275,7 @@ const { book } = useClassBooking();
      const students = useQuery(api.students.list, { schoolId });
      const createStudent = useMutation(api.students.create);
      const updateStudent = useMutation(api.students.update);
-     
+
      return {
        students,
        createStudent: async (data) => {
@@ -295,7 +295,7 @@ const { book } = useClassBooking();
    export function useClassBooking(userId: Id<"users">) {
      const book = useMutation(api.classes.book);
      const conflicts = useQuery(api.classes.checkConflicts, ...);
-     
+
      return {
        book: async (classData) => {
          // Validation
@@ -315,7 +315,7 @@ const { book } = useClassBooking();
    export function useDateSelection() {
      const [selectedDates, setSelectedDates] = useState<number[]>([]);
      const [isRecurring, setIsRecurring] = useState(false);
-     
+
      return {
        selectedDates,
        isRecurring,
@@ -333,11 +333,11 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const { students, createStudent } = useStudentManagement(schoolId);
   const { book, hasConflicts } = useClassBooking(userId);
   const { selectedDates, selectDate } = useDateSelection();
-  
+
   // Only 5-10 UI-specific state variables
   const [showForm, setShowForm] = useState(false);
   const [schoolId, setSchoolId] = useState("");
-  
+
   // Business logic moved to hooks ✅
   // UI rendering stays here
 }
@@ -365,16 +365,16 @@ type EventMap = {
 
 class EventBus {
   private listeners = new Map<string, Set<Function>>();
-  
+
   on<K extends keyof EventMap>(event: K, callback: (data: EventMap[K]) => void) {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
     this.listeners.get(event)!.add(callback);
   }
-  
+
   emit<K extends keyof EventMap>(event: K, data: EventMap[K]) {
-    this.listeners.get(event)?.forEach(callback => callback(data));
+    this.listeners.get(event)?.forEach((callback) => callback(data));
   }
 }
 
@@ -441,7 +441,7 @@ export function Booking({ children }: { children: React.ReactNode }) {
   const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
   const [studentId, setStudentId] = useState<Id<"students"> | "">("");
   const [selectedDate, setSelectedDate] = useState<number | null>(null);
-  
+
   return (
     <BookingContext.Provider value={{ schoolId, studentId, selectedDate, setSchoolId, setStudentId, setSelectedDate }}>
       {children}
@@ -539,12 +539,12 @@ Booking.Submit = function Submit() {
 
 ## Risk Assessment
 
-| Recommendation | Complexity | Breaking Changes | Testing Effort | Reward |
-|----------------|------------|------------------|----------------|--------|
-| #1: Extract Forms | Low | None | Low | ⭐⭐⭐ High |
-| #2: Custom Hooks | Medium | Minor | Medium | ⭐⭐⭐ High |
-| #3: Event Bus | Medium-High | None | High | ⭐⭐ Medium |
-| #4: Compound Components | High | Major | High | ⭐⭐ Medium |
+| Recommendation          | Complexity  | Breaking Changes | Testing Effort | Reward      |
+| ----------------------- | ----------- | ---------------- | -------------- | ----------- |
+| #1: Extract Forms       | Low         | None             | Low            | ⭐⭐⭐ High |
+| #2: Custom Hooks        | Medium      | Minor            | Medium         | ⭐⭐⭐ High |
+| #3: Event Bus           | Medium-High | None             | High           | ⭐⭐ Medium |
+| #4: Compound Components | High        | Major            | High           | ⭐⭐ Medium |
 
 ---
 

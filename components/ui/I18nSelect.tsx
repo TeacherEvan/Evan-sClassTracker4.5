@@ -5,7 +5,8 @@ import { Label } from "./Label";
 import { Select, SelectProps } from "./Select";
 import { I18nString, Language, useI18nInput } from "@/lib/hooks/useI18n";
 
-export interface I18nSelectProps extends Omit<SelectProps, "value" | "onChange" | "options"> {
+export interface I18nSelectProps
+  extends Omit<SelectProps, "value" | "onChange" | "options"> {
   label: I18nString;
   value: I18nString | null | undefined;
   onChange: (val: I18nString) => void;
@@ -30,7 +31,7 @@ export function I18nSelect({
   const { value: localValue, onChange: handleChange } = useI18nInput(
     value || { en: "", th: "" },
     onChange,
-    language
+    language,
   );
 
   return (

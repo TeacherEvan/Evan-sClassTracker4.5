@@ -50,11 +50,7 @@ if (user.role === "moderator") {
  * Verifies user has permission to modify a class
  * Throws error if unauthorized
  */
-async function verifyClassAccess(
-  ctx: any,
-  userId: Id<"users">,
-  classData: any
-): Promise<void> {
+async function verifyClassAccess(ctx: any, userId: Id<"users">, classData: any): Promise<void> {
   const user = await ctx.db.get(userId);
   if (!user) throw new Error("User not found");
 
@@ -86,7 +82,7 @@ export const acknowledge = mutation({
     await verifyClassAccess(ctx, args.userId, classData);
 
     // ... rest of mutation logic
-  }
+  },
 });
 ```
 
@@ -114,15 +110,15 @@ export const acknowledge = mutation({
 
 ```typescript
 // Batch fetch all related entities
-const studentIds = [...new Set(classes.map(c => c.studentId))];
+const studentIds = [...new Set(classes.map((c) => c.studentId))];
 const additionalStudentIds = new Set<Id<"students">>();
 for (const cls of classes) {
   if (cls.additionalStudentIds) {
-    cls.additionalStudentIds.forEach(id => additionalStudentIds.add(id));
+    cls.additionalStudentIds.forEach((id) => additionalStudentIds.add(id));
   }
 }
 const allStudentIds = [...studentIds, ...additionalStudentIds];
-const students = await Promise.all(allStudentIds.map(id => ctx.db.get(id)));
+const students = await Promise.all(allStudentIds.map((id) => ctx.db.get(id)));
 ```
 
 **Potential Issue:**
@@ -169,7 +165,7 @@ additionalStudentIds: v.optional(v.array(v.id("students"))),
 // Query usage
 const classesAsAdditional = await ctx.db
   .query("classes")
-  .withIndex("by_additional_student", q => 
+  .withIndex("by_additional_student", q =>
     q.eq("additionalStudentIds", studentId)
   )
   .collect();
@@ -221,10 +217,12 @@ Based on `PENDING_OPTIMIZATIONS.md`:
 
 ```markdown
 ### YouTube Downloader (HIGH PRIORITY) - 4-6hrs
+
 **Status:** Not started
 **User Request:** "add a youtube downloader component but not store the files in the convex database"
 
 **Requirements:**
+
 - Integration with yt-dlp or similar library
 - Download directly to user's device (no database storage)
 - Support for multiple formats/qualities
@@ -238,14 +236,14 @@ Based on `PENDING_OPTIMIZATIONS.md`:
 
    ```typescript
    // app/api/youtube-download/route.ts
-   import { exec } from 'child_process';
-   import { promisify } from 'util';
-   
+   import { exec } from "child_process";
+   import { promisify } from "util";
+
    const execAsync = promisify(exec);
-   
+
    export async function POST(request: Request) {
      const { url, quality } = await request.json();
-     
+
      // Validate YouTube URL
      // Execute yt-dlp command
      // Stream file to response
@@ -258,12 +256,12 @@ Based on `PENDING_OPTIMIZATIONS.md`:
    ```typescript
    // components/youtube-downloader.tsx
    "use client";
-   
+
    export function YouTubeDownloader() {
      const [url, setUrl] = useState("");
      const [downloading, setDownloading] = useState(false);
      const { t } = useLanguage();
-     
+
      // Input field for URL
      // Quality selector (720p, 1080p, audio only, etc.)
      // Download button with progress indicator
@@ -320,10 +318,10 @@ toast.error("Operation failed");
 
 ```typescript
 // Current
-userId: string | undefined
+userId: string | undefined;
 
 // Better
-userId: Id<"users">
+userId: Id<"users">;
 ```
 
 **Impact:** 🟢 **LOW** - TypeScript catches most issues, but stricter types would be better
@@ -353,11 +351,11 @@ const RATE_LIMITS = {
 
 ## 📊 Performance Metrics (Estimated)
 
-| Operation | Current Performance | After Optimizations | Improvement |
-|-----------|---------------------|---------------------|-------------|
-| Moderator class actions | ~150-200ms | ~100-120ms | 25-40% faster |
-| List 50 classes | ~80-100ms | ~80-100ms | No change |
-| Batch booking | ~500ms | ~500ms | No change |
+| Operation               | Current Performance | After Optimizations | Improvement   |
+| ----------------------- | ------------------- | ------------------- | ------------- |
+| Moderator class actions | ~150-200ms          | ~100-120ms          | 25-40% faster |
+| List 50 classes         | ~80-100ms           | ~80-100ms           | No change     |
+| Batch booking           | ~500ms              | ~500ms              | No change     |
 
 **Note:** Most optimizations focus on **code quality** and **maintainability** rather than raw performance, as current performance is already good.
 

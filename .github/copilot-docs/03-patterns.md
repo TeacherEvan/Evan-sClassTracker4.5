@@ -20,21 +20,12 @@ Schema has `title` AND `titleTh` for system content. User content uses single-la
 
 ```tsx
 const { t } = useLanguage(); // Helper from lib/language-context.tsx
-<h1>{t("Book Class", "จองคลาส")}</h1>
+<h1>{t("Book Class", "จองคลาส")}</h1>;
 
 // For forms - use BilingualInput component (NEW Oct 2025)
 import { BilingualInput } from "@/components/bilingual-input";
 
-<BilingualInput
-  labelEn="Location Name"
-  labelTh="ชื่อสถานที่"
-  valueEn={nameEn}
-  valueTh={nameTh}
-  onChangeEn={setNameEn}
-  onChangeTh={setNameTh}
-  type="text"
-  required
-/>
+<BilingualInput labelEn="Location Name" labelTh="ชื่อสถานที่" valueEn={nameEn} valueTh={nameTh} onChangeEn={setNameEn} onChangeTh={setNameTh} type="text" required />;
 ```
 
 **BilingualInput benefits**:
@@ -53,8 +44,7 @@ import { BilingualInput } from "@/components/bilingual-input";
 ```typescript
 // ✅ CORRECT - Requires AT LEAST ONE language
 if (!nameEn.trim() && !nameTh.trim()) {
-  toast.error("Please provide name in at least one language", 
-              "กรุณากรอกชื่อในอย่างน้อยหนึ่งภาษา");
+  toast.error("Please provide name in at least one language", "กรุณากรอกชื่อในอย่างน้อยหนึ่งภาษา");
   return;
 }
 
@@ -83,14 +73,14 @@ if (!nameEn.trim() || !nameTh.trim()) {
 
 ```typescript
 // ✅ CORRECT - Uses index
-ctx.db.query("classes")
-  .withIndex("by_school_and_date", q => 
-    q.eq("schoolId", schoolId).gte("scheduledDate", startDate))
-  .collect()
+ctx.db
+  .query("classes")
+  .withIndex("by_school_and_date", (q) => q.eq("schoolId", schoolId).gte("scheduledDate", startDate))
+  .collect();
 
 // ❌ WRONG - Full table scan then filter
 const all = await ctx.db.query("classes").collect();
-return all.filter(c => c.schoolId === schoolId);
+return all.filter((c) => c.schoolId === schoolId);
 ```
 
 **Available indexes** (from `convex/schema.ts`):
@@ -110,9 +100,9 @@ for (const classItem of classes) {
 }
 
 // ✅ GOOD - Batch fetch pattern
-const studentIds = [...new Set(classes.map(c => c.studentId))];
-const students = await Promise.all(studentIds.map(id => ctx.db.get(id)));
-const studentMap = new Map(students.map(s => [s._id, s]));
+const studentIds = [...new Set(classes.map((c) => c.studentId))];
+const students = await Promise.all(studentIds.map((id) => ctx.db.get(id)));
+const studentMap = new Map(students.map((s) => [s._id, s]));
 // Then lookup: studentMap.get(classItem.studentId)
 ```
 
@@ -136,21 +126,21 @@ See `docs/OPTIMIZATION_ANALYSIS_2025.md` for identified bottlenecks and fixes.
 const classes = await ctx.db.query("classes").collect();
 for (const c of classes) {
   const student = await ctx.db.get(c.studentId); // N+1!
-  const school = await ctx.db.get(c.schoolId);   // N+1!
+  const school = await ctx.db.get(c.schoolId); // N+1!
 }
 
 // ✅ GOOD - Batch fetch with Map lookup (3 queries total)
 const classes = await ctx.db.query("classes").collect();
 
 // Batch fetch students
-const studentIds = [...new Set(classes.map(c => c.studentId))];
-const students = await Promise.all(studentIds.map(id => ctx.db.get(id)));
-const studentMap = new Map(students.map(s => [s._id, s]));
+const studentIds = [...new Set(classes.map((c) => c.studentId))];
+const students = await Promise.all(studentIds.map((id) => ctx.db.get(id)));
+const studentMap = new Map(students.map((s) => [s._id, s]));
 
 // Batch fetch schools
-const schoolIds = [...new Set(classes.map(c => c.schoolId))];
-const schools = await Promise.all(schoolIds.map(id => ctx.db.get(id)));
-const schoolMap = new Map(schools.map(s => [s._id, s]));
+const schoolIds = [...new Set(classes.map((c) => c.schoolId))];
+const schools = await Promise.all(schoolIds.map((id) => ctx.db.get(id)));
+const schoolMap = new Map(schools.map((s) => [s._id, s]));
 
 // O(1) lookups
 for (const c of classes) {
@@ -184,11 +174,11 @@ export const book = mutation({
   handler: async (ctx, args) => {
     await checkRateLimit(ctx, {
       key: `book-${args.userId}`,
-      limit: 30,      // 30 requests
-      windowMs: 60000 // per minute
+      limit: 30, // 30 requests
+      windowMs: 60000, // per minute
     });
     // ... mutation logic
-  }
+  },
 });
 ```
 
@@ -240,9 +230,10 @@ Use `isActive` boolean instead of deleting records.
 
 ```typescript
 // Query only active records
-ctx.db.query("teacherResources")
-  .withIndex("by_active", q => q.eq("isActive", true))
-  .collect()
+ctx.db
+  .query("teacherResources")
+  .withIndex("by_active", (q) => q.eq("isActive", true))
+  .collect();
 
 // Soft delete
 await ctx.db.patch(resourceId, { isActive: false });
@@ -289,7 +280,7 @@ export const generateUploadUrl = mutation(async (ctx) => {
 
 // Store attachment metadata after upload
 await ctx.db.insert("messages", {
-  attachmentStorageId: storageId,  // From upload response
+  attachmentStorageId: storageId, // From upload response
   attachmentName: "document.pdf",
   attachmentType: "application/pdf",
   attachmentSize: 102400, // bytes
@@ -310,8 +301,9 @@ const url = await ctx.storage.getUrl(storageId);
 
 ```typescript
 // In login mutation (convex/users.ts)
-const user = await ctx.db.query("users")
-  .withIndex("by_username", q => q.eq("username", username))
+const user = await ctx.db
+  .query("users")
+  .withIndex("by_username", (q) => q.eq("username", username))
   .first();
 
 // Check if account is locked
@@ -322,14 +314,14 @@ if (user.accountLockedUntil && user.accountLockedUntil > Date.now()) {
 // Increment failed attempts on wrong password
 await ctx.db.patch(user._id, {
   failedLoginAttempts: (user.failedLoginAttempts || 0) + 1,
-  accountLockedUntil: attempts >= 4 ? Date.now() + 86400000 : undefined // 24hrs
+  accountLockedUntil: attempts >= 4 ? Date.now() + 86400000 : undefined, // 24hrs
 });
 
 // Reset on successful login
 await ctx.db.patch(user._id, {
   failedLoginAttempts: 0,
   accountLockedUntil: undefined,
-  lastSuccessfulLogin: Date.now()
+  lastSuccessfulLogin: Date.now(),
 });
 ```
 
@@ -359,14 +351,12 @@ export const bulkDelete = mutation({
       performedBy: adminId,
       affectedCount: ids.length,
       reason,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
 
     // 4. Soft delete (preserve data)
-    await Promise.all(ids.map(id => 
-      ctx.db.patch(id, { isActive: false, deletedAt: Date.now() })
-    ));
-  }
+    await Promise.all(ids.map((id) => ctx.db.patch(id, { isActive: false, deletedAt: Date.now() })));
+  },
 });
 ```
 
@@ -391,7 +381,7 @@ export const deleteUser = mutation({
   handler: async (ctx, args) => {
     // Perform action
     await ctx.db.delete(userId);
-    
+
     // Log for audit trail
     await logAudit(ctx, {
       userId: args.adminId,
@@ -402,7 +392,7 @@ export const deleteUser = mutation({
       reason: args.reason,
       schoolId: user.schoolId,
     });
-  }
+  },
 });
 ```
 
@@ -443,15 +433,13 @@ useEffect(() => {
 }, [showCycleEditor]);
 
 // Nested modal with higher z-index (z-60 > z-50)
-{showCycleEditor && (
-  <div className="fixed inset-0 z-[60]" role="dialog">
-    <TeacherCycleEditor
-      teacherId={teacherId}
-      moderatorId={moderatorId}
-      onComplete={() => setShowCycleEditor(false)}
-    />
-  </div>
-)}
+{
+  showCycleEditor && (
+    <div className="fixed inset-0 z-[60]" role="dialog">
+      <TeacherCycleEditor teacherId={teacherId} moderatorId={moderatorId} onComplete={() => setShowCycleEditor(false)} />
+    </div>
+  );
+}
 ```
 
 **Backend confirmation pattern** (teacherClassCount.ts):
@@ -469,7 +457,7 @@ export const setTeacherCycle = mutation({
     // Check for existing active cycle
     const existingCycle = await ctx.db
       .query("teacherClassCountCycles")
-      .withIndex("by_teacher_and_active", q => 
+      .withIndex("by_teacher_and_active", q =>
         q.eq("teacherId", args.teacherId).eq("isActive", true))
       .first();
 
@@ -539,14 +527,8 @@ if (args.dateOfBirth && args.area) {
 // Check for existing guardian student (convex/students.ts)
 const existingGuardianStudent = await ctx.db
   .query("students")
-  .withIndex("by_area", q => q.eq("area", args.area))
-  .filter(q => 
-    q.and(
-      q.eq(q.field("firstName"), args.firstName),
-      q.eq(q.field("lastName"), args.lastName),
-      q.eq(q.field("dateOfBirth"), args.dateOfBirth)
-    )
-  )
+  .withIndex("by_area", (q) => q.eq("area", args.area))
+  .filter((q) => q.and(q.eq(q.field("firstName"), args.firstName), q.eq(q.field("lastName"), args.lastName), q.eq(q.field("dateOfBirth"), args.dateOfBirth)))
   .first();
 ```
 
@@ -574,36 +556,26 @@ await ctx.db.insert("classes", {
 // Component state (components/class-booking.tsx)
 const [isRecurringWeekly, setIsRecurringWeekly] = useState(false);
 
-<Checkbox
-  labelEn="Repeat weekly"
-  labelTh="ทำซ้ำรายสัปดาห์"
-  checked={isRecurringWeekly}
-  onCheckedChange={setIsRecurringWeekly}
-/>
+<Checkbox labelEn="Repeat weekly" labelTh="ทำซ้ำรายสัปดาห์" checked={isRecurringWeekly} onCheckedChange={setIsRecurringWeekly} />;
 
-{isRecurringWeekly && (
-  <div className="space-y-4">
-    <Input
-      labelEn="Number of weeks"
-      labelTh="จำนวนสัปดาห์"
-      type="number"
-      min={1}
-      max={52}
-      {...register("weekCount", { valueAsNumber: true })}
-    />
-    <Select
-      labelEn="Select day(s)"
-      labelTh="เลือกวัน"
-      multiple
-      options={[
-        { value: "mon", labelEn: "Monday", labelTh: "วันจันทร์" },
-        { value: "tue", labelEn: "Tuesday", labelTh: "วันอังคาร" },
-        // ... other days
-      ]}
-      {...register("repeatDays")}
-    />
-  </div>
-)}
+{
+  isRecurringWeekly && (
+    <div className="space-y-4">
+      <Input labelEn="Number of weeks" labelTh="จำนวนสัปดาห์" type="number" min={1} max={52} {...register("weekCount", { valueAsNumber: true })} />
+      <Select
+        labelEn="Select day(s)"
+        labelTh="เลือกวัน"
+        multiple
+        options={[
+          { value: "mon", labelEn: "Monday", labelTh: "วันจันทร์" },
+          { value: "tue", labelEn: "Tuesday", labelTh: "วันอังคาร" },
+          // ... other days
+        ]}
+        {...register("repeatDays")}
+      />
+    </div>
+  );
+}
 ```
 
 **Key features**:
@@ -627,23 +599,15 @@ const [showSection, setShowSection] = useState(false);
 
 // UI Pattern
 <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-  <button
-    type="button"
-    onClick={() => setShowSection(!showSection)}
-    className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
-  >
+  <button type="button" onClick={() => setShowSection(!showSection)} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between">
     <span className="font-medium flex items-center gap-2">
       {t("Section Title (Optional)", "หวขอ (ไมบงคบ)")}
       <span className="text-xs text-gray-500">{t("Click to expand", "คลกเพอขยาย")}</span>
     </span>
     {showSection ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
   </button>
-  {showSection && (
-    <div className="p-4 space-y-4 bg-white dark:bg-gray-800">
-      {/* Collapsed content */}
-    </div>
-  )}
-</div>
+  {showSection && <div className="p-4 space-y-4 bg-white dark:bg-gray-800">{/* Collapsed content */}</div>}
+</div>;
 ```
 
 **When to use**:
@@ -683,12 +647,12 @@ const [showSection, setShowSection] = useState(false);
     <div className="p-6 border-b bg-white dark:bg-gray-800">
       <h2>Modal Title</h2>
     </div>
-    
+
     {/* Scrollable Content - SINGLE scroll area */}
     <div className="overflow-y-auto flex-grow p-6">
       {content}
     </div>
-    
+
     {/* Sticky Footer */}
     <div className="p-6 border-t bg-white dark:bg-gray-800">
       <button>Submit</button>
@@ -723,17 +687,7 @@ const [showSection, setShowSection] = useState(false);
 import { PaginatedList } from "@/components/paginated-list";
 
 // Usage
-<PaginatedList
-  items={students}
-  itemsPerPage={15}
-  renderItem={(student) => (
-    <StudentCard key={student._id} student={student} />
-  )}
-  emptyMessageEn="No students found"
-  emptyMessageTh="ไม่พบนักเรียน"
-  showPageInfo={true}
-  showJumpButtons={true}
-/>
+<PaginatedList items={students} itemsPerPage={15} renderItem={(student) => <StudentCard key={student._id} student={student} />} emptyMessageEn="No students found" emptyMessageTh="ไม่พบนักเรียน" showPageInfo={true} showJumpButtons={true} />;
 ```
 
 **Features**:
@@ -757,12 +711,12 @@ import { PaginatedList } from "@/components/paginated-list";
 
 **Performance Impact**:
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| DOM Nodes (100 items) | 2,847 | 412 | -85.5% |
-| Memory Usage | 87.3 MB | 31.2 MB | -64.3% |
-| Page Load (3G) | 4.2s | 2.8s | -33% |
-| Scroll FPS | 42 | 60 | +42.9% |
+| Metric                | Before  | After   | Improvement |
+| --------------------- | ------- | ------- | ----------- |
+| DOM Nodes (100 items) | 2,847   | 412     | -85.5%      |
+| Memory Usage          | 87.3 MB | 31.2 MB | -64.3%      |
+| Page Load (3G)        | 4.2s    | 2.8s    | -33%        |
+| Scroll FPS            | 42      | 60      | +42.9%      |
 
 **Example**: `components/student-management.tsx`, `components/audit-logs.tsx`
 
@@ -776,17 +730,13 @@ import { PaginatedList } from "@/components/paginated-list";
 import { CollapsibleSection } from "@/components/collapsible-section";
 
 // Usage
-<CollapsibleSection
-  titleEn="Additional Information (Optional)"
-  titleTh="ข้อมูลเพิ่มเติม (ไม่บังคับ)"
-  defaultOpen={false}
->
+<CollapsibleSection titleEn="Additional Information (Optional)" titleTh="ข้อมูลเพิ่มเติม (ไม่บังคับ)" defaultOpen={false}>
   <div className="space-y-4">
     <input name="nickname" placeholder="Nickname" />
     <input name="parentPhone" placeholder="Parent Phone" />
     <textarea name="notes" placeholder="Additional Notes" />
   </div>
-</CollapsibleSection>
+</CollapsibleSection>;
 ```
 
 **Features**:
@@ -849,12 +799,12 @@ import { CollapsibleSection } from "@/components/collapsible-section";
   <div className="p-4 md:p-6 border-b bg-white dark:bg-gray-800">
     <h2>Modal Title</h2>
   </div>
-  
+
   {/* Scrollable Content */}
   <div className="overflow-y-auto flex-grow p-4 md:p-6 space-y-4 md:space-y-6">
     {content}
   </div>
-  
+
   {/* Sticky Footer */}
   <div className="p-4 md:p-6 border-t bg-white dark:bg-gray-800">
     <button>Submit</button>
@@ -888,8 +838,8 @@ import { CollapsibleSection } from "@/components/collapsible-section";
 
 **Performance Impact**:
 
-| Resolution | Available Space | Modal Height | Safety Margin | Status |
-|------------|-----------------|--------------|---------------|--------|
+| Resolution | Available Space | Modal Height | Safety Margin | Status  |
+| ---------- | --------------- | ------------ | ------------- | ------- |
 | 1080p      | 992px           | 918px        | +74px         | ✅ SAFE |
 | 1440p      | 1352px          | 1224px       | +128px        | ✅ SAFE |
 | 4K (2160p) | 2072px          | 1836px       | +236px        | ✅ SAFE |
@@ -977,9 +927,7 @@ if (user.role === "admin") {
 ```typescript
 // Provider classes skip moderator approval
 const isProviderLinked = args.providerId !== undefined;
-const status = isProviderLinked || isGuardianLinked || isModerator 
-  ? "approved" 
-  : "pending";
+const status = isProviderLinked || isGuardianLinked || isModerator ? "approved" : "pending";
 
 // Skip moderator notifications for provider classes
 if (!isProviderLinked && !isGuardianLinked && !isModerator && school) {
@@ -1005,9 +953,7 @@ await ctx.db.insert("classes", {
 
 ```typescript
 // Handle optional schoolId in queries
-const school = classData.schoolId 
-  ? await ctx.db.get(classData.schoolId) 
-  : null;
+const school = classData.schoolId ? await ctx.db.get(classData.schoolId) : null;
 
 // Conditional logging (teacherLogs are school-scoped)
 if (classData.schoolId) {
@@ -1041,18 +987,16 @@ else if (args.dateOfBirth && args.area) {
 
 ```typescript
 // Collect unique provider IDs
-const providerIds = [...new Set(classes.map(c => c.providerId).filter(Boolean))];
+const providerIds = [...new Set(classes.map((c) => c.providerId).filter(Boolean))];
 
 // Batch fetch (1 query instead of N)
-const providers = await Promise.all(providerIds.map(id => ctx.db.get(id)));
+const providers = await Promise.all(providerIds.map((id) => ctx.db.get(id)));
 
 // Create lookup map (O(1) access)
-const providerMap = new Map(
-  providers.filter(p => p !== null).map(p => [p!._id, p!])
-);
+const providerMap = new Map(providers.filter((p) => p !== null).map((p) => [p!._id, p!]));
 
 // Use in aggregation
-classes.forEach(c => {
+classes.forEach((c) => {
   const provider = c.providerId ? providerMap.get(c.providerId) : null;
   const school = c.schoolId ? schoolMap.get(c.schoolId) : null;
   // Use provider?.name || school?.name for display
@@ -1084,10 +1028,7 @@ const [startDate, setStartDate] = useState<number>(Date.now());
 const [endDate, setEndDate] = useState<number>(Date.now());
 
 // Read-only query gated by disclaimer + selection
-const classData = useQuery(
-  api.teacherClassCount.getClassCountForPrint,
-  acceptedDisclaimer ? { teacherId, startDate, endDate } : "skip"
-);
+const classData = useQuery(api.teacherClassCount.getClassCountForPrint, acceptedDisclaimer ? { teacherId, startDate, endDate } : "skip");
 ```
 
 Key rules:
@@ -1138,7 +1079,7 @@ export const getSummaryAnalytics = query({
       classes = await ctx.db
         .query("classes")
         .withIndex("by_teacher", q => q.eq("teacherId", args.userId))
-        .filter(q => 
+        .filter(q =>
           q.and(
             q.gte(q.field("scheduledDate"), startDate),
             q.lte(q.field("scheduledDate"), endDate)
@@ -1170,10 +1111,10 @@ export const getSummaryAnalytics = query({
     // 5. Calculate metrics
     const totalClasses = classes.length;
     const attendedClasses = classes.filter(c => c.attended).length;
-    const attendanceRate = totalClasses > 0 
-      ? Math.round((attendedClasses / totalClasses) * 100) 
+    const attendanceRate = totalClasses > 0
+      ? Math.round((attendedClasses / totalClasses) * 100)
       : 0;
-    
+
     return {
       totalClasses,
       attendanceRate,
@@ -1190,11 +1131,9 @@ export const getSummaryAnalytics = query({
 // ✅ CORRECT - Analytics modal with summary cards and data table
 export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
   const { t, language } = useLanguage();
-  
+
   // Date range state (defaults to last 30 days)
-  const [startDate, setStartDate] = useState<number>(
-    Date.now() - 30 * 24 * 60 * 60 * 1000
-  );
+  const [startDate, setStartDate] = useState<number>(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const [endDate, setEndDate] = useState<number>(Date.now());
 
   // Fetch analytics data
@@ -1213,26 +1152,12 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
   // CSV Export
   const handleExportCSV = () => {
     if (!studentPerformanceData) return;
-    
-    const headers = [
-      language === "en" ? "Student Name" : "ชื่อนักเรียน",
-      language === "en" ? "Total Classes" : "คลาสทั้งหมด",
-      language === "en" ? "Attended" : "เข้าเรียน",
-      language === "en" ? "Attendance Rate" : "อัตราเข้าเรียน",
-      language === "en" ? "Avg ClassCount" : "ClassCount เฉลี่ย",
-      language === "en" ? "Rating" : "การประเมิน"
-    ];
 
-    const rows = studentPerformanceData.map((student) => [
-      student.studentName,
-      student.totalClasses,
-      student.attendedClasses,
-      `${student.attendanceRate}%`,
-      student.avgClassCount.toFixed(2),
-      getRatingText(student.performanceRating)[language]
-    ]);
+    const headers = [language === "en" ? "Student Name" : "ชื่อนักเรียน", language === "en" ? "Total Classes" : "คลาสทั้งหมด", language === "en" ? "Attended" : "เข้าเรียน", language === "en" ? "Attendance Rate" : "อัตราเข้าเรียน", language === "en" ? "Avg ClassCount" : "ClassCount เฉลี่ย", language === "en" ? "Rating" : "การประเมิน"];
 
-    const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
+    const rows = studentPerformanceData.map((student) => [student.studentName, student.totalClasses, student.attendedClasses, `${student.attendanceRate}%`, student.avgClassCount.toFixed(2), getRatingText(student.performanceRating)[language]]);
+
+    const csvContent = [headers, ...rows].map((row) => row.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -1246,17 +1171,13 @@ export function ClassAnalytics({ userId, onClose }: ClassAnalyticsProps) {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl max-w-6xl w-full flex flex-col max-h-[85vh]">
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Total Classes, Attendance Rate, Active Students, Avg ClassCount */}
-        </div>
-        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">{/* Total Classes, Attendance Rate, Active Students, Avg ClassCount */}</div>
+
         {/* Student Performance Table */}
         <div className="overflow-y-auto flex-grow">
-          <table className="w-full">
-            {/* Color-coded ratings */}
-          </table>
+          <table className="w-full">{/* Color-coded ratings */}</table>
         </div>
-        
+
         {/* Export Button */}
         <button onClick={handleExportCSV}>
           <Download className="w-4 h-4" />
@@ -1303,14 +1224,11 @@ const [showAnalytics, setShowAnalytics] = useState(false);
 <button onClick={() => setShowAnalytics(true)}>
   <BarChart3 className="w-5 h-5" />
   {t("Analytics", "การวิเคราะห์")}
-</button>
+</button>;
 
-{showAnalytics && (
-  <ClassAnalytics 
-    userId={currentUser._id} 
-    onClose={() => setShowAnalytics(false)} 
-  />
-)}
+{
+  showAnalytics && <ClassAnalytics userId={currentUser._id} onClose={() => setShowAnalytics(false)} />;
+}
 ```
 
 **User Benefits**:
@@ -1330,13 +1248,7 @@ Multi-step guided workflows for feature discovery and onboarding. Used in the st
 ```tsx
 type WizardStep = "step1" | "step2" | "step3" | "complete";
 
-export function ExampleWizard({
-  userId,
-  userRole,
-  userSchoolId,
-  onComplete,
-  onClose,
-}: WizardProps) {
+export function ExampleWizard({ userId, userRole, userSchoolId, onComplete, onClose }: WizardProps) {
   const { t } = useLanguage();
   const [currentStep, setCurrentStep] = useState<WizardStep>("step1");
   const [selectedData, setSelectedData] = useState({});
@@ -1371,9 +1283,7 @@ export function ExampleWizard({
         </div>
 
         {/* Content - Single scroll area */}
-        <div className="overflow-y-auto flex-grow p-4 md:p-6">
-          {renderStepContent()}
-        </div>
+        <div className="overflow-y-auto flex-grow p-4 md:p-6">{renderStepContent()}</div>
 
         {/* Footer - Sticky */}
         <div className="p-4 md:p-6 border-t flex justify-between">
@@ -1486,23 +1396,23 @@ if (tab === "wizard-trigger") {
 ```typescript
 // convex/seed.ts
 export const seedDatabase = mutation({
-  args: { 
+  args: {
     clearExisting: v.optional(v.boolean()),
-    count: v.optional(v.number()) 
+    count: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     // 1. Optional cleanup
     if (args.clearExisting) {
       const existing = await ctx.db.query("images").collect();
-      await Promise.all(existing.map(doc => ctx.db.delete(doc._id)));
+      await Promise.all(existing.map((doc) => ctx.db.delete(doc._id)));
     }
 
     // 2. Generate and insert data
     const images = generateTestImages(args.count || 10);
-    await Promise.all(images.map(img => ctx.db.insert("images", img)));
-    
+    await Promise.all(images.map((img) => ctx.db.insert("images", img)));
+
     return { success: true, count: images.length };
-  }
+  },
 });
 ```
 
@@ -1521,26 +1431,26 @@ export const seedDatabase = mutation({
 
 ```tsx
 // app/page.tsx or layout component
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense } from "react";
 
 // Lazy load heavy components
-const ClassAnalytics = lazy(() => 
-  import('@/components/class-analytics').then(m => ({ 
-    default: m.ClassAnalytics 
-  }))
+const ClassAnalytics = lazy(() =>
+  import("@/components/class-analytics").then((m) => ({
+    default: m.ClassAnalytics,
+  })),
 );
 
-const StudentManagement = lazy(() => 
-  import('@/components/student-management').then(m => ({ 
-    default: m.StudentManagement 
-  }))
+const StudentManagement = lazy(() =>
+  import("@/components/student-management").then((m) => ({
+    default: m.StudentManagement,
+  })),
 );
 
 // Usage with loading fallback
 <Suspense fallback={<LoadingSpinner />}>
-  {activeTab === 'analytics' && <ClassAnalytics />}
-  {activeTab === 'students' && <StudentManagement />}
-</Suspense>
+  {activeTab === "analytics" && <ClassAnalytics />}
+  {activeTab === "students" && <StudentManagement />}
+</Suspense>;
 ```
 
 **When to lazy load**:
@@ -1593,10 +1503,10 @@ components/class-booking/
 **Orchestrator pattern** (index.tsx):
 
 ```tsx
-import { useClassBookingState } from './class-booking-state';
-import { ClassItemDisplay } from './ClassItemDisplay';
-import { DEFAULT_START_TIME, DEFAULT_END_TIME } from './constants';
-import type { BookingFormData } from './types';
+import { useClassBookingState } from "./class-booking-state";
+import { ClassItemDisplay } from "./ClassItemDisplay";
+import { DEFAULT_START_TIME, DEFAULT_END_TIME } from "./constants";
+import type { BookingFormData } from "./types";
 
 export function ClassBooking() {
   // Use shared state hook
@@ -1610,7 +1520,7 @@ export function ClassBooking() {
   // Render with modular components
   return (
     <div>
-      {classes.map(cls => (
+      {classes.map((cls) => (
         <ClassItemDisplay key={cls._id} classData={cls} />
       ))}
     </div>
@@ -1645,10 +1555,18 @@ export function ClassBooking() {
 
 ```typescript
 // Single massive file with all queries, mutations, helpers
-export const list = query({ /* ... */ });
-export const book = mutation({ /* ... */ });
-export const approve = mutation({ /* ... */ });
-export const verifyClassAccess = (ctx, classId, userId) => { /* ... */ };
+export const list = query({
+  /* ... */
+});
+export const book = mutation({
+  /* ... */
+});
+export const approve = mutation({
+  /* ... */
+});
+export const verifyClassAccess = (ctx, classId, userId) => {
+  /* ... */
+};
 // ... 24 more functions
 ```
 
@@ -1667,9 +1585,9 @@ convex/classes/
 
 ```typescript
 // Public API - maintains backward compatibility
-export * from './queries';
-export * from './mutations';
-export * from './helpers';
+export * from "./queries";
+export * from "./mutations";
+export * from "./helpers";
 
 // All existing imports still work:
 // import { book, list, verifyClassAccess } from './classes'
@@ -1680,10 +1598,18 @@ export * from './helpers';
 **queries.ts** - Read operations:
 
 ```typescript
-export const list = query({ /* ... */ });
-export const get = query({ /* ... */ });
-export const getByStatus = query({ /* ... */ });
-export const getByTeacher = query({ /* ... */ });
+export const list = query({
+  /* ... */
+});
+export const get = query({
+  /* ... */
+});
+export const getByStatus = query({
+  /* ... */
+});
+export const getByTeacher = query({
+  /* ... */
+});
 // ... 5 more queries
 ```
 
@@ -1700,9 +1626,15 @@ export const delete = mutation({ /* ... */ });
 **helpers.ts** - Shared utilities:
 
 ```typescript
-export const verifyClassAccess = async (ctx, classId, userId) => { /* ... */ };
-export const canModifyClass = async (ctx, classId, userId) => { /* ... */ };
-export const isClassOwner = (classData, userId) => { /* ... */ };
+export const verifyClassAccess = async (ctx, classId, userId) => {
+  /* ... */
+};
+export const canModifyClass = async (ctx, classId, userId) => {
+  /* ... */
+};
+export const isClassOwner = (classData, userId) => {
+  /* ... */
+};
 ```
 
 **Benefits**:
@@ -1777,7 +1709,7 @@ const SafeLazyComponent = withLazyErrorBoundary(LazyComponent, "HeavyComponent")
 // Use SafeLazyComponent directly
 <Suspense fallback={<SkeletonLoader />}>
   <SafeLazyComponent />
-</Suspense>
+</Suspense>;
 ```
 
 **When to use**:
@@ -1820,7 +1752,7 @@ const SafeLazyComponent = withLazyErrorBoundary(LazyComponent, "HeavyComponent")
     <div className="h-8 w-64 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-lg animate-shimmer" />
     <div className="h-10 w-24 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-lg animate-shimmer" />
   </div>
-  
+
   {/* Stats cards skeleton */}
   <div className="grid grid-cols-4 gap-4">
     {[...Array(4)].map((_, i) => (
@@ -1837,8 +1769,12 @@ const SafeLazyComponent = withLazyErrorBoundary(LazyComponent, "HeavyComponent")
 
 ```css
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .animate-shimmer {
@@ -1850,13 +1786,13 @@ const SafeLazyComponent = withLazyErrorBoundary(LazyComponent, "HeavyComponent")
 **Pre-built skeletons** in `components/ui/skeleton.tsx`:
 
 ```tsx
-import { 
-  Skeleton, 
-  TableRowSkeleton, 
+import {
+  Skeleton,
+  TableRowSkeleton,
   StudentCardSkeleton,
   ClassCardSkeleton,
   DashboardCardSkeleton,
-  StudentListSkeleton 
+  StudentListSkeleton
 } from "@/components/ui/skeleton";
 
 // Use pre-built patterns
@@ -1881,7 +1817,8 @@ import {
 - Infinite scroll loading
 - Modal/dialog loading
 
-**Example**: 
+**Example**:
+
 - `app/workspace-layout.tsx` - LoadingFallback component
 - `components/lazy-components.tsx` - AdminLoadingFallback
 
@@ -1889,9 +1826,11 @@ import {
 
 ```tsx
 // Automatically adapts to dark mode
-<div className="bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 
+<div
+  className="bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 
                 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 
-                rounded animate-shimmer" />
+                rounded animate-shimmer"
+/>
 ```
 
 ---

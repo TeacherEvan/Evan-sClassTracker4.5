@@ -66,9 +66,10 @@ export function BulkActionBar({
     await onDelete(Array.from(selectedIds));
   };
 
-  const countText = language === "en"
-    ? `${selectedIds.size} ${entityType}${selectedIds.size === 1 ? "" : "es"} selected`
-    : `เลือก ${selectedIds.size} รายการ`;
+  const countText =
+    language === "en"
+      ? `${selectedIds.size} ${entityType}${selectedIds.size === 1 ? "" : "es"} selected`
+      : `เลือก ${selectedIds.size} รายการ`;
 
   return (
     <>
@@ -86,7 +87,11 @@ export function BulkActionBar({
                 onClick={() => setShowConfirmApprove(true)}
                 disabled={isProcessing}
                 className={`${ACCESSIBLE_BUTTON} bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white`}
-                aria-label={language === "en" ? "Approve selected" : "อนุมัติรายการที่เลือก"}
+                aria-label={
+                  language === "en"
+                    ? "Approve selected"
+                    : "อนุมัติรายการที่เลือก"
+                }
               >
                 <Check className="w-4 h-4 mr-1.5" />
                 {language === "en" ? "Approve" : "อนุมัติ"}
@@ -96,7 +101,9 @@ export function BulkActionBar({
                 onClick={() => setShowConfirmReject(true)}
                 disabled={isProcessing}
                 className={`${ACCESSIBLE_BUTTON} bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white`}
-                aria-label={language === "en" ? "Reject selected" : "ปฏิเสธรายการที่เลือก"}
+                aria-label={
+                  language === "en" ? "Reject selected" : "ปฏิเสธรายการที่เลือก"
+                }
               >
                 <X className="w-4 h-4 mr-1.5" />
                 {language === "en" ? "Reject" : "ปฏิเสธ"}
@@ -109,7 +116,9 @@ export function BulkActionBar({
               onClick={handleDelete}
               disabled={isProcessing}
               className={`${ACCESSIBLE_BUTTON} bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white`}
-              aria-label={language === "en" ? "Delete selected" : "ลบรายการที่เลือก"}
+              aria-label={
+                language === "en" ? "Delete selected" : "ลบรายการที่เลือก"
+              }
             >
               <Trash2 className="w-4 h-4 mr-1.5" />
               {language === "en" ? "Delete" : "ลบ"}
@@ -140,7 +149,10 @@ export function BulkActionBar({
             aria-modal="true"
             aria-labelledby="approve-title"
           >
-            <h3 id="approve-title" className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h3
+              id="approve-title"
+              className="text-lg font-semibold text-gray-900 dark:text-white mb-4"
+            >
               {language === "en"
                 ? `Approve ${selectedIds.size} ${entityType}${selectedIds.size === 1 ? "" : "es"}?`
                 : `อนุมัติ ${selectedIds.size} รายการ?`}
@@ -164,8 +176,12 @@ export function BulkActionBar({
                 className={`${ACCESSIBLE_BUTTON} bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white`}
               >
                 {isProcessing
-                  ? (language === "en" ? "Processing..." : "กำลังดำเนินการ...")
-                  : (language === "en" ? "Approve" : "อนุมัติ")}
+                  ? language === "en"
+                    ? "Processing..."
+                    : "กำลังดำเนินการ..."
+                  : language === "en"
+                    ? "Approve"
+                    : "อนุมัติ"}
               </button>
             </div>
           </div>
@@ -185,7 +201,10 @@ export function BulkActionBar({
             aria-modal="true"
             aria-labelledby="reject-title"
           >
-            <h3 id="reject-title" className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <h3
+              id="reject-title"
+              className="text-lg font-semibold text-gray-900 dark:text-white mb-4"
+            >
               {language === "en"
                 ? `Reject ${selectedIds.size} ${entityType}${selectedIds.size === 1 ? "" : "es"}?`
                 : `ปฏิเสธ ${selectedIds.size} รายการ?`}
@@ -209,14 +228,17 @@ export function BulkActionBar({
                 className={`${ACCESSIBLE_BUTTON} bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white`}
               >
                 {isProcessing
-                  ? (language === "en" ? "Processing..." : "กำลังดำเนินการ...")
-                  : (language === "en" ? "Reject" : "ปฏิเสธ")}
+                  ? language === "en"
+                    ? "Processing..."
+                    : "กำลังดำเนินการ..."
+                  : language === "en"
+                    ? "Reject"
+                    : "ปฏิเสธ"}
               </button>
             </div>
           </div>
         </div>
       )}
-
     </>
   );
 }

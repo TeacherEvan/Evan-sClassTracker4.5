@@ -6,7 +6,14 @@ import { useLanguage } from "@/lib/language-context";
 import { loadUserSession } from "@/lib/session-utils";
 import type { ErrorContext } from "@/lib/toast";
 import { useMutation } from "convex/react";
-import { AlertTriangle, Bell, CheckCircle, Send, X, XCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  Bell,
+  CheckCircle,
+  Send,
+  X,
+  XCircle,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 export type ToastType = "info" | "success" | "warning" | "error";
@@ -96,7 +103,8 @@ export function DesktopNotificationToast({
       await submitErrorReport({
         userId: user?._id,
         errorType: "ui_error",
-        errorMessage: language === "en" ? notification.message : notification.messageTh,
+        errorMessage:
+          language === "en" ? notification.message : notification.messageTh,
         errorCode: notification.errorContext.errorCode,
         errorOrigin: notification.errorContext.errorOrigin,
         errorFunction: notification.errorContext.errorFunction,
@@ -173,10 +181,9 @@ export function DesktopNotificationToast({
 
   return (
     <div
-      className={`${getStyles()} ${isVisible
-        ? "opacity-100 translate-x-0"
-        : "opacity-0 translate-x-full"
-        } max-w-md p-4`}
+      className={`${getStyles()} ${
+        isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-full"
+      } max-w-md p-4`}
     >
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0 mt-0.5">{getIcon()}</div>
@@ -211,7 +218,9 @@ export function DesktopNotificationToast({
               }}
               className="mt-2 flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
             >
-              {language === "en" ? notification.action.label : notification.action.labelTh}
+              {language === "en"
+                ? notification.action.label
+                : notification.action.labelTh}
             </button>
           )}
 

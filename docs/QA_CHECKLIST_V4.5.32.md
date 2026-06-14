@@ -31,7 +31,6 @@ This document provides a comprehensive quality assurance checklist for all major
   - Expected: Class status is immediately "approved", no moderator notification
   - Actual:
   - Status: ⬜ Not Tested | ✅ Pass | ❌ Fail
-  
 - [ ] **TC1.1.2**: Teacher books regular class → Requires moderator approval
   - Expected: Class status "pending", moderator receives notification
   - Actual:
@@ -180,7 +179,7 @@ This document provides a comprehensive quality assurance checklist for all major
   - Status: ⬜ Not Tested | ✅ Pass | ❌ Fail
 
 - [ ] **TC2.2.2**: Verify completion rate calculation accuracy
-  - Expected: (Completed classes / Total classes) * 100
+  - Expected: (Completed classes / Total classes) \* 100
   - Actual:
   - Status: ⬜ Not Tested | ✅ Pass | ❌ Fail
 
@@ -718,19 +717,19 @@ This document provides a comprehensive quality assurance checklist for all major
 
 **Name**: [To be filled]  
 **Date**: [To be filled]  
-**Signature**: ___________________
+**Signature**: **\*\*\*\***\_\_\_**\*\*\*\***
 
 ### Product Owner
 
 **Name**: [To be filled]  
 **Date**: [To be filled]  
-**Signature**: ___________________
+**Signature**: **\*\*\*\***\_\_\_**\*\*\*\***
 
 ### Technical Lead
 
 **Name**: [To be filled]  
 **Date**: [To be filled]  
-**Signature**: ___________________
+**Signature**: **\*\*\*\***\_\_\_**\*\*\*\***
 
 ---
 

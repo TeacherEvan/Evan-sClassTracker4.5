@@ -1,9 +1,9 @@
 /**
  * Animation Utilities
- * 
+ *
  * Production-grade animation patterns following 2024 UX best practices.
  * All animations use performance-optimized properties (transform, opacity).
- * 
+ *
  * @module lib/animation-utils
  */
 
@@ -62,7 +62,7 @@ export const ANIMATION_CLASSES = {
 
 /**
  * Utility function to get animation class with optional inline styles for timing
- * 
+ *
  * @example
  * ```tsx
  * const { className, style } = getAnimationClass("fadeIn", { delay: 100 });
@@ -74,19 +74,19 @@ export function getAnimationClass(
   options?: {
     delay?: number;
     duration?: number;
-  }
+  },
 ): { className: string; style?: React.CSSProperties } {
   const className = ANIMATION_CLASSES[animation];
   const style: React.CSSProperties = {};
-  
+
   if (options?.delay) {
     style.animationDelay = `${options.delay}ms`;
   }
-  
+
   if (options?.duration) {
     style.animationDuration = `${options.duration}ms`;
   }
-  
+
   return {
     className,
     style: Object.keys(style).length > 0 ? style : undefined,
@@ -96,11 +96,11 @@ export function getAnimationClass(
 /**
  * Hook for staggered animations in lists
  * Returns a delay value based on the item's index
- * 
+ *
  * @example
  * ```tsx
  * items.map((item, index) => (
- *   <div 
+ *   <div
  *     key={item.id}
  *     className="animate-fadeIn"
  *     style={{ animationDelay: `${getStaggerDelay(index, 50)}ms` }}
@@ -126,7 +126,9 @@ export function measureAnimationPerformance(name: string) {
         performance.mark(`${name}-end`);
         performance.measure(name, `${name}-start`, `${name}-end`);
         const measure = performance.getEntriesByName(name)[0];
-        console.log(`Animation "${name}" took ${measure.duration.toFixed(2)}ms`);
+        console.log(
+          `Animation "${name}" took ${measure.duration.toFixed(2)}ms`,
+        );
       },
     };
   }
@@ -149,9 +151,6 @@ export function prefersReducedMotion(): boolean {
  * Conditional animation utility
  * Returns animation class only if user hasn't enabled reduced motion
  */
-export function animateIf(
-  animationClass: string,
-  fallbackClass = ""
-): string {
+export function animateIf(animationClass: string, fallbackClass = ""): string {
   return prefersReducedMotion() ? fallbackClass : animationClass;
 }

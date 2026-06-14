@@ -65,10 +65,16 @@
 
    ```typescript
    // Stored in browser localStorage - NOT in database
-   localStorage.setItem("currentUser", JSON.stringify({
-     _id, username, role, schoolId, 
-     expiresAt // 24-hour session
-   }));
+   localStorage.setItem(
+     "currentUser",
+     JSON.stringify({
+       _id,
+       username,
+       role,
+       schoolId,
+       expiresAt, // 24-hour session
+     }),
+   );
    ```
 
    - **Impact:** Users must re-login after browser crash/clear
@@ -114,7 +120,7 @@
 **Current:** Manual restore process requires:
 
 1. MongoDB access
-2. Convex dashboard access  
+2. Convex dashboard access
 3. Technical knowledge
 4. Manual data import
 
@@ -196,13 +202,7 @@ console.log("   3. Or implement custom restore mutations in Convex\n");
 
 ```typescript
 // NEW: convex/backupHelpers.ts
-export async function createIncrementalBackup(
-  ctx: MutationCtx,
-  tableName: string,
-  recordId: Id<any>,
-  operation: "insert" | "update" | "delete",
-  data: any
-) {
+export async function createIncrementalBackup(ctx: MutationCtx, tableName: string, recordId: Id<any>, operation: "insert" | "update" | "delete", data: any) {
   // Store incremental change in separate table
   await ctx.db.insert("incrementalBackups", {
     timestamp: Date.now(),
@@ -218,12 +218,12 @@ export async function createIncrementalBackup(
 export const book = mutation({
   handler: async (ctx, args) => {
     const classId = await ctx.db.insert("classes", classData);
-    
+
     // Incremental backup
     await createIncrementalBackup(ctx, "classes", classId, "insert", classData);
-    
+
     return classId;
-  }
+  },
 });
 ```
 
@@ -312,7 +312,7 @@ export const restoreFromBackup = mutation({
 // NEW: scripts/verify-backups.ts
 async function verifyBackup(backupId: string): Promise<boolean> {
   const backup = await fetchBackupFromMongoDB(backupId);
-  
+
   // 1. Checksum validation
   const expectedChecksum = backup.metadata.checksum;
   const actualChecksum = calculateChecksum(backup.data);
@@ -323,8 +323,7 @@ async function verifyBackup(backupId: string): Promise<boolean> {
 
   // 2. Record count validation
   const expectedCount = backup.metadata.totalRecords;
-  const actualCount = Object.values(backup.data)
-    .reduce((sum, records) => sum + records.length, 0);
+  const actualCount = Object.values(backup.data).reduce((sum, records) => sum + records.length, 0);
   if (expectedCount !== actualCount) {
     console.error("❌ Record count mismatch!");
     return false;
@@ -351,7 +350,7 @@ async function verifyBackup(backupId: string): Promise<boolean> {
 name: Verify Backups
 on:
   schedule:
-    - cron: '0 6 * * 0' # Every Sunday at 6 AM
+    - cron: "0 6 * * 0" # Every Sunday at 6 AM
 
 jobs:
   verify:
@@ -365,7 +364,7 @@ jobs:
         uses: 8398a7/action-slack@v3
         with:
           status: failure
-          text: '⚠️ Backup verification failed!'
+          text: "⚠️ Backup verification failed!"
 ```
 
 **Benefits:**
@@ -387,19 +386,16 @@ jobs:
 // Enhanced backup with S3 + MongoDB
 async function createRedundantBackup() {
   const backupData = await exportConvexData();
-  
+
   // 1. MongoDB Atlas (primary)
   await storeInMongoDB(backupData);
-  
+
   // 2. AWS S3 (secondary - long-term)
   await uploadToS3(backupData, `backups/${backupId}.json.gz`);
-  
+
   // 3. Local file system (tertiary - immediate access)
-  await fs.writeFile(
-    `./backups/${backupId}.json`,
-    JSON.stringify(backupData, null, 2)
-  );
-  
+  await fs.writeFile(`./backups/${backupId}.json`, JSON.stringify(backupData, null, 2));
+
   console.log("✅ Backup stored in 3 locations");
 }
 ```
@@ -428,34 +424,37 @@ async function createRedundantBackup() {
 
 ```typescript
 // NEW: app/api/cron/backup/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   // Verify Vercel Cron secret
-  const authHeader = request.headers.get('authorization');
+  const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     // Run backup via edge function
     const backupId = await createBackup();
-    
-    return NextResponse.json({ 
-      success: true, 
+
+    return NextResponse.json({
+      success: true,
       backupId,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Backup failed:', error);
-    
+    console.error("Backup failed:", error);
+
     // Send alert
-    await sendSlackAlert('⚠️ Automated backup failed!', error.message);
-    
-    return NextResponse.json({ 
-      success: false, 
-      error: error.message 
-    }, { status: 500 });
+    await sendSlackAlert("⚠️ Automated backup failed!", error.message);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message,
+      },
+      { status: 500 },
+    );
   }
 }
 ```
@@ -464,10 +463,12 @@ export async function GET(request: NextRequest) {
 
 ```json
 {
-  "crons": [{
-    "path": "/api/cron/backup",
-    "schedule": "0 0 * * *"
-  }]
+  "crons": [
+    {
+      "path": "/api/cron/backup",
+      "schedule": "0 0 * * *"
+    }
+  ]
 }
 ```
 
@@ -502,7 +503,7 @@ export const saveSessionState = mutation({
     // Upsert user preferences
     const existing = await ctx.db
       .query("userPreferences")
-      .withIndex("by_user", q => q.eq("userId", args.userId))
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .first();
 
     if (existing) {
@@ -524,18 +525,21 @@ export const saveSessionState = mutation({
 // Client-side sync
 useEffect(() => {
   if (!user) return;
-  
+
   // Sync every 5 minutes
-  const interval = setInterval(() => {
-    savePreferences({
-      userId: user._id,
-      preferences: {
-        language: localStorage.getItem("language") || "en",
-        // ... other preferences
-      },
-    });
-  }, 5 * 60 * 1000);
-  
+  const interval = setInterval(
+    () => {
+      savePreferences({
+        userId: user._id,
+        preferences: {
+          language: localStorage.getItem("language") || "en",
+          // ... other preferences
+        },
+      });
+    },
+    5 * 60 * 1000,
+  );
+
   return () => clearInterval(interval);
 }, [user]);
 ```
@@ -570,7 +574,7 @@ export const saveDraft = mutation({
       formType: args.formType,
       data: args.draftData,
       savedAt: Date.now(),
-      expiresAt: Date.now() + (7 * 24 * 60 * 60 * 1000), // 7 days
+      expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
     });
   },
 });
@@ -581,7 +585,7 @@ const { mutate: saveDraft } = useMutation(api.drafts.saveDraft);
 // Auto-save every 30 seconds
 useEffect(() => {
   if (!hasUnsavedChanges) return;
-  
+
   const timer = setTimeout(() => {
     saveDraft({
       userId: user._id,
@@ -589,7 +593,7 @@ useEffect(() => {
       draftData: formState,
     });
   }, 30000); // 30 seconds
-  
+
   return () => clearTimeout(timer);
 }, [formState, hasUnsavedChanges]);
 ```
@@ -609,29 +613,29 @@ useEffect(() => {
 
 ### Phase 1: Critical Fixes (Week 1) - 23 hours
 
-| Priority | Task | Effort | Impact |
-|----------|------|--------|--------|
-| 🔴 P0 | Implement Automated Restore (#2) | 12h | Critical |
-| ⚡ P1 | Migrate to Vercel Cron Backups (#5) | 3h | High |
-| ⚡ P1 | Implement Incremental Backups (#1) | 8h | High |
+| Priority | Task                                | Effort | Impact   |
+| -------- | ----------------------------------- | ------ | -------- |
+| 🔴 P0    | Implement Automated Restore (#2)    | 12h    | Critical |
+| ⚡ P1    | Migrate to Vercel Cron Backups (#5) | 3h     | High     |
+| ⚡ P1    | Implement Incremental Backups (#1)  | 8h     | High     |
 
 **Total:** 23 hours (~3 days)
 
 ### Phase 2: Data Protection (Week 2) - 10 hours
 
-| Priority | Task | Effort | Impact |
-|----------|------|--------|--------|
-| ⚡ P1 | Add Form Auto-Save (#7) | 6h | High |
-| 🟡 P2 | Add User Session Persistence (#6) | 4h | Medium |
+| Priority | Task                              | Effort | Impact |
+| -------- | --------------------------------- | ------ | ------ |
+| ⚡ P1    | Add Form Auto-Save (#7)           | 6h     | High   |
+| 🟡 P2    | Add User Session Persistence (#6) | 4h     | Medium |
 
 **Total:** 10 hours (~1.5 days)
 
 ### Phase 3: Reliability (Week 3) - 10 hours
 
-| Priority | Task | Effort | Impact |
-|----------|------|--------|--------|
-| 🟡 P2 | Add Backup Verification (#3) | 6h | Medium |
-| 🟡 P2 | Add Off-Site Redundancy (#4) | 4h | Medium |
+| Priority | Task                         | Effort | Impact |
+| -------- | ---------------------------- | ------ | ------ |
+| 🟡 P2    | Add Backup Verification (#3) | 6h     | Medium |
+| 🟡 P2    | Add Off-Site Redundancy (#4) | 4h     | Medium |
 
 **Total:** 10 hours (~1.5 days)
 
@@ -666,12 +670,12 @@ try {
   await createBackup();
 } catch (error) {
   // Send email alert
-  await fetch('https://api.sendgrid.com/v3/mail/send', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${process.env.SENDGRID_API_KEY}` },
+  await fetch("https://api.sendgrid.com/v3/mail/send", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${process.env.SENDGRID_API_KEY}` },
     body: JSON.stringify({
-      to: 'admin@example.com',
-      subject: '⚠️ Backup Failed',
+      to: "admin@example.com",
+      subject: "⚠️ Backup Failed",
       text: `Backup failed at ${new Date()}: ${error.message}`,
     }),
   });
@@ -684,10 +688,7 @@ try {
 
 ```typescript
 // Add to backup-to-mongodb.ts
-await fs.writeFile(
-  `./backups/latest.json`,
-  JSON.stringify(backupData, null, 2)
-);
+await fs.writeFile(`./backups/latest.json`, JSON.stringify(backupData, null, 2));
 console.log("✅ Local copy saved to ./backups/latest.json");
 ```
 
@@ -695,15 +696,15 @@ console.log("✅ Local copy saved to ./backups/latest.json");
 
 ## 📊 Risk Assessment Matrix
 
-| Risk | Current State | After Phase 1 | After Phase 3 |
-|------|--------------|---------------|---------------|
-| **24-hour data loss** | 🔴 HIGH | 🟢 LOW | 🟢 NONE |
-| **Manual restore complexity** | 🔴 CRITICAL | 🟢 LOW | 🟢 LOW |
-| **Backup corruption** | 🟡 MEDIUM | 🟡 MEDIUM | 🟢 LOW |
-| **Single point of failure** | 🟡 MEDIUM | 🟡 MEDIUM | 🟢 LOW |
-| **Machine dependency** | 🟡 MEDIUM | 🟢 LOW | 🟢 LOW |
-| **User session loss** | 🟡 MEDIUM | 🟡 MEDIUM | 🟢 LOW |
-| **Form data loss** | 🔴 HIGH | 🟢 LOW | 🟢 LOW |
+| Risk                          | Current State | After Phase 1 | After Phase 3 |
+| ----------------------------- | ------------- | ------------- | ------------- |
+| **24-hour data loss**         | 🔴 HIGH       | 🟢 LOW        | 🟢 NONE       |
+| **Manual restore complexity** | 🔴 CRITICAL   | 🟢 LOW        | 🟢 LOW        |
+| **Backup corruption**         | 🟡 MEDIUM     | 🟡 MEDIUM     | 🟢 LOW        |
+| **Single point of failure**   | 🟡 MEDIUM     | 🟡 MEDIUM     | 🟢 LOW        |
+| **Machine dependency**        | 🟡 MEDIUM     | 🟢 LOW        | 🟢 LOW        |
+| **User session loss**         | 🟡 MEDIUM     | 🟡 MEDIUM     | 🟢 LOW        |
+| **Form data loss**            | 🔴 HIGH       | 🟢 LOW        | 🟢 LOW        |
 
 **Overall Risk Reduction:** 🔴 HIGH → 🟢 LOW
 
@@ -711,13 +712,13 @@ console.log("✅ Local copy saved to ./backups/latest.json");
 
 ## 💰 Cost Analysis
 
-| Item | Current | After Optimizations | Difference |
-|------|---------|---------------------|------------|
-| MongoDB Atlas | Free (512MB) | Free (512MB) | $0 |
-| AWS S3 Storage | $0 | ~$1/month | +$1 |
-| Vercel Cron | Free (included) | Free (included) | $0 |
-| SendGrid Email | Free (100/day) | Free (100/day) | $0 |
-| **Total Monthly** | **$0** | **~$1** | **+$1** |
+| Item              | Current         | After Optimizations | Difference |
+| ----------------- | --------------- | ------------------- | ---------- |
+| MongoDB Atlas     | Free (512MB)    | Free (512MB)        | $0         |
+| AWS S3 Storage    | $0              | ~$1/month           | +$1        |
+| Vercel Cron       | Free (included) | Free (included)     | $0         |
+| SendGrid Email    | Free (100/day)  | Free (100/day)      | $0         |
+| **Total Monthly** | **$0**          | **~$1**             | **+$1**    |
 
 **ROI:** $1/month for complete disaster recovery protection = **Excellent value**
 

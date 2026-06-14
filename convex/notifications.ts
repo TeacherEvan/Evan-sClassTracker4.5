@@ -55,7 +55,7 @@ export const create = mutation({
       v.literal("info"),
       v.literal("success"),
       v.literal("warning"),
-      v.literal("error")
+      v.literal("error"),
     ),
     userId: v.optional(v.union(v.string(), v.id("users"))),
     createdBy: v.optional(v.id("users")), // Track who created
@@ -112,19 +112,19 @@ export const markAllAsRead = mutation({
   handler: async (ctx, args) => {
     const notifications = args.userId
       ? await ctx.db
-        .query("notifications")
-        .withIndex("by_user", (q) => q.eq("userId", args.userId))
-        .filter((q) => q.eq(q.field("read"), false))
-        .collect()
+          .query("notifications")
+          .withIndex("by_user", (q) => q.eq("userId", args.userId))
+          .filter((q) => q.eq(q.field("read"), false))
+          .collect()
       : await ctx.db
-        .query("notifications")
-        .withIndex("by_read", (q) => q.eq("read", false))
-        .collect();
+          .query("notifications")
+          .withIndex("by_read", (q) => q.eq("read", false))
+          .collect();
 
     await Promise.all(
       notifications.map((notification) =>
-        ctx.db.patch(notification._id, { read: true })
-      )
+        ctx.db.patch(notification._id, { read: true }),
+      ),
     );
   },
 });

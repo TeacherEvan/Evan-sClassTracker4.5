@@ -30,7 +30,7 @@ export function ModeratorListView() {
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {t(
                 "School moderators and contact information",
-                "ผู้ดูแลโรงเรียนและข้อมูลติดต่อ"
+                "ผู้ดูแลโรงเรียนและข้อมูลติดต่อ",
               )}
             </p>
           </div>
@@ -53,7 +53,7 @@ export function ModeratorListView() {
             <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
               {t(
                 "Moderators will appear here once created",
-                "ผู้ดูแลจะปรากฏที่นี่เมื่อสร้างแล้ว"
+                "ผู้ดูแลจะปรากฏที่นี่เมื่อสร้างแล้ว",
               )}
             </p>
           </div>
@@ -103,7 +103,7 @@ export function ModeratorListView() {
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     {t("Created:", "สร้างเมื่อ:")}{" "}
                     {new Date(moderator.createdAt).toLocaleDateString(
-                      language === "en" ? "en-US" : "th-TH"
+                      language === "en" ? "en-US" : "th-TH",
                     )}
                   </p>
                 </div>

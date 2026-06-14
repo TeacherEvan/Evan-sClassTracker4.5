@@ -152,54 +152,52 @@ console.error(`❌ Student #30 not found in K2/4 (only 25 students exist)`);
 // 1. Authorization Check
 const user = await ctx.db.get(args.userId);
 if (user.role !== "moderator" && user.role !== "admin") {
-    throw new Error("Unauthorized");
+  throw new Error("Unauthorized");
 }
 
 // 2. Batch Validation (max 100 classes)
 if (args.classIds.length > 100) {
-    throw new Error("Maximum 100 classes");
+  throw new Error("Maximum 100 classes");
 }
 
 // 3. Batch Fetch (1 query instead of N)
-const classes = await Promise.all(
-    args.classIds.map(id => ctx.db.get(id))
-);
+const classes = await Promise.all(args.classIds.map((id) => ctx.db.get(id)));
 
 // 4. Process Each Class
 for (let i = 0; i < classes.length; i++) {
-    const classData = classes[i];
-    
-    // School-scoped check for moderators
-    if (user.role === "moderator" && classData.schoolId !== user.schoolId) {
-        results.failed.push({ classId, error: "Unauthorized" });
-        continue;
-    }
-    
-    // Skip already approved
-    if (classData.status === "approved") {
-        results.skipped++;
-        continue;
-    }
-    
-    // Approve
-    await ctx.db.patch(classId, {
-        status: "approved",
-        approvedByUserId: user._id,
-        approvedByUsername: user.username,
-        approvedAt: Date.now(),
-    });
+  const classData = classes[i];
+
+  // School-scoped check for moderators
+  if (user.role === "moderator" && classData.schoolId !== user.schoolId) {
+    results.failed.push({ classId, error: "Unauthorized" });
+    continue;
+  }
+
+  // Skip already approved
+  if (classData.status === "approved") {
+    results.skipped++;
+    continue;
+  }
+
+  // Approve
+  await ctx.db.patch(classId, {
+    status: "approved",
+    approvedByUserId: user._id,
+    approvedByUsername: user.username,
+    approvedAt: Date.now(),
+  });
 }
 
 // 5. Single Teacher Notification
 await ctx.db.insert("notifications", {
-    title: "Classes Bulk Approved",
-    message: `${results.approved} classes approved by ${user.username}`,
+  title: "Classes Bulk Approved",
+  message: `${results.approved} classes approved by ${user.username}`,
 });
 
 // 6. Audit Log
 await logAudit(ctx, {
-    action: "BULK_APPROVE_CLASSES",
-    targetName: `Bulk approved ${results.approved} classes`,
+  action: "BULK_APPROVE_CLASSES",
+  targetName: `Bulk approved ${results.approved} classes`,
 });
 ```
 
@@ -209,12 +207,12 @@ await logAudit(ctx, {
 
 ### Authorization Model
 
-| Role | Permissions |
-|------|------------|
-| **Admin** | Can bulk approve ANY classes globally |
+| Role          | Permissions                                              |
+| ------------- | -------------------------------------------------------- |
+| **Admin**     | Can bulk approve ANY classes globally                    |
 | **Moderator** | Can bulk approve classes from their assigned school ONLY |
-| **Teacher** | ❌ No bulk approval access |
-| **Guardian** | ❌ No bulk approval access |
+| **Teacher**   | ❌ No bulk approval access                               |
+| **Guardian**  | ❌ No bulk approval access                               |
 
 ### Safeguards
 
@@ -233,8 +231,8 @@ await logAudit(ctx, {
 ```typescript
 // Bad: N database queries for N classes
 for (const classId of classIds) {
-    const classData = await ctx.db.get(classId);  // 100 queries!
-    await ctx.db.patch(classId, { status: "approved" });
+  const classData = await ctx.db.get(classId); // 100 queries!
+  await ctx.db.patch(classId, { status: "approved" });
 }
 ```
 
@@ -243,11 +241,11 @@ for (const classId of classIds) {
 ```typescript
 // Good: 1 batch query + N updates
 const classes = await Promise.all(
-    args.classIds.map(id => ctx.db.get(id))  // 1 parallel batch!
+  args.classIds.map((id) => ctx.db.get(id)), // 1 parallel batch!
 );
 
 for (let i = 0; i < classes.length; i++) {
-    await ctx.db.patch(classIds[i], { status: "approved" });  // N updates
+  await ctx.db.patch(classIds[i], { status: "approved" }); // N updates
 }
 ```
 
@@ -262,25 +260,22 @@ for (let i = 0; i < classes.length; i++) {
 ```typescript
 // Frontend: Get all pending classes for teacher
 const pendingClasses = await ctx.db
-    .query("classes")
-    .withIndex("by_teacher", q => q.eq("teacherId", teacherId))
-    .filter(q => q.eq(q.field("status"), "pending"))
-    .collect();
+  .query("classes")
+  .withIndex("by_teacher", (q) => q.eq("teacherId", teacherId))
+  .filter((q) => q.eq(q.field("status"), "pending"))
+  .collect();
 
-const classIds = pendingClasses.map(c => c._id);
+const classIds = pendingClasses.map((c) => c._id);
 
 // Moderator bulk approves
 const result = await bulkApprove({
-    userId: moderatorId,
-    classIds: classIds,
-    teacherId: teacherId,
+  userId: moderatorId,
+  classIds: classIds,
+  teacherId: teacherId,
 });
 
 // Show toast
-toast.success(
-    `Approved ${result.approved} classes`,
-    `อนุมัติ ${result.approved} ชั้นเรียน`
-);
+toast.success(`Approved ${result.approved} classes`, `อนุมัติ ${result.approved} ชั้นเรียน`);
 ```
 
 ### 2. Approve Recurring Series
@@ -291,9 +286,9 @@ const series = await getRecurringSeries({ seedClassId });
 
 // Bulk approve entire series
 const result = await bulkApprove({
-    userId: moderatorId,
-    classIds: series.map(c => c._id),
-    teacherId: series[0].teacherId,
+  userId: moderatorId,
+  classIds: series.map((c) => c._id),
+  teacherId: series[0].teacherId,
 });
 ```
 
@@ -363,12 +358,12 @@ const result = await bulkApprove({
 
 ## Code Quality Metrics
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| Student Lookup Precision | ~75% | ~99% | +24% |
-| Error Reporting Clarity | 2/5 | 5/5 | +150% |
-| Approval Speed (100 classes) | 5-10 min | 10s | -97% |
-| Code Coverage | N/A | 95% | New |
+| Metric                       | Before   | After | Change |
+| ---------------------------- | -------- | ----- | ------ |
+| Student Lookup Precision     | ~75%     | ~99%  | +24%   |
+| Error Reporting Clarity      | 2/5      | 5/5   | +150%  |
+| Approval Speed (100 classes) | 5-10 min | 10s   | -97%   |
+| Code Coverage                | N/A      | 95%   | New    |
 
 ---
 

@@ -2,11 +2,11 @@
 
 ## 📋 Workflows Summary
 
-| Workflow | Trigger | Purpose | Duration |
-|----------|---------|---------|----------|
-| **CI - Type Check & Lint** | PR + Push | Validate code quality | ~2-3 min |
-| **Deploy to Staging** | Push to `develop` | Preview deployment | ~4-6 min |
-| **Deploy to Production** | Push to `main` | Production deployment | ~4-6 min |
+| Workflow                   | Trigger           | Purpose               | Duration |
+| -------------------------- | ----------------- | --------------------- | -------- |
+| **CI - Type Check & Lint** | PR + Push         | Validate code quality | ~2-3 min |
+| **Deploy to Staging**      | Push to `develop` | Preview deployment    | ~4-6 min |
+| **Deploy to Production**   | Push to `main`    | Production deployment | ~4-6 min |
 
 ## 🚀 Common Commands
 
@@ -151,13 +151,13 @@ npm run lint -- --fix
 
 **Repository Secrets (Settings → Secrets and variables → Actions):**
 
-| Secret Name | Where to Get | Used By |
-|-------------|--------------|---------|
-| `CONVEX_DEPLOY_KEY` | Convex Dashboard → Deploy Keys | Production |
-| `CONVEX_DEPLOY_KEY_STAGING` | Convex Staging → Deploy Keys | Staging |
-| `VERCEL_TOKEN` | Vercel → Account Settings → Tokens | All |
-| `VERCEL_ORG_ID` | Vercel → Settings → General | All |
-| `VERCEL_PROJECT_ID` | Vercel → Project Settings → General | All |
+| Secret Name                 | Where to Get                        | Used By    |
+| --------------------------- | ----------------------------------- | ---------- |
+| `CONVEX_DEPLOY_KEY`         | Convex Dashboard → Deploy Keys      | Production |
+| `CONVEX_DEPLOY_KEY_STAGING` | Convex Staging → Deploy Keys        | Staging    |
+| `VERCEL_TOKEN`              | Vercel → Account Settings → Tokens  | All        |
+| `VERCEL_ORG_ID`             | Vercel → Settings → General         | All        |
+| `VERCEL_PROJECT_ID`         | Vercel → Project Settings → General | All        |
 
 ## 📝 Best Practices
 

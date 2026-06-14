@@ -3,313 +3,325 @@ import { query } from "./_generated/server";
 
 // Export classes data as CSV-ready format
 export const exportClasses = query({
-    args: {
-        teacherId: v.optional(v.id("users")),
-        schoolId: v.optional(v.id("schools")),
-        startDate: v.optional(v.number()),
-        endDate: v.optional(v.number()),
-    },
-    handler: async (ctx, args) => {
-        let classes = await ctx.db.query("classes").order("desc").collect();
+  args: {
+    teacherId: v.optional(v.id("users")),
+    schoolId: v.optional(v.id("schools")),
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    let classes = await ctx.db.query("classes").order("desc").collect();
 
-        // Apply filters
-        if (args.teacherId) {
-            classes = classes.filter((c) => c.teacherId === args.teacherId);
-        }
-        if (args.schoolId) {
-            classes = classes.filter((c) => c.schoolId === args.schoolId);
-        }
-        if (args.startDate) {
-            classes = classes.filter((c) => c.scheduledDate >= args.startDate!);
-        }
-        if (args.endDate) {
-            classes = classes.filter((c) => c.scheduledDate <= args.endDate!);
-        }
+    // Apply filters
+    if (args.teacherId) {
+      classes = classes.filter((c) => c.teacherId === args.teacherId);
+    }
+    if (args.schoolId) {
+      classes = classes.filter((c) => c.schoolId === args.schoolId);
+    }
+    if (args.startDate) {
+      classes = classes.filter((c) => c.scheduledDate >= args.startDate!);
+    }
+    if (args.endDate) {
+      classes = classes.filter((c) => c.scheduledDate <= args.endDate!);
+    }
 
-        // Populate related data
-        const exportData = await Promise.all(
-            classes.map(async (cls) => {
-                const teacher = await ctx.db.get(cls.teacherId);
-                const school = cls.schoolId ? await ctx.db.get(cls.schoolId) : null;
-                const student = await ctx.db.get(cls.studentId);
-                const location = cls.locationId ? await ctx.db.get(cls.locationId) : null;
+    // Populate related data
+    const exportData = await Promise.all(
+      classes.map(async (cls) => {
+        const teacher = await ctx.db.get(cls.teacherId);
+        const school = cls.schoolId ? await ctx.db.get(cls.schoolId) : null;
+        const student = await ctx.db.get(cls.studentId);
+        const location = cls.locationId
+          ? await ctx.db.get(cls.locationId)
+          : null;
 
-                return {
-                    classId: cls._id,
-                    teacherUsername: teacher?.username || "Unknown",
-                    schoolName: school?.name || "Unknown",
-                    schoolNameTh: school?.nameTh || "Unknown",
-                    studentName: student ? `${student.firstName} ${student.lastName}` : "Unknown",
-                    studentId: student?.studentId || "Unknown",
-                    locationName: location?.name || cls.pendingLocationName || "Unknown",
-                    locationNameTh: location?.nameTh || cls.pendingLocationNameTh || "Unknown",
-                    status: cls.status,
-                    scheduledDate: new Date(cls.scheduledDate).toISOString(),
-                    createdAt: new Date(cls.createdAt).toISOString(),
-                };
-            })
-        );
+        return {
+          classId: cls._id,
+          teacherUsername: teacher?.username || "Unknown",
+          schoolName: school?.name || "Unknown",
+          schoolNameTh: school?.nameTh || "Unknown",
+          studentName: student
+            ? `${student.firstName} ${student.lastName}`
+            : "Unknown",
+          studentId: student?.studentId || "Unknown",
+          locationName: location?.name || cls.pendingLocationName || "Unknown",
+          locationNameTh:
+            location?.nameTh || cls.pendingLocationNameTh || "Unknown",
+          status: cls.status,
+          scheduledDate: new Date(cls.scheduledDate).toISOString(),
+          createdAt: new Date(cls.createdAt).toISOString(),
+        };
+      }),
+    );
 
-        return exportData;
-    },
+    return exportData;
+  },
 });
 
 // Export students data as CSV-ready format
 export const exportStudents = query({
-    args: {
-        schoolId: v.optional(v.id("schools")),
-    },
-    handler: async (ctx, args) => {
-        const students = args.schoolId
-            ? await ctx.db
-                .query("students")
-                .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId!))
-                .collect()
-            : await ctx.db.query("students").collect();
+  args: {
+    schoolId: v.optional(v.id("schools")),
+  },
+  handler: async (ctx, args) => {
+    const students = args.schoolId
+      ? await ctx.db
+          .query("students")
+          .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId!))
+          .collect()
+      : await ctx.db.query("students").collect();
 
-        // Populate school data
-        const exportData = await Promise.all(
-            students.map(async (student) => {
-                const school = student.schoolId ? await ctx.db.get(student.schoolId) : null;
+    // Populate school data
+    const exportData = await Promise.all(
+      students.map(async (student) => {
+        const school = student.schoolId
+          ? await ctx.db.get(student.schoolId)
+          : null;
 
-                return {
-                    studentId: student.studentId,
-                    firstName: student.firstName,
-                    lastName: student.lastName,
-                    grade: student.grade,
-                    schoolName: school?.name || "N/A",
-                    schoolNameTh: school?.nameTh || "N/A",
-                    guardianName: student.guardianName || "N/A",
-                    guardianPhone: student.guardianPhone || "N/A",
-                    guardianEmail: student.guardianEmail || "N/A",
-                    createdAt: new Date(student.createdAt).toISOString(),
-                };
-            })
-        );
+        return {
+          studentId: student.studentId,
+          firstName: student.firstName,
+          lastName: student.lastName,
+          grade: student.grade,
+          schoolName: school?.name || "N/A",
+          schoolNameTh: school?.nameTh || "N/A",
+          guardianName: student.guardianName || "N/A",
+          guardianPhone: student.guardianPhone || "N/A",
+          guardianEmail: student.guardianEmail || "N/A",
+          createdAt: new Date(student.createdAt).toISOString(),
+        };
+      }),
+    );
 
-        return exportData;
-    },
+    return exportData;
+  },
 });
 
 // Export analytics data as CSV-ready format
 export const exportAnalytics = query({
-    args: {
-        schoolId: v.id("schools"),
-        startDate: v.number(),
-        endDate: v.number(),
-    },
-    handler: async (ctx, args) => {
-        // Get all classes for the school in the date range
-        const classes = await ctx.db
-            .query("classes")
-            .withIndex("by_school_and_date", (q) =>
-                q
-                    .eq("schoolId", args.schoolId)
-                    .gte("scheduledDate", args.startDate)
-                    .lte("scheduledDate", args.endDate)
-            )
-            .collect();
+  args: {
+    schoolId: v.id("schools"),
+    startDate: v.number(),
+    endDate: v.number(),
+  },
+  handler: async (ctx, args) => {
+    // Get all classes for the school in the date range
+    const classes = await ctx.db
+      .query("classes")
+      .withIndex("by_school_and_date", (q) =>
+        q
+          .eq("schoolId", args.schoolId)
+          .gte("scheduledDate", args.startDate)
+          .lte("scheduledDate", args.endDate),
+      )
+      .collect();
 
-        // Group by teacher
-        const teacherStats: Record<
-            string,
-            {
-                teacherId: string;
-                teacherUsername: string;
-                totalClasses: number;
-                approved: number;
-                pending: number;
-                rejected: number;
-                acknowledged: number;
-                approvalRate: number;
-            }
-        > = {};
+    // Group by teacher
+    const teacherStats: Record<
+      string,
+      {
+        teacherId: string;
+        teacherUsername: string;
+        totalClasses: number;
+        approved: number;
+        pending: number;
+        rejected: number;
+        acknowledged: number;
+        approvalRate: number;
+      }
+    > = {};
 
-        for (const cls of classes) {
-            const teacherId = cls.teacherId;
-            if (!teacherStats[teacherId]) {
-                const teacher = await ctx.db.get(teacherId);
-                teacherStats[teacherId] = {
-                    teacherId,
-                    teacherUsername: teacher?.username || "Unknown",
-                    totalClasses: 0,
-                    approved: 0,
-                    pending: 0,
-                    rejected: 0,
-                    acknowledged: 0,
-                    approvalRate: 0,
-                };
-            }
+    for (const cls of classes) {
+      const teacherId = cls.teacherId;
+      if (!teacherStats[teacherId]) {
+        const teacher = await ctx.db.get(teacherId);
+        teacherStats[teacherId] = {
+          teacherId,
+          teacherUsername: teacher?.username || "Unknown",
+          totalClasses: 0,
+          approved: 0,
+          pending: 0,
+          rejected: 0,
+          acknowledged: 0,
+          approvalRate: 0,
+        };
+      }
 
-            teacherStats[teacherId].totalClasses++;
-            if (cls.status === "approved") teacherStats[teacherId].approved++;
-            if (cls.status === "pending") teacherStats[teacherId].pending++;
-            if (cls.status === "rejected") teacherStats[teacherId].rejected++;
-            if (cls.status === "acknowledged") teacherStats[teacherId].acknowledged++;
-        }
+      teacherStats[teacherId].totalClasses++;
+      if (cls.status === "approved") teacherStats[teacherId].approved++;
+      if (cls.status === "pending") teacherStats[teacherId].pending++;
+      if (cls.status === "rejected") teacherStats[teacherId].rejected++;
+      if (cls.status === "acknowledged") teacherStats[teacherId].acknowledged++;
+    }
 
-        // Calculate approval rates
-        const exportData = Object.values(teacherStats).map((stat) => {
-            const processedClasses = stat.approved + stat.rejected;
-            const approvalRate =
-                processedClasses > 0 ? (stat.approved / processedClasses) * 100 : 0;
+    // Calculate approval rates
+    const exportData = Object.values(teacherStats).map((stat) => {
+      const processedClasses = stat.approved + stat.rejected;
+      const approvalRate =
+        processedClasses > 0 ? (stat.approved / processedClasses) * 100 : 0;
 
-            return {
-                ...stat,
-                approvalRate: approvalRate.toFixed(2),
-            };
-        });
+      return {
+        ...stat,
+        approvalRate: approvalRate.toFixed(2),
+      };
+    });
 
-        return exportData;
-    },
+    return exportData;
+  },
 });
 
 // Export teacher logs as CSV-ready format
 export const exportTeacherLogs = query({
-    args: {
-        userId: v.id("users"), // ID of the user requesting the export
-        teacherId: v.optional(v.id("users")),
-        schoolId: v.optional(v.id("schools")),
-        startDate: v.optional(v.number()),
-        endDate: v.optional(v.number()),
-    },
-    handler: async (ctx, args) => {
-        // Get current user
-        const user = await ctx.db.get(args.userId);
+  args: {
+    userId: v.id("users"), // ID of the user requesting the export
+    teacherId: v.optional(v.id("users")),
+    schoolId: v.optional(v.id("schools")),
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // Get current user
+    const user = await ctx.db.get(args.userId);
 
-        if (!user) {
-            throw new Error("User not found");
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Role-based access control
+    let allowedTeacherId: string | undefined = args.teacherId;
+
+    if (user.role === "teacher") {
+      // Teachers can only export their own logs
+      allowedTeacherId = user._id;
+    } else if (user.role === "moderator") {
+      // Moderators can export logs from their school
+      // If teacherId is specified, verify it belongs to their school
+      if (args.teacherId) {
+        const teacher = await ctx.db.get(args.teacherId);
+        if (teacher && teacher.schoolId !== user.schoolId) {
+          throw new Error(
+            "Unauthorized: Cannot access logs from other schools",
+          );
         }
+      }
+    }
+    // Admins can export any teacher's logs (no restrictions)
 
-        // Role-based access control
-        let allowedTeacherId: string | undefined = args.teacherId;
+    let logs = await ctx.db.query("teacherLogs").order("desc").collect();
 
-        if (user.role === "teacher") {
-            // Teachers can only export their own logs
-            allowedTeacherId = user._id;
-        } else if (user.role === "moderator") {
-            // Moderators can export logs from their school
-            // If teacherId is specified, verify it belongs to their school
-            if (args.teacherId) {
-                const teacher = await ctx.db.get(args.teacherId);
-                if (teacher && teacher.schoolId !== user.schoolId) {
-                    throw new Error("Unauthorized: Cannot access logs from other schools");
-                }
-            }
+    // Apply filters
+    if (allowedTeacherId) {
+      logs = logs.filter((log) => log.teacherId === allowedTeacherId);
+    }
+    if (args.schoolId) {
+      // Moderators can only access their school
+      if (
+        user.role === "moderator" &&
+        user.schoolId &&
+        args.schoolId !== user.schoolId
+      ) {
+        throw new Error("Unauthorized: Cannot access logs from other schools");
+      }
+      logs = logs.filter((log) => log.schoolId === args.schoolId);
+    } else if (user.role === "moderator" && user.schoolId) {
+      // If moderator and no schoolId specified, default to their school
+      logs = logs.filter((log) => log.schoolId === user.schoolId);
+    }
+    if (args.startDate) {
+      logs = logs.filter((log) => log.createdAt >= args.startDate!);
+    }
+    if (args.endDate) {
+      logs = logs.filter((log) => log.createdAt <= args.endDate!);
+    }
+
+    // Populate related data with error handling
+    const exportData = await Promise.all(
+      logs.map(async (log) => {
+        try {
+          const teacher = await ctx.db.get(log.teacherId);
+          const school = await ctx.db.get(log.schoolId);
+          const acknowledgedByUser = log.acknowledgedBy
+            ? await ctx.db.get(log.acknowledgedBy)
+            : null;
+
+          return {
+            logId: log._id,
+            teacherUsername: teacher?.username || "Unknown",
+            schoolName: school?.name || "Unknown",
+            schoolNameTh: school?.nameTh || "Unknown",
+            action: log.action,
+            actionTh: log.actionTh,
+            details: log.details,
+            detailsTh: log.detailsTh,
+            acknowledged: log.acknowledged ? "Yes" : "No",
+            acknowledgedBy: acknowledgedByUser?.username || "N/A",
+            acknowledgedAt: log.acknowledgedAt
+              ? new Date(log.acknowledgedAt).toISOString()
+              : "N/A",
+            createdAt: new Date(log.createdAt).toISOString(),
+          };
+        } catch (error) {
+          // If there's an error fetching related data, return minimal info
+          console.error(`Error processing log ${log._id}:`, error);
+          return {
+            logId: log._id,
+            teacherUsername: "Error",
+            schoolName: "Error",
+            schoolNameTh: "Error",
+            action: log.action,
+            actionTh: log.actionTh,
+            details: log.details,
+            detailsTh: log.detailsTh,
+            acknowledged: log.acknowledged ? "Yes" : "No",
+            acknowledgedBy: "N/A",
+            acknowledgedAt: "N/A",
+            createdAt: new Date(log.createdAt).toISOString(),
+          };
         }
-        // Admins can export any teacher's logs (no restrictions)
+      }),
+    );
 
-        let logs = await ctx.db.query("teacherLogs").order("desc").collect();
-
-        // Apply filters
-        if (allowedTeacherId) {
-            logs = logs.filter((log) => log.teacherId === allowedTeacherId);
-        }
-        if (args.schoolId) {
-            // Moderators can only access their school
-            if (user.role === "moderator" && user.schoolId && args.schoolId !== user.schoolId) {
-                throw new Error("Unauthorized: Cannot access logs from other schools");
-            }
-            logs = logs.filter((log) => log.schoolId === args.schoolId);
-        } else if (user.role === "moderator" && user.schoolId) {
-            // If moderator and no schoolId specified, default to their school
-            logs = logs.filter((log) => log.schoolId === user.schoolId);
-        }
-        if (args.startDate) {
-            logs = logs.filter((log) => log.createdAt >= args.startDate!);
-        }
-        if (args.endDate) {
-            logs = logs.filter((log) => log.createdAt <= args.endDate!);
-        }
-
-        // Populate related data with error handling
-        const exportData = await Promise.all(
-            logs.map(async (log) => {
-                try {
-                    const teacher = await ctx.db.get(log.teacherId);
-                    const school = await ctx.db.get(log.schoolId);
-                    const acknowledgedByUser = log.acknowledgedBy
-                        ? await ctx.db.get(log.acknowledgedBy)
-                        : null;
-
-                    return {
-                        logId: log._id,
-                        teacherUsername: teacher?.username || "Unknown",
-                        schoolName: school?.name || "Unknown",
-                        schoolNameTh: school?.nameTh || "Unknown",
-                        action: log.action,
-                        actionTh: log.actionTh,
-                        details: log.details,
-                        detailsTh: log.detailsTh,
-                        acknowledged: log.acknowledged ? "Yes" : "No",
-                        acknowledgedBy: acknowledgedByUser?.username || "N/A",
-                        acknowledgedAt: log.acknowledgedAt
-                            ? new Date(log.acknowledgedAt).toISOString()
-                            : "N/A",
-                        createdAt: new Date(log.createdAt).toISOString(),
-                    };
-                } catch (error) {
-                    // If there's an error fetching related data, return minimal info
-                    console.error(`Error processing log ${log._id}:`, error);
-                    return {
-                        logId: log._id,
-                        teacherUsername: "Error",
-                        schoolName: "Error",
-                        schoolNameTh: "Error",
-                        action: log.action,
-                        actionTh: log.actionTh,
-                        details: log.details,
-                        detailsTh: log.detailsTh,
-                        acknowledged: log.acknowledged ? "Yes" : "No",
-                        acknowledgedBy: "N/A",
-                        acknowledgedAt: "N/A",
-                        createdAt: new Date(log.createdAt).toISOString(),
-                    };
-                }
-            })
-        );
-
-        return exportData;
-    },
+    return exportData;
+  },
 });
 
 // Generic table export for backup purposes
 export const exportTable = query({
-    args: {
-        tableName: v.string(),
-    },
-    handler: async (ctx, args) => {
-        // Validate table name to prevent injection
-        const validTables = [
-            "users",
-            "schools",
-            "providers",
-            "classes",
-            "students",
-            "locations",
-            "teacherResources",
-            "messages",
-            "notifications",
-            "notificationWindows",
-            "appUpdates",
-            "postClassNotes",
-            "teacherClassCountCycles",
-            "adminContactRequests",
-            "errorReports",
-            "auditLogs",
-            "teacherLogs",
-            "sangsomEvents",
-            "sangsomDeletedStudents",
-        ];
+  args: {
+    tableName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Validate table name to prevent injection
+    const validTables = [
+      "users",
+      "schools",
+      "providers",
+      "classes",
+      "students",
+      "locations",
+      "teacherResources",
+      "messages",
+      "notifications",
+      "notificationWindows",
+      "appUpdates",
+      "postClassNotes",
+      "teacherClassCountCycles",
+      "adminContactRequests",
+      "errorReports",
+      "auditLogs",
+      "teacherLogs",
+      "sangsomEvents",
+      "sangsomDeletedStudents",
+    ];
 
-        if (!validTables.includes(args.tableName)) {
-            throw new Error(`Invalid table name: ${args.tableName}`);
-        }
+    if (!validTables.includes(args.tableName)) {
+      throw new Error(`Invalid table name: ${args.tableName}`);
+    }
 
-        // Query all records from the specified table
-        // @ts-expect-error - Dynamic table name
-        const records = await ctx.db.query(args.tableName).collect();
-        return records;
-    },
+    // Query all records from the specified table
+    // @ts-expect-error - Dynamic table name
+    const records = await ctx.db.query(args.tableName).collect();
+    return records;
+  },
 });
-

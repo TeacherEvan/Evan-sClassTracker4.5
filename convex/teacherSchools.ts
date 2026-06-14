@@ -1,10 +1,10 @@
 /**
  * Teacher-School Connection Management
- * 
+ *
  * Allows moderators to connect/disconnect teachers to their assigned school.
  * Moderators can ONLY manage connections for their own school.
  * Admins can manage connections for any school.
- * 
+ *
  * Security:
  * - Moderators are strictly school-scoped (can only connect teachers to their school)
  * - All mutations verify moderator's schoolId matches target schoolId
@@ -41,7 +41,9 @@ export const connect = mutation({
 
     // ✅ SECURITY: Only moderators and admins can connect teachers
     if (user.role !== "moderator" && user.role !== "admin") {
-      throw new Error("Unauthorized: Only moderators and admins can connect teachers to schools");
+      throw new Error(
+        "Unauthorized: Only moderators and admins can connect teachers to schools",
+      );
     }
 
     // ✅ SECURITY: Moderators can ONLY connect teachers to their own school
@@ -50,7 +52,9 @@ export const connect = mutation({
         throw new Error("Moderator must be assigned to a school");
       }
       if (user.schoolId !== args.schoolId) {
-        throw new Error("Unauthorized: Moderators can only connect teachers to their assigned school");
+        throw new Error(
+          "Unauthorized: Moderators can only connect teachers to their assigned school",
+        );
       }
     }
 
@@ -80,7 +84,7 @@ export const connect = mutation({
     const existingConnection = await ctx.db
       .query("teacherSchools")
       .withIndex("by_teacher_and_school", (q) =>
-        q.eq("teacherId", args.teacherId).eq("schoolId", args.schoolId)
+        q.eq("teacherId", args.teacherId).eq("schoolId", args.schoolId),
       )
       .first();
 
@@ -118,7 +122,11 @@ export const connect = mutation({
           sessionId: args.sessionId,
         });
 
-        return { success: true, connectionId: existingConnection._id, action: "reconnected" };
+        return {
+          success: true,
+          connectionId: existingConnection._id,
+          action: "reconnected",
+        };
       }
     }
 
@@ -181,7 +189,9 @@ export const disconnect = mutation({
 
     // ✅ SECURITY: Only moderators and admins can disconnect teachers
     if (user.role !== "moderator" && user.role !== "admin") {
-      throw new Error("Unauthorized: Only moderators and admins can disconnect teachers from schools");
+      throw new Error(
+        "Unauthorized: Only moderators and admins can disconnect teachers from schools",
+      );
     }
 
     // ✅ SECURITY: Moderators can ONLY disconnect teachers from their own school
@@ -190,7 +200,9 @@ export const disconnect = mutation({
         throw new Error("Moderator must be assigned to a school");
       }
       if (user.schoolId !== args.schoolId) {
-        throw new Error("Unauthorized: Moderators can only disconnect teachers from their assigned school");
+        throw new Error(
+          "Unauthorized: Moderators can only disconnect teachers from their assigned school",
+        );
       }
     }
 
@@ -217,13 +229,15 @@ export const disconnect = mutation({
     const connection = await ctx.db
       .query("teacherSchools")
       .withIndex("by_teacher_and_school", (q) =>
-        q.eq("teacherId", args.teacherId).eq("schoolId", args.schoolId)
+        q.eq("teacherId", args.teacherId).eq("schoolId", args.schoolId),
       )
       .filter((q) => q.eq(q.field("isActive"), true))
       .first();
 
     if (!connection) {
-      throw new Error("No active connection found between this teacher and school");
+      throw new Error(
+        "No active connection found between this teacher and school",
+      );
     }
 
     // Soft delete (deactivate) the connection
@@ -277,7 +291,9 @@ export const getTeachersForSchool = query({
 
     // ✅ SECURITY: Only moderators and admins can view teacher connections
     if (user.role !== "moderator" && user.role !== "admin") {
-      throw new Error("Unauthorized: Only moderators and admins can view teacher connections");
+      throw new Error(
+        "Unauthorized: Only moderators and admins can view teacher connections",
+      );
     }
 
     // ✅ SECURITY: Moderators can ONLY view teachers for their own school
@@ -286,7 +302,9 @@ export const getTeachersForSchool = query({
         throw new Error("Moderator must be assigned to a school");
       }
       if (user.schoolId !== args.schoolId) {
-        throw new Error("Unauthorized: Moderators can only view teachers for their assigned school");
+        throw new Error(
+          "Unauthorized: Moderators can only view teachers for their assigned school",
+        );
       }
     }
 
@@ -294,7 +312,7 @@ export const getTeachersForSchool = query({
     const connections = await ctx.db
       .query("teacherSchools")
       .withIndex("by_school_and_active", (q) =>
-        q.eq("schoolId", args.schoolId).eq("isActive", true)
+        q.eq("schoolId", args.schoolId).eq("isActive", true),
       )
       .collect();
 
@@ -309,7 +327,7 @@ export const getTeachersForSchool = query({
           connectedAt: conn.connectedAt,
           connectedBy: conn.connectedBy,
         };
-      })
+      }),
     );
 
     return teachersWithDetails;
@@ -336,7 +354,9 @@ export const getSchoolsForTeacher = query({
 
     // ✅ SECURITY: Verify authorization
     if (user.role === "teacher" && user._id !== args.teacherId) {
-      throw new Error("Unauthorized: Teachers can only view their own connections");
+      throw new Error(
+        "Unauthorized: Teachers can only view their own connections",
+      );
     }
 
     if (user.role === "moderator") {
@@ -348,13 +368,15 @@ export const getSchoolsForTeacher = query({
       const teacherInSchool = await ctx.db
         .query("teacherSchools")
         .withIndex("by_teacher_and_school", (q) =>
-          q.eq("teacherId", args.teacherId).eq("schoolId", user.schoolId!)
+          q.eq("teacherId", args.teacherId).eq("schoolId", user.schoolId!),
         )
         .filter((q) => q.eq(q.field("isActive"), true))
         .first();
 
       if (!teacherInSchool) {
-        throw new Error("Unauthorized: This teacher is not connected to your school");
+        throw new Error(
+          "Unauthorized: This teacher is not connected to your school",
+        );
       }
     }
 
@@ -362,14 +384,15 @@ export const getSchoolsForTeacher = query({
     const connections = await ctx.db
       .query("teacherSchools")
       .withIndex("by_teacher_and_active", (q) =>
-        q.eq("teacherId", args.teacherId).eq("isActive", true)
+        q.eq("teacherId", args.teacherId).eq("isActive", true),
       )
       .collect();
 
     // For moderators, filter to only show their school
-    const filteredConnections = user.role === "moderator" && user.schoolId
-      ? connections.filter(conn => conn.schoolId === user.schoolId)
-      : connections;
+    const filteredConnections =
+      user.role === "moderator" && user.schoolId
+        ? connections.filter((conn) => conn.schoolId === user.schoolId)
+        : connections;
 
     // Fetch school details for each connection
     const schoolsWithDetails = await Promise.all(
@@ -383,7 +406,7 @@ export const getSchoolsForTeacher = query({
           connectedAt: conn.connectedAt,
           connectedBy: conn.connectedBy,
         };
-      })
+      }),
     );
 
     return schoolsWithDetails;

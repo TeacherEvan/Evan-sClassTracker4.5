@@ -32,20 +32,20 @@ Successfully implemented two major feature enhancements requested by the user:
 
 ```typescript
 export const updateOwnCycle = mutation({
-    args: {
-        teacherId: v.id("users"),
-        cycleStartDate: v.number(),
-        cycleEndDate: v.number(),
-        notes: v.optional(v.string()),
-        notesTh: v.optional(v.string()),
-        confirmed: v.optional(v.boolean()),
-    },
-    handler: async (ctx, args) => {
-        // Teachers can update their own cycles
-        // Deactivates previous cycles
-        // Notifies moderators/admins automatically
-        // Includes confirmation flow for existing cycles
-    }
+  args: {
+    teacherId: v.id("users"),
+    cycleStartDate: v.number(),
+    cycleEndDate: v.number(),
+    notes: v.optional(v.string()),
+    notesTh: v.optional(v.string()),
+    confirmed: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    // Teachers can update their own cycles
+    // Deactivates previous cycles
+    // Notifies moderators/admins automatically
+    // Includes confirmation flow for existing cycles
+  },
 });
 ```
 
@@ -62,12 +62,12 @@ export const updateOwnCycle = mutation({
 
 ```typescript
 export const getClassCountForPrint = query({
-    args: { teacherId: v.id("users") },
-    handler: async (ctx, args) => {
-        // Returns formatted data optimized for print view
-        // Includes teacher info, cycle info, summary stats
-        // Detailed breakdown of all counted classes
-    }
+  args: { teacherId: v.id("users") },
+  handler: async (ctx, args) => {
+    // Returns formatted data optimized for print view
+    // Includes teacher info, cycle info, summary stats
+    // Detailed breakdown of all counted classes
+  },
 });
 ```
 
@@ -117,11 +117,7 @@ export const getClassCountForPrint = query({
 Added `userRole` prop to ClassCountModal:
 
 ```tsx
-<ClassCountModal
-  teacherId={user._id}
-  userRole={user.role}
-  onClose={() => setShowClassCountModal(false)}
-/>
+<ClassCountModal teacherId={user._id} userRole={user.role} onClose={() => setShowClassCountModal(false)} />
 ```
 
 ---
@@ -144,17 +140,14 @@ const isPastDate = args.scheduledDate < Date.now();
 let isWithinCycle = false;
 
 if (isPastDate) {
-    const activeCycle = await ctx.db
-        .query("teacherClassCountCycles")
-        .withIndex("by_teacher_and_active", (q) =>
-            q.eq("teacherId", args.teacherId).eq("isActive", true)
-        )
-        .first();
-    
-    if (activeCycle) {
-        isWithinCycle = args.scheduledDate >= activeCycle.cycleStartDate && 
-                        args.scheduledDate <= activeCycle.cycleEndDate;
-    }
+  const activeCycle = await ctx.db
+    .query("teacherClassCountCycles")
+    .withIndex("by_teacher_and_active", (q) => q.eq("teacherId", args.teacherId).eq("isActive", true))
+    .first();
+
+  if (activeCycle) {
+    isWithinCycle = args.scheduledDate >= activeCycle.cycleStartDate && args.scheduledDate <= activeCycle.cycleEndDate;
+  }
 }
 ```
 
@@ -172,7 +165,7 @@ if (isPastDate) {
 ⚠️ Past Date Class Request
 
 Teacher Evan has requested a class for John Smith at Playroom.
-⚠️ This is a PAST DATE booking (10/15/2025) within the teacher's 
+⚠️ This is a PAST DATE booking (10/15/2025) within the teacher's
 active cycle. Approval will count toward ClassCount.
 Please review and acknowledge.
 ```
@@ -459,11 +452,7 @@ Teacher adds post-class notes
 **Batch Fetching in Print Query**:
 
 ```typescript
-const [students, schools, locations] = await Promise.all([
-    Promise.all(Array.from(studentIds).map(id => ctx.db.get(id))),
-    Promise.all(Array.from(schoolIds).map(id => ctx.db.get(id))),
-    Promise.all(Array.from(locationIds).map(id => ctx.db.get(id))),
-]);
+const [students, schools, locations] = await Promise.all([Promise.all(Array.from(studentIds).map((id) => ctx.db.get(id))), Promise.all(Array.from(schoolIds).map((id) => ctx.db.get(id))), Promise.all(Array.from(locationIds).map((id) => ctx.db.get(id)))]);
 ```
 
 - Avoids N+1 queries

@@ -29,7 +29,7 @@ Edit your workflow file `.github/workflows/e2e-local-tests.yml` so jobs using Ba
 ```yaml
 jobs:
   e2e-tests:
-    runs-on: ubuntu-latest  # Change from windows-latest
+    runs-on: ubuntu-latest # Change from windows-latest
     steps:
       # your steps here ...
 ```
@@ -39,14 +39,14 @@ jobs:
 For any step with Bash syntax, set the shell:
 
 ```yaml
-    - name: Run E2E server
-      run: |
-        npm run dev &
-        echo $! > .next-pid
-        # Wait for server to be ready (max 60 seconds)
-        timeout 60 bash -c 'until curl -f http://localhost:3000 > /dev/null 2>&1; do sleep 2; done' || exit 1
-        echo "✅ Next.js dev server is ready"
-      shell: bash
+- name: Run E2E server
+  run: |
+    npm run dev &
+    echo $! > .next-pid
+    # Wait for server to be ready (max 60 seconds)
+    timeout 60 bash -c 'until curl -f http://localhost:3000 > /dev/null 2>&1; do sleep 2; done' || exit 1
+    echo "✅ Next.js dev server is ready"
+  shell: bash
 ```
 
 **Summary:**  

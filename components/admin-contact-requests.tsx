@@ -27,8 +27,13 @@ export function AdminContactRequests({
   currentUserId,
 }: AdminContactRequestsProps) {
   const { t, language } = useLanguage();
-  const [statusFilter, setStatusFilter] = useState<RequestStatus | "all">("pending");
-  const [selectedRequest, setSelectedRequest] = useState<{ _id: Id<"adminContactRequests">;[key: string]: unknown } | null>(null);
+  const [statusFilter, setStatusFilter] = useState<RequestStatus | "all">(
+    "pending",
+  );
+  const [selectedRequest, setSelectedRequest] = useState<{
+    _id: Id<"adminContactRequests">;
+    [key: string]: unknown;
+  } | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [adminNotesTh, setAdminNotesTh] = useState("");
 
@@ -41,7 +46,7 @@ export function AdminContactRequests({
     api.adminContactRequests.getAttachmentUrl,
     selectedRequest?.attachmentStorageId
       ? { storageId: selectedRequest.attachmentStorageId as Id<"_storage"> }
-      : "skip"
+      : "skip",
   );
 
   const updateStatus = useMutation(api.adminContactRequests.updateStatus);
@@ -91,7 +96,7 @@ export function AdminContactRequests({
 
       toast.success(
         "Request status updated successfully",
-        "อัปเดตสถานะคำขอสำเร็จ"
+        "อัปเดตสถานะคำขอสำเร็จ",
       );
 
       setSelectedRequest(null);
@@ -99,10 +104,7 @@ export function AdminContactRequests({
       setAdminNotesTh("");
     } catch (error) {
       console.error("Failed to update request status:", error);
-      toast.error(
-        "Failed to update request status",
-        "อัปเดตสถานะคำขอล้มเหลว"
-      );
+      toast.error("Failed to update request status", "อัปเดตสถานะคำขอล้มเหลว");
     }
   };
 
@@ -113,16 +115,10 @@ export function AdminContactRequests({
         requestId,
       });
 
-      toast.success(
-        "Request deleted successfully",
-        "ลบคำขอสำเร็จ"
-      );
+      toast.success("Request deleted successfully", "ลบคำขอสำเร็จ");
     } catch (error) {
       console.error("Failed to delete request:", error);
-      toast.error(
-        "Failed to delete request",
-        "ลบคำขอล้มเหลว"
-      );
+      toast.error("Failed to delete request", "ลบคำขอล้มเหลว");
     }
   };
 
@@ -135,21 +131,26 @@ export function AdminContactRequests({
 
         {/* Status Filter */}
         <div className="flex gap-2 overflow-x-auto">
-          {["all", "pending", "in_progress", "resolved", "dismissed"].map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status as RequestStatus | "all")}
-              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${statusFilter === status
-                ? "bg-orange-500 text-white shadow-md"
-                : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+          {["all", "pending", "in_progress", "resolved", "dismissed"].map(
+            (status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status as RequestStatus | "all")}
+                className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
+                  statusFilter === status
+                    ? "bg-orange-500 text-white shadow-md"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                 }`}
-            >
-              {t(
-                status.charAt(0).toUpperCase() + status.slice(1).replace("_", " "),
-                status.charAt(0).toUpperCase() + status.slice(1).replace("_", " ")
-              )}
-            </button>
-          ))}
+              >
+                {t(
+                  status.charAt(0).toUpperCase() +
+                    status.slice(1).replace("_", " "),
+                  status.charAt(0).toUpperCase() +
+                    status.slice(1).replace("_", " "),
+                )}
+              </button>
+            ),
+          )}
         </div>
       </div>
 
@@ -175,7 +176,7 @@ export function AdminContactRequests({
                     {getRequestTypeIcon(request.requestType)}
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                        request.status
+                        request.status,
                       )}`}
                     >
                       {request.status}
@@ -183,25 +184,31 @@ export function AdminContactRequests({
                     <span className="text-sm text-gray-500 dark:text-gray-400">
                       {new Date(request.createdAt).toLocaleDateString(
                         language === "en" ? "en-US" : "th-TH",
-                        { year: "numeric", month: "short", day: "numeric" }
+                        { year: "numeric", month: "short", day: "numeric" },
                       )}
                     </span>
                   </div>
 
                   <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">
-                    {language === "en" ? request.subject : request.subjectTh || request.subject}
+                    {language === "en"
+                      ? request.subject
+                      : request.subjectTh || request.subject}
                   </h3>
 
                   <p className="text-gray-700 dark:text-gray-300 mb-3">
-                    {language === "en" ? request.message : request.messageTh || request.message}
+                    {language === "en"
+                      ? request.message
+                      : request.messageTh || request.message}
                   </p>
 
                   <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                     <span>
-                      {t("From", "จาก")}: <strong>{request.username}</strong> ({request.userRole})
+                      {t("From", "จาก")}: <strong>{request.username}</strong> (
+                      {request.userRole})
                     </span>
                     <span>
-                      {t("Type", "ประเภท")}: {request.requestType.replace(/_/g, " ")}
+                      {t("Type", "ประเภท")}:{" "}
+                      {request.requestType.replace(/_/g, " ")}
                     </span>
                   </div>
 
@@ -211,7 +218,9 @@ export function AdminContactRequests({
                         {t("Admin Notes", "หมายเหตุผู้จัดการ")}:
                       </p>
                       <p className="text-sm text-blue-800 dark:text-blue-400">
-                        {language === "en" ? request.adminNotes : request.adminNotesTh || request.adminNotes}
+                        {language === "en"
+                          ? request.adminNotes
+                          : request.adminNotesTh || request.adminNotes}
                       </p>
                     </div>
                   )}
@@ -262,7 +271,9 @@ export function AdminContactRequests({
             </div>
 
             <div className="p-4 md:p-6 space-y-4">
-              {(selectedRequest.attachmentStorageId as Id<"_storage"> | undefined) && (
+              {(selectedRequest.attachmentStorageId as
+                | Id<"_storage">
+                | undefined) && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                     {t("Attached Screenshot", "ภาพหน้าจอที่แนบมา")}
@@ -272,11 +283,18 @@ export function AdminContactRequests({
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={getAttachmentUrl}
-                        alt={(selectedRequest.attachmentName as string) || "Screenshot"}
+                        alt={
+                          (selectedRequest.attachmentName as string) ||
+                          "Screenshot"
+                        }
                         className="w-full h-auto max-h-96 object-contain bg-gray-50 dark:bg-gray-800"
                       />
                       <div className="p-2 bg-gray-100 dark:bg-gray-700 text-xs text-gray-600 dark:text-gray-400">
-                        {selectedRequest.attachmentName as string} ({((selectedRequest.attachmentSize as number) / 1024).toFixed(1)} KB)
+                        {selectedRequest.attachmentName as string} (
+                        {(
+                          (selectedRequest.attachmentSize as number) / 1024
+                        ).toFixed(1)}{" "}
+                        KB)
                       </div>
                     </div>
                   ) : (
@@ -310,22 +328,30 @@ export function AdminContactRequests({
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                {(["in_progress", "resolved", "dismissed", "pending"] as RequestStatus[]).map((status) => (
+                {(
+                  [
+                    "in_progress",
+                    "resolved",
+                    "dismissed",
+                    "pending",
+                  ] as RequestStatus[]
+                ).map((status) => (
                   <button
                     key={status}
                     onClick={() => handleUpdateStatus(status)}
-                    className={`px-4 py-3 rounded-xl font-medium transition-all ${status === "resolved"
-                      ? "bg-green-500 hover:bg-green-600 text-white"
-                      : status === "dismissed"
-                        ? "bg-gray-500 hover:bg-gray-600 text-white"
-                        : status === "in_progress"
-                          ? "bg-blue-500 hover:bg-blue-600 text-white"
-                          : "bg-yellow-500 hover:bg-yellow-600 text-white"
-                      }`}
+                    className={`px-4 py-3 rounded-xl font-medium transition-all ${
+                      status === "resolved"
+                        ? "bg-green-500 hover:bg-green-600 text-white"
+                        : status === "dismissed"
+                          ? "bg-gray-500 hover:bg-gray-600 text-white"
+                          : status === "in_progress"
+                            ? "bg-blue-500 hover:bg-blue-600 text-white"
+                            : "bg-yellow-500 hover:bg-yellow-600 text-white"
+                    }`}
                   >
                     {t(
                       `Mark as ${status.replace("_", " ")}`,
-                      `ทำเครื่องหมายเป็น ${status.replace("_", " ")}`
+                      `ทำเครื่องหมายเป็น ${status.replace("_", " ")}`,
                     )}
                   </button>
                 ))}

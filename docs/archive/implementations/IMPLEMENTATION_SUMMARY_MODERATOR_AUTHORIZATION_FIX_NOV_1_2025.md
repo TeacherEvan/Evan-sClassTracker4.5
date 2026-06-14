@@ -11,6 +11,7 @@
 ## 🚨 CRITICAL SECURITY ISSUE
 
 **Bug Report**:
+
 > "PLease explain to me whyu mods from a certain school are allowed to book classes for other schools?"
 
 **Root Cause**: Moderators could book classes at ANY school, not just their assigned school - complete bypass of role-based access control.
@@ -123,18 +124,14 @@ if (bookingUser.role === "moderator") {
   if (!bookingUser.schoolId) {
     throw new Error("Moderator account must have an assigned school. Contact administrator.");
   }
-  
+
   // For school-based classes (not provider classes), validate school matches
   if (args.schoolId && args.schoolId !== bookingUser.schoolId) {
     const moderatorSchool = await ctx.db.get(bookingUser.schoolId);
     const attemptedSchool = await ctx.db.get(args.schoolId);
-    throw new Error(
-      `Authorization failed: Moderators can only book classes at their assigned school. ` +
-      `Your school: ${moderatorSchool?.name || "Unknown"} (${bookingUser.schoolId}). ` +
-      `Attempted school: ${attemptedSchool?.name || "Unknown"} (${args.schoolId}).`
-    );
+    throw new Error(`Authorization failed: Moderators can only book classes at their assigned school. ` + `Your school: ${moderatorSchool?.name || "Unknown"} (${bookingUser.schoolId}). ` + `Attempted school: ${attemptedSchool?.name || "Unknown"} (${args.schoolId}).`);
   }
-  
+
   // Moderators cannot create provider classes
   if (args.providerId) {
     throw new Error("Moderators cannot create provider classes. Providers are only available to teachers and admins.");
@@ -153,8 +150,8 @@ if (bookingUser.role === "moderator") {
 **Error Message Example**:
 
 ```
-Authorization failed: Moderators can only book classes at their assigned school. 
-Your school: Sangsom Kindergarten (k1xyz789abc). 
+Authorization failed: Moderators can only book classes at their assigned school.
+Your school: Sangsom Kindergarten (k1xyz789abc).
 Attempted school: Bangkok International (k2def456ghi).
 ```
 
@@ -200,12 +197,7 @@ I verified **ALL other class mutations** already use `verifyClassAccess()` helpe
 **Lines**: 15-60
 
 ```typescript
-async function verifyClassAccess(
-  ctx: MutationCtx,
-  userId: Id<"users">,
-  classData: Doc<"classes">,
-  options: { requireModeratorOrAdmin?: boolean; allowTeacherOwner?: boolean } = {}
-): Promise<void> {
+async function verifyClassAccess(ctx: MutationCtx, userId: Id<"users">, classData: Doc<"classes">, options: { requireModeratorOrAdmin?: boolean; allowTeacherOwner?: boolean } = {}): Promise<void> {
   const user = await ctx.db.get(userId);
 
   if (!user) {
@@ -224,7 +216,7 @@ async function verifyClassAccess(
     }
     return;
   }
-  
+
   // ... teacher checks
 }
 ```
@@ -258,8 +250,8 @@ async function verifyClassAccess(
 **Result**: ✅ PASS - Error thrown:
 
 ```
-Authorization failed: Moderators can only book classes at their assigned school. 
-Your school: Sangsom Kindergarten (k1xyz789abc). 
+Authorization failed: Moderators can only book classes at their assigned school.
+Your school: Sangsom Kindergarten (k1xyz789abc).
 Attempted school: Bangkok International (k2def456ghi).
 ```
 

@@ -7,7 +7,10 @@ import { useLanguage } from "@/lib/language-context";
 import { logger } from "@/lib/logger";
 import { toast } from "@/lib/toast";
 import { undoManager } from "@/lib/undo-manager";
-import { COMMON_SHORTCUTS, useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
+import {
+  COMMON_SHORTCUTS,
+  useKeyboardShortcuts,
+} from "@/lib/use-keyboard-shortcuts";
 import { useMutation, useQuery } from "convex/react";
 import { BarChart3, Calendar, MapPin, Plus, Users, X } from "lucide-react";
 import { Suspense, useMemo } from "react";
@@ -31,93 +34,158 @@ import type { ClassBookingProps } from "./types";
  * ClassBooking Component
  * Main component for booking and managing classes
  */
-export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingProps) {
+export function ClassBooking({
+  userId,
+  userRole,
+  userSchoolId,
+}: ClassBookingProps) {
   const { t, language } = useLanguage();
   const { schools } = useDataContext(); // Use shared context instead of individual query
 
   const {
     // Form Selection
-    studentId, setStudentId,
-    schoolId, setSchoolId,
-    providerId, setProviderId,
-    locationId, setLocationId,
-    selectedTeacherId, setSelectedTeacherId,
+    studentId,
+    setStudentId,
+    schoolId,
+    setSchoolId,
+    providerId,
+    setProviderId,
+    locationId,
+    setLocationId,
+    selectedTeacherId,
+    setSelectedTeacherId,
 
     // Date & Time
-    scheduledDate, setScheduledDate,
-    selectedDates, setSelectedDates,
-    selectedTime, setSelectedTime,
-    showCalendar, setShowCalendar,
-    isRecurringWeekly, setIsRecurringWeekly,
-    recurringWeeks, setRecurringWeeks,
+    scheduledDate,
+    setScheduledDate,
+    selectedDates,
+    setSelectedDates,
+    selectedTime,
+    setSelectedTime,
+    showCalendar,
+    setShowCalendar,
+    isRecurringWeekly,
+    setIsRecurringWeekly,
+    recurringWeeks,
+    setRecurringWeeks,
 
     // Location Request
-    pendingLocationName, setPendingLocationName,
-    pendingLocationNameTh, setPendingLocationNameTh,
-    requestingNewLocation, setRequestingNewLocation,
-    showProposalForm, setShowProposalForm,
+    pendingLocationName,
+    setPendingLocationName,
+    pendingLocationNameTh,
+    setPendingLocationNameTh,
+    requestingNewLocation,
+    setRequestingNewLocation,
+    showProposalForm,
+    setShowProposalForm,
 
     // UI
-    showForm, setShowForm,
-    loading, setLoading,
-    error, setError,
-    showCreateProvider, setShowCreateProvider,
+    showForm,
+    setShowForm,
+    loading,
+    setLoading,
+    error,
+    setError,
+    showCreateProvider,
+    setShowCreateProvider,
 
     // Modals
-    editingClass, setEditingClass,
-    showMergeModal, setShowMergeModal,
-    showAnalytics, setShowAnalytics,
+    editingClass,
+    setEditingClass,
+    showMergeModal,
+    setShowMergeModal,
+    showAnalytics,
+    setShowAnalytics,
 
     // Conflict Detection
-    conflictingClasses, setConflictingClasses,
-    showConflictModal, setShowConflictModal,
-    pendingBookingData, setPendingBookingData,
+    conflictingClasses,
+    setConflictingClasses,
+    showConflictModal,
+    setShowConflictModal,
+    pendingBookingData,
+    setPendingBookingData,
 
     // Optional Fields
-    duration, setDuration,
-    subject, setSubject,
-    subjectTh, setSubjectTh,
-    lessonTopic, setLessonTopic,
-    lessonTopicTh, setLessonTopicTh,
-    materials, setMaterials,
-    materialsTh, setMaterialsTh,
-    preparationNotes, setPreparationNotes,
-    preparationNotesTh, setPreparationNotesTh,
-    classType, setClassType,
+    duration,
+    setDuration,
+    subject,
+    setSubject,
+    subjectTh,
+    setSubjectTh,
+    lessonTopic,
+    setLessonTopic,
+    lessonTopicTh,
+    setLessonTopicTh,
+    materials,
+    setMaterials,
+    materialsTh,
+    setMaterialsTh,
+    preparationNotes,
+    setPreparationNotes,
+    preparationNotesTh,
+    setPreparationNotesTh,
+    classType,
+    setClassType,
 
     // Student Creation
-    creatingStudent, setCreatingStudent,
-    studentType, setStudentType,
-    newStudentNickname, setNewStudentNickname,
-    newStudentGrade, setNewStudentGrade,
-    newStudentClass, setNewStudentClass,
-    newStudentSchoolId, setNewStudentSchoolId,
-    guardianBirthDate, setGuardianBirthDate,
-    guardianArea, setGuardianArea,
-    newGuardianName, setNewGuardianName,
-    newGuardianPhone, setNewGuardianPhone,
-    guardianTitle, setGuardianTitle,
+    creatingStudent,
+    setCreatingStudent,
+    studentType,
+    setStudentType,
+    newStudentNickname,
+    setNewStudentNickname,
+    newStudentGrade,
+    setNewStudentGrade,
+    newStudentClass,
+    setNewStudentClass,
+    newStudentSchoolId,
+    setNewStudentSchoolId,
+    guardianBirthDate,
+    setGuardianBirthDate,
+    guardianArea,
+    setGuardianArea,
+    newGuardianName,
+    setNewGuardianName,
+    newGuardianPhone,
+    setNewGuardianPhone,
+    guardianTitle,
+    setGuardianTitle,
 
     // Location Creation
-    creatingLocation, setCreatingLocation,
-    newLocationName, setNewLocationName,
-    newLocationNameTh, setNewLocationNameTh,
+    creatingLocation,
+    setCreatingLocation,
+    newLocationName,
+    setNewLocationName,
+    newLocationNameTh,
+    setNewLocationNameTh,
 
     // Confirmation Dialogs
-    showDeleteConfirm, setShowDeleteConfirm,
-    pendingDeleteId, setPendingDeleteId,
-    showRejectDialog, setShowRejectDialog,
-    pendingRejectId, setPendingRejectId,
-    rejectionReason, setRejectionReason,
+    showDeleteConfirm,
+    setShowDeleteConfirm,
+    pendingDeleteId,
+    setPendingDeleteId,
+    showRejectDialog,
+    setShowRejectDialog,
+    pendingRejectId,
+    setPendingRejectId,
+    rejectionReason,
+    setRejectionReason,
 
     // Filters
-    filterTeacherId, setFilterTeacherId,
-    filterSchoolId, setFilterSchoolId,
-    filterStudentId, setFilterStudentId,
-    filterGrade, setFilterGrade,
-    filterClass, setFilterClass,
-    isFilterPanelExpanded, setIsFilterPanelExpanded,
-    expandedStudents, setExpandedStudents,
+    filterTeacherId,
+    setFilterTeacherId,
+    filterSchoolId,
+    setFilterSchoolId,
+    filterStudentId,
+    setFilterStudentId,
+    filterGrade,
+    setFilterGrade,
+    filterClass,
+    setFilterClass,
+    isFilterPanelExpanded,
+    setIsFilterPanelExpanded,
+    expandedStudents,
+    setExpandedStudents,
   } = useClassBookingState(userId, userRole, userSchoolId);
 
   // Keyboard shortcuts
@@ -137,13 +205,13 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   // Load providers for teachers/admins
   const myProviders = useQuery(
     api.providers.list,
-    (userRole === "teacher" || userRole === "admin") ? { userId } : "skip"
+    userRole === "teacher" || userRole === "admin" ? { userId } : "skip",
   );
 
   // Load students filtered by selected school - prevents cross-school contamination
   const students = useQuery(
     api.students.list,
-    schoolId ? { schoolId: schoolId as Id<"schools"> } : "skip"
+    schoolId ? { schoolId: schoolId as Id<"schools"> } : "skip",
   );
 
   // Filter classes by role: teachers see their classes, moderators see their school's classes
@@ -153,15 +221,19 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       ? { teacherId: userId }
       : userRole === "moderator" && userSchoolId
         ? { schoolId: userSchoolId }
-        : {}
+        : {},
   );
   // Query all teachers for admin/moderator to select from
   const allTeachers = useQuery(
     api.users.list,
-    (userRole === "admin" || userRole === "moderator") ? { role: "teacher" } : "skip"
+    userRole === "admin" || userRole === "moderator"
+      ? { role: "teacher" }
+      : "skip",
   );
   const bookClass = useMutation(api.classes.book);
-  const bookClassWithConflictCheck = useMutation(api.classes.bookWithConflictCheck);
+  const bookClassWithConflictCheck = useMutation(
+    api.classes.bookWithConflictCheck,
+  );
   const acknowledgeClass = useMutation(api.classes.acknowledge);
   const approveClass = useMutation(api.classes.approve);
   const rejectClass = useMutation(api.classes.reject);
@@ -170,8 +242,6 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
   const createStudent = useMutation(api.students.create);
   const addStudentToClass = useMutation(api.classes.addStudentToClass);
   const createLocation = useMutation(api.locations.create);
-
-
 
   // ✅ PERFORMANCE: Memoize conflict detection map (O(n²) → O(n) lookup)
   // Pre-compute conflicts for all classes once, then look up by ID in render
@@ -191,25 +261,37 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     if (!classes) return [];
 
     return classes.filter((classItem) => {
-      if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
-      if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
-      if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
-      if (filterGrade !== "all" && classItem.student?.grade !== filterGrade) return false;
-      if (filterClass !== "all" && classItem.student?.class !== filterClass) return false;
+      if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId)
+        return false;
+      if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId)
+        return false;
+      if (filterStudentId !== "all" && classItem.studentId !== filterStudentId)
+        return false;
+      if (filterGrade !== "all" && classItem.student?.grade !== filterGrade)
+        return false;
+      if (filterClass !== "all" && classItem.student?.class !== filterClass)
+        return false;
       return true;
     });
-  }, [classes, filterTeacherId, filterSchoolId, filterStudentId, filterGrade, filterClass]);
-
-
+  }, [
+    classes,
+    filterTeacherId,
+    filterSchoolId,
+    filterStudentId,
+    filterGrade,
+    filterClass,
+  ]);
 
   // Query locations for selected school
   const locations = useQuery(
     api.locations.list,
-    schoolId ? { schoolId: schoolId as Id<"schools">, activeOnly: true } : "skip"
+    schoolId
+      ? { schoolId: schoolId as Id<"schools">, activeOnly: true }
+      : "skip",
   );
 
   // Check if selected location is guardian type
-  const selectedLocation = locations?.find(loc => loc._id === locationId);
+  const selectedLocation = locations?.find((loc) => loc._id === locationId);
   const isGuardianLocation = selectedLocation?.type === "guardian";
 
   // Form validation
@@ -218,12 +300,16 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     // School OR Provider required (XOR enforced on submit)
     (schoolId || providerId) &&
     // Location required only for school-linked classes; providers don't use school locations
-    (schoolId ? (locationId || requestingNewLocation) : true) &&
-    (requestingNewLocation ? (pendingLocationName.trim() || pendingLocationNameTh.trim()) : true) &&
+    (schoolId ? locationId || requestingNewLocation : true) &&
+    (requestingNewLocation
+      ? pendingLocationName.trim() || pendingLocationNameTh.trim()
+      : true) &&
     (selectedDates.length > 0 || scheduledDate) &&
     (isGuardianLocation ? guardianTitle.trim() : true) &&
     // Admin/Moderator must select a teacher
-    ((userRole === "admin" || userRole === "moderator") ? selectedTeacherId : true);
+    (userRole === "admin" || userRole === "moderator"
+      ? selectedTeacherId
+      : true);
 
   const handleBookClass = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,17 +322,21 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       const hasProvider = !!providerId;
 
       if (hasSchool && hasProvider) {
-        throw new Error(t(
-          "Cannot book with both school and provider - please choose one",
-          "ไม่สามารถจองทั้งโรงเรียนและผู้ให้บริการพร้อมกัน - กรุณาเลือกอย่างใดอย่างหนึ่ง"
-        ));
+        throw new Error(
+          t(
+            "Cannot book with both school and provider - please choose one",
+            "ไม่สามารถจองทั้งโรงเรียนและผู้ให้บริการพร้อมกัน - กรุณาเลือกอย่างใดอย่างหนึ่ง",
+          ),
+        );
       }
 
       if (!hasSchool && !hasProvider) {
-        throw new Error(t(
-          "Please select either a school or a provider",
-          "กรุณาเลือกโรงเรียนหรือผู้ให้บริการ"
-        ));
+        throw new Error(
+          t(
+            "Please select either a school or a provider",
+            "กรุณาเลือกโรงเรียนหรือผู้ให้บริการ",
+          ),
+        );
       }
 
       if (!studentId) {
@@ -255,11 +345,20 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       if (!locationId && !requestingNewLocation) {
         throw new Error("Please select a location or request a new one");
       }
-      if (requestingNewLocation && !pendingLocationName.trim() && !pendingLocationNameTh.trim()) {
-        throw new Error("Please provide at least one location name (English or Thai)");
+      if (
+        requestingNewLocation &&
+        !pendingLocationName.trim() &&
+        !pendingLocationNameTh.trim()
+      ) {
+        throw new Error(
+          "Please provide at least one location name (English or Thai)",
+        );
       }
       // Admin/Moderator must select a teacher
-      if ((userRole === "admin" || userRole === "moderator") && !selectedTeacherId) {
+      if (
+        (userRole === "admin" || userRole === "moderator") &&
+        !selectedTeacherId
+      ) {
         throw new Error(t("Please select a teacher", "กรุณาเลือกครูผู้สอน"));
       }
 
@@ -268,19 +367,27 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
       if (isRecurringWeekly && (selectedDates.length > 0 || scheduledDate)) {
         // Generate recurring weekly dates
-        const baseDate = selectedDates.length > 0
-          ? new Date(selectedDates[0])
-          : new Date(scheduledDate);
+        const baseDate =
+          selectedDates.length > 0
+            ? new Date(selectedDates[0])
+            : new Date(scheduledDate);
 
-        const [hours, minutes] = selectedDates.length > 0
-          ? selectedTime.split(":")
-          : [baseDate.getHours().toString(), baseDate.getMinutes().toString()];
+        const [hours, minutes] =
+          selectedDates.length > 0
+            ? selectedTime.split(":")
+            : [
+                baseDate.getHours().toString(),
+                baseDate.getMinutes().toString(),
+              ];
 
         // Generate dates for each week
         for (let week = 0; week < recurringWeeks; week++) {
           const recurringDate = new Date(baseDate);
-          recurringDate.setDate(baseDate.getDate() + (week * 7)); // Add 7 days per week
-          recurringDate.setHours(Number.parseInt(hours), Number.parseInt(minutes));
+          recurringDate.setDate(baseDate.getDate() + week * 7); // Add 7 days per week
+          recurringDate.setHours(
+            Number.parseInt(hours),
+            Number.parseInt(minutes),
+          );
           datesToBook.push(recurringDate.getTime());
         }
       } else if (selectedDates.length > 0) {
@@ -300,10 +407,12 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
       // Validate guardian title if guardian location selected
       if (isGuardianLocation && !guardianTitle.trim()) {
-        throw new Error(t(
-          "Please enter the guardian's title (e.g., Mom, Dad, Grandma)",
-          "กรุณาระบุความสัมพันธ์กับผู้ปกครอง (เช่น แม่, พ่อ, ยาย)"
-        ));
+        throw new Error(
+          t(
+            "Please enter the guardian's title (e.g., Mom, Dad, Grandma)",
+            "กรุณาระบุความสัมพันธ์กับผู้ปกครอง (เช่น แม่, พ่อ, ยาย)",
+          ),
+        );
       }
 
       // Prepare optional fields (only include if filled)
@@ -317,49 +426,62 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       };
 
       // Determine the teacher ID (use selected teacher for admin/mod, or current user for teachers)
-      const effectiveTeacherId = (userRole === "admin" || userRole === "moderator")
-        ? (selectedTeacherId as Id<"users">)
-        : userId;
+      const effectiveTeacherId =
+        userRole === "admin" || userRole === "moderator"
+          ? (selectedTeacherId as Id<"users">)
+          : userId;
 
       // For multiple dates, book all without conflict checking (to avoid complex UX)
       if (datesToBook.length > 1) {
-        const bookingPromises = datesToBook.map(timestamp =>
+        const bookingPromises = datesToBook.map((timestamp) =>
           bookClass({
             teacherId: effectiveTeacherId,
             ...(schoolId && { schoolId: schoolId as Id<"schools"> }),
             ...(providerId && { providerId: providerId as Id<"providers"> }),
             studentId: studentId as Id<"students">,
-            locationId: locationId ? (locationId as Id<"locations">) : undefined,
-            pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
-            pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
+            locationId: locationId
+              ? (locationId as Id<"locations">)
+              : undefined,
+            pendingLocationName: requestingNewLocation
+              ? pendingLocationName
+              : undefined,
+            pendingLocationNameTh: requestingNewLocation
+              ? pendingLocationNameTh
+              : undefined,
             scheduledDate: timestamp,
             bookedByUserId: userId,
             guardianTitle: isGuardianLocation ? guardianTitle : undefined,
             ...optionalFields,
-          })
+          }),
         );
 
         await Promise.all(bookingPromises);
         toast.success(
           `Successfully booked ${datesToBook.length} classes!`,
-          `จองคลาสสำเร็จแล้ว ${datesToBook.length} คลาส!`
+          `จองคลาสสำเร็จแล้ว ${datesToBook.length} คลาส!`,
         );
       } else {
         // For single date, use conflict checking
-        const result = await bookClassWithConflictCheck({
+        const result = (await bookClassWithConflictCheck({
           teacherId: effectiveTeacherId,
           ...(schoolId && { schoolId: schoolId as Id<"schools"> }),
           ...(providerId && { providerId: providerId as Id<"providers"> }),
           studentId: studentId as Id<"students">,
           locationId: locationId ? (locationId as Id<"locations">) : undefined,
-          pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
-          pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
+          pendingLocationName: requestingNewLocation
+            ? pendingLocationName
+            : undefined,
+          pendingLocationNameTh: requestingNewLocation
+            ? pendingLocationNameTh
+            : undefined,
           scheduledDate: datesToBook[0],
           bookedByUserId: userId,
           guardianTitle: isGuardianLocation ? guardianTitle : undefined,
           ...optionalFields,
-        }) as {
-          success: boolean; hasConflicts: boolean; conflicts?: Array<{
+        })) as {
+          success: boolean;
+          hasConflicts: boolean;
+          conflicts?: Array<{
             classId: Id<"classes">;
             studentId: Id<"students">;
             studentName: string;
@@ -368,7 +490,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
             scheduledDate: number;
             status: string;
             additionalStudentIds?: Id<"students">[];
-          }>; classId?: Id<"classes">
+          }>;
+          classId?: Id<"classes">;
         };
 
         if (result.hasConflicts) {
@@ -380,25 +503,43 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
             ...(schoolId && { schoolId: schoolId as Id<"schools"> }),
             ...(providerId && { providerId: providerId as Id<"providers"> }),
             studentId: studentId as Id<"students">,
-            locationId: locationId ? (locationId as Id<"locations">) : undefined,
-            pendingLocationName: requestingNewLocation ? pendingLocationName : undefined,
-            pendingLocationNameTh: requestingNewLocation ? pendingLocationNameTh : undefined,
+            locationId: locationId
+              ? (locationId as Id<"locations">)
+              : undefined,
+            pendingLocationName: requestingNewLocation
+              ? pendingLocationName
+              : undefined,
+            pendingLocationNameTh: requestingNewLocation
+              ? pendingLocationNameTh
+              : undefined,
             scheduledDate: datesToBook[0],
             bookedByUserId: userId,
             guardianTitle: isGuardianLocation ? guardianTitle : undefined,
           });
-          setConflictingClasses((result.conflicts || []).map((c) => ({
-            _id: c.classId,
-            studentId: c.studentId,
-            additionalStudentIds: c.additionalStudentIds,
-            locationId: c.locationId,
-            scheduledDate: c.scheduledDate,
-            status: c.status,
-            student: { _id: c.studentId, firstName: c.studentName.split(" ")[0], lastName: c.studentName.split(" ")[1] || "" },
-            location: c.locationId ? { _id: c.locationId, name: c.locationName, nameTh: c.locationName } : null,
-            teacherId: effectiveTeacherId,
-            schoolId: schoolId as Id<"schools">,
-          })));
+          setConflictingClasses(
+            (result.conflicts || []).map((c) => ({
+              _id: c.classId,
+              studentId: c.studentId,
+              additionalStudentIds: c.additionalStudentIds,
+              locationId: c.locationId,
+              scheduledDate: c.scheduledDate,
+              status: c.status,
+              student: {
+                _id: c.studentId,
+                firstName: c.studentName.split(" ")[0],
+                lastName: c.studentName.split(" ")[1] || "",
+              },
+              location: c.locationId
+                ? {
+                    _id: c.locationId,
+                    name: c.locationName,
+                    nameTh: c.locationName,
+                  }
+                : null,
+              teacherId: effectiveTeacherId,
+              schoolId: schoolId as Id<"schools">,
+            })),
+          );
           setShowConflictModal(true);
           setLoading(false);
           return; // Don't proceed with booking yet
@@ -445,7 +586,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
           ? err.message
           : userRole === "moderator" || userRole === "admin"
             ? "Failed to book class"
-            : "Failed to request class"
+            : "Failed to request class",
       );
     } finally {
       setLoading(false);
@@ -458,10 +599,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
     try {
       // First, create the new class with forceCreate flag
-      const result = await bookClassWithConflictCheck({
+      const result = (await bookClassWithConflictCheck({
         ...pendingBookingData,
         forceCreate: true,
-      }) as { success: boolean; classId?: Id<"classes"> };
+      })) as { success: boolean; classId?: Id<"classes"> };
 
       if (result.success && result.classId) {
         // Then add the student to the first conflicting class instead
@@ -476,7 +617,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         // (This is a bit wasteful, but simplifies the flow)
         // Alternatively, we could use mergeClasses mutation here
 
-        toast.success("Student added to existing class!", "เพิ่มนักเรียนในคลาสที่มีอยู่แล้ว!");
+        toast.success(
+          "Student added to existing class!",
+          "เพิ่มนักเรียนในคลาสที่มีอยู่แล้ว!",
+        );
 
         // Reset states
         setPendingBookingData(null);
@@ -514,7 +658,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to merge classes",
-        err instanceof Error ? err.message : "ไม่สามารถรวมคลาสได้"
+        err instanceof Error ? err.message : "ไม่สามารถรวมคลาสได้",
       );
     }
   };
@@ -566,7 +710,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to create class",
-        err instanceof Error ? err.message : "ไม่สามารถสร้างคลาสได้"
+        err instanceof Error ? err.message : "ไม่สามารถสร้างคลาสได้",
       );
     }
   };
@@ -577,7 +721,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to acknowledge class",
-        err instanceof Error ? err.message : "ไม่สามารถรับทราบคลาสได้"
+        err instanceof Error ? err.message : "ไม่สามารถรับทราบคลาสได้",
       );
     }
   };
@@ -588,7 +732,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to approve class",
-        err instanceof Error ? err.message : "ไม่สามารถอนุมัติคลาสได้"
+        err instanceof Error ? err.message : "ไม่สามารถอนุมัติคลาสได้",
       );
     }
   };
@@ -606,14 +750,19 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     }
 
     try {
-      await rejectClass({ id: pendingRejectId, userId, reason: rejectionReason, reasonTh: rejectionReason });
+      await rejectClass({
+        id: pendingRejectId,
+        userId,
+        reason: rejectionReason,
+        reasonTh: rejectionReason,
+      });
       setShowRejectDialog(false);
       setPendingRejectId(null);
       setRejectionReason("");
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to reject class",
-        err instanceof Error ? err.message : "ไม่สามารถปฏิเสธคลาสได้"
+        err instanceof Error ? err.message : "ไม่สามารถปฏิเสธคลาสได้",
       );
     }
   };
@@ -627,7 +776,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     if (!pendingDeleteId) return;
 
     const classId = pendingDeleteId;
-    const classData = classes?.find(c => c._id === classId);
+    const classData = classes?.find((c) => c._id === classId);
 
     try {
       // Schedule deletion with undo capability
@@ -668,12 +817,16 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to delete class",
-        err instanceof Error ? err.message : "ไม่สามารถลบคลาสได้"
+        err instanceof Error ? err.message : "ไม่สามารถลบคลาสได้",
       );
     }
   };
 
-  const handleRequestCancellation = async (classId: Id<"classes">, reason: string, reasonTh: string) => {
+  const handleRequestCancellation = async (
+    classId: Id<"classes">,
+    reason: string,
+    reasonTh: string,
+  ) => {
     try {
       await requestCancellation({
         classId,
@@ -685,8 +838,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       toast.success("Cancellation request submitted", "ส่งคำขอยกเลิกแล้ว");
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to submit cancellation request",
-        err instanceof Error ? err.message : "ไม่สามารถส่งคำขอยกเลิกได้"
+        err instanceof Error
+          ? err.message
+          : "Failed to submit cancellation request",
+        err instanceof Error ? err.message : "ไม่สามารถส่งคำขอยกเลิกได้",
       );
     }
   };
@@ -700,14 +855,28 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
     if (studentType === "school") {
       // School student requires grade, class, and school
-      if (!newStudentGrade.trim() || !newStudentClass.trim() || !newStudentSchoolId) {
-        setError(t("Please fill in all student fields", "กรุณากรอกข้อมูลนักเรียนให้ครบถ้วน"));
+      if (
+        !newStudentGrade.trim() ||
+        !newStudentClass.trim() ||
+        !newStudentSchoolId
+      ) {
+        setError(
+          t(
+            "Please fill in all student fields",
+            "กรุณากรอกข้อมูลนักเรียนให้ครบถ้วน",
+          ),
+        );
         return;
       }
     } else {
       // Guardian student requires birthDate and area
       if (!guardianBirthDate.trim() || !guardianArea.trim()) {
-        setError(t("Birth date and area are required for guardian students", "ต้องกรอกวันเกิดและพื้นที่สำหรับนักเรียนของผู้ปกครอง"));
+        setError(
+          t(
+            "Birth date and area are required for guardian students",
+            "ต้องกรอกวันเกิดและพื้นที่สำหรับนักเรียนของผู้ปกครอง",
+          ),
+        );
         return;
       }
     }
@@ -715,9 +884,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
     setLoading(true);
     try {
       // Convert date string to timestamp for provider students
-      const birthTimestamp = studentType === "provider" && guardianBirthDate
-        ? new Date(guardianBirthDate).getTime()
-        : undefined;
+      const birthTimestamp =
+        studentType === "provider" && guardianBirthDate
+          ? new Date(guardianBirthDate).getTime()
+          : undefined;
 
       const newStudentData = await createStudent({
         firstName: newStudentNickname,
@@ -725,11 +895,20 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         nickname: newStudentNickname,
         grade: studentType === "school" ? newStudentGrade : "N/A", // Required field, use N/A for provider
         class: studentType === "school" ? newStudentClass : undefined,
-        schoolId: studentType === "school" ? (newStudentSchoolId as Id<"schools">) : undefined,
+        schoolId:
+          studentType === "school"
+            ? (newStudentSchoolId as Id<"schools">)
+            : undefined,
         dateOfBirth: birthTimestamp,
         area: studentType === "provider" ? guardianArea : undefined,
-        guardianName: studentType === "provider" && newGuardianName ? newGuardianName : undefined,
-        guardianPhone: studentType === "provider" && newGuardianPhone ? newGuardianPhone : undefined,
+        guardianName:
+          studentType === "provider" && newGuardianName
+            ? newGuardianName
+            : undefined,
+        guardianPhone:
+          studentType === "provider" && newGuardianPhone
+            ? newGuardianPhone
+            : undefined,
         createdBy: userId,
       });
 
@@ -752,9 +931,15 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       setNewGuardianPhone("");
 
       if (studentType === "school") {
-        toast.success("Student created successfully!", "สร้างข้อมูลนักเรียนสำเร็จ!");
+        toast.success(
+          "Student created successfully!",
+          "สร้างข้อมูลนักเรียนสำเร็จ!",
+        );
       } else {
-        toast.success("Guardian student created successfully!", "สร้างข้อมูลนักเรียนของผู้ปกครองสำเร็จ!");
+        toast.success(
+          "Guardian student created successfully!",
+          "สร้างข้อมูลนักเรียนของผู้ปกครองสำเร็จ!",
+        );
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create student");
@@ -765,7 +950,12 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
   const handleCreateLocation = async () => {
     if (!newLocationName.trim() && !newLocationNameTh.trim()) {
-      setError(t("Please enter location name in at least one language", "กรุณากรอกชื่อสถานที่อย่างน้อยหนึ่งภาษา"));
+      setError(
+        t(
+          "Please enter location name in at least one language",
+          "กรุณากรอกชื่อสถานที่อย่างน้อยหนึ่งภาษา",
+        ),
+      );
       return;
     }
 
@@ -793,7 +983,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
       toast.success("Location created successfully!", "สร้างสถานที่สำเร็จ!");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create location");
+      setError(
+        err instanceof Error ? err.message : "Failed to create location",
+      );
     } finally {
       setLoading(false);
     }
@@ -834,7 +1026,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
               </button>
             )}
             {userRole === "admin" && (
-              <CleanupUnpopulatedClassesButton userId={userId} userRole={userRole} />
+              <CleanupUnpopulatedClassesButton
+                userId={userId}
+                userRole={userRole}
+              />
             )}
           </div>
         </div>
@@ -846,8 +1041,18 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                    />
                   </svg>
                 </div>
                 <h3 className="text-lg md:text-xl font-bold text-gray-900 dark:text-white">
@@ -881,15 +1086,35 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
               >
                 {isFilterPanelExpanded ? (
                   <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 15l7-7 7 7"
+                      />
                     </svg>
                     {t("Hide Filters", "ซ่อนตัวกรอง")}
                   </>
                 ) : (
                   <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
                     </svg>
                     {t("Show Filters", "แสดงตัวกรอง")}
                   </>
@@ -911,7 +1136,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
               // Teacher filter chip
               if (filterTeacherId !== "all") {
-                const teacher = allTeachers?.find(t => t._id === filterTeacherId);
+                const teacher = allTeachers?.find(
+                  (t) => t._id === filterTeacherId,
+                );
                 if (teacher) {
                   activeChips.push({
                     key: "teacher",
@@ -920,8 +1147,18 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     value: teacher.username,
                     onRemove: () => setFilterTeacherId("all"),
                     icon: (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
                       </svg>
                     ),
                     color: "blue",
@@ -931,7 +1168,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
               // School filter chip
               if (filterSchoolId !== "all") {
-                const school = schools?.find(s => s._id === filterSchoolId);
+                const school = schools?.find((s) => s._id === filterSchoolId);
                 if (school) {
                   activeChips.push({
                     key: "school",
@@ -940,8 +1177,18 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     value: school.name,
                     onRemove: () => setFilterSchoolId("all"),
                     icon: (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
                       </svg>
                     ),
                     color: "green",
@@ -951,7 +1198,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
               // Student filter chip
               if (filterStudentId !== "all") {
-                const classWithStudent = classes.find(c => c.studentId === filterStudentId);
+                const classWithStudent = classes.find(
+                  (c) => c.studentId === filterStudentId,
+                );
                 if (classWithStudent?.student) {
                   const student = classWithStudent.student;
                   const studentName = `${student.firstName} ${student.lastName}${student.nickname ? ` (${student.nickname})` : ""}`;
@@ -962,8 +1211,18 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     value: studentName,
                     onRemove: () => setFilterStudentId("all"),
                     icon: (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                        />
                       </svg>
                     ),
                     color: "purple",
@@ -980,8 +1239,18 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   value: filterGrade,
                   onRemove: () => setFilterGrade("all"),
                   icon: (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
                     </svg>
                   ),
                   color: "orange",
@@ -997,8 +1266,18 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   value: filterClass,
                   onRemove: () => setFilterClass("all"),
                   icon: (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
                     </svg>
                   ),
                   color: "teal",
@@ -1013,7 +1292,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       role="list"
                       aria-label={t("Active filters", "ตัวกรองที่ใช้งาน")}
                     >
-                      {activeChips.map(chip => (
+                      {activeChips.map((chip) => (
                         <FilterChip
                           key={chip.key}
                           label={chip.label}
@@ -1034,7 +1313,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                           setFilterClass("all");
                         }}
                         className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full text-sm font-medium transition-colors flex items-center gap-2 min-h-[48px] md:min-h-[44px]"
-                        aria-label={t("Clear all filters", "ล้างตัวกรองทั้งหมด")}
+                        aria-label={t(
+                          "Clear all filters",
+                          "ล้างตัวกรองทั้งหมด",
+                        )}
                       >
                         <X className="w-4 h-4" />
                         {t("Clear All", "ล้างทั้งหมด")}
@@ -1053,17 +1335,33 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                 {(userRole === "admin" || userRole === "moderator") && (
                   <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
                     <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
-                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      <svg
+                        className="w-4 h-4 text-blue-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
                       </svg>
                       {t("Filter by Teacher", "กรองตามครู")}
                     </label>
                     <select
                       value={filterTeacherId}
-                      onChange={(e) => setFilterTeacherId(e.target.value as Id<"users"> | "all")}
+                      onChange={(e) =>
+                        setFilterTeacherId(
+                          e.target.value as Id<"users"> | "all",
+                        )
+                      }
                       className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
                     >
-                      <option value="all">{t("All Teachers", "ครูทั้งหมด")}</option>
+                      <option value="all">
+                        {t("All Teachers", "ครูทั้งหมด")}
+                      </option>
                       {allTeachers?.map((teacher) => (
                         <option key={teacher._id} value={teacher._id}>
                           {teacher.username}
@@ -1077,17 +1375,33 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                 {(userRole === "admin" || userRole === "teacher") && (
                   <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
                     <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
-                      <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      <svg
+                        className="w-4 h-4 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                        />
                       </svg>
                       {t("Filter by School", "กรองตามโรงเรียน")}
                     </label>
                     <select
                       value={filterSchoolId}
-                      onChange={(e) => setFilterSchoolId(e.target.value as Id<"schools"> | "all")}
+                      onChange={(e) =>
+                        setFilterSchoolId(
+                          e.target.value as Id<"schools"> | "all",
+                        )
+                      }
                       className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
                     >
-                      <option value="all">{t("All Schools", "โรงเรียนทั้งหมด")}</option>
+                      <option value="all">
+                        {t("All Schools", "โรงเรียนทั้งหมด")}
+                      </option>
                       {(() => {
                         // Admins see all schools
                         if (userRole === "admin") {
@@ -1102,11 +1416,13 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                         if (userRole === "teacher" && classes) {
                           const teacherSchoolIds = new Set(
                             classes
-                              .filter(c => c.schoolId) // Only school-linked classes
-                              .map(c => c.schoolId as Id<"schools">)
+                              .filter((c) => c.schoolId) // Only school-linked classes
+                              .map((c) => c.schoolId as Id<"schools">),
                           );
                           return schools
-                            ?.filter(school => teacherSchoolIds.has(school._id))
+                            ?.filter((school) =>
+                              teacherSchoolIds.has(school._id),
+                            )
                             .map((school) => (
                               <option key={school._id} value={school._id}>
                                 {school.name}
@@ -1123,38 +1439,68 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                 {/* Student Filter */}
                 <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
                   <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
-                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    <svg
+                      className="w-4 h-4 text-purple-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                      />
                     </svg>
                     {t("Filter by Student", "กรองตามนักเรียน")}
                   </label>
                   <select
                     value={filterStudentId}
-                    onChange={(e) => setFilterStudentId(e.target.value as Id<"students"> | "all")}
+                    onChange={(e) =>
+                      setFilterStudentId(
+                        e.target.value as Id<"students"> | "all",
+                      )
+                    }
                     className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
                   >
-                    <option value="all">{t("All Students", "นักเรียนทั้งหมด")}</option>
+                    <option value="all">
+                      {t("All Students", "นักเรียนทั้งหมด")}
+                    </option>
                     {/* Get unique students from classes */}
-                    {Array.from(new Set(classes.map(c => c.studentId)))
-                      .map(studentId => {
-                        const classWithStudent = classes.find(c => c.studentId === studentId);
+                    {Array.from(new Set(classes.map((c) => c.studentId)))
+                      .map((studentId) => {
+                        const classWithStudent = classes.find(
+                          (c) => c.studentId === studentId,
+                        );
                         return classWithStudent?.student ? (
                           <option key={studentId} value={studentId}>
-                            {classWithStudent.student.firstName} {classWithStudent.student.lastName}
-                            {classWithStudent.student.nickname ? ` (${classWithStudent.student.nickname})` : ""}
+                            {classWithStudent.student.firstName}{" "}
+                            {classWithStudent.student.lastName}
+                            {classWithStudent.student.nickname
+                              ? ` (${classWithStudent.student.nickname})`
+                              : ""}
                           </option>
                         ) : null;
                       })
-                      .filter(Boolean)
-                    }
+                      .filter(Boolean)}
                   </select>
                 </div>
 
                 {/* Grade Filter */}
                 <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
                   <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
-                    <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <svg
+                      className="w-4 h-4 text-orange-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
                     </svg>
                     {t("Filter by Grade", "กรองตามชั้น")}
                   </label>
@@ -1163,24 +1509,39 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     onChange={(e) => setFilterGrade(e.target.value)}
                     className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
                   >
-                    <option value="all">{t("All Grades", "ชั้นทั้งหมด")}</option>
+                    <option value="all">
+                      {t("All Grades", "ชั้นทั้งหมด")}
+                    </option>
                     {/* Get unique grades from classes */}
-                    {Array.from(new Set(classes.map(c => c.student?.grade).filter(Boolean)))
+                    {Array.from(
+                      new Set(
+                        classes.map((c) => c.student?.grade).filter(Boolean),
+                      ),
+                    )
                       .sort()
-                      .map(grade => (
+                      .map((grade) => (
                         <option key={grade} value={grade}>
                           {grade}
                         </option>
-                      ))
-                    }
+                      ))}
                   </select>
                 </div>
 
                 {/* Class Filter */}
                 <div className="bg-white dark:bg-gray-700 rounded-xl p-4 shadow-sm">
                   <label className="flex items-center gap-2 text-sm font-semibold mb-2 text-gray-900 dark:text-white">
-                    <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <svg
+                      className="w-4 h-4 text-teal-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
                     </svg>
                     {t("Filter by Class", "กรองตามห้อง")}
                   </label>
@@ -1189,16 +1550,21 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     onChange={(e) => setFilterClass(e.target.value)}
                     className="w-full px-4 py-3 md:py-2.5 text-base md:text-sm border-2 border-gray-300 dark:border-gray-600 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:text-white font-medium transition-all"
                   >
-                    <option value="all">{t("All Classes", "ห้องทั้งหมด")}</option>
+                    <option value="all">
+                      {t("All Classes", "ห้องทั้งหมด")}
+                    </option>
                     {/* Get unique classes from classes */}
-                    {Array.from(new Set(classes.map(c => c.student?.class).filter(Boolean)))
+                    {Array.from(
+                      new Set(
+                        classes.map((c) => c.student?.class).filter(Boolean),
+                      ),
+                    )
                       .sort()
-                      .map(cls => (
+                      .map((cls) => (
                         <option key={cls} value={cls}>
                           {cls}
                         </option>
-                      ))
-                    }
+                      ))}
                   </select>
                 </div>
 
@@ -1207,11 +1573,31 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   <div className="text-sm font-semibold text-gray-900 dark:text-white">
                     {(() => {
                       const filteredCount = classes.filter((classItem) => {
-                        if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
-                        if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
-                        if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
-                        if (filterGrade !== "all" && classItem.student?.grade !== filterGrade) return false;
-                        if (filterClass !== "all" && classItem.student?.class !== filterClass) return false;
+                        if (
+                          filterTeacherId !== "all" &&
+                          classItem.teacherId !== filterTeacherId
+                        )
+                          return false;
+                        if (
+                          filterSchoolId !== "all" &&
+                          classItem.schoolId !== filterSchoolId
+                        )
+                          return false;
+                        if (
+                          filterStudentId !== "all" &&
+                          classItem.studentId !== filterStudentId
+                        )
+                          return false;
+                        if (
+                          filterGrade !== "all" &&
+                          classItem.student?.grade !== filterGrade
+                        )
+                          return false;
+                        if (
+                          filterClass !== "all" &&
+                          classItem.student?.class !== filterClass
+                        )
+                          return false;
                         return true;
                       }).length;
                       return (
@@ -1221,8 +1607,8 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                           </span>
                           <span className="text-gray-700 dark:text-gray-300">
                             {t(
-                              `of ${classes.length} ${classes.length === 1 ? 'class' : 'classes'}`,
-                              `จาก ${classes.length} คลาส`
+                              `of ${classes.length} ${classes.length === 1 ? "class" : "classes"}`,
+                              `จาก ${classes.length} คลาส`,
                             )}
                           </span>
                         </div>
@@ -1249,8 +1635,13 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                 {userRole === "moderator" && (
                   <div className="relative">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">1</span>
-                      <label htmlFor="school" className="block text-sm font-medium">
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">
+                        1
+                      </span>
+                      <label
+                        htmlFor="school"
+                        className="block text-sm font-medium"
+                      >
                         {t("School", "โรงเรียน")} *
                       </label>
                     </div>
@@ -1267,9 +1658,13 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       required
                       disabled={true} // ✅ SECURITY FIX (Nov 1, 2025): Moderators CANNOT change school (strictly locked to their assigned school)
                     >
-                      <option value="">{t("Select a school first", "เลือกโรงเรียนก่อน")}</option>
+                      <option value="">
+                        {t("Select a school first", "เลือกโรงเรียนก่อน")}
+                      </option>
                       {schools === undefined ? (
-                        <option disabled>{t("Loading schools...", "กำลังโหลดโรงเรียน...")}</option>
+                        <option disabled>
+                          {t("Loading schools...", "กำลังโหลดโรงเรียน...")}
+                        </option>
                       ) : (
                         schools?.map((school) => (
                           <option key={school._id} value={school._id}>
@@ -1279,7 +1674,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       )}
                     </select>
                     <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-                      {t("Your school is pre-selected", "โรงเรียนของคุณถูกเลือกไว้แล้ว")}
+                      {t(
+                        "Your school is pre-selected",
+                        "โรงเรียนของคุณถูกเลือกไว้แล้ว",
+                      )}
                     </p>
                   </div>
                 )}
@@ -1288,16 +1686,25 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                 {(userRole === "teacher" || userRole === "admin") && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">1</span>
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">
+                        1
+                      </span>
                       <label className="block text-sm font-medium">
-                        {t("School OR Provider (Choose One)", "โรงเรียนหรือผู้ให้บริการ (เลือกอย่างใดอย่างหนึ่ง")} *
+                        {t(
+                          "School OR Provider (Choose One)",
+                          "โรงเรียนหรือผู้ให้บริการ (เลือกอย่างใดอย่างหนึ่ง",
+                        )}{" "}
+                        *
                       </label>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* School Dropdown */}
                       <div>
-                        <label htmlFor="school" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        <label
+                          htmlFor="school"
+                          className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                        >
                           {t("School", "โรงเรียน")}
                         </label>
                         <select
@@ -1313,9 +1720,13 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                           className="w-full px-4 py-3 md:py-2 text-base md:text-sm border-2 border-blue-500 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-600 dark:bg-gray-800 dark:border-blue-600 touch-manipulation transition-all shadow-sm"
                           disabled={loading}
                         >
-                          <option value="">{t("No School", "ไม่มีโรงเรียน")}</option>
+                          <option value="">
+                            {t("No School", "ไม่มีโรงเรียน")}
+                          </option>
                           {schools === undefined ? (
-                            <option disabled>{t("Loading schools...", "กำลังโหลดโรงเรียน...")}</option>
+                            <option disabled>
+                              {t("Loading schools...", "กำลังโหลดโรงเรียน...")}
+                            </option>
                           ) : (
                             schools?.map((school) => (
                               <option key={school._id} value={school._id}>
@@ -1328,14 +1739,19 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
                       {/* Provider Dropdown */}
                       <div>
-                        <label htmlFor="provider" className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        <label
+                          htmlFor="provider"
+                          className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1"
+                        >
                           {t("Provider", "ผู้ให้บริการ")}
                         </label>
                         <select
                           id="provider"
                           value={providerId}
                           onChange={(e) => {
-                            setProviderId(e.target.value as Id<"providers"> | "");
+                            setProviderId(
+                              e.target.value as Id<"providers"> | "",
+                            );
                             if (e.target.value) setSchoolId(""); // Clear school if provider selected
                             setLocationId(""); // Reset location
                             setStudentId(""); // Reset student
@@ -1344,13 +1760,22 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                           className="w-full px-4 py-3 md:py-2 text-base md:text-sm border-2 border-purple-500 rounded-xl md:rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-600 dark:bg-gray-800 dark:border-purple-600 touch-manipulation transition-all shadow-sm"
                           disabled={loading}
                         >
-                          <option value="">{t("No Provider", "ไม่มีผู้ให้บริการ")}</option>
+                          <option value="">
+                            {t("No Provider", "ไม่มีผู้ให้บริการ")}
+                          </option>
                           {myProviders === undefined ? (
-                            <option disabled>{t("Loading providers...", "กำลังโหลดผู้ให้บริการ...")}</option>
+                            <option disabled>
+                              {t(
+                                "Loading providers...",
+                                "กำลังโหลดผู้ให้บริการ...",
+                              )}
+                            </option>
                           ) : (
                             myProviders?.map((provider) => (
                               <option key={provider._id} value={provider._id}>
-                                {language === "th" ? provider.nameTh : provider.name}
+                                {language === "th"
+                                  ? provider.nameTh
+                                  : provider.name}
                               </option>
                             ))
                           )}
@@ -1370,7 +1795,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {t(
                         "Select either a school OR a provider (not both, not neither). At least one is required.",
-                        "เลือกโรงเรียนหรือผู้ให้บริการ (ไม่ใช่ทั้งสองอย่าง) ต้องเลือกอย่างน้อยหนึ่งอย่าง"
+                        "เลือกโรงเรียนหรือผู้ให้บริการ (ไม่ใช่ทั้งสองอย่าง) ต้องเลือกอย่างน้อยหนึ่งอย่าง",
                       )}
                     </p>
                   </div>
@@ -1378,29 +1803,39 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
                 {/* Step 2: Teacher Selection (Admin/Moderator only) */}
                 {(userRole === "admin" || userRole === "moderator") && (
-                  <div className={`relative transition-opacity ${(schoolId || providerId) ? 'opacity-100' : 'opacity-50'}`}>
+                  <div
+                    className={`relative transition-opacity ${schoolId || providerId ? "opacity-100" : "opacity-50"}`}
+                  >
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">2</span>
-                      <label htmlFor="teacher" className="block text-sm font-medium">
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">
+                        2
+                      </span>
+                      <label
+                        htmlFor="teacher"
+                        className="block text-sm font-medium"
+                      >
                         {t("Teacher", "ครูผู้สอน")} *
                       </label>
                     </div>
                     <select
                       id="teacher"
                       value={selectedTeacherId}
-                      onChange={(e) => setSelectedTeacherId(e.target.value as Id<"users"> | "")}
+                      onChange={(e) =>
+                        setSelectedTeacherId(e.target.value as Id<"users"> | "")
+                      }
                       className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-all"
                       required
                       disabled={loading || !(schoolId || providerId)}
                     >
                       <option value="">
-                        {(schoolId || providerId)
+                        {schoolId || providerId
                           ? t("Select a teacher", "เลือกครูผู้สอน")
-                          : t("Select school first", "เลือกโรงเรียนก่อน")
-                        }
+                          : t("Select school first", "เลือกโรงเรียนก่อน")}
                       </option>
                       {allTeachers === undefined ? (
-                        <option disabled>{t("Loading teachers...", "กำลังโหลดครู...")}</option>
+                        <option disabled>
+                          {t("Loading teachers...", "กำลังโหลดครู...")}
+                        </option>
                       ) : (
                         allTeachers?.map((teacher) => (
                           <option key={teacher._id} value={teacher._id}>
@@ -1412,20 +1847,27 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                       {t(
                         "Select which teacher will teach this class",
-                        "เลือกครูที่จะสอนคลาสนี้"
+                        "เลือกครูที่จะสอนคลาสนี้",
                       )}
                     </p>
                   </div>
                 )}
 
                 {/* Step 3: Student Selection - Filtered by School (or provider flow for guardian students) */}
-                <div className={`relative transition-opacity ${(schoolId || providerId) ? 'opacity-100' : 'opacity-50'}`}>
+                <div
+                  className={`relative transition-opacity ${schoolId || providerId ? "opacity-100" : "opacity-50"}`}
+                >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">
-                        {(userRole === "admin" || userRole === "moderator") ? "3" : "2"}
+                        {userRole === "admin" || userRole === "moderator"
+                          ? "3"
+                          : "2"}
                       </span>
-                      <label htmlFor="student" className="block text-sm font-medium">
+                      <label
+                        htmlFor="student"
+                        className="block text-sm font-medium"
+                      >
                         {t("Student Name", "ชื่อนักเรียน")} *
                       </label>
                     </div>
@@ -1448,8 +1890,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       >
                         {creatingStudent
                           ? t("← Select Existing", "← เลือกนักเรียนที่มีอยู่")
-                          : t("+ Create New", "+ สร้างใหม่")
-                        }
+                          : t("+ Create New", "+ สร้างใหม่")}
                       </button>
                     )}
                   </div>
@@ -1461,10 +1902,11 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                         <button
                           type="button"
                           onClick={() => setStudentType("school")}
-                          className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${studentType === "school"
-                            ? "bg-blue-600 text-white"
-                            : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                            }`}
+                          className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                            studentType === "school"
+                              ? "bg-blue-600 text-white"
+                              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          }`}
                           disabled={loading}
                         >
                           {t("School Student", "นักเรียนในโรงเรียน")}
@@ -1472,10 +1914,11 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                         <button
                           type="button"
                           onClick={() => setStudentType("provider")}
-                          className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${studentType === "provider"
-                            ? "bg-purple-600 text-white"
-                            : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
-                            }`}
+                          className={`flex-1 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                            studentType === "provider"
+                              ? "bg-purple-600 text-white"
+                              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                          }`}
                           disabled={loading}
                         >
                           {t("Guardian Student", "นักเรียนของผู้ปกครอง")}
@@ -1512,7 +1955,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
                             disabled={loading}
                           >
-                            <option value="">{t("Select Class", "เลือกคลาส")}</option>
+                            <option value="">
+                              {t("Select Class", "เลือกคลาส")}
+                            </option>
                             <option value="/1">/1</option>
                             <option value="/2">/2</option>
                             <option value="/3">/3</option>
@@ -1529,7 +1974,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                             value={schoolId}
                             disabled
                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-100 dark:bg-gray-700 dark:border-gray-600 cursor-not-allowed"
-                            placeholder={schools?.find(s => s._id === schoolId)?.name || t("School", "โรงเรียน")}
+                            placeholder={
+                              schools?.find((s) => s._id === schoolId)?.name ||
+                              t("School", "โรงเรียน")
+                            }
                           />
                         </>
                       ) : (
@@ -1538,15 +1986,22 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                             type="date"
                             placeholder={t("Birth Date *", "วันเกิด *")}
                             value={guardianBirthDate}
-                            onChange={(e) => setGuardianBirthDate(e.target.value)}
+                            onChange={(e) =>
+                              setGuardianBirthDate(e.target.value)
+                            }
                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600"
                             disabled={loading}
                           />
                           <input
                             type="text"
-                            placeholder={t("Area (e.g., BKK01, CNX02) *", "พื้นที่ (เช่น BKK01, CNX02) *")}
+                            placeholder={t(
+                              "Area (e.g., BKK01, CNX02) *",
+                              "พื้นที่ (เช่น BKK01, CNX02) *",
+                            )}
                             value={guardianArea}
-                            onChange={(e) => setGuardianArea(e.target.value.toUpperCase())}
+                            onChange={(e) =>
+                              setGuardianArea(e.target.value.toUpperCase())
+                            }
                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600"
                             disabled={loading}
                           />
@@ -1562,7 +2017,9 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                             type="tel"
                             placeholder={t("Guardian Phone", "เบอร์ผู้ปกครอง")}
                             value={newGuardianPhone}
-                            onChange={(e) => setNewGuardianPhone(e.target.value)}
+                            onChange={(e) =>
+                              setNewGuardianPhone(e.target.value)
+                            }
                             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-800 dark:border-gray-600"
                             disabled={loading}
                           />
@@ -1573,15 +2030,21 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                         type="button"
                         onClick={handleCreateStudent}
                         disabled={loading}
-                        className={`w-full px-4 py-2 text-white rounded-lg disabled:opacity-50 text-sm font-medium ${studentType === "school"
-                          ? "bg-green-600 hover:bg-green-700"
-                          : "bg-purple-600 hover:bg-purple-700"
-                          }`}
+                        className={`w-full px-4 py-2 text-white rounded-lg disabled:opacity-50 text-sm font-medium ${
+                          studentType === "school"
+                            ? "bg-green-600 hover:bg-green-700"
+                            : "bg-purple-600 hover:bg-purple-700"
+                        }`}
                       >
                         {studentType === "school"
-                          ? t("✓ Create & Select Student", "✓ สร้างและเลือกนักเรียน")
-                          : t("✓ Create Guardian Student", "✓ สร้างนักเรียนของผู้ปกครอง")
-                        }
+                          ? t(
+                              "✓ Create & Select Student",
+                              "✓ สร้างและเลือกนักเรียน",
+                            )
+                          : t(
+                              "✓ Create Guardian Student",
+                              "✓ สร้างนักเรียนของผู้ปกครอง",
+                            )}
                       </button>
                     </div>
                   ) : (
@@ -1599,12 +2062,19 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
               {/* Step 4: Location & Date Selection */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className={`transition-opacity ${schoolId ? 'opacity-100' : 'opacity-50'}`}>
+                <div
+                  className={`transition-opacity ${schoolId ? "opacity-100" : "opacity-50"}`}
+                >
                   <div className="flex items-center gap-2 mb-2">
                     <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold">
-                      {(userRole === "admin" || userRole === "moderator") ? "4" : "3"}
+                      {userRole === "admin" || userRole === "moderator"
+                        ? "4"
+                        : "3"}
                     </span>
-                    <label htmlFor="location" className="block text-sm font-medium">
+                    <label
+                      htmlFor="location"
+                      className="block text-sm font-medium"
+                    >
                       {t("Location", "สถานที่")} *
                     </label>
                   </div>
@@ -1623,7 +2093,12 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       }
                     }}
                     className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 touch-manipulation transition-all"
-                    disabled={loading || !schoolId || requestingNewLocation || creatingLocation}
+                    disabled={
+                      loading ||
+                      !schoolId ||
+                      requestingNewLocation ||
+                      creatingLocation
+                    }
                   >
                     <option value="">
                       {!schoolId
@@ -1632,12 +2107,12 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                           ? t("Loading locations...", "กำลังโหลดสถานที่...")
                           : locations.length === 0
                             ? t("No locations available", "ไม่มีสถานที่")
-                            : t("Select a location", "เลือกสถานที่")
-                      }
+                            : t("Select a location", "เลือกสถานที่")}
                     </option>
                     {locations?.map((location) => (
                       <option key={location._id} value={location._id}>
-                        {location.name} {location.type === "guardian" ? "👨‍👩‍👧" : ""}
+                        {location.name}{" "}
+                        {location.type === "guardian" ? "👨‍👩‍👧" : ""}
                       </option>
                     ))}
                   </select>
@@ -1661,8 +2136,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                         <MapPin className="w-4 h-4" />
                         {requestingNewLocation
                           ? t("Use existing location", "ใช้สถานที่ที่มีอยู่")
-                          : t("Request new location", "ขอสถานที่ใหม่")
-                        }
+                          : t("Request new location", "ขอสถานที่ใหม่")}
                       </button>
                       <span className="text-gray-300">|</span>
                       <button
@@ -1677,65 +2151,82 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   )}
 
                   {/* Create new location button (for moderators/admins) */}
-                  {(userRole === "moderator" || userRole === "admin") && schoolId && (
-                    <div className="mt-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCreatingLocation(!creatingLocation);
-                          if (!creatingLocation) {
-                            setLocationId("");
-                          } else {
-                            setNewLocationName("");
-                            setNewLocationNameTh("");
-                          }
-                        }}
-                        className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1 font-medium"
-                      >
-                        <MapPin className="w-4 h-4" />
-                        {creatingLocation
-                          ? t("← Select Existing Location", "← เลือกสถานที่ที่มีอยู่")
-                          : t("+ Create New Location", "+ สร้างสถานที่ใหม่")
-                        }
-                      </button>
-                    </div>
-                  )}
+                  {(userRole === "moderator" || userRole === "admin") &&
+                    schoolId && (
+                      <div className="mt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCreatingLocation(!creatingLocation);
+                            if (!creatingLocation) {
+                              setLocationId("");
+                            } else {
+                              setNewLocationName("");
+                              setNewLocationNameTh("");
+                            }
+                          }}
+                          className="text-sm text-blue-500 hover:text-blue-600 flex items-center gap-1 font-medium"
+                        >
+                          <MapPin className="w-4 h-4" />
+                          {creatingLocation
+                            ? t(
+                                "← Select Existing Location",
+                                "← เลือกสถานที่ที่มีอยู่",
+                              )
+                            : t("+ Create New Location", "+ สร้างสถานที่ใหม่")}
+                        </button>
+                      </div>
+                    )}
 
                   {/* Location creation form (for moderators/admins) */}
-                  {creatingLocation && schoolId && (userRole === "moderator" || userRole === "admin") && (
-                    <div className="mt-3 space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <input
-                        type="text"
-                        placeholder={t("Location Name (English) *", "ชื่อสถานที่ (อังกฤษ) *")}
-                        value={newLocationName}
-                        onChange={(e) => setNewLocationName(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                        disabled={loading}
-                      />
-                      <input
-                        type="text"
-                        placeholder={t("Location Name (Thai) *", "ชื่อสถานที่ (ไทย) *")}
-                        value={newLocationNameTh}
-                        onChange={(e) => setNewLocationNameTh(e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
-                        disabled={loading}
-                      />
-                      <button
-                        type="button"
-                        onClick={handleCreateLocation}
-                        disabled={loading}
-                        className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
-                      >
-                        {t("✓ Create & Select Location", "✓ สร้างและเลือกสถานที่")}
-                      </button>
-                    </div>
-                  )}
+                  {creatingLocation &&
+                    schoolId &&
+                    (userRole === "moderator" || userRole === "admin") && (
+                      <div className="mt-3 space-y-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <input
+                          type="text"
+                          placeholder={t(
+                            "Location Name (English) *",
+                            "ชื่อสถานที่ (อังกฤษ) *",
+                          )}
+                          value={newLocationName}
+                          onChange={(e) => setNewLocationName(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                          disabled={loading}
+                        />
+                        <input
+                          type="text"
+                          placeholder={t(
+                            "Location Name (Thai) *",
+                            "ชื่อสถานที่ (ไทย) *",
+                          )}
+                          value={newLocationNameTh}
+                          onChange={(e) => setNewLocationNameTh(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
+                          disabled={loading}
+                        />
+                        <button
+                          type="button"
+                          onClick={handleCreateLocation}
+                          disabled={loading}
+                          className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
+                        >
+                          {t(
+                            "✓ Create & Select Location",
+                            "✓ สร้างและเลือกสถานที่",
+                          )}
+                        </button>
+                      </div>
+                    )}
                 </div>
 
                 {/* Guardian Title (only if guardian location selected) */}
                 {isGuardianLocation && (
                   <div>
-                    <label htmlFor="guardianTitle" className="block text-sm font-medium mb-2">
+                    <label
+                      htmlFor="guardianTitle"
+                      className="block text-sm font-medium mb-2"
+                    >
                       {t("Guardian Title", "ความสัมพันธ์กับผู้ปกครอง")} *
                     </label>
                     <input
@@ -1743,7 +2234,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       id="guardianTitle"
                       value={guardianTitle}
                       onChange={(e) => setGuardianTitle(e.target.value)}
-                      placeholder={t("e.g. Mom, Dad, Grandma", "เช่น แม่, พ่อ, ยาย")}
+                      placeholder={t(
+                        "e.g. Mom, Dad, Grandma",
+                        "เช่น แม่, พ่อ, ยาย",
+                      )}
                       className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
                       required={isGuardianLocation}
                       disabled={loading}
@@ -1751,14 +2245,17 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
                       {t(
                         "Classes at guardian's home are auto-approved",
-                        "ชั้นเรียนที่บ้านผู้ปกครองจะได้รับการอนุมัติอัตโนมัติ"
+                        "ชั้นเรียนที่บ้านผู้ปกครองจะได้รับการอนุมัติอัตโนมัติ",
                       )}
                     </p>
                   </div>
                 )}
 
                 <div>
-                  <label htmlFor="date" className="block text-sm font-medium mb-2">
+                  <label
+                    htmlFor="date"
+                    className="block text-sm font-medium mb-2"
+                  >
                     {t("Start Date", "วันที่เริ่มต้น")}
                   </label>
 
@@ -1769,11 +2266,19 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600 text-left flex items-center justify-between"
                     disabled={loading}
                   >
-                    <span className={selectedDates.length > 0 ? "text-gray-900 dark:text-white" : "text-gray-500"}>
-                      {selectedDates.length > 0
-                        ? t(`${selectedDates.length} date${selectedDates.length > 1 ? 's' : ''} selected`, `เลือกแล้ว ${selectedDates.length} วัน`)
-                        : t("Select date(s)", "เลือกวันที่")
+                    <span
+                      className={
+                        selectedDates.length > 0
+                          ? "text-gray-900 dark:text-white"
+                          : "text-gray-500"
                       }
+                    >
+                      {selectedDates.length > 0
+                        ? t(
+                            `${selectedDates.length} date${selectedDates.length > 1 ? "s" : ""} selected`,
+                            `เลือกแล้ว ${selectedDates.length} วัน`,
+                          )
+                        : t("Select date(s)", "เลือกวันที่")}
                     </span>
                     <Calendar className="w-5 h-5 text-gray-400" />
                   </button>
@@ -1789,7 +2294,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     }}
                     className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 touch-manipulation transition-shadow mt-2"
                     disabled={loading}
-                    placeholder={t("Or enter date/time manually", "หรือกรอกวันที่/เวลาด้วยตนเอง")}
+                    placeholder={t(
+                      "Or enter date/time manually",
+                      "หรือกรอกวันที่/เวลาด้วยตนเอง",
+                    )}
                   />
                 </div>
               </div>
@@ -1806,10 +2314,17 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   {/* Time picker for all selected dates */}
                   {selectedDates.length > 0 && (
                     <div className="mt-4">
-                      <label htmlFor="time" className="block text-sm font-medium mb-2">
+                      <label
+                        htmlFor="time"
+                        className="block text-sm font-medium mb-2"
+                      >
                         {t(
-                          selectedDates.length > 1 ? "Time for all classes" : "Select Time",
-                          selectedDates.length > 1 ? "เวลาสำหรับทุกคลาส" : "เลือกเวลา"
+                          selectedDates.length > 1
+                            ? "Time for all classes"
+                            : "Select Time",
+                          selectedDates.length > 1
+                            ? "เวลาสำหรับทุกคลาส"
+                            : "เลือกเวลา",
                         )}
                       </label>
                       <input
@@ -1842,7 +2357,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500"
                       disabled={loading}
                     />
-                    <label htmlFor="recurringWeekly" className="text-sm font-medium cursor-pointer">
+                    <label
+                      htmlFor="recurringWeekly"
+                      className="text-sm font-medium cursor-pointer"
+                    >
                       {t("Recurring Weekly", "ซ้ำทุกสัปดาห์")}
                     </label>
                   </div>
@@ -1850,7 +2368,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   {isRecurringWeekly && (
                     <div className="space-y-3 mt-4">
                       <div>
-                        <label htmlFor="recurringWeeks" className="block text-sm font-medium mb-2">
+                        <label
+                          htmlFor="recurringWeeks"
+                          className="block text-sm font-medium mb-2"
+                        >
                           {t("Number of Weeks", "จำนวนสัปดาห์")}
                         </label>
                         <input
@@ -1859,14 +2380,24 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                           min="1"
                           max="52"
                           value={recurringWeeks}
-                          onChange={(e) => setRecurringWeeks(Math.max(1, Math.min(52, Number.parseInt(e.target.value) || 1)))}
+                          onChange={(e) =>
+                            setRecurringWeeks(
+                              Math.max(
+                                1,
+                                Math.min(
+                                  52,
+                                  Number.parseInt(e.target.value) || 1,
+                                ),
+                              ),
+                            )
+                          }
                           className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 dark:bg-gray-800 dark:border-gray-600"
                           disabled={loading}
                         />
                         <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
                           {t(
                             `Will book ${recurringWeeks} classes, repeating every week on the same day`,
-                            `จะจองคลาส ${recurringWeeks} ครั้ง ซ้ำทุกสัปดาห์ในวันเดียวกัน`
+                            `จะจองคลาส ${recurringWeeks} ครั้ง ซ้ำทุกสัปดาห์ในวันเดียวกัน`,
                           )}
                         </p>
                       </div>
@@ -1878,27 +2409,48 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                         </p>
                         <div className="space-y-1 max-h-40 overflow-y-auto">
                           {(() => {
-                            const baseDate = selectedDates.length > 0
-                              ? new Date(selectedDates[0])
-                              : new Date(scheduledDate);
-                            const [hours, minutes] = selectedDates.length > 0
-                              ? selectedTime.split(":")
-                              : [baseDate.getHours().toString(), baseDate.getMinutes().toString()];
+                            const baseDate =
+                              selectedDates.length > 0
+                                ? new Date(selectedDates[0])
+                                : new Date(scheduledDate);
+                            const [hours, minutes] =
+                              selectedDates.length > 0
+                                ? selectedTime.split(":")
+                                : [
+                                    baseDate.getHours().toString(),
+                                    baseDate.getMinutes().toString(),
+                                  ];
 
-                            return Array.from({ length: Math.min(recurringWeeks, 10) }, (_, i) => {
-                              const date = new Date(baseDate);
-                              date.setDate(baseDate.getDate() + (i * 7));
-                              date.setHours(Number.parseInt(hours), Number.parseInt(minutes));
-                              return (
-                                <div key={i} className="text-xs text-gray-600 dark:text-gray-400">
-                                  {i + 1}. {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </div>
-                              );
-                            });
+                            return Array.from(
+                              { length: Math.min(recurringWeeks, 10) },
+                              (_, i) => {
+                                const date = new Date(baseDate);
+                                date.setDate(baseDate.getDate() + i * 7);
+                                date.setHours(
+                                  Number.parseInt(hours),
+                                  Number.parseInt(minutes),
+                                );
+                                return (
+                                  <div
+                                    key={i}
+                                    className="text-xs text-gray-600 dark:text-gray-400"
+                                  >
+                                    {i + 1}. {date.toLocaleDateString()}{" "}
+                                    {date.toLocaleTimeString([], {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </div>
+                                );
+                              },
+                            );
                           })()}
                           {recurringWeeks > 10 && (
                             <div className="text-xs text-gray-500 italic">
-                              {t(`... and ${recurringWeeks - 10} more`, `... และอีก ${recurringWeeks - 10} วัน`)}
+                              {t(
+                                `... and ${recurringWeeks - 10} more`,
+                                `... และอีก ${recurringWeeks - 10} วัน`,
+                              )}
                             </div>
                           )}
                         </div>
@@ -1917,7 +2469,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="pendingLocationName" className="block text-sm font-medium mb-2">
+                      <label
+                        htmlFor="pendingLocationName"
+                        className="block text-sm font-medium mb-2"
+                      >
                         {t("Location Name (English)", "ชื่อสถานที่ (อังกฤษ)")}
                       </label>
                       <input
@@ -1931,14 +2486,19 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       />
                     </div>
                     <div>
-                      <label htmlFor="pendingLocationNameTh" className="block text-sm font-medium mb-2">
+                      <label
+                        htmlFor="pendingLocationNameTh"
+                        className="block text-sm font-medium mb-2"
+                      >
                         {t("Location Name (Thai)", "ชื่อสถานที่ (ไทย)")}
                       </label>
                       <input
                         type="text"
                         id="pendingLocationNameTh"
                         value={pendingLocationNameTh}
-                        onChange={(e) => setPendingLocationNameTh(e.target.value)}
+                        onChange={(e) =>
+                          setPendingLocationNameTh(e.target.value)
+                        }
                         className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
                         placeholder={t("e.g., ห้อง 301", "เช่น ห้อง 301")}
                         required={requestingNewLocation}
@@ -1948,7 +2508,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
                     {t(
                       "This location will need moderator approval before being used.",
-                      "สถานที่นี้จะต้องได้รับการอนุมัติจากผู้ดูแลก่อนจึงจะสามารถใช้งานได้"
+                      "สถานที่นี้จะต้องได้รับการอนุมัติจากผู้ดูแลก่อนจึงจะสามารถใช้งานได้",
                     )}
                   </p>
                 </div>
@@ -1963,7 +2523,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                 <div className="space-y-4">
                   {/* Duration */}
                   <div>
-                    <label htmlFor="duration" className="block text-sm font-medium mb-2">
+                    <label
+                      htmlFor="duration"
+                      className="block text-sm font-medium mb-2"
+                    >
                       {t("Duration (minutes)", "ระยะเวลา (นาที)")}
                     </label>
                     <input
@@ -1979,7 +2542,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   {/* Subject */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="subject" className="block text-sm font-medium mb-2">
+                      <label
+                        htmlFor="subject"
+                        className="block text-sm font-medium mb-2"
+                      >
                         {t("Subject (English)", "วิชา (อังกฤษ)")}
                       </label>
                       <input
@@ -1992,7 +2558,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       />
                     </div>
                     <div>
-                      <label htmlFor="subjectTh" className="block text-sm font-medium mb-2">
+                      <label
+                        htmlFor="subjectTh"
+                        className="block text-sm font-medium mb-2"
+                      >
                         {t("Subject (Thai)", "วิชา (ไทย)")}
                       </label>
                       <input
@@ -2009,7 +2578,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   {/* Lesson Topic */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="lessonTopic" className="block text-sm font-medium mb-2">
+                      <label
+                        htmlFor="lessonTopic"
+                        className="block text-sm font-medium mb-2"
+                      >
                         {t("Lesson Topic (English)", "หัวข้อบทเรียน (อังกฤษ)")}
                       </label>
                       <input
@@ -2022,7 +2594,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                       />
                     </div>
                     <div>
-                      <label htmlFor="lessonTopicTh" className="block text-sm font-medium mb-2">
+                      <label
+                        htmlFor="lessonTopicTh"
+                        className="block text-sm font-medium mb-2"
+                      >
                         {t("Lesson Topic (Thai)", "หัวข้อบทเรียน (ไทย)")}
                       </label>
                       <input
@@ -2039,28 +2614,46 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   {/* Materials */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="materials" className="block text-sm font-medium mb-2">
-                        {t("Materials Needed (English)", "อุปกรณ์ที่ต้องใช้ (อังกฤษ)")}
+                      <label
+                        htmlFor="materials"
+                        className="block text-sm font-medium mb-2"
+                      >
+                        {t(
+                          "Materials Needed (English)",
+                          "อุปกรณ์ที่ต้องใช้ (อังกฤษ)",
+                        )}
                       </label>
                       <textarea
                         id="materials"
                         value={materials}
                         onChange={(e) => setMaterials(e.target.value)}
                         rows={2}
-                        placeholder={t("e.g., Textbook, calculator", "เช่น หนังสือเรียน, เครื่องคิดเลข")}
+                        placeholder={t(
+                          "e.g., Textbook, calculator",
+                          "เช่น หนังสือเรียน, เครื่องคิดเลข",
+                        )}
                         className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
                       />
                     </div>
                     <div>
-                      <label htmlFor="materialsTh" className="block text-sm font-medium mb-2">
-                        {t("Materials Needed (Thai)", "อุปกรณ์ที่ต้องใช้ (ไทย)")}
+                      <label
+                        htmlFor="materialsTh"
+                        className="block text-sm font-medium mb-2"
+                      >
+                        {t(
+                          "Materials Needed (Thai)",
+                          "อุปกรณ์ที่ต้องใช้ (ไทย)",
+                        )}
                       </label>
                       <textarea
                         id="materialsTh"
                         value={materialsTh}
                         onChange={(e) => setMaterialsTh(e.target.value)}
                         rows={2}
-                        placeholder={t("e.g., หนังสือเรียน, เครื่องคิดเลข", "เช่น หนังสือเรียน, เครื่องคิดเลข")}
+                        placeholder={t(
+                          "e.g., หนังสือเรียน, เครื่องคิดเลข",
+                          "เช่น หนังสือเรียน, เครื่องคิดเลข",
+                        )}
                         className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
                       />
                     </div>
@@ -2069,28 +2662,46 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   {/* Preparation Notes */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="preparationNotes" className="block text-sm font-medium mb-2">
-                        {t("Preparation Notes (English)", "หมายเหตุการเตรียมการ (อังกฤษ)")}
+                      <label
+                        htmlFor="preparationNotes"
+                        className="block text-sm font-medium mb-2"
+                      >
+                        {t(
+                          "Preparation Notes (English)",
+                          "หมายเหตุการเตรียมการ (อังกฤษ)",
+                        )}
                       </label>
                       <textarea
                         id="preparationNotes"
                         value={preparationNotes}
                         onChange={(e) => setPreparationNotes(e.target.value)}
                         rows={2}
-                        placeholder={t("e.g., Review chapter 3", "เช่น ทบทวนบทที่ 3")}
+                        placeholder={t(
+                          "e.g., Review chapter 3",
+                          "เช่น ทบทวนบทที่ 3",
+                        )}
                         className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
                       />
                     </div>
                     <div>
-                      <label htmlFor="preparationNotesTh" className="block text-sm font-medium mb-2">
-                        {t("Preparation Notes (Thai)", "หมายเหตุการเตรียมการ (ไทย)")}
+                      <label
+                        htmlFor="preparationNotesTh"
+                        className="block text-sm font-medium mb-2"
+                      >
+                        {t(
+                          "Preparation Notes (Thai)",
+                          "หมายเหตุการเตรียมการ (ไทย)",
+                        )}
                       </label>
                       <textarea
                         id="preparationNotesTh"
                         value={preparationNotesTh}
                         onChange={(e) => setPreparationNotesTh(e.target.value)}
                         rows={2}
-                        placeholder={t("e.g., ทบทวนบทที่ 3", "เช่น ทบทวนบทที่ 3")}
+                        placeholder={t(
+                          "e.g., ทบทวนบทที่ 3",
+                          "เช่น ทบทวนบทที่ 3",
+                        )}
                         className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
                       />
                     </div>
@@ -2098,19 +2709,26 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
                   {/* Class Type */}
                   <div>
-                    <label htmlFor="classType" className="block text-sm font-medium mb-2">
+                    <label
+                      htmlFor="classType"
+                      className="block text-sm font-medium mb-2"
+                    >
                       {t("Class Type", "ประเภทคลาส")}
                     </label>
                     <select
                       id="classType"
                       value={classType}
-                      onChange={(e) => setClassType(e.target.value as typeof classType)}
+                      onChange={(e) =>
+                        setClassType(e.target.value as typeof classType)
+                      }
                       className="w-full px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600"
                     >
                       <option value="regular">{t("Regular", "ปกติ")}</option>
                       <option value="makeup">{t("Makeup", "ชดเชย")}</option>
                       <option value="trial">{t("Trial", "ทดลอง")}</option>
-                      <option value="assessment">{t("Assessment", "ประเมินผล")}</option>
+                      <option value="assessment">
+                        {t("Assessment", "ประเมินผล")}
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -2129,20 +2747,26 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                   className="flex-1 bg-blue-500 text-white py-3.5 md:py-2.5 px-4 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-98 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation shadow-lg shadow-blue-500/20 text-base md:text-sm"
                 >
                   {loading ? (
-                    userRole === "moderator" || userRole === "admin"
-                      ? t("Booking...", "กำลังจอง...")
-                      : t("Submitting Request...", "กำลังส่งคำขอ...")
+                    userRole === "moderator" || userRole === "admin" ? (
+                      t("Booking...", "กำลังจอง...")
+                    ) : (
+                      t("Submitting Request...", "กำลังส่งคำขอ...")
+                    )
                   ) : (
                     <>
-                      {userRole === "moderator" || userRole === "admin" ? (
-                        selectedDates.length > 1
-                          ? t(`Book ${selectedDates.length} Classes`, `จอง ${selectedDates.length} คลาส`)
+                      {userRole === "moderator" || userRole === "admin"
+                        ? selectedDates.length > 1
+                          ? t(
+                              `Book ${selectedDates.length} Classes`,
+                              `จอง ${selectedDates.length} คลาส`,
+                            )
                           : t("Book Class", "จองคลาส")
-                      ) : (
-                        selectedDates.length > 1
-                          ? t(`Submit ${selectedDates.length} Class Requests`, `ส่งคำขอ ${selectedDates.length} คลาส`)
-                          : t("Submit Class Request", "ส่งคำขอคลาส")
-                      )}
+                        : selectedDates.length > 1
+                          ? t(
+                              `Submit ${selectedDates.length} Class Requests`,
+                              `ส่งคำขอ ${selectedDates.length} คลาส`,
+                            )
+                          : t("Submit Class Request", "ส่งคำขอคลาส")}
                     </>
                   )}
                 </button>
@@ -2162,7 +2786,12 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
         <div className="space-y-2">
           {(() => {
             // When ANY filter is active, group by student for hierarchical navigation
-            const hasActiveFilters = filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all" || filterGrade !== "all" || filterClass !== "all";
+            const hasActiveFilters =
+              filterTeacherId !== "all" ||
+              filterSchoolId !== "all" ||
+              filterStudentId !== "all" ||
+              filterGrade !== "all" ||
+              filterClass !== "all";
 
             // NEW: Require filters to be active before displaying classes (prevents scrolling hell)
             if (!hasActiveFilters) {
@@ -2174,12 +2803,15 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                     </div>
                     <div className="space-y-2">
                       <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-                        {t("Select Filters to View Classes", "เลือกตัวกรองเพื่อดูคลาส")}
+                        {t(
+                          "Select Filters to View Classes",
+                          "เลือกตัวกรองเพื่อดูคลาส",
+                        )}
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-300 max-w-md">
                         {t(
                           "Use the filters above to search by teacher, school, student, grade, or class. This helps improve performance and makes it easier to find what you need.",
-                          "ใช้ตัวกรองด้านบนเพื่อค้นหาตามครู โรงเรียน นักเรียน ระดับชั้น หรือห้องเรียน ช่วยเพิ่มประสิทธิภาพและทำให้ค้นหาสิ่งที่ต้องการได้ง่ายขึ้น"
+                          "ใช้ตัวกรองด้านบนเพื่อค้นหาตามครู โรงเรียน นักเรียน ระดับชั้น หรือห้องเรียน ช่วยเพิ่มประสิทธิภาพและทำให้ค้นหาสิ่งที่ต้องการได้ง่ายขึ้น",
                         )}
                       </p>
                     </div>
@@ -2190,7 +2822,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
             if (filteredClasses.length > 0) {
               // Group classes by student
-              const studentGroups = new Map<Id<"students">, typeof filteredClasses>();
+              const studentGroups = new Map<
+                Id<"students">,
+                typeof filteredClasses
+              >();
               filteredClasses.forEach((classItem) => {
                 if (!studentGroups.has(classItem.studentId)) {
                   studentGroups.set(classItem.studentId, []);
@@ -2198,106 +2833,135 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                 studentGroups.get(classItem.studentId)!.push(classItem);
               });
 
-              return Array.from(studentGroups.entries()).map(([studentId, studentClasses]) => {
-                const firstClass = studentClasses[0];
-                const student = firstClass.student;
-                if (!student) return null;
+              return Array.from(studentGroups.entries()).map(
+                ([studentId, studentClasses]) => {
+                  const firstClass = studentClasses[0];
+                  const student = firstClass.student;
+                  if (!student) return null;
 
-                const isExpanded = expandedStudents.has(studentId);
-                const classCount = studentClasses.length;
-                const nextClass = studentClasses
-                  .filter(c => c.scheduledDate >= Date.now())
-                  .sort((a, b) => a.scheduledDate - b.scheduledDate)[0];
+                  const isExpanded = expandedStudents.has(studentId);
+                  const classCount = studentClasses.length;
+                  const nextClass = studentClasses
+                    .filter((c) => c.scheduledDate >= Date.now())
+                    .sort((a, b) => a.scheduledDate - b.scheduledDate)[0];
 
-                return (
-                  <div key={studentId} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-                    {/* Student Header - Clickable to expand/collapse */}
-                    <button
-                      onClick={() => {
-                        const newExpanded = new Set(expandedStudents);
-                        if (isExpanded) {
-                          newExpanded.delete(studentId);
-                        } else {
-                          newExpanded.add(studentId);
-                        }
-                        setExpandedStudents(newExpanded);
-                      }}
-                      className="w-full p-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  return (
+                    <div
+                      key={studentId}
+                      className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden"
                     >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="flex-shrink-0">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${isExpanded ? 'bg-blue-600' : 'bg-gray-500'
-                            }`}>
-                            {student.firstName.charAt(0)}{student.lastName.charAt(0)}
+                      {/* Student Header - Clickable to expand/collapse */}
+                      <button
+                        onClick={() => {
+                          const newExpanded = new Set(expandedStudents);
+                          if (isExpanded) {
+                            newExpanded.delete(studentId);
+                          } else {
+                            newExpanded.add(studentId);
+                          }
+                          setExpandedStudents(newExpanded);
+                        }}
+                        className="w-full p-3 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="flex-shrink-0">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                                isExpanded ? "bg-blue-600" : "bg-gray-500"
+                              }`}
+                            >
+                              {student.firstName.charAt(0)}
+                              {student.lastName.charAt(0)}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0 text-left">
+                            <h3 className="font-semibold text-base truncate">
+                              {student.firstName} {student.lastName}
+                              {student.nickname && (
+                                <span className="text-gray-500 dark:text-gray-400 font-normal text-sm ml-2">
+                                  ({student.nickname})
+                                </span>
+                              )}
+                            </h3>
+                            <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                              <span className="inline-flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                {classCount}{" "}
+                                {t(
+                                  classCount === 1 ? "class" : "classes",
+                                  "คลาส",
+                                )}
+                              </span>
+                              {nextClass && (
+                                <span className="truncate">
+                                  {t("Next:", "ถัดไป:")}{" "}
+                                  {new Date(
+                                    nextClass.scheduledDate,
+                                  ).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                  })}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <svg
+                              className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 9l-7 7-7-7"
+                              />
+                            </svg>
                           </div>
                         </div>
-                        <div className="flex-1 min-w-0 text-left">
-                          <h3 className="font-semibold text-base truncate">
-                            {student.firstName} {student.lastName}
-                            {student.nickname && (
-                              <span className="text-gray-500 dark:text-gray-400 font-normal text-sm ml-2">
-                                ({student.nickname})
-                              </span>
-                            )}
-                          </h3>
-                          <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400 mt-0.5">
-                            <span className="inline-flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              {classCount} {t(classCount === 1 ? "class" : "classes", "คลาส")}
-                            </span>
-                            {nextClass && (
-                              <span className="truncate">
-                                {t("Next:", "ถัดไป:")} {new Date(nextClass.scheduledDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex-shrink-0">
-                          <svg
-                            className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </div>
-                      </div>
-                    </button>
+                      </button>
 
-                    {/* Expanded Classes List */}
-                    {isExpanded && (
-                      <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 p-2 space-y-2">
-                        {studentClasses.map((classItem) => {
-                          // ✅ PERFORMANCE: O(1) lookup instead of O(n²) recalculation
-                          const conflicts = conflictMap.get(classItem._id) || { ids: [], count: 0 };
-                          const hasConflicts = conflicts.count > 0;
+                      {/* Expanded Classes List */}
+                      {isExpanded && (
+                        <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 p-2 space-y-2">
+                          {studentClasses.map((classItem) => {
+                            // ✅ PERFORMANCE: O(1) lookup instead of O(n²) recalculation
+                            const conflicts = conflictMap.get(
+                              classItem._id,
+                            ) || { ids: [], count: 0 };
+                            const hasConflicts = conflicts.count > 0;
 
-                          return (
-                            <ClassItemDisplay
-                              key={classItem._id}
-                              classItem={classItem}
-                              userRole={userRole}
-                              userId={userId}
-                              hasConflicts={hasConflicts}
-                              conflictCount={conflicts.count}
-                              onAcknowledge={handleAcknowledge}
-                              onApprove={handleApprove}
-                              onReject={handleReject}
-                              onDelete={handleDelete}
-                              onRequestCancellation={handleRequestCancellation}
-                              onEdit={(item) => {
-                                const classDoc = item as unknown as Doc<"classes">;
-                                setEditingClass(classDoc);
-                              }}
-                            />
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              });
+                            return (
+                              <ClassItemDisplay
+                                key={classItem._id}
+                                classItem={classItem}
+                                userRole={userRole}
+                                userId={userId}
+                                hasConflicts={hasConflicts}
+                                conflictCount={conflicts.count}
+                                onAcknowledge={handleAcknowledge}
+                                onApprove={handleApprove}
+                                onReject={handleReject}
+                                onDelete={handleDelete}
+                                onRequestCancellation={
+                                  handleRequestCancellation
+                                }
+                                onEdit={(item) => {
+                                  const classDoc =
+                                    item as unknown as Doc<"classes">;
+                                  setEditingClass(classDoc);
+                                }}
+                              />
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                },
+              );
             }
 
             // Filters active but no matches - show "no results" message
@@ -2306,15 +2970,41 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
 
           {/* No classes found - only show when filters are active */}
           {(() => {
-            const hasActiveFilters = filterTeacherId !== "all" || filterSchoolId !== "all" || filterStudentId !== "all" || filterGrade !== "all" || filterClass !== "all";
-            const filteredCount = classes?.filter((classItem) => {
-              if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
-              if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
-              if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
-              if (filterGrade !== "all" && classItem.student?.grade !== filterGrade) return false;
-              if (filterClass !== "all" && classItem.student?.class !== filterClass) return false;
-              return true;
-            }).length || 0;
+            const hasActiveFilters =
+              filterTeacherId !== "all" ||
+              filterSchoolId !== "all" ||
+              filterStudentId !== "all" ||
+              filterGrade !== "all" ||
+              filterClass !== "all";
+            const filteredCount =
+              classes?.filter((classItem) => {
+                if (
+                  filterTeacherId !== "all" &&
+                  classItem.teacherId !== filterTeacherId
+                )
+                  return false;
+                if (
+                  filterSchoolId !== "all" &&
+                  classItem.schoolId !== filterSchoolId
+                )
+                  return false;
+                if (
+                  filterStudentId !== "all" &&
+                  classItem.studentId !== filterStudentId
+                )
+                  return false;
+                if (
+                  filterGrade !== "all" &&
+                  classItem.student?.grade !== filterGrade
+                )
+                  return false;
+                if (
+                  filterClass !== "all" &&
+                  classItem.student?.class !== filterClass
+                )
+                  return false;
+                return true;
+              }).length || 0;
 
             // Only show "no results" message when filters are active AND no matches found
             if (hasActiveFilters && filteredCount === 0) {
@@ -2322,7 +3012,10 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center text-gray-500 dark:text-gray-400">
                   <Calendar className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p className="text-sm">
-                    {t("No classes match the selected filters", "ไม่พบคลาสที่ตรงกับตัวกรองที่เลือก")}
+                    {t(
+                      "No classes match the selected filters",
+                      "ไม่พบคลาสที่ตรงกับตัวกรองที่เลือก",
+                    )}
                   </p>
                 </div>
               );
@@ -2383,27 +3076,38 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
       )}
 
       {/* Conflict Detection Modal */}
-      {showConflictModal && pendingBookingData && conflictingClasses.length > 0 && (
-        <ClassConflictModal
-          userId={userId}
-          conflicts={conflictingClasses}
-          newClassData={{
-            studentId: pendingBookingData.studentId,
-            studentName: (students?.find(s => s._id === pendingBookingData.studentId)?.firstName || "Unknown") + " " + (students?.find(s => s._id === pendingBookingData.studentId)?.lastName || ""),
-            scheduledDate: pendingBookingData.scheduledDate,
-            locationId: pendingBookingData.locationId,
-            locationName: locations?.find(l => l._id === pendingBookingData.locationId)?.name || pendingBookingData.pendingLocationName || "Unknown",
-          }}
-          onMerge={handleMergeFromConflict}
-          onCreateSeparate={handleCreateSeparateFromConflict}
-          onCancel={() => {
-            setShowConflictModal(false);
-            setPendingBookingData(null);
-            setConflictingClasses([]);
-            setLoading(false);
-          }}
-        />
-      )}
+      {showConflictModal &&
+        pendingBookingData &&
+        conflictingClasses.length > 0 && (
+          <ClassConflictModal
+            userId={userId}
+            conflicts={conflictingClasses}
+            newClassData={{
+              studentId: pendingBookingData.studentId,
+              studentName:
+                (students?.find((s) => s._id === pendingBookingData.studentId)
+                  ?.firstName || "Unknown") +
+                " " +
+                (students?.find((s) => s._id === pendingBookingData.studentId)
+                  ?.lastName || ""),
+              scheduledDate: pendingBookingData.scheduledDate,
+              locationId: pendingBookingData.locationId,
+              locationName:
+                locations?.find((l) => l._id === pendingBookingData.locationId)
+                  ?.name ||
+                pendingBookingData.pendingLocationName ||
+                "Unknown",
+            }}
+            onMerge={handleMergeFromConflict}
+            onCreateSeparate={handleCreateSeparateFromConflict}
+            onCancel={() => {
+              setShowConflictModal(false);
+              setPendingBookingData(null);
+              setConflictingClasses([]);
+              setLoading(false);
+            }}
+          />
+        )}
 
       {/* Delete Confirmation Dialog */}
       {showDeleteConfirm && (
@@ -2415,7 +3119,7 @@ export function ClassBooking({ userId, userRole, userSchoolId }: ClassBookingPro
             <p className="mb-6 text-gray-700 dark:text-gray-300">
               {t(
                 "Are you sure you want to delete this class? The teacher will be notified.",
-                "คุณแน่ใจหรือไม่ที่จะลบคลาสนี้? ครูจะได้รับการแจ้งเตือน"
+                "คุณแน่ใจหรือไม่ที่จะลบคลาสนี้? ครูจะได้รับการแจ้งเตือน",
               )}
             </p>
             <div className="flex gap-3 justify-end">

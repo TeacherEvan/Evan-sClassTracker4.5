@@ -85,7 +85,7 @@ export const create = mutation({
       details: {
         englishName: args.name,
         thaiName: args.nameTh,
-        moderatorId: args.moderatorId
+        moderatorId: args.moderatorId,
       },
       userAgent: args.userAgent,
       screenResolution: args.screenResolution,
@@ -153,7 +153,7 @@ export const updateModerator = mutation({
       targetName: school.name,
       details: {
         newModeratorId: moderator._id,
-        newModeratorUsername: moderator.username
+        newModeratorUsername: moderator.username,
       },
       userAgent: args.userAgent,
       screenResolution: args.screenResolution,
@@ -240,7 +240,7 @@ export const update = mutation({
         oldNameTh: school.nameTh,
         newName: args.name,
         newNameTh: args.nameTh,
-        moderatorId: args.moderatorId
+        moderatorId: args.moderatorId,
       },
       userAgent: args.userAgent,
       screenResolution: args.screenResolution,
@@ -297,7 +297,7 @@ export const remove = mutation({
 
     if (activeClasses.length > 0) {
       throw new Error(
-        `Cannot delete school with ${activeClasses.length} active classes. Please delete or reassign classes first.`
+        `Cannot delete school with ${activeClasses.length} active classes. Please delete or reassign classes first.`,
       );
     }
 
@@ -309,7 +309,7 @@ export const remove = mutation({
 
     if (students.length > 0) {
       throw new Error(
-        `Cannot delete school with ${students.length} students. Please reassign students first.`
+        `Cannot delete school with ${students.length} students. Please reassign students first.`,
       );
     }
 
@@ -327,7 +327,7 @@ export const remove = mutation({
       details: {
         englishName: school.name,
         thaiName: school.nameTh,
-        moderatorId: school.moderatorId
+        moderatorId: school.moderatorId,
       },
       userAgent: args.userAgent,
       screenResolution: args.screenResolution,

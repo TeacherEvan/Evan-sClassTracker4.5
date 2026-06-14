@@ -17,7 +17,9 @@ export const approve = mutation({
 
     // ✅ SECURITY: Only moderators and admins can approve
     if (user.role !== "moderator" && user.role !== "admin") {
-      throw new Error("Unauthorized: Only moderators and admins can approve classes");
+      throw new Error(
+        "Unauthorized: Only moderators and admins can approve classes",
+      );
     }
 
     // Get class
@@ -28,7 +30,9 @@ export const approve = mutation({
 
     // ✅ SECURITY: Moderators can only approve classes from their school
     if (user.role === "moderator" && user.schoolId !== cls.schoolId) {
-      throw new Error("Unauthorized: Moderators can only approve classes from their assigned school");
+      throw new Error(
+        "Unauthorized: Moderators can only approve classes from their assigned school",
+      );
     }
 
     // Update class status - use schema-compliant fields
@@ -85,7 +89,9 @@ export const reject = mutation({
 
     // ✅ SECURITY: Only moderators and admins can reject
     if (user.role !== "moderator" && user.role !== "admin") {
-      throw new Error("Unauthorized: Only moderators and admins can reject classes");
+      throw new Error(
+        "Unauthorized: Only moderators and admins can reject classes",
+      );
     }
 
     // Get class
@@ -96,7 +102,9 @@ export const reject = mutation({
 
     // ✅ SECURITY: Moderators can only reject classes from their school
     if (user.role === "moderator" && user.schoolId !== cls.schoolId) {
-      throw new Error("Unauthorized: Moderators can only reject classes from their assigned school");
+      throw new Error(
+        "Unauthorized: Moderators can only reject classes from their assigned school",
+      );
     }
 
     // Update class status - rejected classes go back to pending or get marked

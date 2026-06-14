@@ -62,7 +62,7 @@
 
 ```typescript
 classes: {
-  additionalStudentIds: v.optional(v.array(v.id("students")))
+  additionalStudentIds: v.optional(v.array(v.id("students")));
 }
 ```
 
@@ -257,14 +257,14 @@ classes: {
 2. **Cached Queries:** Prevent duplicate database lookups
 
    ```typescript
-   const primaryStudent = students.find(s => s._id === studentId);
+   const primaryStudent = students.find((s) => s._id === studentId);
    // Then use: primaryStudent.firstName
    ```
 
 3. **Optimistic Updates:** UI updates immediately, then syncs
 
    ```typescript
-   setCurrentAdditionalStudents(prev => [...prev, studentId]);
+   setCurrentAdditionalStudents((prev) => [...prev, studentId]);
    // Then calls backend
    ```
 
@@ -280,17 +280,17 @@ classes: {
 
 ### Text Translations
 
-| English | Thai |
-|---------|------|
-| Add Student(s) to This Class | เพิ่มนักเรียนในคลาสนี้ |
-| Current Students in Class | นักเรียนในคลาสปัจจุบัน |
-| Primary | หลัก |
-| Select Student to Add | เลือกนักเรียนที่จะเพิ่ม |
-| Add Student | เพิ่มนักเรียน |
-| Remove student | ลบนักเรียน |
-| No additional students added yet | ยังไม่มีนักเรียนเพิ่มเติม |
-| Student added to class! | เพิ่มนักเรียนในคลาสสำเร็จ! |
-| Student removed from class | ลบนักเรียนออกจากคลาสแล้ว |
+| English                          | Thai                       |
+| -------------------------------- | -------------------------- |
+| Add Student(s) to This Class     | เพิ่มนักเรียนในคลาสนี้     |
+| Current Students in Class        | นักเรียนในคลาสปัจจุบัน     |
+| Primary                          | หลัก                       |
+| Select Student to Add            | เลือกนักเรียนที่จะเพิ่ม    |
+| Add Student                      | เพิ่มนักเรียน              |
+| Remove student                   | ลบนักเรียน                 |
+| No additional students added yet | ยังไม่มีนักเรียนเพิ่มเติม  |
+| Student added to class!          | เพิ่มนักเรียนในคลาสสำเร็จ! |
+| Student removed from class       | ลบนักเรียนออกจากคลาสแล้ว   |
 
 All translations use the `t()` helper from `useLanguage()` context.
 

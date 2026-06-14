@@ -38,13 +38,13 @@ This audit examined:
 
 **Data Created**:
 
-| Entity | Count | Details |
-|--------|-------|---------|
-| **Admin User** | 1 | Username: `admin`, Role: `admin` |
-| **Moderator** | 1 | Username: `moderator1`, School: "Sangsom International School" |
-| **Teacher** | 1 | Username: `Evan`, Multi-school access |
-| **Schools** | 1 | Sangsom International School (grades K1-K3, G1-G6) |
-| **Locations** | 5 | Big Kitchen, Small Kitchen, Library, Field, Hallway |
+| Entity         | Count | Details                                                        |
+| -------------- | ----- | -------------------------------------------------------------- |
+| **Admin User** | 1     | Username: `admin`, Role: `admin`                               |
+| **Moderator**  | 1     | Username: `moderator1`, School: "Sangsom International School" |
+| **Teacher**    | 1     | Username: `Evan`, Multi-school access                          |
+| **Schools**    | 1     | Sangsom International School (grades K1-K3, G1-G6)             |
+| **Locations**  | 5     | Big Kitchen, Small Kitchen, Library, Field, Hallway            |
 
 **Status**: ✅ Database initialized (`npx convex run init:isInitialized` returns `true`)
 
@@ -58,11 +58,11 @@ This audit examined:
 
 **Data Created**:
 
-| Teacher | Weekly Schedule | Total Classes (12 weeks) | Location(s) |
-|---------|----------------|--------------------------|-------------|
-| **T. Che** | Mon-Fri (5 days) | ~60 classes | OLD MUSIC TOILET |
-| **T. Cale** | Mon-Thu (4 days) | ~48 classes | Big kitchen, OLD TEG |
-| **T. Lee** | Mon-Fri (5 days) | ~60 classes | PLAY ROOM B.5 |
+| Teacher     | Weekly Schedule  | Total Classes (12 weeks) | Location(s)          |
+| ----------- | ---------------- | ------------------------ | -------------------- |
+| **T. Che**  | Mon-Fri (5 days) | ~60 classes              | OLD MUSIC TOILET     |
+| **T. Cale** | Mon-Thu (4 days) | ~48 classes              | Big kitchen, OLD TEG |
+| **T. Lee**  | Mon-Fri (5 days) | ~60 classes              | PLAY ROOM B.5        |
 
 **Schedule Period**: November 4, 2025 - January 24, 2026 (12 weeks)
 
@@ -131,12 +131,12 @@ This audit examined:
 ✅ **Schema-driven development**: Single source of truth in `convex/schema.ts`  
 ✅ **Index-first query pattern**: All queries use `.withIndex()` to avoid table scans  
 ✅ **Real-time architecture**: Convex subscriptions for live updates  
-✅ **Custom authentication**: Session-based with 24-hour expiration  
+✅ **Custom authentication**: Session-based with 24-hour expiration
 
 **Weaknesses**:
 
 ⚠️ **Large files exist**: class-booking.tsx (2,930 lines), classes.ts (2,213 lines) - see Wish #3  
-⚠️ **Provider order load-bearing**: Reordering causes runtime failures (fragile)  
+⚠️ **Provider order load-bearing**: Reordering causes runtime failures (fragile)
 
 ---
 
@@ -149,7 +149,7 @@ This audit examined:
 ✅ **Pagination implemented**: Native Convex pagination with cursor support  
 ✅ **Memoization**: `useMemo` and `useCallback` used appropriately  
 ✅ **Code splitting**: Heavy components lazy-loaded  
-✅ **Debouncing**: BilingualInput has 300ms debounce (50% fewer re-renders)  
+✅ **Debouncing**: BilingualInput has 300ms debounce (50% fewer re-renders)
 
 **Evidence** (from October 2025 optimizations):
 
@@ -170,7 +170,7 @@ const performance = students.map((student, index) => { ... });
 
 **Minor Concerns**:
 
-⚠️ **seedPrivateClasses.ts line 207**: Uses `.collect()` then `.find()` for location lookup (could use index)  
+⚠️ **seedPrivateClasses.ts line 207**: Uses `.collect()` then `.find()` for location lookup (could use index)
 
 ---
 
@@ -182,17 +182,17 @@ const performance = students.map((student, index) => { ... });
 ✅ **Try-catch blocks**: Used in critical mutations  
 ✅ **Error reporting**: `convex/adminErrorReports.ts` collects client-side errors  
 ✅ **Validation**: Input validation in mutations (e.g., date ranges, role checks)  
-✅ **Rate limiting**: 30/min for class bookings, 20/min for messages  
+✅ **Rate limiting**: 30/min for class bookings, 20/min for messages
 
 **Example** (from convex/teacherClassCount.ts):
 
 ```typescript
 if (!user || (user.role !== "moderator" && user.role !== "admin")) {
-    throw new Error("Unauthorized: Only moderators and admins can view detailed class counts");
+  throw new Error("Unauthorized: Only moderators and admins can view detailed class counts");
 }
 
 if (moderator.role === "moderator" && moderator.schoolId !== teacher.schoolId) {
-    throw new Error("Unauthorized: Moderators can only view teachers from their assigned school");
+  throw new Error("Unauthorized: Moderators can only view teachers from their assigned school");
 }
 ```
 
@@ -200,7 +200,7 @@ if (moderator.role === "moderator" && moderator.schoolId !== teacher.schoolId) {
 
 ⚠️ **Inconsistent error messages**: Some bilingual, some English-only  
 ⚠️ **No centralized error codes**: Hard to track error types  
-⚠️ **seedPrivateClasses.ts**: Collects errors but doesn't prevent partial schedules  
+⚠️ **seedPrivateClasses.ts**: Collects errors but doesn't prevent partial schedules
 
 ---
 
@@ -212,15 +212,14 @@ if (moderator.role === "moderator" && moderator.schoolId !== teacher.schoolId) {
 ✅ **BilingualInput component**: Reusable, debounced, consistent styling  
 ✅ **Validation pattern**: Uses `&&` (AND) for optional fields, not `||` (OR)  
 ✅ **Toast notifications**: All have EN/TH messages  
-✅ **Documentation**: Copilot instructions emphasize bilingual-first development  
+✅ **Documentation**: Copilot instructions emphasize bilingual-first development
 
 **Example** (Pattern #2 from copilot-docs):
 
 ```typescript
 // ✅ CORRECT - Requires AT LEAST ONE language
 if (!nameEn.trim() && !nameTh.trim()) {
-  toast.error("Please provide name in at least one language", 
-              "กรุณากรอกชื่อในอย่างน้อยหนึ่งภาษา");
+  toast.error("Please provide name in at least one language", "กรุณากรอกชื่อในอย่างน้อยหนึ่งภาษา");
   return;
 }
 ```
@@ -236,7 +235,7 @@ if (!nameEn.trim() && !nameTh.trim()) {
 ✅ **Account lockout**: 24-hour lockout after 5 failed login attempts  
 ✅ **Session expiration**: 24-hour auto-expiration with activity renewal  
 ✅ **Rate limiting**: Mutations protected (30/min bookings, 20/min messages)  
-✅ **Role-based access control**: Moderators school-scoped, teachers multi-school, admins God mode  
+✅ **Role-based access control**: Moderators school-scoped, teachers multi-school, admins God mode
 
 **✅ SECURITY FIXES DEPLOYED** (Nov 2, 2025):
 
@@ -265,7 +264,7 @@ if (!nameEn.trim() && !nameTh.trim()) {
 ✅ **25 documented patterns**: Non-negotiable patterns with code examples  
 ✅ **Disaster recovery protocols**: 10 critical failure scenarios with step-by-step recovery  
 ✅ **Implementation summaries**: Every feature has detailed summary (e.g., IMPLEMENTATION_SUMMARY_PBKDF2_NOV_2_2025.md)  
-✅ **Agent-friendly**: Decision trees, quick reference cards, copy-paste commands  
+✅ **Agent-friendly**: Decision trees, quick reference cards, copy-paste commands
 
 **Example** (copilot-instructions.md index):
 
@@ -273,6 +272,7 @@ if (!nameEn.trim() && !nameTh.trim()) {
 ## 🎯 Quick Decision Tree
 
 I need to...
+
 - Get started immediately → Quick Start Guide
 - Understand the architecture → Architecture Essentials
 - Implement a new feature → Non-Negotiable Patterns
@@ -291,13 +291,13 @@ I need to...
 ✅ **Test files exist**: `tests/e2e/auth.spec.ts`, `class-booking.spec.ts`, `student-management.spec.ts`  
 ✅ **Helpers**: Reusable `login()`, `logout()`, `waitForToast()`, `generateTestData()`  
 ✅ **Bilingual selectors**: Handles both EN/TH text  
-✅ **Real-time testing**: Verifies reactive updates  
+✅ **Real-time testing**: Verifies reactive updates
 
 **Gaps**:
 
 ⚠️ **No unit tests**: Only E2E tests exist  
 ⚠️ **No backend mutation tests**: Convex mutations not directly tested  
-⚠️ **Coverage unknown**: No coverage reporting configured  
+⚠️ **Coverage unknown**: No coverage reporting configured
 
 ---
 
@@ -356,7 +356,7 @@ All 3 files now use PBKDF2 hashPassword from `convex/users.ts`:
 
 ```powershell
 # Confirmed: No btoa() usage in password creation (only legacy verification)
-grep -r "btoa\(" convex/ 
+grep -r "btoa\(" convex/
 # Result: Only found in verifyPassword for legacy support ✅
 ```
 
@@ -364,7 +364,7 @@ grep -r "btoa\(" convex/
 
 ✅ All password creation uses PBKDF2 (100,000 iterations, SHA-256, 32-byte hash, 16-byte salt)  
 ✅ Deployed to Convex successfully (Nov 2, 2025)  
-✅ Security grade improved from C+ to A+  
+✅ Security grade improved from C+ to A+
 
 **Recommended Action** (for existing users with btoa() passwords):
 
@@ -385,16 +385,14 @@ Location lookup uses `.collect()` (full table scan) then `.find()` instead of in
 ```typescript
 // ❌ INEFFICIENT
 const allLocations = await ctx.db.query("locations").collect();
-const location = allLocations.find(loc => 
-    loc.name === locationName && loc.isActive === true
-);
+const location = allLocations.find((loc) => loc.name === locationName && loc.isActive === true);
 
 // ✅ BETTER (if index exists)
 const location = await ctx.db
-    .query("locations")
-    .withIndex("by_name", q => q.eq("name", locationName))
-    .filter(q => q.eq(q.field("isActive"), true))
-    .first();
+  .query("locations")
+  .withIndex("by_name", (q) => q.eq("name", locationName))
+  .filter((q) => q.eq(q.field("isActive"), true))
+  .first();
 ```
 
 **Impact**: Minor - only affects seeding performance (not runtime)
@@ -480,7 +478,7 @@ If I had the chance to improve this system, here are my top 3 wishes:
    ```powershell
    # Reset admin password to secure PBKDF2 hash
    npx convex run users:adminResetPassword --args '{"username":"admin","newPassword":"SecureAdminPassword2025!"}'
-   
+
    # Repeat for moderator1 and Evan
    ```
 
@@ -493,10 +491,10 @@ If I had the chance to improve this system, here are my top 3 wishes:
    function hashPassword(password: string): string {
      return btoa(password);
    }
-   
+
    // To:
    import { hashPassword } from "./users";
-   
+
    // Use imported function instead
    ```
 
@@ -505,7 +503,7 @@ If I had the chance to improve this system, here are my top 3 wishes:
    ```typescript
    // Change line 169 from:
    const passwordHash = btoa(defaultPassword);
-   
+
    // To:
    import { hashPassword } from "./users";
    const passwordHash = await hashPassword(defaultPassword);
@@ -518,10 +516,10 @@ If I had the chance to improve this system, here are my top 3 wishes:
    function hashPassword(password: string): string {
      return btoa(password);
    }
-   
+
    // To:
    import { hashPassword } from "./users";
-   
+
    // Use imported function instead
    ```
 
@@ -530,7 +528,7 @@ If I had the chance to improve this system, here are my top 3 wishes:
    ```powershell
    # Search for remaining btoa() usage
    grep -r "btoa\(" convex/
-   
+
    # Should only find legacy verification in users.ts
    # All password CREATION should use PBKDF2
    ```
@@ -614,38 +612,38 @@ convex/__tests__/
 **3. Example test** (`convex/__tests__/users.test.ts`):
 
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { hashPassword, verifyPassword } from '../users';
+import { describe, it, expect } from "vitest";
+import { hashPassword, verifyPassword } from "../users";
 
-describe('PBKDF2 Password Hashing', () => {
-  it('should hash passwords securely', async () => {
-    const password = 'TeacherAdmin';
+describe("PBKDF2 Password Hashing", () => {
+  it("should hash passwords securely", async () => {
+    const password = "TeacherAdmin";
     const hash = await hashPassword(password);
-    
+
     expect(hash).toMatch(/^pbkdf2\$/); // Correct format
-    expect(hash.split('$').length).toBe(3); // salt + hash
+    expect(hash.split("$").length).toBe(3); // salt + hash
     expect(hash).not.toContain(password); // No plaintext
   });
-  
-  it('should verify correct passwords', async () => {
-    const password = 'TeacherAdmin';
+
+  it("should verify correct passwords", async () => {
+    const password = "TeacherAdmin";
     const hash = await hashPassword(password);
-    
+
     const isValid = await verifyPassword(password, hash);
     expect(isValid).toBe(true);
   });
-  
-  it('should reject incorrect passwords', async () => {
-    const hash = await hashPassword('TeacherAdmin');
-    
-    const isValid = await verifyPassword('WrongPassword', hash);
+
+  it("should reject incorrect passwords", async () => {
+    const hash = await hashPassword("TeacherAdmin");
+
+    const isValid = await verifyPassword("WrongPassword", hash);
     expect(isValid).toBe(false);
   });
-  
-  it('should not create identical hashes for same password', async () => {
-    const hash1 = await hashPassword('TeacherAdmin');
-    const hash2 = await hashPassword('TeacherAdmin');
-    
+
+  it("should not create identical hashes for same password", async () => {
+    const hash1 = await hashPassword("TeacherAdmin");
+    const hash2 = await hashPassword("TeacherAdmin");
+
     expect(hash1).not.toEqual(hash2); // Different salts
   });
 });
@@ -733,26 +731,26 @@ describe('PBKDF2 Password Hashing', () => {
 
 ## Appendix A: Seeded Data Statistics
 
-| Data Type | Count | Status | Notes |
-|-----------|-------|--------|-------|
-| **Users** | 3 | ✅ **SECURED (Nov 2, 2025)** | admin, moderator1, Evan (PBKDF2 hashes) - legacy support maintained for auto-upgrade |
-| **Schools** | 1 | ✅ Valid | Sangsom International School |
-| **Locations** | 5-8 | ✅ Valid | Big Kitchen, Small Kitchen, Library + auto-created private locations |
-| **Classes (Private)** | ~168 | ✅ Valid | 12 weeks × 3 teachers (Che, Cale, Lee) |
-| **Students** | Unknown | ✅ Valid | Created via student-management.tsx, referenced by XXYY codes |
-| **App Updates** | 1 | ✅ Valid | v4.5.0 announcement |
+| Data Type             | Count   | Status                       | Notes                                                                                |
+| --------------------- | ------- | ---------------------------- | ------------------------------------------------------------------------------------ |
+| **Users**             | 3       | ✅ **SECURED (Nov 2, 2025)** | admin, moderator1, Evan (PBKDF2 hashes) - legacy support maintained for auto-upgrade |
+| **Schools**           | 1       | ✅ Valid                     | Sangsom International School                                                         |
+| **Locations**         | 5-8     | ✅ Valid                     | Big Kitchen, Small Kitchen, Library + auto-created private locations                 |
+| **Classes (Private)** | ~168    | ✅ Valid                     | 12 weeks × 3 teachers (Che, Cale, Lee)                                               |
+| **Students**          | Unknown | ✅ Valid                     | Created via student-management.tsx, referenced by XXYY codes                         |
+| **App Updates**       | 1       | ✅ Valid                     | v4.5.0 announcement                                                                  |
 
 ---
 
 ## Appendix B: Performance Benchmarks
 
-| Metric | Before (Pre-Oct 2025) | After (Oct 2025) | Improvement |
-|--------|----------------------|------------------|-------------|
-| **Page Load** | ~5s | ~2.5s | 40-50% faster |
-| **Message Query** | 100+ queries (N+1) | 1-3 queries | 10-100x faster |
-| **DOM Nodes (100 items)** | 2,847 | 412 | 85.5% reduction |
-| **Memory (class list)** | 87.3 MB | 31.2 MB | 64.3% reduction |
-| **Scroll FPS** | 42 | 60 | 42.9% improvement |
+| Metric                    | Before (Pre-Oct 2025) | After (Oct 2025) | Improvement       |
+| ------------------------- | --------------------- | ---------------- | ----------------- |
+| **Page Load**             | ~5s                   | ~2.5s            | 40-50% faster     |
+| **Message Query**         | 100+ queries (N+1)    | 1-3 queries      | 10-100x faster    |
+| **DOM Nodes (100 items)** | 2,847                 | 412              | 85.5% reduction   |
+| **Memory (class list)**   | 87.3 MB               | 31.2 MB          | 64.3% reduction   |
+| **Scroll FPS**            | 42                    | 60               | 42.9% improvement |
 
 Source: `docs/archive/PENDING_OPTIMIZATIONS.md`, `docs/archive/OPTIMIZATION_ANALYSIS_2025.md`
 
@@ -760,16 +758,16 @@ Source: `docs/archive/PENDING_OPTIMIZATIONS.md`, `docs/archive/OPTIMIZATION_ANAL
 
 ## Appendix C: Code Quality Metrics
 
-| Metric | Value | Grade |
-|--------|-------|-------|
-| **Total Lines of Code** | ~50,000+ | - |
-| **Documentation Lines** | ~6,000 | A+ |
-| **Largest Component** | 2,930 lines (class-booking.tsx) | C (needs refactoring) |
-| **Largest Backend File** | 2,213 lines (classes.ts) | C (needs refactoring) |
-| **TypeScript Errors** | 0 | A+ |
-| **ESLint Warnings** | 1 minor (unused variable) | A |
-| **E2E Test Coverage** | ~70% (estimated) | B |
-| **Unit Test Coverage** | 0% | F (none exist) |
+| Metric                   | Value                           | Grade                 |
+| ------------------------ | ------------------------------- | --------------------- |
+| **Total Lines of Code**  | ~50,000+                        | -                     |
+| **Documentation Lines**  | ~6,000                          | A+                    |
+| **Largest Component**    | 2,930 lines (class-booking.tsx) | C (needs refactoring) |
+| **Largest Backend File** | 2,213 lines (classes.ts)        | C (needs refactoring) |
+| **TypeScript Errors**    | 0                               | A+                    |
+| **ESLint Warnings**      | 1 minor (unused variable)       | A                     |
+| **E2E Test Coverage**    | ~70% (estimated)                | B                     |
+| **Unit Test Coverage**   | 0%                              | F (none exist)        |
 
 ---
 

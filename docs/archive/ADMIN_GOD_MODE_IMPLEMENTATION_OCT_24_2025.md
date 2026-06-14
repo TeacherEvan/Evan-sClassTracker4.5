@@ -105,7 +105,7 @@ export const bulkDeleteClasses = mutation({
 
     // Delete loop with audit logging
     // ...
-  }
+  },
 });
 ```
 
@@ -141,14 +141,15 @@ if (admin.role === "admin" && userToDelete.role === "admin" && args.adminOrModer
 
 ```typescript
 // Check if student has associated classes
-const classCount = await ctx.db.query("classes")
+const classCount = await ctx.db
+  .query("classes")
   .withIndex("by_student", (q) => q.eq("studentId", studentId))
   .collect()
-  .then(classes => classes.length);
+  .then((classes) => classes.length);
 
 if (classCount > 0) {
   errors.push({
-    error: `Cannot delete student with ${classCount} associated classes`
+    error: `Cannot delete student with ${classCount} associated classes`,
   });
   continue;
 }
@@ -159,14 +160,15 @@ if (classCount > 0) {
 ```typescript
 // Check if student has associated classes (unless force=true for admin God mode)
 if (!operationArgs.force) {
-  const classCount = await ctx.db.query("classes")
+  const classCount = await ctx.db
+    .query("classes")
     .withIndex("by_student", (q) => q.eq("studentId", studentId))
     .collect()
-    .then(classes => classes.length);
+    .then((classes) => classes.length);
 
   if (classCount > 0) {
     errors.push({
-      error: `Cannot delete student with ${classCount} associated classes (use force option to override)`
+      error: `Cannot delete student with ${classCount} associated classes (use force option to override)`,
     });
     continue;
   }
@@ -300,7 +302,7 @@ const result = await bulkDeleteStudents({
   studentIds: [id1, id2],
   userId: adminId,
   reason: "Removing test students",
-  force: true // NEW: Bypass class association check
+  force: true, // NEW: Bypass class association check
 });
 ```
 

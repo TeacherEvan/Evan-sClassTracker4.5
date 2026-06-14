@@ -11,7 +11,7 @@
 
 ### User Complaint
 
-*"The filter for class bookings is displaying every fucking class that's ever been made by default, which causes scrolling hell when quickly wanting to do something... Causing performance and mental problems."*
+_"The filter for class bookings is displaying every fucking class that's ever been made by default, which causes scrolling hell when quickly wanting to do something... Causing performance and mental problems."_
 
 ### Root Cause
 
@@ -175,11 +175,11 @@ return null;
 
 ### **Metrics (Estimated)**
 
-| Scenario | Before | After | Improvement |
-|----------|--------|-------|-------------|
-| DOM Nodes (no filters) | 500-2000+ | 20-30 | **95-98% reduction** |
-| Initial Render Time | 800-1500ms | 50-100ms | **90% faster** |
-| Memory Usage (no filters) | 40-80 MB | 5-10 MB | **80% reduction** |
+| Scenario                  | Before          | After         | Improvement          |
+| ------------------------- | --------------- | ------------- | -------------------- |
+| DOM Nodes (no filters)    | 500-2000+       | 20-30         | **95-98% reduction** |
+| Initial Render Time       | 800-1500ms      | 50-100ms      | **90% faster**       |
+| Memory Usage (no filters) | 40-80 MB        | 5-10 MB       | **80% reduction**    |
 | Scroll Lag (100+ classes) | Janky 30-45 FPS | Smooth 60 FPS | **100% improvement** |
 
 ### **User-Reported Benefits**
@@ -188,7 +188,7 @@ return null;
 ✅ **Faster Page Loads**: Empty state renders instantly  
 ✅ **Reduced Mental Overhead**: Clean starting point reduces decision fatigue  
 ✅ **Improved Findability**: Users forced to use filters → better search habits  
-✅ **Better Performance**: Browser doesn't choke rendering hundreds of cards  
+✅ **Better Performance**: Browser doesn't choke rendering hundreds of cards
 
 ---
 
@@ -288,6 +288,7 @@ npx convex deploy
 ### **How to Use Class Filters**
 
 **English:**
+
 > Select filters from the panel above to view classes. You can filter by:
 >
 > - **Teacher** (moderators/admins only)
@@ -299,6 +300,7 @@ npx convex deploy
 > Classes will appear grouped by student once you select any filter.
 
 **Thai:**
+
 > เลือกตัวกรองจากแผงด้านบนเพื่อดูคลาส คุณสามารถกรองตาม:
 >
 > - **ครู** (สำหรับผู้ดูแลและผู้จัดการเท่านั้น)
@@ -316,7 +318,7 @@ npx convex deploy
 **Issue:** Default display of all classes caused scrolling hell and performance problems  
 **Solution:** Require filter interaction before showing any classes  
 **Impact:** 95-98% DOM reduction, 90% faster initial render, eliminated scrolling hell  
-**Status:** ✅ Deployed to production (v4.5.15)  
+**Status:** ✅ Deployed to production (v4.5.15)
 
 **User Feedback Expected:** "Finally! I can actually find classes without scrolling forever!"
 

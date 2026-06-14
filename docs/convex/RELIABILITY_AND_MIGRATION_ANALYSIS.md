@@ -38,12 +38,11 @@ This document analyzes Convex service reliability over the past 6 months and eva
 2. [Incident Pattern Analysis](#2-incident-pattern-analysis)
 3. [Company Response & Roadmap](#3-company-response--roadmap)
 4. [Dual-Backup Strategy Evaluation](#4-dual-backup-strategy-evaluation)
-5. [Migration Complexity Assessment](#5-migration-complexity-assessment)
-6. [Recommended Solutions](#6-recommended-solutions)
-7. [Implementation Roadmap](#7-implementation-roadmap)
-8. [Tools & Extensions](#8-tools--extensions)
-9. [Cost-Benefit Analysis](#9-cost-benefit-analysis)
-10. [Decision Matrix](#10-decision-matrix)
+5. [Recommended Solutions](#6-recommended-solutions)
+6. [Implementation Roadmap](#7-implementation-roadmap)
+7. [Tools & Extensions](#8-tools--extensions)
+8. [Cost-Benefit Analysis](#9-cost-benefit-analysis)
+9. [Decision Matrix](#10-decision-matrix)
 
 ---
 
@@ -53,11 +52,11 @@ This document analyzes Convex service reliability over the past 6 months and eva
 
 **Source**: <https://status.convex.dev> (accessed Nov 4, 2025)
 
-| Service | Uptime | Status |
-|---------|--------|--------|
-| **Live Traffic** | 99.81% | Operational |
+| Service                  | Uptime | Status      |
+| ------------------------ | ------ | ----------- |
+| **Live Traffic**         | 99.81% | Operational |
 | **Development Services** | 99.86% | Operational |
-| **convex.dev website** | 100% | Operational |
+| **convex.dev website**   | 100%   | Operational |
 
 **Analysis**:
 
@@ -113,11 +112,11 @@ This document analyzes Convex service reliability over the past 6 months and eva
 
 ### Incident Severity Classification
 
-| Severity | Count | Examples |
-|----------|-------|----------|
-| **Critical** (>4 hours) | 3 | Oct 31 (8h), Oct 21 (8.4h, 5h) |
-| **Major** (1-4 hours) | 2 | Oct 25 (4.3h), Oct 28 (2.2h) |
-| **Minor** (<1 hour) | 2 | Oct 31 (47min), Nov 3 (1.3h) |
+| Severity                | Count | Examples                       |
+| ----------------------- | ----- | ------------------------------ |
+| **Critical** (>4 hours) | 3     | Oct 31 (8h), Oct 21 (8.4h, 5h) |
+| **Major** (1-4 hours)   | 2     | Oct 25 (4.3h), Oct 28 (2.2h)   |
+| **Minor** (<1 hour)     | 2     | Oct 31 (47min), Nov 3 (1.3h)   |
 
 **Concern**: 50% of incidents were **Critical** (>4 hours downtime)
 
@@ -247,21 +246,19 @@ class SupabaseProvider implements DatabaseProvider {
 }
 
 // Runtime switching
-const db: DatabaseProvider = process.env.USE_SUPABASE 
-  ? new SupabaseProvider() 
-  : new ConvexProvider();
+const db: DatabaseProvider = process.env.USE_SUPABASE ? new SupabaseProvider() : new ConvexProvider();
 ```
 
 **Complexity Analysis**:
 
-| Aspect | Effort | Details |
-|--------|--------|---------|
-| **Abstraction Layer** | 2-3 weeks | Rewrite all 45 Convex files to use abstract interface |
-| **Dual Schema Maintenance** | Ongoing | Maintain both Convex schema and PostgreSQL schema in sync |
-| **Data Synchronization** | 1-2 weeks | Build sync mechanism (Convex → Supabase, bi-directional?) |
-| **Real-time Parity** | 2-3 weeks | Implement Supabase real-time to match Convex reactivity |
-| **Testing** | 2-3 weeks | Test both backends, switching logic, data consistency |
-| **Total Effort** | **8-13 weeks** | Plus ongoing maintenance overhead |
+| Aspect                      | Effort         | Details                                                   |
+| --------------------------- | -------------- | --------------------------------------------------------- |
+| **Abstraction Layer**       | 2-3 weeks      | Rewrite all 45 Convex files to use abstract interface     |
+| **Dual Schema Maintenance** | Ongoing        | Maintain both Convex schema and PostgreSQL schema in sync |
+| **Data Synchronization**    | 1-2 weeks      | Build sync mechanism (Convex → Supabase, bi-directional?) |
+| **Real-time Parity**        | 2-3 weeks      | Implement Supabase real-time to match Convex reactivity   |
+| **Testing**                 | 2-3 weeks      | Test both backends, switching logic, data consistency     |
+| **Total Effort**            | **8-13 weeks** | Plus ongoing maintenance overhead                         |
 
 **Problems**:
 
@@ -275,27 +272,22 @@ const db: DatabaseProvider = process.env.USE_SUPABASE
    ```typescript
    // Convex (type-safe, reactive)
    const classes = useQuery(api.classes.list, { schoolId });
-   
+
    // Supabase (requires manual reactivity)
    const { data: classes } = useQuery({
-     queryKey: ['classes', schoolId],
+     queryKey: ["classes", schoolId],
      queryFn: async () => {
-       const { data, error } = await supabase
-         .from('classes')
-         .select('*')
-         .eq('schoolId', schoolId);
+       const { data, error } = await supabase.from("classes").select("*").eq("schoolId", schoolId);
        if (error) throw error;
        return data;
-     }
+     },
    });
-   
+
    // Real-time subscription (separate)
    useEffect(() => {
      const channel = supabase
-       .channel('classes')
-       .on('postgres_changes', { event: '*', schema: 'public', table: 'classes' }, 
-         () => queryClient.invalidateQueries(['classes'])
-       )
+       .channel("classes")
+       .on("postgres_changes", { event: "*", schema: "public", table: "classes" }, () => queryClient.invalidateQueries(["classes"]))
        .subscribe();
      return () => supabase.removeChannel(channel);
    }, []);
@@ -364,7 +356,7 @@ const db: DatabaseProvider = process.env.USE_SUPABASE
 ✅ **Cost-effective**: $0 (use free S3/R2 tier) or $5/month (Dropbox)  
 ✅ **Proven**: Standard disaster recovery pattern  
 ✅ **Flexible**: Can restore to Supabase, Firebase, or new Convex project  
-✅ **Low maintenance**: Set up once, runs automatically  
+✅ **Low maintenance**: Set up once, runs automatically
 
 **Implementation**:
 
@@ -382,8 +374,8 @@ npx convex export --path $backupPath --include-file-storage --prod
 aws s3 cp $backupPath s3://your-bucket/convex-backups/
 
 # Keep last 30 days
-Get-ChildItem ./backups -Filter "convex-backup-*.zip" | 
-  Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-30) } | 
+Get-ChildItem ./backups -Filter "convex-backup-*.zip" |
+  Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-30) } |
   Remove-Item
 
 Write-Host "✅ Backup complete: $backupPath"
@@ -407,47 +399,47 @@ name: Daily Convex Backup
 
 on:
   schedule:
-    - cron: '0 2 * * *'  # 2 AM UTC daily
-  workflow_dispatch:  # Manual trigger
+    - cron: "0 2 * * *" # 2 AM UTC daily
+  workflow_dispatch: # Manual trigger
 
 jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      
+          node-version: "20"
+
       - name: Install dependencies
         run: npm install -g convex
-      
+
       - name: Export Convex data
         env:
           CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}
         run: |
           DATE=$(date +%Y-%m-%d-%H%M)
           npx convex export --path ./backup-$DATE.zip --include-file-storage --prod
-      
+
       - name: Upload to S3
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
-      
+
       - run: |
           DATE=$(date +%Y-%m-%d-%H%M)
           aws s3 cp ./backup-$DATE.zip s3://your-bucket/convex-backups/
-      
+
       - name: Notify on failure
         if: failure()
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
-          text: 'Convex backup failed!'
+          text: "Convex backup failed!"
           webhook_url: ${{ secrets.SLACK_WEBHOOK }}
 ```
 
@@ -459,28 +451,30 @@ jobs:
 ## Trigger: Convex down for >4 hours with no ETA
 
 ### Step 1: Assess Situation (5 minutes)
+
 - Check https://status.convex.dev for incident updates
 - Check Convex Discord for community reports
 - Estimate downtime (if >24h, proceed with migration)
 
 ### Step 2: Prepare Supabase (15 minutes)
+
 1. Create Supabase project: https://supabase.com/dashboard
 2. Note connection string and anon key
 3. Create `.env.local`:
-   ```
+```
 
-   NEXT_PUBLIC_SUPABASE_URL=<https://xxx.supabase.co>
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+NEXT_PUBLIC_SUPABASE_URL=<https://xxx.supabase.co>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 
-   ```
+````
 
 ### Step 3: Convert & Import Data (1-2 hours)
 1. Download latest Convex backup from S3
-2. Run conversion script (see MIGRATION_SCRIPTS.md)
+2. Run conversion script (see [Migration Runbook](../migrations/GUARDIAN_MIGRATION_RUNBOOK.md))
 3. Import to Supabase:
-   ```bash
-   psql $SUPABASE_DB_URL < converted-schema.sql
-   ```
+```bash
+psql $SUPABASE_DB_URL < converted-schema.sql
+````
 
 ### Step 4: Deploy Emergency Frontend (30 minutes)
 
@@ -530,18 +524,18 @@ jobs:
 ```
 
 convex/
-├── users.ts          (auth, sessions, password hashing)
-├── classes.ts        (class booking, state machine)
-├── students.ts       (student management)
-├── schools.ts        (school data)
-├── messages.ts       (messaging system)
-├── notifications.ts  (real-time notifications)
-├── events.ts         (calendar events)
-├── auditLogs.ts      (audit trail)
-├── files.ts          (file uploads)
+├── users.ts (auth, sessions, password hashing)
+├── classes.ts (class booking, state machine)
+├── students.ts (student management)
+├── schools.ts (school data)
+├── messages.ts (messaging system)
+├── notifications.ts (real-time notifications)
+├── events.ts (calendar events)
+├── auditLogs.ts (audit trail)
+├── files.ts (file uploads)
 └── [40 more files]
 
-```
+````
 
 ### Migration Effort Estimation
 
@@ -585,11 +579,11 @@ CREATE POLICY "Users can read own data" ON users
 CREATE POLICY "Admins can read all" ON users
   FOR SELECT USING (
     EXISTS (
-      SELECT 1 FROM users 
+      SELECT 1 FROM users
       WHERE id = auth.uid() AND role = 'admin'
     )
   );
-```
+````
 
 **Conversion Challenges**:
 
@@ -607,7 +601,7 @@ CREATE POLICY "Admins can read all" ON users
      theme: "dark",
      notifications: { email: true, sms: false }
    }
-   
+
    // Supabase (requires JSONB or separate table)
    preferences JSONB  -- Less type-safe
    -- OR --
@@ -629,7 +623,7 @@ CREATE POLICY "Admins can read all" ON users
      v.literal("approved"),
      v.literal("rejected")
    )
-   
+
    // Supabase
    status TEXT CHECK (status IN ('pending', 'approved', 'rejected'))
    -- OR --
@@ -646,46 +640,43 @@ export const listBySchool = query({
   handler: async (ctx, args) => {
     const classes = await ctx.db
       .query("classes")
-      .withIndex("by_school_and_date", q => 
-        q.eq("schoolId", args.schoolId)
-      )
-      .filter(q => q.eq(q.field("isActive"), true))
+      .withIndex("by_school_and_date", (q) => q.eq("schoolId", args.schoolId))
+      .filter((q) => q.eq(q.field("isActive"), true))
       .order("desc")
       .take(50);
-    
+
     // Fetch related data (N+1 problem avoided with Convex)
     const classesWithTeachers = await Promise.all(
-      classes.map(async c => ({
+      classes.map(async (c) => ({
         ...c,
-        teacher: await ctx.db.get(c.teacherId)
-      }))
+        teacher: await ctx.db.get(c.teacherId),
+      })),
     );
-    
+
     return classesWithTeachers;
-  }
+  },
 });
 
 // AFTER (Supabase)
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 export async function listBySchool(schoolId: string) {
-  const supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_KEY!
-  );
-  
+  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_KEY!);
+
   // Single query with JOIN (no N+1 problem)
   const { data, error } = await supabase
-    .from('classes')
-    .select(`
+    .from("classes")
+    .select(
+      `
       *,
       teacher:teachers(id, username, email)
-    `)
-    .eq('school_id', schoolId)
-    .eq('is_active', true)
-    .order('created_at', { ascending: false })
+    `,
+    )
+    .eq("school_id", schoolId)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
     .limit(50);
-  
+
   if (error) throw error;
   return data;
 }
@@ -710,13 +701,13 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 function ClassList({ schoolId }: { schoolId: string }) {
   const queryClient = useQueryClient();
-  
+
   // Initial query
   const { data: classes } = useQuery({
     queryKey: ['classes', schoolId],
     queryFn: () => listBySchool(schoolId)
   });
-  
+
   // Real-time subscription
   useEffect(() => {
     const channel = supabase
@@ -735,12 +726,12 @@ function ClassList({ schoolId }: { schoolId: string }) {
         }
       )
       .subscribe();
-    
+
     return () => {
       supabase.removeChannel(channel);
     };
   }, [schoolId, queryClient]);
-  
+
   return <div>{/* Render classes */}</div>;
 }
 ```
@@ -762,14 +753,14 @@ function ClassList({ schoolId }: { schoolId: string }) {
 
 ### Total Migration Timeline
 
-| Phase | Duration | Difficulty |
-|-------|----------|------------|
-| Schema Conversion | 1-2 weeks | 🟡 Medium |
-| Query Rewrite | 2-3 weeks | 🔴 Hard |
-| Real-time Setup | 1-2 weeks | 🟡 Medium |
-| Testing | 2-3 weeks | 🟡 Medium |
-| Deployment | 1 week | 🟢 Easy |
-| **TOTAL** | **7-11 weeks** | **🔴 Very Hard** |
+| Phase             | Duration       | Difficulty       |
+| ----------------- | -------------- | ---------------- |
+| Schema Conversion | 1-2 weeks      | 🟡 Medium        |
+| Query Rewrite     | 2-3 weeks      | 🔴 Hard          |
+| Real-time Setup   | 1-2 weeks      | 🟡 Medium        |
+| Testing           | 2-3 weeks      | 🟡 Medium        |
+| Deployment        | 1 week         | 🟢 Easy          |
+| **TOTAL**         | **7-11 weeks** | **🔴 Very Hard** |
 
 **Cost in Developer Time**:
 
@@ -869,49 +860,49 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
 
    ```typescript
    // scripts/convex-to-postgres.ts
-   import { readFileSync, writeFileSync } from 'fs';
-   import AdmZip from 'adm-zip';
-   
+   import { readFileSync, writeFileSync } from "fs";
+   import AdmZip from "adm-zip";
+
    function convertConvexToPostgres(zipPath: string) {
      const zip = new AdmZip(zipPath);
      const entries = zip.getEntries();
-     
+
      // Extract Convex data
      const tables = entries
-       .filter(entry => entry.entryName.endsWith('.jsonl'))
-       .map(entry => {
-         const tableName = entry.entryName.replace('.jsonl', '');
-         const lines = entry.getData().toString().split('\n');
-         const records = lines
-           .filter(line => line.trim())
-           .map(line => JSON.parse(line));
-         
+       .filter((entry) => entry.entryName.endsWith(".jsonl"))
+       .map((entry) => {
+         const tableName = entry.entryName.replace(".jsonl", "");
+         const lines = entry.getData().toString().split("\n");
+         const records = lines.filter((line) => line.trim()).map((line) => JSON.parse(line));
+
          return { tableName, records };
        });
-     
+
      // Generate SQL
-     const sql = tables.map(({ tableName, records }) => {
-       const insertStatements = records.map(record => {
-         const columns = Object.keys(record).filter(k => k !== '_id');
-         const values = columns.map(col => {
-           const val = record[col];
-           if (typeof val === 'string') return `'${val.replace(/'/g, "''")}'`;
-           if (val === null) return 'NULL';
-           if (typeof val === 'object') return `'${JSON.stringify(val)}'::jsonb`;
-           return val;
+     const sql = tables
+       .map(({ tableName, records }) => {
+         const insertStatements = records.map((record) => {
+           const columns = Object.keys(record).filter((k) => k !== "_id");
+           const values = columns.map((col) => {
+             const val = record[col];
+             if (typeof val === "string") return `'${val.replace(/'/g, "''")}'`;
+             if (val === null) return "NULL";
+             if (typeof val === "object") return `'${JSON.stringify(val)}'::jsonb`;
+             return val;
+           });
+
+           return `INSERT INTO ${tableName} (${columns.join(", ")}) VALUES (${values.join(", ")});`;
          });
-         
-         return `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${values.join(', ')});`;
-       });
-       
-       return insertStatements.join('\n');
-     }).join('\n\n');
-     
-     writeFileSync('converted-backup.sql', sql);
-     console.log('✅ Conversion complete: converted-backup.sql');
+
+         return insertStatements.join("\n");
+       })
+       .join("\n\n");
+
+     writeFileSync("converted-backup.sql", sql);
+     console.log("✅ Conversion complete: converted-backup.sql");
    }
-   
-   convertConvexToPostgres('./backups/convex-backup-2025-11-04.zip');
+
+   convertConvexToPostgres("./backups/convex-backup-2025-11-04.zip");
    ```
 
 3. **Create Emergency Branch**
@@ -919,13 +910,13 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
    ```bash
    # Create branch with Supabase integration (pre-coded)
    git checkout -b emergency-supabase
-   
+
    # Install Supabase client
    npm install @supabase/supabase-js
-   
+
    # Create lib/supabase.ts
-   # ... (see detailed implementation in SUPABASE_MIGRATION_GUIDE.md)
-   
+   # ... (detailed implementation to be documented in future migration guide)
+
    # Commit
    git add .
    git commit -m "feat: emergency Supabase fallback integration"
@@ -1100,7 +1091,7 @@ https://dashboard.convex.dev/t/your-team/your-project/settings
 - ⚠️ Convex announces service changes/deprecation
 
 **Timeline**: 7-11 weeks  
-**Budget**: $15,000 - $30,000  
+**Budget**: $15,000 - $30,000
 
 **Decision Point**: Review monthly (check trigger conditions)
 
@@ -1318,9 +1309,9 @@ export default {
         'Authorization': `Bearer ${env.CONVEX_API_KEY}`
       }
     });
-    
+
     const blob = await response.blob();
-    
+
     // Upload to R2
     await env.BACKUPS.put(`backup-${Date.now()}.zip`, blob);
   }
@@ -1409,13 +1400,13 @@ npx prisma migrate deploy
 
 ### Current Costs (Free Tier)
 
-| Service | Monthly Cost | Annual Cost |
-|---------|--------------|-------------|
-| **Convex (Free)** | $0 | $0 |
-| **Vercel (Hobby)** | $0 | $0 |
-| **MongoDB Atlas (Free)** | $0 | $0 |
-| **GitHub (Free)** | $0 | $0 |
-| **TOTAL** | **$0** | **$0** |
+| Service                  | Monthly Cost | Annual Cost |
+| ------------------------ | ------------ | ----------- |
+| **Convex (Free)**        | $0           | $0          |
+| **Vercel (Hobby)**       | $0           | $0          |
+| **MongoDB Atlas (Free)** | $0           | $0          |
+| **GitHub (Free)**        | $0           | $0          |
+| **TOTAL**                | **$0**       | **$0**      |
 
 **Risk**: No SLA, extended outages, deprioritized recovery
 
@@ -1423,12 +1414,12 @@ npx prisma migrate deploy
 
 ### Recommended Setup (Pro + Backups)
 
-| Service | Monthly Cost | Annual Cost | Benefit |
-|---------|--------------|-------------|---------|
-| **Convex Pro** | $25 | $300 | Priority recovery (30-90 min vs 4-8h) |
-| **Cloudflare R2 (100GB)** | $1.50 | $18 | Automated daily backups |
-| **Supabase (Free)** | $0 | $0 | Emergency hot-swap ready |
-| **TOTAL** | **$26.50** | **$318** | **95% risk reduction** |
+| Service                   | Monthly Cost | Annual Cost | Benefit                               |
+| ------------------------- | ------------ | ----------- | ------------------------------------- |
+| **Convex Pro**            | $25          | $300        | Priority recovery (30-90 min vs 4-8h) |
+| **Cloudflare R2 (100GB)** | $1.50        | $18         | Automated daily backups               |
+| **Supabase (Free)**       | $0           | $0          | Emergency hot-swap ready              |
+| **TOTAL**                 | **$26.50**   | **$318**    | **95% risk reduction**                |
 
 **ROI Calculation**:
 
@@ -1451,13 +1442,13 @@ npx prisma migrate deploy
 
 ### Full Supabase Migration (Alternative)
 
-| Item | Cost | Timeline |
-|------|------|----------|
-| **Developer Time** | $15,000 - $30,000 | 7-11 weeks |
-| **Supabase Pro** | $25/month | Ongoing |
-| **Testing** | $2,000 - $5,000 | 2-3 weeks |
-| **Deployment** | $500 - $1,000 | 1 week |
-| **TOTAL** | **$17,500 - $36,000** | **10-15 weeks** |
+| Item               | Cost                  | Timeline        |
+| ------------------ | --------------------- | --------------- |
+| **Developer Time** | $15,000 - $30,000     | 7-11 weeks      |
+| **Supabase Pro**   | $25/month             | Ongoing         |
+| **Testing**        | $2,000 - $5,000       | 2-3 weeks       |
+| **Deployment**     | $500 - $1,000         | 1 week          |
+| **TOTAL**          | **$17,500 - $36,000** | **10-15 weeks** |
 
 **Breakeven Analysis**:
 
@@ -1575,20 +1566,17 @@ npx prisma migrate deploy
    - Protects against data loss
    - Enables disaster recovery (2-4 hours)
 
-**SHORT-TERM (This Month)** 🟡:
-3. **Prepare Emergency Supabase Infrastructure** ($0, 10-14 hours)
+**SHORT-TERM (This Month)** 🟡: 3. **Prepare Emergency Supabase Infrastructure** ($0, 10-14 hours)
 
 - Insurance policy against extended Convex outages
 - Pre-code emergency branch for fast activation
 
-**ONGOING**:
-4. **Monitor Convex Reliability** (monthly review)
+**ONGOING**: 4. **Monitor Convex Reliability** (monthly review)
 
 - Track incident frequency and duration
 - Re-evaluate migration if issues persist
 
-**DEFER** ❌:
-5. **Full Supabase Migration** (only if triggered)
+**DEFER** ❌: 5. **Full Supabase Migration** (only if triggered)
 
 - Cost: $25,000, Timeline: 7-11 weeks
 - Only necessary if Convex becomes unusable long-term
@@ -1639,21 +1627,21 @@ CREATE TABLE users (
   password_hash TEXT NOT NULL,
   role TEXT NOT NULL CHECK (role IN ('admin', 'moderator', 'teacher')),
   school_id UUID REFERENCES schools(id) ON DELETE SET NULL,
-  
+
   -- Bilingual fields
   display_name TEXT,
   display_name_th TEXT,
-  
+
   -- Preferences (JSONB for flexibility)
   preferences JSONB DEFAULT '{}'::jsonb,
-  
+
   -- Metadata
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
   last_login TIMESTAMPTZ,
   is_active BOOLEAN DEFAULT true,
   require_password_change BOOLEAN DEFAULT false,
-  
+
   -- Performance indexes
   CONSTRAINT username_lowercase CHECK (username = LOWER(username))
 );
@@ -1673,7 +1661,7 @@ CREATE POLICY "Moderators can view school users" ON users
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM users u
-      WHERE u.id = auth.uid() 
+      WHERE u.id = auth.uid()
       AND u.role = 'moderator'
       AND u.school_id = users.school_id
     )
@@ -1707,13 +1695,14 @@ CREATE TRIGGER users_updated_at
 ```markdown
 # Convex Incident Log
 
-| Date | Duration | Severity | Impact | Recovery Time (Free) | Recovery Time (Pro) | Notes |
-|------|----------|----------|--------|---------------------|-------------------|-------|
-| 2025-11-03 | 1.3h | Minor | Subset of customers | 1.3h | 30min | Database cluster issue |
-| 2025-10-31 | 8h | Critical | Subset of customers | 8h | 1h | Downstream provider maintenance |
-| ... | ... | ... | ... | ... | ... | ... |
+| Date       | Duration | Severity | Impact              | Recovery Time (Free) | Recovery Time (Pro) | Notes                           |
+| ---------- | -------- | -------- | ------------------- | -------------------- | ------------------- | ------------------------------- |
+| 2025-11-03 | 1.3h     | Minor    | Subset of customers | 1.3h                 | 30min               | Database cluster issue          |
+| 2025-10-31 | 8h       | Critical | Subset of customers | 8h                   | 1h                  | Downstream provider maintenance |
+| ...        | ...      | ...      | ...                 | ...                  | ...                 | ...                             |
 
 **Monthly Summary**:
+
 - **Total Incidents**: [count]
 - **Total Downtime (Free Tier)**: [hours]
 - **Total Downtime (Pro Tier Estimate)**: [hours]
@@ -1721,9 +1710,11 @@ CREATE TRIGGER users_updated_at
 - **Uptime Percentage**: [%]
 
 **Trend Analysis**:
+
 - Increasing ⚠️ / Stable ✅ / Decreasing ✅
 
 **Action Items**:
+
 - [ ] Continue monitoring
 - [ ] Escalate to Convex support
 - [ ] Begin migration planning
@@ -1735,23 +1726,27 @@ CREATE TRIGGER users_updated_at
 # Emergency Contacts
 
 ## Convex Support
+
 - **Email**: support@convex.dev
 - **Discord**: https://discord.gg/convex
 - **Status Page**: https://status.convex.dev
 - **Dashboard**: https://dashboard.convex.dev
 
 ## Supabase Support
+
 - **Email**: support@supabase.io
 - **Discord**: https://discord.supabase.com
 - **Status Page**: https://status.supabase.com
 - **Dashboard**: https://app.supabase.com
 
 ## Internal Team
+
 - **Project Lead**: [Name] - [Email] - [Phone]
 - **Developer**: [Name] - [Email] - [Phone]
 - **Stakeholder**: [Name] - [Email] - [Phone]
 
 ## Service Providers
+
 - **Vercel Support**: vercel.com/support
 - **Cloudflare Support**: support.cloudflare.com
 - **AWS Support**: aws.amazon.com/support

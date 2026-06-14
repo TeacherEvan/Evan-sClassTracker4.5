@@ -16,12 +16,12 @@
 
 ### Key Findings
 
-| Service | Primary Bottleneck | Free Limit | Time to Limit | Upgrade Cost |
-|---------|-------------------|------------|---------------|--------------|
-| **Convex** | Bandwidth | 5 GB/month | **6-12 months** | **$25/mo** |
-| Convex | Database Size | 1 GB | 2-3 years | (Included in Pro) |
-| Vercel | Bandwidth | 100 GB/month | Many years | $20/mo |
-| Vercel | Build Minutes | 6,000/month | Never | (Included) |
+| Service    | Primary Bottleneck | Free Limit   | Time to Limit   | Upgrade Cost      |
+| ---------- | ------------------ | ------------ | --------------- | ----------------- |
+| **Convex** | Bandwidth          | 5 GB/month   | **6-12 months** | **$25/mo**        |
+| Convex     | Database Size      | 1 GB         | 2-3 years       | (Included in Pro) |
+| Vercel     | Bandwidth          | 100 GB/month | Many years      | $20/mo            |
+| Vercel     | Build Minutes      | 6,000/month  | Never           | (Included)        |
 
 ### Why Convex Hits First
 
@@ -114,14 +114,14 @@ lib/hooks/
 
 ### Benefits
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| **Largest Component** | 1,939 lines | ~400 lines | **79% reduction** |
-| **Testability** | Monolithic (hard to test) | 13 isolated units | **Unit tests possible** |
-| **Re-renders** | Full component | Only changed sub-components | **30-50% fewer** |
-| **Onboarding** | 2,995 lines to understand | ~150 lines per component | **95% easier** |
-| **Debugging** | Find needle in haystack | Isolate to specific component | **10x faster** |
-| **Reusability** | None (tightly coupled) | Share OptionalFields, ActionButtons | **Code reuse** |
+| Metric                | Before                    | After                               | Improvement             |
+| --------------------- | ------------------------- | ----------------------------------- | ----------------------- |
+| **Largest Component** | 1,939 lines               | ~400 lines                          | **79% reduction**       |
+| **Testability**       | Monolithic (hard to test) | 13 isolated units                   | **Unit tests possible** |
+| **Re-renders**        | Full component            | Only changed sub-components         | **30-50% fewer**        |
+| **Onboarding**        | 2,995 lines to understand | ~150 lines per component            | **95% easier**          |
+| **Debugging**         | Find needle in haystack   | Isolate to specific component       | **10x faster**          |
+| **Reusability**       | None (tightly coupled)    | Share OptionalFields, ActionButtons | **Code reuse**          |
 
 ### Performance Strategy
 
@@ -143,9 +143,14 @@ const filteredStudents = useMemo(() => {
 }, [students, searchTerm, schoolId]);
 
 // Prevent child re-renders
-const handleEdit = useCallback((id: Id<"students">) => {
-  // ... edit logic
-}, [/* dependencies */]);
+const handleEdit = useCallback(
+  (id: Id<"students">) => {
+    // ... edit logic
+  },
+  [
+    /* dependencies */
+  ],
+);
 ```
 
 **Expected Gains**:
@@ -159,13 +164,13 @@ const handleEdit = useCallback((id: Id<"students">) => {
 
 **Timeline**: 10 hours over 2-3 sessions
 
-| Phase | Tasks | Duration |
-|-------|-------|----------|
-| **Phase 1: Foundation** | Extract 2 hooks | 1 hour |
-| **Phase 2: class-booking** | 8 sub-components + coordinator | 4 hours |
-| **Phase 3: student-management** | 5 sub-components + coordinator | 3 hours |
-| **Phase 4: Optimization** | React.memo, useMemo, useCallback | 1 hour |
-| **Phase 5: Testing** | Full workflow verification | 1 hour |
+| Phase                           | Tasks                            | Duration |
+| ------------------------------- | -------------------------------- | -------- |
+| **Phase 1: Foundation**         | Extract 2 hooks                  | 1 hour   |
+| **Phase 2: class-booking**      | 8 sub-components + coordinator   | 4 hours  |
+| **Phase 3: student-management** | 5 sub-components + coordinator   | 3 hours  |
+| **Phase 4: Optimization**       | React.memo, useMemo, useCallback | 1 hour   |
+| **Phase 5: Testing**            | Full workflow verification       | 1 hour   |
 
 **Rollback Plan**: Keep work in feature branch, merge only after passing all checks
 

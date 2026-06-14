@@ -136,22 +136,20 @@ Transform current horizontal-tab layout into multi-panel VS Code-inspired layout
   <header className="col-span-3 row-span-1">
     <Header />
   </header>
-  
+
   {/* Left Sidebar */}
   <aside className="col-span-1 row-span-2">
     <SidebarNav />
   </aside>
-  
+
   {/* Main Content */}
-  <main className="col-span-1 row-span-1">
-    {renderActiveView()}
-  </main>
-  
+  <main className="col-span-1 row-span-1">{renderActiveView()}</main>
+
   {/* Right Panel */}
   <aside className="col-span-1 row-span-2">
     <RightPanel />
   </aside>
-  
+
   {/* Bottom Panel - spans left nav + main content */}
   <footer className="col-span-2 row-span-1">
     <BottomPanel />
@@ -184,19 +182,19 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
   <Panel defaultSize={20} minSize={10} maxSize={30}>
     <SidebarNav />
   </Panel>
-  
+
   <PanelResizeHandle className="w-1 bg-gray-300 hover:bg-blue-500" />
-  
+
   <Panel defaultSize={50} minSize={30}>
     <MainContent />
   </Panel>
-  
+
   <PanelResizeHandle className="w-1 bg-gray-300 hover:bg-blue-500" />
-  
+
   <Panel defaultSize={30} minSize={15} maxSize={40}>
     <RightPanel />
   </Panel>
-</PanelGroup>
+</PanelGroup>;
 ```
 
 ---
@@ -248,33 +246,26 @@ interface LayoutState {
   activeView: ViewType;
 }
 
-type ViewType = 
-  | "calendar" 
-  | "classes" 
-  | "students" 
-  | "messages" 
-  | "events" 
-  | "schools" 
-  | "moderators" 
-  | "locations" 
-  | "resources" 
-  | "analytics";
+type ViewType = "calendar" | "classes" | "students" | "messages" | "events" | "schools" | "moderators" | "locations" | "resources" | "analytics";
 ```
 
 **Persistence** (localStorage):
 
 ```tsx
 // Save layout preferences
-localStorage.setItem('layoutPreferences', JSON.stringify({
-  leftSidebarWidth: 240,
-  rightPanelWidth: 320,
-  bottomPanelHeight: 240,
-  rightPanelVisible: true,
-  bottomPanelVisible: true
-}));
+localStorage.setItem(
+  "layoutPreferences",
+  JSON.stringify({
+    leftSidebarWidth: 240,
+    rightPanelWidth: 320,
+    bottomPanelHeight: 240,
+    rightPanelVisible: true,
+    bottomPanelVisible: true,
+  }),
+);
 
 // Restore on mount
-const savedPrefs = localStorage.getItem('layoutPreferences');
+const savedPrefs = localStorage.getItem("layoutPreferences");
 if (savedPrefs) {
   setLayoutState(JSON.parse(savedPrefs));
 }
@@ -300,25 +291,29 @@ screens: {
 
 ```tsx
 // Detect screen size
-const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+const [screenSize, setScreenSize] = useState<"mobile" | "tablet" | "desktop">("desktop");
 
 useEffect(() => {
   const handleResize = () => {
     const width = window.innerWidth;
-    if (width < 768) setScreenSize('mobile');
-    else if (width < 1024) setScreenSize('tablet');
-    else setScreenSize('desktop');
+    if (width < 768) setScreenSize("mobile");
+    else if (width < 1024) setScreenSize("tablet");
+    else setScreenSize("desktop");
   };
-  
-  window.addEventListener('resize', handleResize);
+
+  window.addEventListener("resize", handleResize);
   handleResize(); // Initial check
-  
-  return () => window.removeEventListener('resize', handleResize);
+
+  return () => window.removeEventListener("resize", handleResize);
 }, []);
 
 // Conditional rendering
-{screenSize === 'desktop' && <RightPanel />}
-{screenSize !== 'mobile' && <BottomPanel />}
+{
+  screenSize === "desktop" && <RightPanel />;
+}
+{
+  screenSize !== "mobile" && <BottomPanel />;
+}
 ```
 
 ---
@@ -390,16 +385,16 @@ useEffect(() => {
 
 ```tsx
 import {
-  Calendar,      // Calendar view
-  BookOpen,      // Classes
-  Users,         // Students
+  Calendar, // Calendar view
+  BookOpen, // Classes
+  Users, // Students
   MessageSquare, // Messages
-  CalendarDays,  // Events
-  School,        // Schools
-  UserCog,       // Moderators
-  MapPin,        // Locations
-  BookMarked,    // Resources
-  BarChart3      // Analytics
+  CalendarDays, // Events
+  School, // Schools
+  UserCog, // Moderators
+  MapPin, // Locations
+  BookMarked, // Resources
+  BarChart3, // Analytics
 } from "lucide-react";
 ```
 
@@ -407,14 +402,14 @@ import {
 
 ## 📊 Implementation Timeline
 
-| Phase | Duration | Status | Deliverable |
-|-------|----------|--------|-------------|
-| **Phase 1** | 2 days | ⏳ Pending | Core layout structure |
-| **Phase 2** | 2 days | ⏳ Pending | Resizable panels |
-| **Phase 3** | 2 days | ⏳ Pending | Component migration |
-| **Phase 4** | 1 day  | ⏳ Pending | State management |
-| **Phase 5** | 1 day  | ⏳ Pending | Responsive behavior |
-| **Phase 6** | 2 days | ⏳ Pending | Testing & polish |
+| Phase       | Duration | Status     | Deliverable           |
+| ----------- | -------- | ---------- | --------------------- |
+| **Phase 1** | 2 days   | ⏳ Pending | Core layout structure |
+| **Phase 2** | 2 days   | ⏳ Pending | Resizable panels      |
+| **Phase 3** | 2 days   | ⏳ Pending | Component migration   |
+| **Phase 4** | 1 day    | ⏳ Pending | State management      |
+| **Phase 5** | 1 day    | ⏳ Pending | Responsive behavior   |
+| **Phase 6** | 2 days   | ⏳ Pending | Testing & polish      |
 
 **Total Estimated Time:** 10 working days (2 weeks)
 

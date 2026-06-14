@@ -10,13 +10,11 @@ The `listWithDetails` query in `convex/classes.ts` uses batch fetching to join s
 
 ```typescript
 // In convex/classes.ts
-const students = await Promise.all(allStudentIds.map(id => ctx.db.get(id)));
-const studentMap = new Map(
-  students.filter((s): s is NonNullable<typeof s> => s !== null).map(s => [s._id, s])
-);
+const students = await Promise.all(allStudentIds.map((id) => ctx.db.get(id)));
+const studentMap = new Map(students.filter((s): s is NonNullable<typeof s> => s !== null).map((s) => [s._id, s]));
 
 // Returns null for deleted students
-return classes.map(c => ({
+return classes.map((c) => ({
   ...c,
   student: studentMap.get(c.studentId) || null,
   // ...
@@ -62,20 +60,19 @@ if (!student) {
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
             <X className="h-5 w-5 text-red-500" />
-            <h3 className="font-semibold text-red-800 dark:text-red-400">
-              {t("Deleted Student Reference", "อ้างอิงนักเรียนที่ถูกลบ")}
-            </h3>
+            <h3 className="font-semibold text-red-800 dark:text-red-400">{t("Deleted Student Reference", "อ้างอิงนักเรียนที่ถูกลบ")}</h3>
           </div>
-          <p className="text-sm text-red-700 dark:text-red-300 mb-3">
-            {t(
-              "This class references a student that has been deleted. Please delete this class or contact an administrator.",
-              "คลาสนี้อ้างอิงถึงนักเรียนที่ถูกลบแล้ว กรุณาลบคลาสนี้หรือติดต่อผู้ดูแลระบบ"
-            )}
-          </p>
+          <p className="text-sm text-red-700 dark:text-red-300 mb-3">{t("This class references a student that has been deleted. Please delete this class or contact an administrator.", "คลาสนี้อ้างอิงถึงนักเรียนที่ถูกลบแล้ว กรุณาลบคลาสนี้หรือติดต่อผู้ดูแลระบบ")}</p>
           <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-            <p>{t("Class ID:", "รหัสคลาส:")} {classItem._id}</p>
-            <p>{t("Scheduled:", "กำหนดการ:")} {new Date(classItem.scheduledDate).toLocaleString()}</p>
-            <p>{t("Status:", "สถานะ:")} {getStatusText(classItem.status)}</p>
+            <p>
+              {t("Class ID:", "รหัสคลาส:")} {classItem._id}
+            </p>
+            <p>
+              {t("Scheduled:", "กำหนดการ:")} {new Date(classItem.scheduledDate).toLocaleString()}
+            </p>
+            <p>
+              {t("Status:", "สถานะ:")} {getStatusText(classItem.status)}
+            </p>
           </div>
         </div>
         <button onClick={/* delete handler */} className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">
@@ -99,12 +96,8 @@ Updated to show deleted student indicator in calendar view:
 **Changes:**
 
 ```tsx
-<button
-  className={`... ${!student ? 'opacity-60' : ''}`}
->
-  <div className={`... ${!student ? 'text-red-600 dark:text-red-400' : ''}`}>
-    {student ? `${student.firstName} ${student.lastName}` : t("⚠️ Deleted Student", "⚠️ นักเรียนถูกลบ")}
-  </div>
+<button className={`... ${!student ? "opacity-60" : ""}`}>
+  <div className={`... ${!student ? "text-red-600 dark:text-red-400" : ""}`}>{student ? `${student.firstName} ${student.lastName}` : t("⚠️ Deleted Student", "⚠️ นักเรียนถูกลบ")}</div>
   {/* ... rest of content */}
 </button>
 ```

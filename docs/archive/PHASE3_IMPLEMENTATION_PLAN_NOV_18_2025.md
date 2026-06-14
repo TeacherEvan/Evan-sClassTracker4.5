@@ -131,22 +131,22 @@ Phase 3 focuses on enhancing user experience with:
 
 ## Phase 3 Timeline
 
-| Task | Time | Status |
-|------|------|--------|
-| 3.1 Undo for deletions | 1 hour | ⏳ Starting |
-| 3.2 Bulk actions UI | 1.5 hours | ⏳ Pending |
-| 3.3 Loading/empty states | 30 min | ⏳ Pending |
-| **Total** | **3 hours** | **0% complete** |
+| Task                     | Time        | Status          |
+| ------------------------ | ----------- | --------------- |
+| 3.1 Undo for deletions   | 1 hour      | ⏳ Starting     |
+| 3.2 Bulk actions UI      | 1.5 hours   | ⏳ Pending      |
+| 3.3 Loading/empty states | 30 min      | ⏳ Pending      |
+| **Total**                | **3 hours** | **0% complete** |
 
 ---
 
 ## Success Metrics
 
-| Metric | Before | After | Target |
-|--------|--------|-------|--------|
-| UX Score | 92/100 | TBD | 97/100 (+5) |
-| User Errors | N/A | TBD | -50% |
-| Task Completion Time | N/A | TBD | -30% |
+| Metric               | Before | After | Target      |
+| -------------------- | ------ | ----- | ----------- |
+| UX Score             | 92/100 | TBD   | 97/100 (+5) |
+| User Errors          | N/A    | TBD   | -50%        |
+| Task Completion Time | N/A    | TBD   | -30%        |
 
 ---
 

@@ -1,20 +1,20 @@
 /**
  * usePollingQuery - Poll-based data fetching for static/rarely-changing data
- * 
+ *
  * Use this instead of useQuery for data that:
  * - Changes infrequently (schools, locations, user lists)
  * - Doesn't need instant updates
  * - Would cause unnecessary re-renders with real-time subscriptions
- * 
+ *
  * Benefits:
  * - Reduces WebSocket traffic
  * - Prevents unnecessary component re-renders
  * - Improves battery life on mobile devices
- * 
+ *
  * @example
  * // Instead of real-time subscription:
  * // const schools = useQuery(api.schools.list, {});
- * 
+ *
  * // Use polling (updates every 60 seconds):
  * const schools = usePollingQuery(api.schools.list, {}, 60000);
  */
@@ -35,13 +35,9 @@ interface PollingOptions {
 export function usePollingQuery<T>(
   query: FunctionReference<"query", "public", Record<string, unknown>, T>,
   args: Record<string, unknown>,
-  options: PollingOptions = {}
+  options: PollingOptions = {},
 ): T | undefined {
-  const {
-    interval = 10000,
-    enabled = true,
-    fetchOnMount = true,
-  } = options;
+  const { interval = 10000, enabled = true, fetchOnMount = true } = options;
 
   const convex = useConvex();
   const [data, setData] = useState<T | undefined>(undefined);
@@ -91,18 +87,18 @@ export function usePollingQuery<T>(
 
 /**
  * useManualRefreshQuery - Manual refresh with optional auto-refresh
- * 
+ *
  * Use for analytics, dashboards, or reports that don't need constant updates
- * 
+ *
  * @example
  * const { data, refresh, isLoading } = useManualRefreshQuery(api.analytics.getStats, {});
- * 
+ *
  * <button onClick={refresh}>Refresh</button>
  */
 export function useManualRefreshQuery<T>(
   query: FunctionReference<"query", "public", Record<string, unknown>, T>,
   args: Record<string, unknown>,
-  autoRefreshInterval?: number
+  autoRefreshInterval?: number,
 ): {
   data: T | undefined;
   refresh: () => Promise<void>;

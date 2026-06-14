@@ -4,7 +4,7 @@ import { Id, Doc } from "./_generated/dataModel";
 
 /**
  * Duplicate Detection System
- * 
+ *
  * Detects potential duplicate students by comparing:
  * - firstName, lastName, grade, dateOfBirth, guardianPhone, area, schoolId
  * - 4+ matches → flag for admin review
@@ -13,7 +13,7 @@ import { Id, Doc } from "./_generated/dataModel";
 // Helper function to compare two students and count matches
 function compareStudents(
   student1: Doc<"students">,
-  student2: Doc<"students">
+  student2: Doc<"students">,
 ): { matches: number; details: Record<string, boolean> } {
   const details = {
     firstName: false,
@@ -42,11 +42,19 @@ function compareStudents(
     details.grade = true;
     matches++;
   }
-  if (student1.dateOfBirth && student2.dateOfBirth && student1.dateOfBirth === student2.dateOfBirth) {
+  if (
+    student1.dateOfBirth &&
+    student2.dateOfBirth &&
+    student1.dateOfBirth === student2.dateOfBirth
+  ) {
     details.dateOfBirth = true;
     matches++;
   }
-  if (student1.guardianPhone && student2.guardianPhone && student1.guardianPhone === student2.guardianPhone) {
+  if (
+    student1.guardianPhone &&
+    student2.guardianPhone &&
+    student1.guardianPhone === student2.guardianPhone
+  ) {
     details.guardianPhone = true;
     matches++;
   }
@@ -54,7 +62,11 @@ function compareStudents(
     details.area = true;
     matches++;
   }
-  if (student1.schoolId && student2.schoolId && student1.schoolId === student2.schoolId) {
+  if (
+    student1.schoolId &&
+    student2.schoolId &&
+    student1.schoolId === student2.schoolId
+  ) {
     details.schoolId = true;
     matches++;
   }
@@ -99,7 +111,9 @@ export const detectDuplicates = mutation({
         .collect();
     } else {
       // No scope available - skip duplicate detection for performance
-      console.warn("Student has no schoolId, providerId, or area - skipping duplicate detection");
+      console.warn(
+        "Student has no schoolId, providerId, or area - skipping duplicate detection",
+      );
       return {
         hasDuplicates: false,
         duplicates: [],
@@ -132,7 +146,9 @@ export const detectDuplicates = mutation({
     if (potentialDuplicates.length > 0) {
       // Get the highest match count
       const maxMatches = Math.max(...potentialDuplicates.map((d) => d.matches));
-      const bestMatch = potentialDuplicates.find((d) => d.matches === maxMatches)!;
+      const bestMatch = potentialDuplicates.find(
+        (d) => d.matches === maxMatches,
+      )!;
 
       await ctx.db.insert("duplicateWatchlist", {
         studentId: args.studentId,
@@ -172,12 +188,14 @@ export const detectDuplicates = mutation({
 export const listWatchlist = query({
   args: {
     userId: v.id("users"),
-    status: v.optional(v.union(
-      v.literal("pending"),
-      v.literal("reviewed"),
-      v.literal("merged"),
-      v.literal("dismissed")
-    )),
+    status: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("reviewed"),
+        v.literal("merged"),
+        v.literal("dismissed"),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     // Verify admin access
@@ -188,12 +206,18 @@ export const listWatchlist = query({
 
     // Get watchlist entries
     const baseQuery = ctx.db.query("duplicateWatchlist");
-    
+
     let entries;
     if (args.status) {
-      entries = await baseQuery.withIndex("by_status", (q) => q.eq("status", args.status!)).order("desc").collect();
+      entries = await baseQuery
+        .withIndex("by_status", (q) => q.eq("status", args.status!))
+        .order("desc")
+        .collect();
     } else {
-      entries = await baseQuery.withIndex("by_created_at").order("desc").collect();
+      entries = await baseQuery
+        .withIndex("by_created_at")
+        .order("desc")
+        .collect();
     }
 
     // Fetch student details for each entry
@@ -201,7 +225,7 @@ export const listWatchlist = query({
       entries.map(async (entry) => {
         const student = await ctx.db.get(entry.studentId);
         const possibleDuplicates = await Promise.all(
-          entry.possibleDuplicateIds.map((id) => ctx.db.get(id))
+          entry.possibleDuplicateIds.map((id) => ctx.db.get(id)),
         );
 
         return {
@@ -209,7 +233,7 @@ export const listWatchlist = query({
           student,
           possibleDuplicates: possibleDuplicates.filter(Boolean), // Filter out nulls
         };
-      })
+      }),
     );
 
     return enrichedEntries;
@@ -237,7 +261,7 @@ export const getWatchlistEntry = query({
     // Fetch student details
     const student = await ctx.db.get(entry.studentId);
     const possibleDuplicates = await Promise.all(
-      entry.possibleDuplicateIds.map((id) => ctx.db.get(id))
+      entry.possibleDuplicateIds.map((id) => ctx.db.get(id)),
     );
 
     // Get classes for all students
@@ -251,8 +275,8 @@ export const getWatchlistEntry = query({
         ctx.db
           .query("classes")
           .withIndex("by_student", (q) => q.eq("studentId", id))
-          .collect()
-      )
+          .collect(),
+      ),
     );
 
     return {
@@ -322,7 +346,10 @@ export const mergeDuplicateStudents = mutation({
     // Validate: keepStudentId must be related to this watchlist entry
     if (
       entry.studentId !== args.keepStudentId &&
-      !(entry.possibleDuplicateIds && entry.possibleDuplicateIds.includes(args.keepStudentId))
+      !(
+        entry.possibleDuplicateIds &&
+        entry.possibleDuplicateIds.includes(args.keepStudentId)
+      )
     ) {
       throw new Error("Keep student must be part of this duplicate set");
     }
@@ -347,7 +374,7 @@ export const mergeDuplicateStudents = mutation({
         isDeleted: true,
         deletedAt: Date.now(),
         deletedBy: args.userId,
-        deletionReason: "Merged into another student record"
+        deletionReason: "Merged into another student record",
       });
     }
 

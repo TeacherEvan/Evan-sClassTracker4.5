@@ -95,18 +95,18 @@
 
 ### Authorization Model
 
-| Role | Can Delete |
-|------|-----------|
-| Admin | All users except other admins |
-| Moderator | Teachers only |
-| Teacher | N/A (no access) |
+| Role      | Can Delete                    |
+| --------- | ----------------------------- |
+| Admin     | All users except other admins |
+| Moderator | Teachers only                 |
+| Teacher   | N/A (no access)               |
 
 ### Rate Limiting
 
-| Operation | Limit | Window | Key Pattern |
-|-----------|-------|--------|-------------|
-| Bulk User Delete | 5 ops | 60s | `bulk-delete-users-{userId}` |
-| Bulk Student Delete | 10 ops | 60s | `bulk-delete-students-{userId}` |
+| Operation           | Limit  | Window | Key Pattern                     |
+| ------------------- | ------ | ------ | ------------------------------- |
+| Bulk User Delete    | 5 ops  | 60s    | `bulk-delete-users-{userId}`    |
+| Bulk Student Delete | 10 ops | 60s    | `bulk-delete-students-{userId}` |
 
 ### Data Validation
 
@@ -139,7 +139,7 @@ export const bulkDeleteUsers = mutation({
   handler: async (ctx, args) => {
     // Rate limiting, authorization, deletion loop
     // Returns: { total, successful, failed, results, errors }
-  }
+  },
 });
 ```
 

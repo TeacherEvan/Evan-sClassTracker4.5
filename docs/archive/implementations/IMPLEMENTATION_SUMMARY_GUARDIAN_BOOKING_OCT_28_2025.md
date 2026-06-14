@@ -42,13 +42,13 @@ students: defineTable({
 ```typescript
 // NEW FUNCTION: Generate guardian-specific IDs
 function generateGuardianStudentId(
-  firstName: string, 
-  lastName: string, 
+  firstName: string,
+  lastName: string,
   birthDate: number, // timestamp
-  area: string
+  area: string,
 ): string {
-  const birthDateStr = new Date(birthDate).toISOString().split('T')[0].replace(/-/g, '');
-  const nameHash = `${firstName.substring(0, 2)}${lastName ? lastName.substring(0, 2) : 'XX'}`.toUpperCase();
+  const birthDateStr = new Date(birthDate).toISOString().split("T")[0].replace(/-/g, "");
+  const nameHash = `${firstName.substring(0, 2)}${lastName ? lastName.substring(0, 2) : "XX"}`.toUpperCase();
   const areaCode = area.substring(0, 5).toUpperCase();
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
   return `${areaCode}-${nameHash}-${birthDateStr}-${random}`;
@@ -70,14 +70,8 @@ function generateGuardianStudentId(
 if (args.dateOfBirth && args.area) {
   const existingGuardianStudent = await ctx.db
     .query("students")
-    .withIndex("by_area", q => q.eq("area", args.area))
-    .filter(q => 
-      q.and(
-        q.eq(q.field("firstName"), args.firstName),
-        q.eq(q.field("lastName"), args.lastName),
-        q.eq(q.field("dateOfBirth"), args.dateOfBirth)
-      )
-    )
+    .withIndex("by_area", (q) => q.eq("area", args.area))
+    .filter((q) => q.and(q.eq(q.field("firstName"), args.firstName), q.eq(q.field("lastName"), args.lastName), q.eq(q.field("dateOfBirth"), args.dateOfBirth)))
     .first();
 
   if (existingGuardianStudent) {
@@ -136,38 +130,34 @@ const [newGuardianPhone, setNewGuardianPhone] = useState("");
 **Student Type Toggle:**
 
 ```tsx
-{/* Student Type Selection */}
+{
+  /* Student Type Selection */
+}
 <div className="flex gap-2">
-  <button
-    onClick={() => setStudentType("school")}
-    className={studentType === "school" ? "bg-blue-600 text-white" : "..."}
-  >
+  <button onClick={() => setStudentType("school")} className={studentType === "school" ? "bg-blue-600 text-white" : "..."}>
     {t("School Student", "นักเรียนในโรงเรียน")}
   </button>
-  <button
-    onClick={() => setStudentType("guardian")}
-    className={studentType === "guardian" ? "bg-purple-600 text-white" : "..."}
-  >
+  <button onClick={() => setStudentType("guardian")} className={studentType === "guardian" ? "bg-purple-600 text-white" : "..."}>
     {t("Guardian Student", "นักเรียนของผู้ปกครอง")}
   </button>
-</div>
+</div>;
 ```
 
 **Conditional Form Fields:**
 
 ```tsx
-{studentType === "school" ? (
-  <>
-    {/* Grade, Class, School dropdowns */}
-  </>
-) : (
-  <>
-    {/* Birth Date input (type="date") */}
-    {/* Area input (auto-uppercase) */}
-    {/* Guardian Name input */}
-    {/* Guardian Phone input */}
-  </>
-)}
+{
+  studentType === "school" ? (
+    <>{/* Grade, Class, School dropdowns */}</>
+  ) : (
+    <>
+      {/* Birth Date input (type="date") */}
+      {/* Area input (auto-uppercase) */}
+      {/* Guardian Name input */}
+      {/* Guardian Phone input */}
+    </>
+  );
+}
 ```
 
 **Features:**
@@ -202,11 +192,9 @@ const handleCreateStudent = async () => {
       return;
     }
   }
-  
+
   // Convert date string to timestamp
-  const birthTimestamp = studentType === "guardian" && guardianBirthDate 
-    ? new Date(guardianBirthDate).getTime() 
-    : undefined;
+  const birthTimestamp = studentType === "guardian" && guardianBirthDate ? new Date(guardianBirthDate).getTime() : undefined;
 
   const newStudentData = await createStudent({
     firstName: newStudentNickname,
@@ -221,7 +209,7 @@ const handleCreateStudent = async () => {
     guardianPhone: studentType === "guardian" && newGuardianPhone ? newGuardianPhone : undefined,
     createdBy: userId,
   });
-  
+
   // ... reset form and show success toast
 };
 ```
@@ -237,28 +225,28 @@ const handleCreateStudent = async () => {
 **Guardian Students Section:**
 
 ```tsx
-{/* Guardian Students Section - Show separately */}
-{students && students.some(s => s.guardianName) && (
-  <div>
-    <label className="... text-purple-600 dark:text-purple-400">
-      {t("Guardian Students (Auto-approved)", "นักเรียนของผู้ปกครอง (อนุมัติอัตโนมัติ)")}
-    </label>
-    <select className="... border-purple-300 focus:ring-purple-500">
-      <option value="">
-        {t("Select guardian student", "เลือกนักเรียนของผู้ปกครอง")}
-      </option>
-      {students.filter(s => s.guardianName).map((student) => (
-        <option key={student._id} value={student._id}>
-          👤 {student.firstName} {student.lastName}
-          {student.area ? ` [${student.area}]` : ""}
-        </option>
-      ))}
-    </select>
-    <p className="... text-purple-600">
-      {t(`${count} guardian student(s) available`, `มีนักเรียนของผู้ปกครอง ${count} คน`)}
-    </p>
-  </div>
-)}
+{
+  /* Guardian Students Section - Show separately */
+}
+{
+  students && students.some((s) => s.guardianName) && (
+    <div>
+      <label className="... text-purple-600 dark:text-purple-400">{t("Guardian Students (Auto-approved)", "นักเรียนของผู้ปกครอง (อนุมัติอัตโนมัติ)")}</label>
+      <select className="... border-purple-300 focus:ring-purple-500">
+        <option value="">{t("Select guardian student", "เลือกนักเรียนของผู้ปกครอง")}</option>
+        {students
+          .filter((s) => s.guardianName)
+          .map((student) => (
+            <option key={student._id} value={student._id}>
+              👤 {student.firstName} {student.lastName}
+              {student.area ? ` [${student.area}]` : ""}
+            </option>
+          ))}
+      </select>
+      <p className="... text-purple-600">{t(`${count} guardian student(s) available`, `มีนักเรียนของผู้ปกครอง ${count} คน`)}</p>
+    </div>
+  );
+}
 ```
 
 **Visual Features:**

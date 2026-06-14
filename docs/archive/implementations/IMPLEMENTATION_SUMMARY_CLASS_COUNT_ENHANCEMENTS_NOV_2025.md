@@ -114,16 +114,16 @@ const isValid = hasSchool !== hasProvider; // Exactly one must be true
 
 ```typescript
 export const exportTable = query({
-    args: { tableName: v.string() },
-    handler: async (ctx, args) => {
-        // Validate against whitelist
-        if (!validTables.includes(args.tableName)) {
-            throw new Error(`Invalid table name: ${args.tableName}`);
-        }
-        // @ts-expect-error - Dynamic table name
-        const records = await ctx.db.query(args.tableName).collect();
-        return records;
-    },
+  args: { tableName: v.string() },
+  handler: async (ctx, args) => {
+    // Validate against whitelist
+    if (!validTables.includes(args.tableName)) {
+      throw new Error(`Invalid table name: ${args.tableName}`);
+    }
+    // @ts-expect-error - Dynamic table name
+    const records = await ctx.db.query(args.tableName).collect();
+    return records;
+  },
 });
 ```
 

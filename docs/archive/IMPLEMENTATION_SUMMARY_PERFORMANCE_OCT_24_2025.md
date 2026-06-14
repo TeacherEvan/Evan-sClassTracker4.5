@@ -320,14 +320,14 @@ Created `docs/PERFORMANCE_AUDIT_OCT_24_2025.md` with **12 detailed sections**:
 
 ⚠️ **BREAKING**: The following mutations now **require** new parameters:
 
-| Mutation | New Required Params | Old Signature | New Signature |
-|----------|-------------------|---------------|---------------|
-| `schools.create` | `adminId` | `{ name, nameTh, moderatorId? }` | `{ name, nameTh, moderatorId?, adminId }` |
-| `schools.updateModerator` | `adminId` | `{ schoolId, moderatorId }` | `{ schoolId, moderatorId, adminId }` |
-| `schools.remove` | `adminId`, `reason` | `{ id }` | `{ id, adminId, reason }` |
-| `students.update` | `updatedBy` | `{ id, ...fields }` | `{ id, updatedBy, ...fields }` |
-| `students.remove` | `deletedBy`, `reason` | `{ id }` | `{ id, deletedBy, reason }` |
-| `bulkOperations.bulkDeleteStudents` | `reason` | `{ studentIds, userId }` | `{ studentIds, userId, reason }` |
+| Mutation                            | New Required Params   | Old Signature                    | New Signature                             |
+| ----------------------------------- | --------------------- | -------------------------------- | ----------------------------------------- |
+| `schools.create`                    | `adminId`             | `{ name, nameTh, moderatorId? }` | `{ name, nameTh, moderatorId?, adminId }` |
+| `schools.updateModerator`           | `adminId`             | `{ schoolId, moderatorId }`      | `{ schoolId, moderatorId, adminId }`      |
+| `schools.remove`                    | `adminId`, `reason`   | `{ id }`                         | `{ id, adminId, reason }`                 |
+| `students.update`                   | `updatedBy`           | `{ id, ...fields }`              | `{ id, updatedBy, ...fields }`            |
+| `students.remove`                   | `deletedBy`, `reason` | `{ id }`                         | `{ id, deletedBy, reason }`               |
+| `bulkOperations.bulkDeleteStudents` | `reason`              | `{ studentIds, userId }`         | `{ studentIds, userId, reason }`          |
 
 **Migration Required**: ✅ COMPLETED - All frontend components updated
 
@@ -408,12 +408,12 @@ npm run build
 
 ### Overhead Added
 
-| Feature | Overhead | Assessment |
-|---------|----------|-----------|
-| Audit logging enhancements | +15-30ms per mutation | ✅ Acceptable |
-| Client metadata capture | +5ms | ✅ Negligible |
-| Session tracking | +2-5ms | ✅ Negligible |
-| **Total** | **~20-40ms** | ✅ Users won't notice |
+| Feature                    | Overhead              | Assessment            |
+| -------------------------- | --------------------- | --------------------- |
+| Audit logging enhancements | +15-30ms per mutation | ✅ Acceptable         |
+| Client metadata capture    | +5ms                  | ✅ Negligible         |
+| Session tracking           | +2-5ms                | ✅ Negligible         |
+| **Total**                  | **~20-40ms**          | ✅ Users won't notice |
 
 ### Benefits Gained
 
@@ -518,10 +518,10 @@ await mutation({ ...args, ...metadata });
 
 ```typescript
 // Admin/Moderator investigations
-api.performanceMonitoring.getDetailedAuditLogs
-api.performanceMonitoring.getPerformanceStatistics
-api.performanceMonitoring.getSessionTimeline
-api.performanceMonitoring.getSuspiciousActivity
+api.performanceMonitoring.getDetailedAuditLogs;
+api.performanceMonitoring.getPerformanceStatistics;
+api.performanceMonitoring.getSessionTimeline;
+api.performanceMonitoring.getSuspiciousActivity;
 ```
 
 ### Schema Indexes

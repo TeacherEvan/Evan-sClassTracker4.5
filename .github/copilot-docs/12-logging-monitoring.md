@@ -35,24 +35,24 @@ Complete guide to extracting logs, monitoring system health, and debugging produ
 // In your Convex functions, use console.log/warn/error
 export const book = mutation({
   handler: async (ctx, args) => {
-    console.log("📝 Booking class", { 
-      teacherId: args.teacherId, 
+    console.log("📝 Booking class", {
+      teacherId: args.teacherId,
       studentId: args.studentId,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-    
+
     try {
       // ... business logic
       console.log("✅ Class booked successfully", { classId });
     } catch (error) {
-      console.error("❌ Booking failed", { 
+      console.error("❌ Booking failed", {
         error: error.message,
         stack: error.stack,
-        args 
+        args,
       });
       throw error;
     }
-  }
+  },
 });
 ```
 
@@ -65,7 +65,7 @@ console.log("User login", {
   username,
   deviceType,
   timestamp: Date.now(),
-  success: true
+  success: true,
 });
 
 // ❌ BAD - Unstructured string
@@ -92,20 +92,20 @@ console.log("User logged in");
 export const slowQueryExample = query({
   handler: async (ctx, args) => {
     const start = Date.now();
-    
+
     const result = await ctx.db.query("classes").collect();
-    
+
     const duration = Date.now() - start;
     if (duration > 1000) {
       console.warn("🐌 Slow query detected", {
         function: "slowQueryExample",
         duration: `${duration}ms`,
-        resultCount: result.length
+        resultCount: result.length,
       });
     }
-    
+
     return result;
-  }
+  },
 });
 ```
 
@@ -126,18 +126,18 @@ export const errorLoggingExample = mutation({
         userId: args.userId,
         timestamp: Date.now(),
         severity: "high",
-        context: JSON.stringify(args)
+        context: JSON.stringify(args),
       });
-      
+
       // Also console.error for Convex logs
       console.error("Error in errorLoggingExample", {
         error: error.message,
-        userId: args.userId
+        userId: args.userId,
       });
-      
+
       throw error;
     }
-  }
+  },
 });
 ```
 
@@ -224,33 +224,33 @@ vercel logs --build     # Build logs only
 // app/api/example/route.ts
 export async function POST(request: Request) {
   const start = Date.now();
-  
+
   console.log("📨 API Request", {
     path: request.url,
     method: request.method,
     headers: Object.fromEntries(request.headers),
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
-  
+
   try {
     const body = await request.json();
     const result = await processRequest(body);
-    
+
     console.log("✅ API Success", {
       path: request.url,
       duration: `${Date.now() - start}ms`,
-      statusCode: 200
+      statusCode: 200,
     });
-    
+
     return Response.json(result);
   } catch (error) {
     console.error("❌ API Error", {
       path: request.url,
       error: error.message,
       stack: error.stack,
-      duration: `${Date.now() - start}ms`
+      duration: `${Date.now() - start}ms`,
     });
-    
+
     return Response.json({ error: error.message }, { status: 500 });
   }
 }
@@ -332,47 +332,47 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 
 ```typescript
 // app/layout.tsx - Global error boundary
-'use client';
+"use client";
 
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
 export function ErrorBoundaryLogger({ children }) {
   useEffect(() => {
     // Catch unhandled errors
-    window.addEventListener('error', (event) => {
-      console.error('🚨 Unhandled Error', {
+    window.addEventListener("error", (event) => {
+      console.error("🚨 Unhandled Error", {
         message: event.message,
         filename: event.filename,
         lineno: event.lineno,
         colno: event.colno,
         error: event.error?.stack,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      
+
       // Send to backend for logging
-      fetch('/api/log-error', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      fetch("/api/log-error", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: event.message,
           stack: event.error?.stack,
           url: window.location.href,
           userAgent: navigator.userAgent,
-          timestamp: Date.now()
-        })
+          timestamp: Date.now(),
+        }),
       });
     });
-    
+
     // Catch unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event) => {
-      console.error('🚨 Unhandled Promise Rejection', {
+    window.addEventListener("unhandledrejection", (event) => {
+      console.error("🚨 Unhandled Promise Rejection", {
         reason: event.reason,
         promise: event.promise,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     });
   }, []);
-  
+
   return children;
 }
 ```
@@ -382,14 +382,14 @@ export function ErrorBoundaryLogger({ children }) {
 ```typescript
 // Track page load performance
 useEffect(() => {
-  if (typeof window !== 'undefined' && window.performance) {
+  if (typeof window !== "undefined" && window.performance) {
     const perfData = window.performance.timing;
     const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
-    
-    console.log('📊 Page Performance', {
+
+    console.log("📊 Page Performance", {
       pageLoadTime: `${pageLoadTime}ms`,
       domContentLoaded: `${perfData.domContentLoadedEventEnd - perfData.navigationStart}ms`,
-      firstPaint: window.performance.getEntriesByType('paint')[0]?.startTime
+      firstPaint: window.performance.getEntriesByType("paint")[0]?.startTime,
     });
   }
 }, []);
@@ -432,27 +432,27 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
-      
+          node-version: "20"
+
       - name: Install dependencies
         run: |
           echo "📦 Installing dependencies..."
           npm ci
           echo "✅ Dependencies installed"
-      
+
       - name: TypeScript Check
         run: |
           echo "🔍 Running TypeScript check..."
           npx tsc --noEmit
           echo "✅ TypeScript check passed"
-      
+
       - name: Build
         run: |
           echo "🏗️ Building application..."
@@ -460,13 +460,13 @@ jobs:
           echo "✅ Build successful"
         env:
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
-      
+
       - name: Run Tests
         run: |
           echo "🧪 Running tests..."
           npm run test:e2e
           echo "✅ All tests passed"
-      
+
       # Upload logs on failure
       - name: Upload logs on failure
         if: failure()
@@ -507,7 +507,7 @@ act --verbose
   uses: 8398a7/action-slack@v3
   with:
     status: ${{ job.status }}
-    text: 'Build failed! Check logs at ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+    text: "Build failed! Check logs at ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
   env:
     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 ```
@@ -551,7 +551,7 @@ db.setProfilingLevel(0);
 node -e "
 const { MongoClient } = require('mongodb');
 const uri = process.env.MONGODB_URI;
-const client = new MongoClient(uri, { 
+const client = new MongoClient(uri, {
   serverApi: { version: '1', strict: true, deprecationErrors: true }
 });
 
@@ -562,7 +562,7 @@ async function run() {
     const db = client.db('admin');
     const result = await db.command({ ping: 1 });
     console.log('📊 Ping result:', result);
-    
+
     // Get database stats
     const stats = await db.stats();
     console.log('📦 Database stats:', {
@@ -607,7 +607,7 @@ export const create = mutation({
       severity: "medium",
       reportedAt: Date.now(),
     });
-    
+
     console.log("📝 Error report created", { reportId, ...args });
     return reportId;
   },
@@ -618,13 +618,16 @@ export const create = mutation({
 
 ```typescript
 // lib/error-reporter.ts
-export async function reportError(error: Error, context?: {
-  componentName?: string;
-  userAction?: string;
-  additionalInfo?: any;
-}) {
+export async function reportError(
+  error: Error,
+  context?: {
+    componentName?: string;
+    userAction?: string;
+    additionalInfo?: any;
+  },
+) {
   const user = loadUserSession();
-  
+
   const errorReport = {
     errorMessage: error.message,
     errorStack: error.stack,
@@ -634,16 +637,16 @@ export async function reportError(error: Error, context?: {
     browserInfo: navigator.userAgent,
     url: window.location.href,
     timestamp: new Date().toISOString(),
-    additionalInfo: JSON.stringify(context?.additionalInfo)
+    additionalInfo: JSON.stringify(context?.additionalInfo),
   };
-  
+
   console.error("🚨 Reporting error to admin", errorReport);
-  
+
   try {
-    await fetch('/api/log-error', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(errorReport)
+    await fetch("/api/log-error", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(errorReport),
     });
   } catch (reportingError) {
     console.error("❌ Failed to report error", reportingError);
@@ -655,9 +658,9 @@ try {
   await bookClass(classData);
 } catch (error) {
   reportError(error, {
-    componentName: 'ClassBooking',
-    userAction: 'Attempted to book class',
-    additionalInfo: { classData }
+    componentName: "ClassBooking",
+    userAction: "Attempted to book class",
+    additionalInfo: { classData },
   });
   toast.error("Booking failed", "การจองล้มเหลว");
 }
@@ -674,15 +677,15 @@ try {
 export function trackPerformance(metricName: string, duration: number) {
   console.log(`⏱️ Performance: ${metricName}`, {
     duration: `${duration}ms`,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
-  
+
   // Send to analytics (optional)
   if (window.gtag) {
-    window.gtag('event', 'timing_complete', {
+    window.gtag("event", "timing_complete", {
       name: metricName,
       value: duration,
-      event_category: 'Performance'
+      event_category: "Performance",
     });
   }
 }
@@ -690,7 +693,7 @@ export function trackPerformance(metricName: string, duration: number) {
 // Usage
 const start = Date.now();
 await loadStudents();
-trackPerformance('Load Students', Date.now() - start);
+trackPerformance("Load Students", Date.now() - start);
 ```
 
 ### Convex Query Performance
@@ -700,35 +703,32 @@ trackPerformance('Load Students', Date.now() - start);
 export const monitoredQuery = query({
   handler: async (ctx, args) => {
     const start = Date.now();
-    
+
     const result = await ctx.db
       .query("classes")
-      .withIndex("by_school_and_date", q => 
-        q.eq("schoolId", args.schoolId)
-         .gte("scheduledDate", args.startDate)
-      )
+      .withIndex("by_school_and_date", (q) => q.eq("schoolId", args.schoolId).gte("scheduledDate", args.startDate))
       .collect();
-    
+
     const duration = Date.now() - start;
-    
+
     console.log("📊 Query Performance", {
       queryName: "classes.bySchoolAndDate",
       duration: `${duration}ms`,
       resultCount: result.length,
       schoolId: args.schoolId,
-      indexed: true // Using .withIndex()
+      indexed: true, // Using .withIndex()
     });
-    
+
     if (duration > 1000) {
       console.warn("🐌 Slow Query Alert", {
         queryName: "classes.bySchoolAndDate",
         duration: `${duration}ms`,
-        threshold: "1000ms"
+        threshold: "1000ms",
       });
     }
-    
+
     return result;
-  }
+  },
 });
 ```
 
@@ -761,20 +761,20 @@ $errors | Format-Table -AutoSize
 
 ```powershell
 # Find all errors in last 24 hours
-$convexLogs | Where-Object { 
-  $_.level -eq "error" -and 
-  $_.timestamp -gt (Get-Date).AddDays(-1) 
+$convexLogs | Where-Object {
+  $_.level -eq "error" -and
+  $_.timestamp -gt (Get-Date).AddDays(-1)
 } | Group-Object functionName | Sort-Object Count -Descending
 
 # Find slow queries
-$convexLogs | Where-Object { 
-  $_.message -like "*duration*" -and 
-  [int]$_.duration -gt 1000 
+$convexLogs | Where-Object {
+  $_.message -like "*duration*" -and
+  [int]$_.duration -gt 1000
 } | Sort-Object duration -Descending
 
 # Find most active users
-$convexLogs | Where-Object { 
-  $_.userId 
+$convexLogs | Where-Object {
+  $_.userId
 } | Group-Object userId | Sort-Object Count -Descending | Select-Object -First 10
 ```
 
@@ -798,33 +798,33 @@ Sentry.init({
 **LogRocket** (Session Replay):
 
 ```typescript
-import LogRocket from 'logrocket';
+import LogRocket from "logrocket";
 
-LogRocket.init('your-app-id');
+LogRocket.init("your-app-id");
 
 // Identify users
 LogRocket.identify(userId, {
   name: username,
-  role: userRole
+  role: userRole,
 });
 ```
 
 **Datadog** (Full Stack Monitoring):
 
 ```typescript
-import { datadogRum } from '@datadog/browser-rum';
+import { datadogRum } from "@datadog/browser-rum";
 
 datadogRum.init({
-  applicationId: 'your-app-id',
-  clientToken: 'your-client-token',
-  site: 'datadoghq.com',
-  service: 'class-tracker',
-  env: 'production',
-  version: '4.5.17',
+  applicationId: "your-app-id",
+  clientToken: "your-client-token",
+  site: "datadoghq.com",
+  service: "class-tracker",
+  env: "production",
+  version: "4.5.17",
   sessionSampleRate: 100,
   premiumSampleRate: 100,
   trackInteractions: true,
-  defaultPrivacyLevel: 'mask-user-input'
+  defaultPrivacyLevel: "mask-user-input",
 });
 ```
 
@@ -860,18 +860,18 @@ datadogRum.init({
 
 ## 10. Quick Reference: Where to Find What
 
-| Need | Location | Access Method |
-|------|----------|---------------|
-| **Backend errors** | Convex Dashboard | <https://dashboard.convex.dev> → Logs |
-| **Frontend errors** | Vercel Dashboard | `vercel logs` or dashboard |
-| **Client errors** | Browser Console | F12 → Console |
-| **Build errors** | GitHub Actions | Repository → Actions tab |
-| **Database errors** | MongoDB Atlas | <https://cloud.mongodb.com> → Monitoring |
-| **User errors** | Admin Dashboard | Login → Error Reports tab |
-| **Performance metrics** | Convex Dashboard | Dashboard → Usage tab |
-| **Slow queries** | Convex Logs | Filter logs → Search "duration" |
-| **Failed deploys** | Vercel Dashboard | Deployments → Failed |
-| **CI/CD logs** | GitHub Actions | Actions → Workflow run |
+| Need                    | Location         | Access Method                            |
+| ----------------------- | ---------------- | ---------------------------------------- |
+| **Backend errors**      | Convex Dashboard | <https://dashboard.convex.dev> → Logs    |
+| **Frontend errors**     | Vercel Dashboard | `vercel logs` or dashboard               |
+| **Client errors**       | Browser Console  | F12 → Console                            |
+| **Build errors**        | GitHub Actions   | Repository → Actions tab                 |
+| **Database errors**     | MongoDB Atlas    | <https://cloud.mongodb.com> → Monitoring |
+| **User errors**         | Admin Dashboard  | Login → Error Reports tab                |
+| **Performance metrics** | Convex Dashboard | Dashboard → Usage tab                    |
+| **Slow queries**        | Convex Logs      | Filter logs → Search "duration"          |
+| **Failed deploys**      | Vercel Dashboard | Deployments → Failed                     |
+| **CI/CD logs**          | GitHub Actions   | Actions → Workflow run                   |
 
 ---
 

@@ -104,11 +104,11 @@ grep -r ".filter(" convex/*.ts
 // Example: Teacher approved classes query
 const classes = await ctx.db
   .query("classes")
-  .withIndex("by_teacher", q => q.eq("teacherId", teacherId))
+  .withIndex("by_teacher", (q) => q.eq("teacherId", teacherId))
   .collect(); // Returns 100 classes
 
 // Filter in memory
-const approved = classes.filter(c => c.status === "approved"); // Scans all 100
+const approved = classes.filter((c) => c.status === "approved"); // Scans all 100
 // Complexity: O(n) where n = total teacher classes
 ```
 
@@ -118,9 +118,7 @@ const approved = classes.filter(c => c.status === "approved"); // Scans all 100
 // Same query with composite index
 const approved = await ctx.db
   .query("classes")
-  .withIndex("by_teacher_and_status", q => 
-    q.eq("teacherId", teacherId).eq("status", "approved")
-  )
+  .withIndex("by_teacher_and_status", (q) => q.eq("teacherId", teacherId).eq("status", "approved"))
   .collect(); // Returns only approved classes directly
 
 // No filtering needed
@@ -129,14 +127,14 @@ const approved = await ctx.db
 
 ### Real-World Benefits
 
-| Query Type | Before | After | Improvement |
-|------------|--------|-------|-------------|
+| Query Type               | Before      | After        | Improvement    |
+| ------------------------ | ----------- | ------------ | -------------- |
 | Teacher approved classes | O(n) filter | O(1) indexed | 10-100x faster |
-| Guardian class lookup | O(n) filter | O(1) indexed | 10-50x faster |
-| Unacknowledged logs | O(n) filter | O(1) indexed | 5-20x faster |
-| School active cycles | O(n) filter | O(1) indexed | 5-10x faster |
-| Active messages | O(n) filter | O(1) indexed | 10-50x faster |
-| Student note history | O(n) + sort | O(1) sorted | 5-10x faster |
+| Guardian class lookup    | O(n) filter | O(1) indexed | 10-50x faster  |
+| Unacknowledged logs      | O(n) filter | O(1) indexed | 5-20x faster   |
+| School active cycles     | O(n) filter | O(1) indexed | 5-10x faster   |
+| Active messages          | O(n) filter | O(1) indexed | 10-50x faster  |
+| Student note history     | O(n) + sort | O(1) sorted  | 5-10x faster   |
 
 **Note**: Actual improvement depends on data volume. Higher data volumes = greater improvement.
 

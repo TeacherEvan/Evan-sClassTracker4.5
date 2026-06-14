@@ -21,8 +21,8 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
             <div className="text-red-500 text-6xl mb-4">⚠️</div>
             <h1 className="text-2xl font-bold mb-4">Configuration Error</h1>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Missing NEXT_PUBLIC_CONVEX_URL environment variable. 
-              Please set it in your .env.local file or Vercel environment settings.
+              Missing NEXT_PUBLIC_CONVEX_URL environment variable. Please set it
+              in your .env.local file or Vercel environment settings.
             </p>
           </div>
         </div>

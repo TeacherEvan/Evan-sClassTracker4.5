@@ -106,8 +106,8 @@ Implement **soft, practical rate limits** to prevent accidental user actions (do
 // Standard implementation in mutations
 await checkRateLimit(ctx, {
   key: `operation-name:${userId}`,
-  limit: 20,          // Generous threshold
-  windowMs: 60000,    // 1 minute window
+  limit: 20, // Generous threshold
+  windowMs: 60000, // 1 minute window
 });
 ```
 
@@ -186,10 +186,7 @@ For forms with auto-save (like BilingualInput), we already use 300ms debouncing:
 
 ```typescript
 // From components/bilingual-input.tsx
-const debouncedOnChangeEn = useMemo(
-  () => debounce(onChangeEn, 300),
-  [onChangeEn]
-);
+const debouncedOnChangeEn = useMemo(() => debounce(onChangeEn, 300), [onChangeEn]);
 ```
 
 ---
@@ -224,12 +221,12 @@ const debouncedOnChangeEn = useMemo(
 
 ### Comparison to Industry Standards
 
-| Operation | Our Limit | Typical SaaS | Notes |
-|-----------|-----------|--------------|-------|
-| Creates | 15-20/min | 10-100/min | Mid-range, suitable for teachers |
-| Updates | 25-30/min | 50-200/min | Conservative, prevents accidents |
-| Deletes | 10/min | 5-20/min | Aligned with best practices |
-| Errors | 5/min | 1-10/min | Prevents spam while allowing bursts |
+| Operation | Our Limit | Typical SaaS | Notes                               |
+| --------- | --------- | ------------ | ----------------------------------- |
+| Creates   | 15-20/min | 10-100/min   | Mid-range, suitable for teachers    |
+| Updates   | 25-30/min | 50-200/min   | Conservative, prevents accidents    |
+| Deletes   | 10/min    | 5-20/min     | Aligned with best practices         |
+| Errors    | 5/min     | 1-10/min     | Prevents spam while allowing bursts |
 
 ---
 
@@ -263,9 +260,7 @@ const debouncedOnChangeEn = useMemo(
 
 ```typescript
 // From rateLimit.ts
-throw new Error(
-  `Rate limit exceeded. Please wait before trying again. (${limit} requests per ${Math.round(windowMs / 1000)}s)`
-);
+throw new Error(`Rate limit exceeded. Please wait before trying again. (${limit} requests per ${Math.round(windowMs / 1000)}s)`);
 ```
 
 **User-Friendly Error Handling** (Frontend):
@@ -366,31 +361,31 @@ If rate limits cause issues:
 
 ## 📊 Rate Limiting Summary Table
 
-| Operation | Limit | Window | File | Line | Severity |
-|-----------|-------|--------|------|------|----------|
-| **Students** |
-| Create | 20/min | 60s | students.ts | ~120 | Medium |
-| Update | 30/min | 60s | students.ts | ~360 | Low |
-| Delete | 10/min | 60s | students.ts | ~430 | High |
-| **Locations** |
-| Create | 15/min | 60s | locations.ts | ~52 | Medium |
-| Update | 20/min | 60s | locations.ts | ~78 | Low |
-| Toggle | 25/min | 60s | locations.ts | ~105 | Low |
-| **Notifications** |
-| Create (User) | 15/min | 60s | notifications.ts | ~60 | Medium |
-| Create (System) | None | - | notifications.ts | ~60 | N/A |
-| **Requests** |
-| Cancellation | 10/min | 60s | cancellationRequests.ts | ~88 | Medium |
-| Error Report | 5/min | 60s | errorReports.ts | ~42 | High |
-| **Classes** (Already Protected) |
-| Book | 30/min | 60s | classes.ts | Multiple | Medium |
-| Edit | 20/min | 60s | classes.ts | Multiple | Low |
-| Delete | 10/min | 60s | classes.ts | Multiple | High |
-| **Messages** (Already Protected) |
-| Send | 20/min | 60s | messages.ts | Multiple | Medium |
-| **Users** (Already Protected) |
-| Create | 10 / 5min | 300s | users.ts | Multiple | High |
-| Password | 5 / 5min | 300s | users.ts | Multiple | High |
+| Operation                        | Limit     | Window | File                    | Line     | Severity |
+| -------------------------------- | --------- | ------ | ----------------------- | -------- | -------- |
+| **Students**                     |           |        |                         |          |          |
+| Create                           | 20/min    | 60s    | students.ts             | ~120     | Medium   |
+| Update                           | 30/min    | 60s    | students.ts             | ~360     | Low      |
+| Delete                           | 10/min    | 60s    | students.ts             | ~430     | High     |
+| **Locations**                    |           |        |                         |          |          |
+| Create                           | 15/min    | 60s    | locations.ts            | ~52      | Medium   |
+| Update                           | 20/min    | 60s    | locations.ts            | ~78      | Low      |
+| Toggle                           | 25/min    | 60s    | locations.ts            | ~105     | Low      |
+| **Notifications**                |           |        |                         |          |          |
+| Create (User)                    | 15/min    | 60s    | notifications.ts        | ~60      | Medium   |
+| Create (System)                  | None      | -      | notifications.ts        | ~60      | N/A      |
+| **Requests**                     |           |        |                         |          |          |
+| Cancellation                     | 10/min    | 60s    | cancellationRequests.ts | ~88      | Medium   |
+| Error Report                     | 5/min     | 60s    | errorReports.ts         | ~42      | High     |
+| **Classes** (Already Protected)  |           |        |                         |          |          |
+| Book                             | 30/min    | 60s    | classes.ts              | Multiple | Medium   |
+| Edit                             | 20/min    | 60s    | classes.ts              | Multiple | Low      |
+| Delete                           | 10/min    | 60s    | classes.ts              | Multiple | High     |
+| **Messages** (Already Protected) |           |        |                         |          |          |
+| Send                             | 20/min    | 60s    | messages.ts             | Multiple | Medium   |
+| **Users** (Already Protected)    |           |        |                         |          |          |
+| Create                           | 10 / 5min | 300s   | users.ts                | Multiple | High     |
+| Password                         | 5 / 5min  | 300s   | users.ts                | Multiple | High     |
 
 **Total Operations Protected**: 20 mutations  
 **New Rate Limits Added**: 9 mutations  
@@ -424,8 +419,8 @@ If rate limits cause issues:
 4. **Use descriptive keys**:
 
    ```typescript
-   key: `${operation}-${resource}:${userId}` // Good
-   key: `mutation:${userId}` // Too generic!
+   key: `${operation}-${resource}:${userId}`; // Good
+   key: `mutation:${userId}`; // Too generic!
    ```
 
 5. **Test with realistic scenarios**:

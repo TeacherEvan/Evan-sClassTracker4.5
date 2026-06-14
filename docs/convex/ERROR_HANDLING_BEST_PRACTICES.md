@@ -28,27 +28,25 @@
 
 ```typescript
 export const listByDateRange = query({
-    args: {
-        userId: v.id("users"),
-        startDate: v.number(),
-        endDate: v.number(),
-    },
-    handler: async (ctx, args) => {
-        const user = await ctx.db.get(args.userId);
-        if (!user) throw new Error("User not found");
+  args: {
+    userId: v.id("users"),
+    startDate: v.number(),
+    endDate: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const user = await ctx.db.get(args.userId);
+    if (!user) throw new Error("User not found");
 
-        // Get all active events in date range
-        const allEvents = await ctx.db
-            .query("events")
-            .withIndex("by_date", (q) =>
-                q.gte("eventDate", args.startDate).lte("eventDate", args.endDate)
-            )
-            .filter((q) => q.eq(q.field("isActive"), true))
-            .collect();
+    // Get all active events in date range
+    const allEvents = await ctx.db
+      .query("events")
+      .withIndex("by_date", (q) => q.gte("eventDate", args.startDate).lte("eventDate", args.endDate))
+      .filter((q) => q.eq(q.field("isActive"), true))
+      .collect();
 
-        // Filter based on visibility and user permissions
-        // [implementation continues...]
-    },
+    // Filter based on visibility and user permissions
+    // [implementation continues...]
+  },
 });
 ```
 
@@ -247,7 +245,7 @@ export function ConvexErrorHandler({ children }: { children: React.ReactNode }) 
     const handleConvexError = (event: ErrorEvent) => {
       if (event.message?.includes('CONVEX')) {
         console.error('[Convex Error]', event);
-        
+
         toast.error(
           "Connection issue detected. Your changes are saved, but you may need to refresh.",
           "ตรวจพบปัญหาการเชื่อมต่อ การเปลี่ยนแปลงของคุณถูกบันทึกแล้ว แต่คุณอาจต้องรีเฟรช"
@@ -256,7 +254,7 @@ export function ConvexErrorHandler({ children }: { children: React.ReactNode }) 
     };
 
     window.addEventListener('error', handleConvexError);
-    
+
     return () => {
       window.removeEventListener('error', handleConvexError);
     };
@@ -315,7 +313,7 @@ Error: [Request ID: ca8e1fccf709ab6f] Server Error Called by client
 
 ```javascript
 // Enable Convex debug logging
-localStorage.setItem('CONVEX_DEBUG', 'true');
+localStorage.setItem("CONVEX_DEBUG", "true");
 
 // Reload page
 location.reload();
@@ -347,14 +345,14 @@ location.reload();
 
 ## When to Apply Each Solution
 
-| Scenario | Solution | Priority |
-|----------|----------|----------|
-| **Query not used yet** | Document pattern, defer implementation | Low |
-| **Intermittent errors** | Add error boundary, retry logic | High |
-| **E2E test failures** | Use HAR mocking (record/replay) | Critical |
-| **Development debugging** | Check Convex dashboard logs | Immediate |
-| **Production errors** | Global error handler + monitoring | High |
-| **Invalid arguments** | Client-side validation | Medium |
+| Scenario                  | Solution                               | Priority  |
+| ------------------------- | -------------------------------------- | --------- |
+| **Query not used yet**    | Document pattern, defer implementation | Low       |
+| **Intermittent errors**   | Add error boundary, retry logic        | High      |
+| **E2E test failures**     | Use HAR mocking (record/replay)        | Critical  |
+| **Development debugging** | Check Convex dashboard logs            | Immediate |
+| **Production errors**     | Global error handler + monitoring      | High      |
+| **Invalid arguments**     | Client-side validation                 | Medium    |
 
 ---
 

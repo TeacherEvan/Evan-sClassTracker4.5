@@ -15,7 +15,7 @@ interface UserManagementProps {
 export function UserManagement({ currentUserId }: UserManagementProps) {
   const { t } = useLanguage();
   const users = useQuery(api.users.list, {});
-  const currentUser = users?.find(u => u._id === currentUserId);
+  const currentUser = users?.find((u) => u._id === currentUserId);
   const schools = useQuery(api.schools.list, {});
   const createUser = useMutation(api.users.create);
   const resetPassword = useMutation(api.users.resetPassword);
@@ -23,15 +23,25 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
   const bulkDeleteUsers = useMutation(api.users.bulkDeleteUsers);
 
   const [username, setUsername] = useState("");
-  const [role, setRole] = useState<"teacher" | "moderator" | "admin">("teacher");
+  const [role, setRole] = useState<"teacher" | "moderator" | "admin">(
+    "teacher",
+  );
   const [schoolId, setSchoolId] = useState<Id<"schools"> | "">("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
-  const [selectedUsers, setSelectedUsers] = useState<Set<Id<"users">>>(new Set());
+  const [selectedUsers, setSelectedUsers] = useState<Set<Id<"users">>>(
+    new Set(),
+  );
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<{ id: Id<"users">; username: string } | null>(null);
-  const [userToReset, setUserToReset] = useState<{ id: Id<"users">; username: string } | null>(null);
+  const [userToDelete, setUserToDelete] = useState<{
+    id: Id<"users">;
+    username: string;
+  } | null>(null);
+  const [userToReset, setUserToReset] = useState<{
+    id: Id<"users">;
+    username: string;
+  } | null>(null);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,8 +58,8 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
       setSuccess(
         t(
           `User created! Default password: Teacher${username}`,
-          `สร้างผู้ใช้แล้ว! รหัสผ่านเริ่มต้น: Teacher${username}`
-        )
+          `สร้างผู้ใช้แล้ว! รหัสผ่านเริ่มต้น: Teacher${username}`,
+        ),
       );
       setUsername("");
       setRole("teacher");
@@ -72,13 +82,13 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
       await resetPassword({ userId: userToReset.id });
       toast.success(
         `Password reset! New password: Teacher${userToReset.username}`,
-        `รีเซ็ตรหัสผ่านแล้ว! รหัสผ่านใหม่: Teacher${userToReset.username}`
+        `รีเซ็ตรหัสผ่านแล้ว! รหัสผ่านใหม่: Teacher${userToReset.username}`,
       );
       setUserToReset(null);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to reset password",
-        err instanceof Error ? err.message : "ไม่สามารถรีเซ็ตรหัสผ่านได้"
+        err instanceof Error ? err.message : "ไม่สามารถรีเซ็ตรหัสผ่านได้",
       );
     }
   };
@@ -93,7 +103,7 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
     if (!currentUserId) {
       toast.error(
         "Cannot determine admin user",
-        "ไม่สามารถระบุผู้ใช้ผู้ดูแลระบบได้"
+        "ไม่สามารถระบุผู้ใช้ผู้ดูแลระบบได้",
       );
       return;
     }
@@ -105,23 +115,20 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
       });
       toast.success(
         `User ${userToDelete.username} has been deleted`,
-        `ลบผู้ใช้ ${userToDelete.username} แล้ว`
+        `ลบผู้ใช้ ${userToDelete.username} แล้ว`,
       );
       setUserToDelete(null);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to delete user",
-        err instanceof Error ? err.message : "ไม่สามารถลบผู้ใช้ได้"
+        err instanceof Error ? err.message : "ไม่สามารถลบผู้ใช้ได้",
       );
     }
   };
 
   const handleBulkDelete = async () => {
     if (!currentUserId) {
-      toast.error(
-        "Cannot determine user",
-        "ไม่สามารถระบุผู้ใช้ได้"
-      );
+      toast.error("Cannot determine user", "ไม่สามารถระบุผู้ใช้ได้");
       return;
     }
 
@@ -134,14 +141,14 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
       if (result.successful > 0) {
         toast.success(
           `Successfully deleted ${result.successful} user(s)`,
-          `ลบผู้ใช้สำเร็จ ${result.successful} คน`
+          `ลบผู้ใช้สำเร็จ ${result.successful} คน`,
         );
       }
 
       if (result.failed > 0) {
         toast.error(
           `Failed to delete ${result.failed} user(s). Check console for details.`,
-          `ไม่สามารถลบผู้ใช้ได้ ${result.failed} คน ตรวจสอบคอนโซลสำหรับรายละเอียด`
+          `ไม่สามารถลบผู้ใช้ได้ ${result.failed} คน ตรวจสอบคอนโซลสำหรับรายละเอียด`,
         );
         console.error("Bulk delete errors:", result.errors);
       }
@@ -151,7 +158,7 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to bulk delete users",
-        err instanceof Error ? err.message : "ไม่สามารถลบผู้ใช้จำนวนมากได้"
+        err instanceof Error ? err.message : "ไม่สามารถลบผู้ใช้จำนวนมากได้",
       );
     }
   };
@@ -174,30 +181,32 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
       setSelectedUsers(new Set());
     } else {
       // Select all selectable users
-      setSelectedUsers(new Set(selectableUsers.map(u => u._id)));
+      setSelectedUsers(new Set(selectableUsers.map((u) => u._id)));
     }
   };
 
   // Filter users that can be selected for deletion
-  const selectableUsers = users?.filter(user => {
-    // Cannot select yourself
-    if (user._id === currentUserId) return false;
+  const selectableUsers =
+    users?.filter((user) => {
+      // Cannot select yourself
+      if (user._id === currentUserId) return false;
 
-    // Moderators can only select teachers
-    if (currentUser?.role === "moderator") {
-      return user.role === "teacher";
-    }
+      // Moderators can only select teachers
+      if (currentUser?.role === "moderator") {
+        return user.role === "teacher";
+      }
 
-    // Admins can select anyone except other admins
-    if (currentUser?.role === "admin") {
-      return user.role !== "admin";
-    }
+      // Admins can select anyone except other admins
+      if (currentUser?.role === "admin") {
+        return user.role !== "admin";
+      }
 
-    return false;
-  }) || [];
+      return false;
+    }) || [];
 
   // Check if user can perform bulk delete (admin or moderator)
-  const canBulkDelete = currentUser?.role === "admin" || currentUser?.role === "moderator";
+  const canBulkDelete =
+    currentUser?.role === "admin" || currentUser?.role === "moderator";
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
@@ -214,7 +223,10 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
 
         <form onSubmit={handleCreateUser} className="space-y-4">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium mb-2">
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium mb-2"
+            >
               {t("Username", "ชื่อผู้ใช้")}
             </label>
             <input
@@ -230,7 +242,7 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {t(
                 `Default password will be: Teacher${username || "{username}"}`,
-                `รหัสผ่านเริ่มต้นจะเป็น: Teacher${username || "{username}"}`
+                `รหัสผ่านเริ่มต้นจะเป็น: Teacher${username || "{username}"}`,
               )}
             </p>
           </div>
@@ -256,17 +268,24 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
 
           {(role === "teacher" || role === "moderator") && (
             <div>
-              <label htmlFor="school" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="school"
+                className="block text-sm font-medium mb-2"
+              >
                 {t("School (Optional)", "โรงเรียน (ไม่บังคับ)")}
               </label>
               <select
                 id="school"
                 value={schoolId}
-                onChange={(e) => setSchoolId(e.target.value as Id<"schools"> | "")}
+                onChange={(e) =>
+                  setSchoolId(e.target.value as Id<"schools"> | "")
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
                 disabled={loading}
               >
-                <option value="">{t("Select a school", "เลือกโรงเรียน")}</option>
+                <option value="">
+                  {t("Select a school", "เลือกโรงเรียน")}
+                </option>
                 {schools?.map((school) => (
                   <option key={school._id} value={school._id}>
                     {school.name}
@@ -303,9 +322,7 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
       {/* Users List */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-semibold">
-            {t("Users", "ผู้ใช้")}
-          </h3>
+          <h3 className="text-xl font-semibold">{t("Users", "ผู้ใช้")}</h3>
 
           {/* Bulk Delete Controls */}
           {canBulkDelete && selectableUsers.length > 0 && (
@@ -313,7 +330,10 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
               {selectedUsers.size > 0 && (
                 <>
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {t(`${selectedUsers.size} selected`, `เลือก ${selectedUsers.size} คน`)}
+                    {t(
+                      `${selectedUsers.size} selected`,
+                      `เลือก ${selectedUsers.size} คน`,
+                    )}
                   </span>
                   <button
                     onClick={() => setShowBulkDeleteConfirm(true)}
@@ -338,16 +358,19 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
 
         <div className="space-y-2">
           {users?.map((user) => {
-            const isSelectable = selectableUsers.some(u => u._id === user._id);
+            const isSelectable = selectableUsers.some(
+              (u) => u._id === user._id,
+            );
             const isSelected = selectedUsers.has(user._id);
 
             return (
               <div
                 key={user._id}
-                className={`flex items-center justify-between p-3 border rounded-lg ${isSelected
+                className={`flex items-center justify-between p-3 border rounded-lg ${
+                  isSelected
                     ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                     : "border-gray-200 dark:border-gray-700"
-                  }`}
+                }`}
               >
                 <div className="flex items-center gap-3 flex-1">
                   {isSelectable && canBulkDelete && (
@@ -367,11 +390,13 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
                           ? "ครู"
                           : user.role === "moderator"
                             ? "ผู้ดูแล"
-                            : "ผู้จัดการ"
+                            : "ผู้จัดการ",
                       )}
                       {user.requirePasswordChange && (
                         <span className="ml-2 text-yellow-600 dark:text-yellow-400">
-                          ({t("Requires password change", "ต้องเปลี่ยนรหัสผ่าน")})
+                          (
+                          {t("Requires password change", "ต้องเปลี่ยนรหัสผ่าน")}
+                          )
                         </span>
                       )}
                     </div>
@@ -419,13 +444,13 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
             <p className="text-gray-700 dark:text-gray-300 mb-4">
               {t(
                 `You are about to permanently delete ${selectedUsers.size} user(s). This action cannot be undone!`,
-                `คุณกำลังจะลบผู้ใช้ ${selectedUsers.size} คนอย่างถาวร การดำเนินการนี้ไม่สามารถยกเลิกได้!`
+                `คุณกำลังจะลบผู้ใช้ ${selectedUsers.size} คนอย่างถาวร การดำเนินการนี้ไม่สามารถยกเลิกได้!`,
               )}
             </p>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
               {t(
                 "Are you absolutely sure you want to continue?",
-                "คุณแน่ใจหรือไม่ว่าต้องการดำเนินการต่อ?"
+                "คุณแน่ใจหรือไม่ว่าต้องการดำเนินการต่อ?",
               )}
             </p>
             <div className="flex gap-3">
@@ -456,7 +481,7 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
             <p className="text-gray-700 dark:text-gray-300 mb-6">
               {t(
                 `Reset password for ${userToReset.username}? They will need to change it on next login.`,
-                `รีเซ็ตรหัสผ่านสำหรับ ${userToReset.username}? พวกเขาจะต้องเปลี่ยนรหัสผ่านในการเข้าสู่ระบบครั้งถัดไป`
+                `รีเซ็ตรหัสผ่านสำหรับ ${userToReset.username}? พวกเขาจะต้องเปลี่ยนรหัสผ่านในการเข้าสู่ระบบครั้งถัดไป`,
               )}
             </p>
             <div className="flex gap-3">
@@ -487,13 +512,13 @@ export function UserManagement({ currentUserId }: UserManagementProps) {
             <p className="text-gray-700 dark:text-gray-300 mb-4">
               {t(
                 `Are you ABSOLUTELY SURE you want to delete ${userToDelete.username}?`,
-                `คุณแน่ใจหรือไม่ว่าต้องการลบ ${userToDelete.username}?`
+                `คุณแน่ใจหรือไม่ว่าต้องการลบ ${userToDelete.username}?`,
               )}
             </p>
             <p className="text-sm text-red-600 dark:text-red-400 mb-6 font-medium">
               {t(
                 "This action is PERMANENT and IRREVERSIBLE!",
-                "การดำเนินการนี้เป็นการลบถาวรและไม่สามารถยกเลิกได้!"
+                "การดำเนินการนี้เป็นการลบถาวรและไม่สามารถยกเลิกได้!",
               )}
             </p>
             <div className="flex gap-3">

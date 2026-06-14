@@ -76,9 +76,9 @@ logger.info("User logged in", { userId: "abc123" });
 logger.warn("Deprecated function called", { function: "oldFunc" });
 
 // Error (with context)
-logger.error("Failed to save class", error, { 
-  component: "ClassBooking", 
-  action: "save" 
+logger.error("Failed to save class", error, {
+  component: "ClassBooking",
+  action: "save"
 });
 
 // Performance
@@ -284,7 +284,7 @@ const shortcuts = [
 - [ ] **Logging**
   - [ ] Debug logs only in development
   - [ ] Production logs structured
-  - [ ] No console.* in components (except error boundary)
+  - [ ] No console.\* in components (except error boundary)
 
 ---
 
@@ -308,14 +308,14 @@ const shortcuts = [
 
 ### WCAG 2.1 Compliance Progress
 
-| Criterion | Before | After | Status |
-|-----------|--------|-------|--------|
+| Criterion                        | Before  | After   | Status              |
+| -------------------------------- | ------- | ------- | ------------------- |
 | **1.3.1 Info and Relationships** | Partial | ✅ Full | Color + Icon + Text |
-| **1.4.1 Use of Color** | ❌ Fail | ✅ Pass | Not color-only |
-| **2.1.1 Keyboard** | Partial | ✅ Full | Full keyboard nav |
-| **2.4.7 Focus Visible** | ❌ Fail | ✅ Pass | Focus rings added |
-| **2.5.5 Target Size** | ❌ Fail | ✅ Pass | 44px minimum |
-| **4.1.3 Status Messages** | ❌ Fail | ✅ Pass | ARIA live regions |
+| **1.4.1 Use of Color**           | ❌ Fail | ✅ Pass | Not color-only      |
+| **2.1.1 Keyboard**               | Partial | ✅ Full | Full keyboard nav   |
+| **2.4.7 Focus Visible**          | ❌ Fail | ✅ Pass | Focus rings added   |
+| **2.5.5 Target Size**            | ❌ Fail | ✅ Pass | 44px minimum        |
+| **4.1.3 Status Messages**        | ❌ Fail | ✅ Pass | ARIA live regions   |
 
 **Overall**: Level A → Level AA (Target achieved)
 

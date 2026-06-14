@@ -14,5 +14,8 @@ export interface TestCtx {
   runAction: (handler: unknown, args: unknown) => Promise<unknown>;
   withIdentity: (identity: unknown) => TestCtx;
   finishInProgressScheduledFunctions: () => Promise<void>;
-  finishAllScheduledFunctions: (advanceTimers: () => void, maxIterations?: number) => Promise<void>;
+  finishAllScheduledFunctions: (
+    advanceTimers: () => void,
+    maxIterations?: number,
+  ) => Promise<void>;
 }

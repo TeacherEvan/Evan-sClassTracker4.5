@@ -53,19 +53,14 @@ Successfully implemented **three major features** to enhance teacher class count
 ```tsx
 // components/class-detail-card.tsx
 export function ClassDetailCard({ classData }: ClassDetailCardProps) {
-    const [isExpanded, setIsExpanded] = useState(false);
-    
-    // Lazy-load notes only when expanded
-    const allNotesForClass = useQuery(
-        api.postClassNotes.getByClass,
-        isExpanded ? { classId: classData.classId } : "skip"
-    );
-    
-    // Provider vs School badge logic
-    const isProvider = !!classData.providerId;
-    const entityName = isProvider
-        ? (language === "th" ? classData.providerNameTh : classData.providerName)
-        : (language === "th" ? classData.schoolNameTh : classData.schoolName);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Lazy-load notes only when expanded
+  const allNotesForClass = useQuery(api.postClassNotes.getByClass, isExpanded ? { classId: classData.classId } : "skip");
+
+  // Provider vs School badge logic
+  const isProvider = !!classData.providerId;
+  const entityName = isProvider ? (language === "th" ? classData.providerNameTh : classData.providerName) : language === "th" ? classData.schoolNameTh : classData.schoolName;
 }
 ```
 
@@ -94,10 +89,7 @@ const [startDate, setStartDate] = useState<Date>(defaultStartDate);
 const [endDate, setEndDate] = useState<Date>(defaultEndDate);
 
 // NO mutations - read-only queries only
-const classCountData = useQuery(
-    api.teacherClassCount.getMyClassCountDetails,
-    selectedTeacherId && acceptedDisclaimer ? { teacherId: selectedTeacherId } : "skip"
-);
+const classCountData = useQuery(api.teacherClassCount.getMyClassCountDetails, selectedTeacherId && acceptedDisclaimer ? { teacherId: selectedTeacherId } : "skip");
 
 // Client-side calculation
 const totalPayment = totalClassCount * rate;
@@ -108,9 +100,7 @@ const totalPayment = totalClassCount * rate;
 ```tsx
 // User MUST accept before proceeding
 if (!acceptedDisclaimer) {
-    return (
-        <DisclaimerScreen onAccept={() => setAcceptedDisclaimer(true)} />
-    );
+  return <DisclaimerScreen onAccept={() => setAcceptedDisclaimer(true)} />;
 }
 ```
 
@@ -167,7 +157,7 @@ if (!acceptedDisclaimer) {
 
 ```typescript
 const handlePrint = () => {
-    const html = `
+  const html = `
 <!DOCTYPE html>
 <html lang="${language === "th" ? "th" : "en"}">
 <head>
@@ -208,9 +198,9 @@ const handlePrint = () => {
 </body>
 </html>
     `;
-    
-    printWindow.document.write(html);
-    printWindow.print();
+
+  printWindow.document.write(html);
+  printWindow.print();
 };
 ```
 
@@ -225,22 +215,14 @@ import { ClassPaymentCalculator } from "./class-payment-calculator";
 const [showPaymentCalculator, setShowPaymentCalculator] = useState(false);
 
 // Button in header
-<button
-    onClick={() => setShowPaymentCalculator(true)}
-    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-    title={t("Payment Calculator", "เครื่องคำนวณค่าสอน")}
->
-    <Calculator className="w-5 h-5 text-white" />
-</button>
+<button onClick={() => setShowPaymentCalculator(true)} className="p-2 hover:bg-white/20 rounded-lg transition-colors" title={t("Payment Calculator", "เครื่องคำนวณค่าสอน")}>
+  <Calculator className="w-5 h-5 text-white" />
+</button>;
 
 // Modal at end of component
-{showPaymentCalculator && (
-    <ClassPaymentCalculator
-        teacherId={teacherId}
-        userRole="teacher"
-        onClose={() => setShowPaymentCalculator(false)}
-    />
-)}
+{
+  showPaymentCalculator && <ClassPaymentCalculator teacherId={teacherId} userRole="teacher" onClose={() => setShowPaymentCalculator(false)} />;
+}
 ```
 
 #### Testing Checklist
@@ -274,9 +256,9 @@ const [showPaymentCalculator, setShowPaymentCalculator] = useState(false);
 
 ```tsx
 interface CreateProviderModalProps {
-    userId: Id<"users">;
-    onClose: () => void;
-    onCreated: (providerId: Id<"providers">) => void; // Callback with new ID
+  userId: Id<"users">;
+  onClose: () => void;
+  onCreated: (providerId: Id<"providers">) => void; // Callback with new ID
 }
 ```
 
@@ -318,16 +300,18 @@ interface CreateProviderModalProps {
 ```tsx
 const [showCreateProvider, setShowCreateProvider] = useState(false);
 
-{showCreateProvider && (
+{
+  showCreateProvider && (
     <CreateProviderModal
-        userId={currentUser._id}
-        onClose={() => setShowCreateProvider(false)}
-        onCreated={(providerId) => {
-            setSelectedProviderId(providerId); // Auto-select
-            setShowCreateProvider(false);
-        }}
+      userId={currentUser._id}
+      onClose={() => setShowCreateProvider(false)}
+      onCreated={(providerId) => {
+        setSelectedProviderId(providerId); // Auto-select
+        setShowCreateProvider(false);
+      }}
     />
-)}
+  );
+}
 ```
 
 **Next Step**: Integration into student-management.tsx and class-booking.tsx (Phase 4.2)
@@ -431,31 +415,45 @@ const [showCreateProvider, setShowCreateProvider] = useState(false);
 3. ✅ Replaced school-only dropdown with school OR provider:
 
    ```tsx
-   {/* School OR Provider Selection (not for moderators) */}
-   {currentUser.role !== "moderator" && (
+   {
+     /* School OR Provider Selection (not for moderators) */
+   }
+   {
+     currentUser.role !== "moderator" && (
        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-           {/* School Dropdown */}
-           <select value={schoolId} onChange={(e) => {
-               setSchoolId(e.target.value);
-               if (e.target.value) setProviderId(""); // Clear provider
-           }}>...</select>
-           
-           {/* Provider Dropdown */}
-           <select value={providerId} onChange={(e) => {
-               setProviderId(e.target.value);
-               if (e.target.value) setSchoolId(""); // Clear school
-           }}>...</select>
-           
-           <button onClick={() => setShowCreateProvider(true)}>
-               + Create New Provider
-           </button>
+         {/* School Dropdown */}
+         <select
+           value={schoolId}
+           onChange={(e) => {
+             setSchoolId(e.target.value);
+             if (e.target.value) setProviderId(""); // Clear provider
+           }}
+         >
+           ...
+         </select>
+
+         {/* Provider Dropdown */}
+         <select
+           value={providerId}
+           onChange={(e) => {
+             setProviderId(e.target.value);
+             if (e.target.value) setSchoolId(""); // Clear school
+           }}
+         >
+           ...
+         </select>
+
+         <button onClick={() => setShowCreateProvider(true)}>+ Create New Provider</button>
        </div>
-   )}
-   
-   {/* Moderators see school dropdown only */}
-   {currentUser.role === "moderator" && (
-       <select value={schoolId}>...</select>
-   )}
+     );
+   }
+
+   {
+     /* Moderators see school dropdown only */
+   }
+   {
+     currentUser.role === "moderator" && <select value={schoolId}>...</select>;
+   }
    ```
 
 4. ✅ Updated form validation (XOR logic):
@@ -465,14 +463,14 @@ const [showCreateProvider, setShowCreateProvider] = useState(false);
    const hasSchool = !!schoolId;
    const hasProvider = !!providerId;
    const hasGuardian = !!guardianName.trim();
-   
+
    if (hasSchool && hasProvider) {
-       toast.error("Cannot link to both school and provider");
-       return;
+     toast.error("Cannot link to both school and provider");
+     return;
    }
    if (!hasSchool && !hasProvider && !hasGuardian) {
-       toast.error("Must link to school, provider, or guardian");
-       return;
+     toast.error("Must link to school, provider, or guardian");
+     return;
    }
    ```
 
@@ -480,28 +478,30 @@ const [showCreateProvider, setShowCreateProvider] = useState(false);
 
    ```tsx
    await createStudent({
-       firstName: nickname,
-       lastName: "",
-       ...(schoolId && { schoolId }),
-       ...(providerId && { providerId }),
-       // ... other fields
+     firstName: nickname,
+     lastName: "",
+     ...(schoolId && { schoolId }),
+     ...(providerId && { providerId }),
+     // ... other fields
    });
    ```
 
 6. ✅ Integrated CreateProviderModal with callback:
 
    ```tsx
-   {showCreateProvider && (
+   {
+     showCreateProvider && (
        <CreateProviderModal
-           userId={currentUser._id}
-           onClose={() => setShowCreateProvider(false)}
-           onCreated={(newProviderId) => {
-               setProviderId(newProviderId); // Auto-select
-               setSchoolId(""); // Clear school
-               setShowCreateProvider(false);
-           }}
+         userId={currentUser._id}
+         onClose={() => setShowCreateProvider(false)}
+         onCreated={(newProviderId) => {
+           setProviderId(newProviderId); // Auto-select
+           setSchoolId(""); // Clear school
+           setShowCreateProvider(false);
+         }}
        />
-   )}
+     );
+   }
    ```
 
 **Build Status**: ✅ **SUCCESS** (npm run build - Exit code 0, Oct 30 2025)
@@ -568,10 +568,10 @@ const hasSchool = args.schoolId !== undefined;
 const hasProvider = args.providerId !== undefined;
 
 if (hasSchool && hasProvider) {
-    throw new Error("Cannot link to both school and provider");
+  throw new Error("Cannot link to both school and provider");
 }
 if (!hasSchool && !hasProvider && !args.guardianName) {
-    throw new Error("Must link to school, provider, or guardian");
+  throw new Error("Must link to school, provider, or guardian");
 }
 ```
 

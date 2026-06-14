@@ -50,11 +50,11 @@ export const mergeClasses = mutation({
     // Authorization check using helper
     if (user.role === "teacher") {
       await verifyClassAccess(ctx, args.userId, targetClass, {
-        allowTeacherOwner: true
+        allowTeacherOwner: true,
       });
     } else {
       await verifyClassAccess(ctx, args.userId, targetClass, {
-        requireModeratorOrAdmin: true
+        requireModeratorOrAdmin: true,
       });
     }
 
@@ -69,16 +69,23 @@ export const mergeClasses = mutation({
 
     // Get all source classes
     const sourceClasses = await Promise.all(
-      args.sourceClassIds.map((id) => ctx.db.get(id))
+      args.sourceClassIds.map((id) => ctx.db.get(id)),
     );
 
-    console.log("Source classes:", sourceClasses.map(c => c ? {
-      id: c._id,
-      scheduledDate: new Date(c.scheduledDate).toISOString(),
-      locationId: c.locationId,
-      teacherId: c.teacherId,
-      schoolId: c.schoolId,
-    } : null));
+    console.log(
+      "Source classes:",
+      sourceClasses.map((c) =>
+        c
+          ? {
+              id: c._id,
+              scheduledDate: new Date(c.scheduledDate).toISOString(),
+              locationId: c.locationId,
+              teacherId: c.teacherId,
+              schoolId: c.schoolId,
+            }
+          : null,
+      ),
+    );
 
     // CRITICAL FIX: Use 5-minute time tolerance to match frontend grouping logic
     // Frontend groups classes within 5-minute window (merge-classes-modal.tsx line 47)
@@ -100,15 +107,17 @@ export const mergeClasses = mutation({
       }
 
       // Check if scheduled for the same date/time (with 5-minute tolerance)
-      const timeDiff = Math.abs(sourceClass.scheduledDate - targetClass.scheduledDate);
+      const timeDiff = Math.abs(
+        sourceClass.scheduledDate - targetClass.scheduledDate,
+      );
       if (timeDiff > TIME_TOLERANCE) {
         const sourceDate = new Date(sourceClass.scheduledDate).toLocaleString();
         const targetDate = new Date(targetClass.scheduledDate).toLocaleString();
         const minutesDiff = Math.round(timeDiff / 60000);
         throw new Error(
           `Can only merge classes scheduled within 5 minutes of each other. ` +
-          `Source class: ${sourceDate}, Target class: ${targetDate}, ` +
-          `Time difference: ${minutesDiff} minutes`
+            `Source class: ${sourceDate}, Target class: ${targetDate}, ` +
+            `Time difference: ${minutesDiff} minutes`,
         );
       }
 
@@ -275,10 +284,12 @@ export const bulkApprove = mutation({
     userId: v.id("users"),
     classIds: v.array(v.id("classes")),
     teacherId: v.optional(v.id("users")), // For filtering classes by teacher
-    dateRange: v.optional(v.object({
-      startDate: v.number(),
-      endDate: v.number(),
-    })),
+    dateRange: v.optional(
+      v.object({
+        startDate: v.number(),
+        endDate: v.number(),
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     // 1. Verify user and role
@@ -288,7 +299,9 @@ export const bulkApprove = mutation({
     }
 
     if (user.role !== "moderator" && user.role !== "admin") {
-      throw new Error("Unauthorized: Only moderators and admins can bulk approve classes");
+      throw new Error(
+        "Unauthorized: Only moderators and admins can bulk approve classes",
+      );
     }
 
     // 2. Validate batch size
@@ -299,12 +312,16 @@ export const bulkApprove = mutation({
     const results = {
       approved: 0,
       skipped: 0,
-      failed: [] as Array<{ classId: string; error: string; studentName?: string }>,
+      failed: [] as Array<{
+        classId: string;
+        error: string;
+        studentName?: string;
+      }>,
     };
 
     // 3. Batch fetch all classes to approve
     const classes = await Promise.all(
-      args.classIds.map(id => ctx.db.get(id))
+      args.classIds.map((id) => ctx.db.get(id)),
     );
 
     // 4. Process each class
@@ -326,7 +343,8 @@ export const bulkApprove = mutation({
           if (!user.schoolId || classData.schoolId !== user.schoolId) {
             results.failed.push({
               classId: classId.toString(),
-              error: "Unauthorized: Can only approve classes from your assigned school",
+              error:
+                "Unauthorized: Can only approve classes from your assigned school",
             });
             continue;
           }
@@ -357,7 +375,6 @@ export const bulkApprove = mutation({
         });
 
         results.approved++;
-
       } catch (error) {
         results.failed.push({
           classId: classId.toString(),
@@ -418,7 +435,9 @@ export const deleteRecurringSeries = mutation({
 
     // Validate batch size
     if (args.classIds.length > 50) {
-      throw new Error("Maximum 50 classes can be deleted in a recurring series at once");
+      throw new Error(
+        "Maximum 50 classes can be deleted in a recurring series at once",
+      );
     }
 
     // Validate reason

@@ -43,7 +43,11 @@ describe("useSetI18n", () => {
     expect(typeof useSetI18n).toBe("function");
   });
 
-  type SetValueFn = (val: { en: string; th: string } | ((prev: { en: string; th: string }) => { en: string; th: string })) => void;
+  type SetValueFn = (
+    val:
+      | { en: string; th: string }
+      | ((prev: { en: string; th: string }) => { en: string; th: string }),
+  ) => void;
 
   it("returns a function that updates only the English value", () => {
     const currentValue = { current: { en: "Hello", th: "สวัสดี" } };

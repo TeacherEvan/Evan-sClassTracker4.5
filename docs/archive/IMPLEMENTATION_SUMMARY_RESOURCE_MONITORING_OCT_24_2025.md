@@ -27,13 +27,13 @@ Implemented automatic resource monitoring system that warns admins when Convex f
 
 ```typescript
 // Check current usage (admin query)
-api.resourceMonitoring.getCurrentUsage({ userId })
+api.resourceMonitoring.getCurrentUsage({ userId });
 
 // Get upgrade recommendation (admin query)
-api.resourceMonitoring.getUpgradeRecommendation({ userId })
+api.resourceMonitoring.getUpgradeRecommendation({ userId });
 
 // Internal cron job (runs daily at 3 AM UTC)
-internal.resourceMonitoring.checkAndNotify()
+internal.resourceMonitoring.checkAndNotify();
 ```
 
 ---
@@ -43,11 +43,7 @@ internal.resourceMonitoring.checkAndNotify()
 Added daily cron job:
 
 ```typescript
-crons.daily(
-    "check-resource-usage",
-    { hourUTC: 3, minuteUTC: 0 },
-    internal.resourceMonitoring.checkAndNotify
-);
+crons.daily("check-resource-usage", { hourUTC: 3, minuteUTC: 0 }, internal.resourceMonitoring.checkAndNotify);
 ```
 
 **Behavior:**
@@ -112,8 +108,8 @@ totalSize = Σ(recordCount × avgRecordSize)
 ```typescript
 // Based on cost analysis (COST_ANALYSIS_CONVEX_VS_VERCEL.md):
 // ~700 KB per active user per month
-estimatedBandwidth = (activeUsers × 0.7 MB) 
-                   + (classCount × 0.01 MB) 
+estimatedBandwidth = (activeUsers × 0.7 MB)
+                   + (classCount × 0.01 MB)
                    + (messageCount × 0.02 MB)
 ```
 
@@ -185,7 +181,7 @@ Based on `docs/COST_ANALYSIS_CONVEX_VS_VERCEL.md`:
 **Realistic Timeline:**
 
 - Year 1: Safe ✅
-- Year 2: Safe ✅  
+- Year 2: Safe ✅
 - Year 3: Database may hit limit ⚠️
 - Bandwidth: Safe for 50-75 daily active users
 

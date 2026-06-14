@@ -41,11 +41,11 @@ This training guide provides step-by-step instructions for new administrators. C
 
 ### Understanding Roles
 
-| Role | Scope | Key Permission |
-| --- | --- | --- |
-| Admin | All schools | Create users, manage everything |
-| Moderator | One school | Approve classes for assigned school |
-| Teacher | Multi-school | Book classes at any school |
+| Role      | Scope        | Key Permission                      |
+| --------- | ------------ | ----------------------------------- |
+| Admin     | All schools  | Create users, manage everything     |
+| Moderator | One school   | Approve classes for assigned school |
+| Teacher   | Multi-school | Book classes at any school          |
 
 ---
 
@@ -225,7 +225,7 @@ Complete these 10 tasks:
 9. [ ] Troubleshoot simulated issue
 10. [ ] Document all steps taken
 
-**Score**: ___/10
+**Score**: \_\_\_/10
 
 - 10/10: ✅ Certified
 - 8-9/10: ⚠️ Review and retake

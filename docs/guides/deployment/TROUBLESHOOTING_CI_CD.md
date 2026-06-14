@@ -136,7 +136,7 @@ Add the Convex URL as a GitHub secret (optional for CI, required for build):
 
    ```yaml
    env:
-       NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
+     NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL }}
    ```
 
 ---
@@ -291,7 +291,7 @@ If issues persist:
    ```powershell
    # Deploy Convex
    npx convex deploy --cmd 'npm run build' --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL
-   
+
    # Deploy Vercel
    vercel --prod
    ```

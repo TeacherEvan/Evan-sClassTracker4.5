@@ -6,9 +6,9 @@ dotenv.config({ path: ".env.local" });
 const client = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 async function main() {
-    console.log("Seeding database...");
-    await client.mutation(api.seed.seedDatabase, { clearExisting: true });
-    console.log("Seeding complete!");
+  console.log("Seeding database...");
+  await client.mutation(api.seed.seedDatabase, { clearExisting: true });
+  console.log("Seeding complete!");
 }
 
 main().catch(console.error);

@@ -45,10 +45,7 @@ const ClassAnalytics = dynamic(() => import("./class-analytics"), {
 #### 2. AdminContactRequests (Admin-only)
 
 ```typescript
-const AdminContactRequests = dynamic(
-  () => import("./admin-contact-requests"),
-  { ssr: false }
-);
+const AdminContactRequests = dynamic(() => import("./admin-contact-requests"), { ssr: false });
 ```
 
 **Savings**: ~30KB gzipped
@@ -67,10 +64,7 @@ const HelpWindow = dynamic(() => import("./help-window"), {
 #### 4. TeacherActivityDashboard (Teacher-only)
 
 ```typescript
-const TeacherActivityDashboard = dynamic(
-  () => import("./teacher-activity-dashboard"),
-  { ssr: false }
-);
+const TeacherActivityDashboard = dynamic(() => import("./teacher-activity-dashboard"), { ssr: false });
 ```
 
 **Savings**: ~40KB gzipped
@@ -112,10 +106,7 @@ const TeacherActivityDashboard = dynamic(
 const conflicts = detectConflicts(allClasses, currentClass);
 
 // After
-const conflicts = useMemo(
-  () => detectConflicts(allClasses, currentClass),
-  [allClasses, currentClass]
-);
+const conflicts = useMemo(() => detectConflicts(allClasses, currentClass), [allClasses, currentClass]);
 ```
 
 #### 2. Calendar Date Calculations
@@ -125,36 +116,27 @@ const conflicts = useMemo(
 const monthGridDays = getMonthGridDays(currentDate);
 
 // After
-const monthGridDays = useMemo(
-  () => getMonthGridDays(currentDate),
-  [currentDate]
-);
+const monthGridDays = useMemo(() => getMonthGridDays(currentDate), [currentDate]);
 ```
 
 #### 3. Filter/Sort Operations
 
 ```typescript
 // Before
-const filteredClasses = classes?.filter(cls => matchesFilters(cls, filters));
+const filteredClasses = classes?.filter((cls) => matchesFilters(cls, filters));
 
 // After
-const filteredClasses = useMemo(
-  () => classes?.filter(cls => matchesFilters(cls, filters)),
-  [classes, filters]
-);
+const filteredClasses = useMemo(() => classes?.filter((cls) => matchesFilters(cls, filters)), [classes, filters]);
 ```
 
 #### 4. Student List Rendering
 
 ```typescript
 // Before
-const studentList = students?.map(s => ({ ...s, displayName: getDisplayName(s) }));
+const studentList = students?.map((s) => ({ ...s, displayName: getDisplayName(s) }));
 
 // After
-const studentList = useMemo(
-  () => students?.map(s => ({ ...s, displayName: getDisplayName(s) })),
-  [students]
-);
+const studentList = useMemo(() => students?.map((s) => ({ ...s, displayName: getDisplayName(s) })), [students]);
 ```
 
 ### Implementation Steps
@@ -197,7 +179,7 @@ const classes = useQuery(api.classes.list, {});
 // After: Query with stable params
 const classes = useQuery(
   api.classes.list,
-  useMemo(() => ({ schoolId, teacherId }), [schoolId, teacherId])
+  useMemo(() => ({ schoolId, teacherId }), [schoolId, teacherId]),
 );
 ```
 
@@ -210,7 +192,7 @@ const allClasses = useQuery(api.classes.list, {});
 // After: Load paginated (50 per page)
 const classes = useQuery(api.classes.listPaginated, {
   limit: 50,
-  offset: currentPage * 50
+  offset: currentPage * 50,
 });
 ```
 
@@ -218,7 +200,7 @@ const classes = useQuery(api.classes.listPaginated, {
 
 ```typescript
 // Before: Client-side filtering
-const filtered = classes?.filter(c => c.status === "pending");
+const filtered = classes?.filter((c) => c.status === "pending");
 
 // After: Server-side index query
 const pending = useQuery(api.classes.listByStatus, { status: "pending" });
@@ -281,10 +263,10 @@ npm uninstall <unused-package>
 export default {
   experimental: {
     turbo: {
-      resolveExtensions: ['.tsx', '.ts', '.js', '.jsx'],
-      moduleIdStrategy: 'deterministic'
-    }
-  }
+      resolveExtensions: [".tsx", ".ts", ".js", ".jsx"],
+      moduleIdStrategy: "deterministic",
+    },
+  },
 };
 ```
 
@@ -305,25 +287,25 @@ export default {
 
 ## Phase 4 Timeline
 
-| Task | Time | Status |
-|------|------|--------|
-| 4.1 Lazy load components | 1 hour | ⏳ Starting |
-| 4.2 Memoization | 1 hour | ⏳ Pending |
-| 4.3 Query optimization | 45 min | ⏳ Pending |
-| 4.4 Bundle size reduction | 30 min | ⏳ Pending |
-| **Total** | **3.25 hours** | **0% complete** |
+| Task                      | Time           | Status          |
+| ------------------------- | -------------- | --------------- |
+| 4.1 Lazy load components  | 1 hour         | ⏳ Starting     |
+| 4.2 Memoization           | 1 hour         | ⏳ Pending      |
+| 4.3 Query optimization    | 45 min         | ⏳ Pending      |
+| 4.4 Bundle size reduction | 30 min         | ⏳ Pending      |
+| **Total**                 | **3.25 hours** | **0% complete** |
 
 ---
 
 ## Performance Metrics
 
-| Metric | Before | Target | Method |
-|--------|--------|--------|--------|
-| Initial Load | ~3.5s | <2s | Lazy loading |
-| Bundle Size | ~700KB | <500KB | Tree-shaking |
-| Time to Interactive | ~4s | <2.5s | Code splitting |
-| Query Response | ~300ms | <200ms | Indexes |
-| Re-renders | High | Low | Memoization |
+| Metric              | Before | Target | Method         |
+| ------------------- | ------ | ------ | -------------- |
+| Initial Load        | ~3.5s  | <2s    | Lazy loading   |
+| Bundle Size         | ~700KB | <500KB | Tree-shaking   |
+| Time to Interactive | ~4s    | <2.5s  | Code splitting |
+| Query Response      | ~300ms | <200ms | Indexes        |
+| Re-renders          | High   | Low    | Memoization    |
 
 ---
 
@@ -343,10 +325,10 @@ npm install --save-dev @next/bundle-analyzer
 
 ```typescript
 // next.config.ts
-import bundleAnalyzer from '@next/bundle-analyzer';
+import bundleAnalyzer from "@next/bundle-analyzer";
 
 const withBundleAnalyzer = bundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
+  enabled: process.env.ANALYZE === "true",
 });
 
 export default withBundleAnalyzer(nextConfig);

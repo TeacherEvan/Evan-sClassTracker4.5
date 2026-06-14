@@ -56,12 +56,12 @@ After discovering the correct startup procedure, a final test run was executed. 
 ### Supporting Evidence
 
 1. **The `helpers.ts` file contains complex logic** to handle three potential blocking elements after a user logs in:
-    - A mandatory "Change Password" dialog.
-    - A "Welcome!" toast notification.
-    - A "Startup Wizard" for teacher/moderator roles.
+   - A mandatory "Change Password" dialog.
+   - A "Welcome!" toast notification.
+   - A "Startup Wizard" for teacher/moderator roles.
 2. The `error-context.md` from the failed `should login as teacher successfully` test shows the page is stuck on the "Sign In" page, which is consistent with a timeout during the login process.
-3. The fact that *every single test* fails (including `logout`, `class-booking`, etc.) strongly implies the failure occurs in a common setup step, and the `login()` helper is the entry point for nearly all tests.
-4. A previous fix attempt (changing the login button selector from "Login" to "Sign In") was correct but insufficient, as the failure happens *after* the button is successfully clicked.
+3. The fact that _every single test_ fails (including `logout`, `class-booking`, etc.) strongly implies the failure occurs in a common setup step, and the `login()` helper is the entry point for nearly all tests.
+4. A previous fix attempt (changing the login button selector from "Login" to "Sign In") was correct but insufficient, as the failure happens _after_ the button is successfully clicked.
 
 ---
 
@@ -70,18 +70,18 @@ After discovering the correct startup procedure, a final test run was executed. 
 **DO NOT** investigate the PowerShell orchestration scripts (`.ps1` files). They are a red herring. The problem is in the test environment and helper logic.
 
 1. **Follow the Correct Startup Procedure**:
-    - First, run `npx convex dev` in a background terminal.
-    - Second, run the tests. **Use the UI mode for visual debugging**: `npm run test:e2e:ui`.
+   - First, run `npx convex dev` in a background terminal.
+   - Second, run the tests. **Use the UI mode for visual debugging**: `npm run test:e2e:ui`.
 
 2. **Focus Exclusively on `login()` in `tests/e2e/helpers.ts`**:
-    - Run a single test from the UI (e.g., `should login as teacher successfully`).
-    - **Visually observe** what appears on the screen immediately after the "Sign In" button is clicked. It is almost certainly one of the modals mentioned above.
+   - Run a single test from the UI (e.g., `should login as teacher successfully`).
+   - **Visually observe** what appears on the screen immediately after the "Sign In" button is clicked. It is almost certainly one of the modals mentioned above.
 
 3. **Debug the Modal Handling Logic**:
-    - The logic for handling the password change dialog, welcome toast, and startup wizard in `helpers.ts` is flawed. It is not correctly detecting or dismissing the modal that is appearing.
-    - Use the Playwright Inspector in the UI-mode test run to step through the `login` function and identify which `isVisible()` check is failing or which element is not being interacted with correctly.
+   - The logic for handling the password change dialog, welcome toast, and startup wizard in `helpers.ts` is flawed. It is not correctly detecting or dismissing the modal that is appearing.
+   - Use the Playwright Inspector in the UI-mode test run to step through the `login` function and identify which `isVisible()` check is failing or which element is not being interacted with correctly.
 
 4. **Implement a Robust Fix**:
-    - Adjust the selectors and waiting logic within the `login` helper to reliably detect and dismiss whichever modal is blocking the tests. Add `console.log` statements within the helper to trace its execution path during the test run.
+   - Adjust the selectors and waiting logic within the `login` helper to reliably detect and dismiss whichever modal is blocking the tests. Add `console.log` statements within the helper to trace its execution path during the test run.
 
 By following this plan, the new agent can avoid repeating failed steps and immediately focus on the true root cause of the test suite's instability.

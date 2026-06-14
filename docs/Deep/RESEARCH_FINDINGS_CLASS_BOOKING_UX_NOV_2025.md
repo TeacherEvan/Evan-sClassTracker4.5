@@ -37,6 +37,7 @@ Conducted comprehensive investigation of industry-standard design systems, acces
 - **Interaction:** Tap to toggle selection, not for primary actions
 
 ❌ **Chips NOT for Primary Actions**
+
 > "Avoid replacing major actions with chips. Actions that progress people to the next or previous step should always be displayed as buttons."
 
 **Impact on Plan:** Validates chip-based filter panel approach. Chips should NOT be used for wizard navigation - use buttons instead.
@@ -199,12 +200,7 @@ Conducted comprehensive investigation of industry-standard design systems, acces
 **Code Pattern:**
 
 ```tsx
-<button 
-  role="button"
-  aria-pressed={isSelected}
-  onClick={toggleFilter}
-  className="px-4 py-2 rounded-full border-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 min-h-[44px] min-w-[88px]"
->
+<button role="button" aria-pressed={isSelected} onClick={toggleFilter} className="px-4 py-2 rounded-full border-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 min-h-[44px] min-w-[88px]">
   {isSelected && <Check className="w-4 h-4 mr-1" />}
   {label}
 </button>
@@ -237,20 +233,16 @@ Conducted comprehensive investigation of industry-standard design systems, acces
     <EntitySelector /> {/* School or Provider */}
     <StudentSelector /> {/* With hierarchical filtering */}
   </div>
-  
+
   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
     <DatePicker />
     <TimePicker />
   </div>
-  
+
   <LocationSelector />
-  
+
   {/* Optional Fields - Collapsible */}
-  <CollapsibleSection 
-    titleEn="Additional Details (Optional)" 
-    titleTh="รายละเอียดเพิ่มเติม (ไม่บังคับ)"
-    defaultOpen={false}
-  >
+  <CollapsibleSection titleEn="Additional Details (Optional)" titleTh="รายละเอียดเพิ่มเติม (ไม่บังคับ)" defaultOpen={false}>
     <div className="space-y-4">
       <SubjectInput />
       <LessonTopicInput />
@@ -258,24 +250,28 @@ Conducted comprehensive investigation of industry-standard design systems, acces
       <NotesInput />
     </div>
   </CollapsibleSection>
-  
+
   {/* Sticky Footer with Actions */}
   <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t p-4 flex gap-3 justify-end">
-    <button type="button" onClick={onCancel}>Cancel</button>
-    <button type="submit" disabled={!isValid}>Book Class</button>
+    <button type="button" onClick={onCancel}>
+      Cancel
+    </button>
+    <button type="submit" disabled={!isValid}>
+      Book Class
+    </button>
   </div>
 </form>
 ```
 
 **Performance Comparison:**
 
-| Metric | Wizard | Single-Page | Improvement |
-|--------|--------|-------------|-------------|
-| Required clicks | 12-15 | 8-10 | -33% |
-| Screen transitions | 3 | 0 | -100% |
-| Avg completion time | 90-120s | 60-75s | -25% to -37% |
-| Mobile scrolling | Medium | High (natural) | +40% usability |
-| Error recovery | Poor | Excellent | +60% |
+| Metric              | Wizard  | Single-Page    | Improvement    |
+| ------------------- | ------- | -------------- | -------------- |
+| Required clicks     | 12-15   | 8-10           | -33%           |
+| Screen transitions  | 3       | 0              | -100%          |
+| Avg completion time | 90-120s | 60-75s         | -25% to -37%   |
+| Mobile scrolling    | Medium  | High (natural) | +40% usability |
+| Error recovery      | Poor    | Excellent      | +60%           |
 
 ---
 
@@ -298,6 +294,7 @@ Conducted comprehensive investigation of industry-standard design systems, acces
 ## ♿ Accessibility Requirements (WCAG 2.1 Level AA)
 
 ### Filter Chips
+
 - **ARIA:** role="button", aria-pressed="true|false"
 - **Keyboard:** Space/Enter to toggle, Tab/Shift+Tab navigation
 - **Screen reader:** "Filter by {label}, {selected/unselected} button"
@@ -305,6 +302,7 @@ Conducted comprehensive investigation of industry-standard design systems, acces
 - **Contrast:** 3:1 for border/background, 4.5:1 for text
 
 ### Booking Form
+
 - **ARIA:** role="dialog", aria-labelledby="{title}", aria-modal="true"
 - **Focus trap:** Focus locked within modal, Escape to close
 - **Error handling:** aria-invalid="true", aria-describedby="{error-id}"
@@ -312,12 +310,14 @@ Conducted comprehensive investigation of industry-standard design systems, acces
 - **Inline validation:** Real-time feedback as user types
 
 ### Analytics Dashboard
+
 - **Data tables:** Proper table markup (<thead>, <tbody>, <th scope>)
 - **Charts:** Text alternatives for all visualizations
 - **Filters:** Same accessibility as main filter panel
 - **Export:** Keyboard accessible CSV export button
 
 ### Testing Tools
+
 - axe DevTools for automated accessibility testing
 - Screen reader testing (NVDA on Windows, VoiceOver on Mac)
 - Keyboard-only navigation testing
@@ -339,16 +339,18 @@ Conducted comprehensive investigation of industry-standard design systems, acces
 
 **New Section to Add:**
 
-```markdown
+````markdown
 ## 📱 Mobile-First Responsive Design
 
 ### Filter Panel (Mobile)
+
 - Stack filters vertically on small screens (<640px)
 - Expand/collapse filter panel by default on mobile
 - Larger touch targets (min 44x44px)
 - Simplified labels (abbreviations on mobile)
 
 ### Booking Form (Mobile)
+
 - Single column layout (<768px)
 - Full-width inputs
 - Sticky bottom actions bar
@@ -356,18 +358,21 @@ Conducted comprehensive investigation of industry-standard design systems, acces
 - Date picker uses native mobile date input
 
 ### Class Cards (Mobile)
+
 - Simplified metadata (show only essential info)
 - Swipe gestures for quick actions
 - Expandable cards for full details
 
 ### Responsive Padding Pattern
+
 ```tsx
 // Use throughout implementation
-className="p-4 md:p-6"         // Padding
-className="gap-3 md:gap-4"     // Spacing
-className="space-y-4 md:space-y-6"  // Vertical spacing
-className="text-sm md:text-base"    // Text size
+className = "p-4 md:p-6"; // Padding
+className = "gap-3 md:gap-4"; // Spacing
+className = "space-y-4 md:space-y-6"; // Vertical spacing
+className = "text-sm md:text-base"; // Text size
 ```
+````
 
 ```
 
@@ -512,6 +517,7 @@ className="text-sm md:text-base"    // Text size
 
 ---
 
-**Document Status:** FINAL - Ready for user review  
-**Last Updated:** November 1, 2025  
+**Document Status:** FINAL - Ready for user review
+**Last Updated:** November 1, 2025
 **Next Action:** Present optimized plan to user for approval
+```

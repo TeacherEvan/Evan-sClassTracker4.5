@@ -20,17 +20,17 @@ Evan's Class Tracker 4.5 demonstrates **excellent code quality** with strong pat
 
 ### Current State
 
-| Category | Score | Status | Change |
-|----------|-------|--------|--------|
-| **Code Architecture** | 92/100 | ✅ Excellent | +0 |
-| **Type Safety** | 95/100 | ✅ Excellent | +3 |
-| **Performance** | 93/100 | ✅ Excellent | +8 |
-| **Security** | 88/100 | ✅ Good | +3 |
-| **User Experience** | 87/100 | ✅ Good | +2 |
-| **Testing** | 85/100 | ✅ Good | +5 |
-| **Documentation** | 98/100 | ✅ Outstanding | +1 |
-| **Maintainability** | 82/100 | 🟡 Good* | -2 |
-| **Overall** | **90/100** | ✅ **A Grade** | **+2** |
+| Category              | Score      | Status         | Change |
+| --------------------- | ---------- | -------------- | ------ |
+| **Code Architecture** | 92/100     | ✅ Excellent   | +0     |
+| **Type Safety**       | 95/100     | ✅ Excellent   | +3     |
+| **Performance**       | 93/100     | ✅ Excellent   | +8     |
+| **Security**          | 88/100     | ✅ Good        | +3     |
+| **User Experience**   | 87/100     | ✅ Good        | +2     |
+| **Testing**           | 85/100     | ✅ Good        | +5     |
+| **Documentation**     | 98/100     | ✅ Outstanding | +1     |
+| **Maintainability**   | 82/100     | 🟡 Good\*      | -2     |
+| **Overall**           | **90/100** | ✅ **A Grade** | **+2** |
 
 \* Maintainability slightly down due to continued file size growth without refactoring
 
@@ -180,12 +180,12 @@ export function toast(message: string, type: "success" | "error" | "info") {
 
 **Critical Issue**: Large files continue to grow without refactoring.
 
-| File | Lines | Status | Change Since Nov 5 |
-|------|-------|--------|--------------------|
-| `components/class-booking.tsx` | **3,120** | 🔴 CRITICAL | +0 (no change) |
-| `convex/classes.ts` | **2,213** | 🔴 HIGH | +0 (no change) |
-| `components/student-management.tsx` | **1,193** | 🟡 MEDIUM | +0 (no change) |
-| `components/class-detail-modal.tsx` | **1,065** | 🟡 MEDIUM | +0 (no change) |
+| File                                | Lines     | Status      | Change Since Nov 5 |
+| ----------------------------------- | --------- | ----------- | ------------------ |
+| `components/class-booking.tsx`      | **3,120** | 🔴 CRITICAL | +0 (no change)     |
+| `convex/classes.ts`                 | **2,213** | 🔴 HIGH     | +0 (no change)     |
+| `components/student-management.tsx` | **1,193** | 🟡 MEDIUM   | +0 (no change)     |
+| `components/class-detail-modal.tsx` | **1,065** | 🟡 MEDIUM   | +0 (no change)     |
 
 **Impact**:
 
@@ -435,7 +435,7 @@ useEffect(() => {
       setShowForm(false); // Close form
     }
   };
-  
+
   window.addEventListener("keydown", handleKeyDown);
   return () => window.removeEventListener("keydown", handleKeyDown);
 }, []);
@@ -459,7 +459,7 @@ useEffect(() => {
 <div className={status === "approved" ? "bg-green-500" : "bg-red-500"} />
 
 // After
-<div 
+<div
   className={status === "approved" ? "bg-green-500" : "bg-red-500"}
   role="status"
   aria-label={status === "approved" ? "Approved" : "Rejected"}
@@ -485,12 +485,12 @@ useEffect(() => {
 ```typescript
 function deleteClass(classId: Id<"classes">) {
   const deleteAction = api.classes.delete({ classId });
-  
+
   toast("Class deleted", "info", {
     action: {
       label: "Undo",
-      onClick: () => api.classes.restore({ classId })
-    }
+      onClick: () => api.classes.restore({ classId }),
+    },
   });
 }
 ```
@@ -588,13 +588,7 @@ const hashPassword = async (password: string): Promise<string> => {
 
 ```typescript
 // convex/rateLimit.ts
-export async function checkRateLimit(
-  ctx: QueryCtx | MutationCtx,
-  userId: Id<"users">,
-  action: string,
-  limit: number,
-  windowMs: number
-): Promise<boolean> {
+export async function checkRateLimit(ctx: QueryCtx | MutationCtx, userId: Id<"users">, action: string, limit: number, windowMs: number): Promise<boolean> {
   // Check if user exceeded rate limit
   // Return true if allowed, false if blocked
 }
@@ -612,20 +606,14 @@ export async function checkRateLimit(
 
 ```typescript
 // convex/auditHelpers.ts
-export async function logAudit(
-  ctx: MutationCtx,
-  action: string,
-  entityType: string,
-  entityId: Id<any>,
-  details: Record<string, any>
-) {
+export async function logAudit(ctx: MutationCtx, action: string, entityType: string, entityId: Id<any>, details: Record<string, any>) {
   await ctx.db.insert("auditLogs", {
     userId: ctx.auth.getUserIdentity()?.subject,
     action,
     entityType,
     entityId,
     details,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   });
 }
 ```
@@ -706,14 +694,18 @@ await ctx.db.insert("students", { name });
 // next.config.ts
 export default {
   async headers() {
-    return [{
-      source: "/:path*",
-      headers: [{
-        key: "Content-Security-Policy",
-        value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
-      }]
-    }];
-  }
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
+          },
+        ],
+      },
+    ];
+  },
 };
 ```
 
@@ -730,11 +722,11 @@ export default {
 useEffect(() => {
   const expiryTime = getSessionExpiry();
   const warningTime = expiryTime - 5 * 60 * 1000; // 5 min before
-  
+
   const timeout = setTimeout(() => {
     toast("Your session will expire in 5 minutes. Please save your work.", "warning");
   }, warningTime - Date.now());
-  
+
   return () => clearTimeout(timeout);
 }, []);
 ```
@@ -864,10 +856,7 @@ const ClassAnalytics = dynamic(() => import("./class-analytics"), {
 ```typescript
 import { useMemo } from "react";
 
-const conflicts = useMemo(() => 
-  detectConflicts(allClasses, currentClass),
-  [allClasses, currentClass]
-);
+const conflicts = useMemo(() => detectConflicts(allClasses, currentClass), [allClasses, currentClass]);
 ```
 
 **Benefit**: Prevent unnecessary re-calculations.
@@ -925,8 +914,12 @@ const [theme, setTheme] = useState<"light" | "dark">("light");
 
 ```css
 /* Tailwind dark mode */
-.dark .bg-white { background-color: #1a1a1a; }
-.dark .text-black { color: #ffffff; }
+.dark .bg-white {
+  background-color: #1a1a1a;
+}
+.dark .text-black {
+  color: #ffffff;
+}
 ```
 
 ---
@@ -989,13 +982,13 @@ function exportToExcel(data: any[], filename: string) {
 ```typescript
 // playwright.config.ts
 export default {
-  timeout: 45_000,        // 45s per test (was 60s)
-  workers: 6,             // 6 parallel workers (was 4)
-  retries: 2,             // 2 retries on failure
+  timeout: 45_000, // 45s per test (was 60s)
+  workers: 6, // 6 parallel workers (was 4)
+  retries: 2, // 2 retries on failure
   use: {
     baseURL: "http://localhost:3001",
-    actionTimeout: 8_000  // 8s per action (was 10s)
-  }
+    actionTimeout: 8_000, // 8s per action (was 10s)
+  },
 };
 ```
 
@@ -1042,12 +1035,15 @@ export default [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     rules: {
-      "@typescript-eslint/no-unused-vars": ["warn", {
-        "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_"
-      }]
-    }
-  }
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
 ];
 ```
 
@@ -1148,17 +1144,17 @@ export default [
 
 ## Part 7: Grading Breakdown
 
-| Category | Weight | Score | Weighted | Notes |
-|----------|--------|-------|----------|-------|
-| **Architecture** | 15% | 92/100 | 13.8 | Provider system adds complexity but well-documented |
-| **Type Safety** | 10% | 95/100 | 9.5 | Strict TypeScript, Convex types |
-| **Performance** | 15% | 93/100 | 14.0 | Recent optimizations (indexes, E2E) |
-| **Security** | 10% | 88/100 | 8.8 | PBKDF2, RBAC, audit logs; missing CSP |
-| **UX** | 15% | 87/100 | 13.1 | Wizards, filters, bilingual; missing shortcuts |
-| **Testing** | 10% | 85/100 | 8.5 | E2E strong, unit tests weak |
-| **Documentation** | 10% | 98/100 | 9.8 | Outstanding guides and patterns |
-| **Maintainability** | 15% | 82/100 | 12.3 | File size bloat hurts score |
-| **Total** | 100% | - | **89.8** | **Rounded to 90/100** |
+| Category            | Weight | Score  | Weighted | Notes                                               |
+| ------------------- | ------ | ------ | -------- | --------------------------------------------------- |
+| **Architecture**    | 15%    | 92/100 | 13.8     | Provider system adds complexity but well-documented |
+| **Type Safety**     | 10%    | 95/100 | 9.5      | Strict TypeScript, Convex types                     |
+| **Performance**     | 15%    | 93/100 | 14.0     | Recent optimizations (indexes, E2E)                 |
+| **Security**        | 10%    | 88/100 | 8.8      | PBKDF2, RBAC, audit logs; missing CSP               |
+| **UX**              | 15%    | 87/100 | 13.1     | Wizards, filters, bilingual; missing shortcuts      |
+| **Testing**         | 10%    | 85/100 | 8.5      | E2E strong, unit tests weak                         |
+| **Documentation**   | 10%    | 98/100 | 9.8      | Outstanding guides and patterns                     |
+| **Maintainability** | 15%    | 82/100 | 12.3     | File size bloat hurts score                         |
+| **Total**           | 100%   | -      | **89.8** | **Rounded to 90/100**                               |
 
 **Final Grade**: **A (90/100)** ✅ Production-Ready
 

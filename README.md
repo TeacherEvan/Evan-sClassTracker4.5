@@ -46,7 +46,6 @@ Built with Next.js 15, React 19, Convex & Tailwind v4
   - Added modular architecture documentation (PR #96-98)
   - Consolidated redundant docs into `docs/archive/`
   - Updated refactoring guide to reflect completed work
-  
 - 🏗️ **New Documentation**:
   - Pattern #26: Wizard-Based Onboarding Pattern
   - Pattern #27: Database Seeding Pattern
@@ -55,7 +54,6 @@ Built with Next.js 15, React 19, Convex & Tailwind v4
   - Pattern #30: Backend Module Split Pattern (classes.ts split)
   - Modular architecture docs: `components/class-booking/` structure
   - Modular architecture docs: `convex/classes/` structure
-  
 - 🗂️ **Files Archived**:
   - `.github/AI_AGENT_WORKFLOW.md` → `docs/archive/`
   - `.github/WORKFLOWS_QUICKREF.md` → `docs/archive/`
@@ -70,7 +68,6 @@ Built with Next.js 15, React 19, Convex & Tailwind v4
   - Teacher dashboards: Faster approved class queries
   - School reports: Reduced unacknowledged log scanning
   - Private tutoring: Optimized guardian-linked class queries
-  
 - 🗂️ **New Composite Indexes**:
   - `classes.by_teacher_and_status` - Approved class queries
   - `classes.by_teacher_and_guardian_linked` - Guardian class queries
@@ -78,7 +75,6 @@ Built with Next.js 15, React 19, Convex & Tailwind v4
   - `teacherClassCountCycles.by_school_and_active` - School cycle queries
   - `messages.by_school_and_active` - Active message filtering
   - `postClassNotes.by_student_and_created_at` - Student note history
-  
 - 🛠️ **Technical Details**:
   - Convex updated to v1.29.2 (latest stable)
   - 90+ total indexes across 19 database tables
@@ -93,17 +89,14 @@ Built with Next.js 15, React 19, Convex & Tailwind v4
   - Test execution time: 2-3 minutes → 1.5-2 minutes (30-40% faster)
   - Login flow: 8-10 seconds → 4-5 seconds per test (50% faster)
   - Full suite parallelism: 4 workers → 6 workers (50% more concurrent tests)
-  
 - 🔧 **Test Helper Optimizations**:
   - `login()`: Convex timeout 30s→15s, password change wait 3s→1.5s, wizard dismissal 1s→0.5s
   - `navigateToTab()`: Tab button wait 10s→5s, retry attempts 3→2, content load 1s→0.5s
   - Monthly Calendar verification: 10s→5s timeout
-  
 - ⚙️ **Configuration Updates**:
   - Global test timeout: 60s → 45s (25% reduction)
   - Action timeout: 10s → 8s (20% reduction)
   - Local workers: 4 → 6 (50% more parallelism)
-  
 - 📊 **Impact**: Developers can run the full E2E suite 30-40% faster, improving CI/CD pipeline speed and local development experience
 
 ## ✨ Recent Updates
@@ -238,7 +231,7 @@ Built with Next.js 15, React 19, Convex & Tailwind v4
 ### Previous Fixes (Oct 26-27, 2025)
 
 - ✅ **Student Creation**: Empty lastName allowed for Thai single-name students
-- ✅ **Duplicate Prevention**: Blocks duplicate students (same name+grade+class+school)  
+- ✅ **Duplicate Prevention**: Blocks duplicate students (same name+grade+class+school)
 - ✅ **Error Messages**: Shows actual error details instead of generic messages
 - ✅ **Thai Default**: New users default to Thai language
 - ✅ **CI/CD Fix**: Disabled Next.js telemetry to prevent firewall blocks
@@ -408,10 +401,10 @@ Look for the green **"Help"** button in the top-right corner of the application 
 
 ### Documentation
 
-- Quick Start Guide: [`docs/HELP_WINDOW_QUICKSTART.md`](docs/HELP_WINDOW_QUICKSTART.md)
-- Feature Documentation: [`docs/HELP_WINDOW_FEATURE.md`](docs/HELP_WINDOW_FEATURE.md)
-- UI Flow Guide: [`docs/HELP_WINDOW_UI_FLOW.md`](docs/HELP_WINDOW_UI_FLOW.md)
-- Implementation Summary: [`IMPLEMENTATION_SUMMARY_HELP_WINDOW.md`](IMPLEMENTATION_SUMMARY_HELP_WINDOW.md)
+- Quick Start Guide: [`docs/archive/HELP_WINDOW_QUICKSTART.md`](docs/archive/HELP_WINDOW_QUICKSTART.md)
+- Feature Documentation: [`features/HELP_WINDOW_FEATURE.md`](features/HELP_WINDOW_FEATURE.md)
+- UI Flow Guide: [`docs/archive/HELP_WINDOW_UI_FLOW.md`](docs/archive/HELP_WINDOW_UI_FLOW.md)
+- Implementation Summary: [`docs/archive/implementations/IMPLEMENTATION_SUMMARY_HELP_WINDOW_NOV_1_2025.md`](docs/archive/implementations/IMPLEMENTATION_SUMMARY_HELP_WINDOW_NOV_1_2025.md)
 
 ## Tech Stack
 
@@ -512,9 +505,9 @@ npm run test:e2e
 
 **Documentation:**
 
-- E2E Testing Guide: [`docs/E2E_TESTING_GUIDE.md`](docs/E2E_TESTING_GUIDE.md)
-- Staging Setup: [`docs/STAGING_SETUP_GUIDE.md`](docs/STAGING_SETUP_GUIDE.md)
-- Test Plan: [`docs/STAGING_TEST_PLAN.md`](docs/STAGING_TEST_PLAN.md)
+- E2E Testing Guide: [`guides/testing/E2E_TESTING_GUIDE.md`](guides/testing/E2E_TESTING_GUIDE.md)
+- Staging Setup: [`docs/archive/STAGING_SETUP_GUIDE.md`](docs/archive/STAGING_SETUP_GUIDE.md)
+- Test Plan: [`docs/archive/STAGING_TEST.md`](docs/archive/STAGING_TEST.md)
 
 **Test Coverage:**
 
@@ -593,13 +586,12 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ### 🖼️ Version 4.5.27 - Image Processing & Seeding (Nov 18, 2025)
 
-#### Robust Image Handling & Test Data Generation**
+#### Robust Image Handling & Test Data Generation\*\*
 
 - 📸 **Image Processing Pipeline**:
   - Secure client-side uploads via `generateUploadUrl`
   - Direct-to-storage architecture (bypassing function limits)
   - Metadata tracking in `images` table
-  
 - 🌱 **Database Seeding**:
   - Automated test data population (`seedDatabase`)
   - Configurable volume and cleanup options

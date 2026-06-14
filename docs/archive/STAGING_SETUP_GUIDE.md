@@ -90,7 +90,7 @@ Only needed if you chose Option B above:
   with:
     vercel-token: ${{ secrets.VERCEL_TOKEN }}
     vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-    vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_STAGING }}  # ← Different project
+    vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID_STAGING }} # ← Different project
 ```
 
 ## Workflow Usage

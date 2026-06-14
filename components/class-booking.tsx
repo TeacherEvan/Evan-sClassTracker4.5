@@ -5,6 +5,6 @@
  */
 "use client";
 
-import { ClassBooking } from './class-booking/index';
+import { ClassBooking } from "./class-booking/index";
 
 export default ClassBooking;

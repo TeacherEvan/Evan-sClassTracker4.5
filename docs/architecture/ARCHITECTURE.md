@@ -182,15 +182,15 @@ Guardian Classes: ──────────→ approved (auto, no moderator
 
 ### Authorization Matrix
 
-| Action | Admin | Moderator | Teacher |
-|--------|-------|-----------|---------|
-| Create School | ✅ | ❌ | ❌ |
-| Create Provider | ✅ | ❌ | ✅ (own only) |
-| View All Providers | ✅ | ❌ | ❌ |
-| View Own Providers | ✅ | ❌ | ✅ |
-| Book School Class | ✅ | ✅ | ✅ |
-| Book Provider Class | ✅ | ❌ | ✅ (own only) |
-| Approve Classes | ✅ | ✅ (school) | ❌ |
+| Action              | Admin | Moderator   | Teacher       |
+| ------------------- | ----- | ----------- | ------------- |
+| Create School       | ✅    | ❌          | ❌            |
+| Create Provider     | ✅    | ❌          | ✅ (own only) |
+| View All Providers  | ✅    | ❌          | ❌            |
+| View Own Providers  | ✅    | ❌          | ✅            |
+| Book School Class   | ✅    | ✅          | ✅            |
+| Book Provider Class | ✅    | ❌          | ✅ (own only) |
+| Approve Classes     | ✅    | ✅ (school) | ❌            |
 
 ### Student ID Generation
 

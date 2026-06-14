@@ -1,11 +1,11 @@
 /**
  * Centralized icon imports for Help system
- * 
+ *
  * PERFORMANCE OPTIMIZATION:
  * Instead of importing ALL lucide-react icons (* as LucideIcons),
  * we import only the icons actually used in help-content.ts.
  * This reduces bundle size by ~40KB.
- * 
+ *
  * Pattern: Tree-shakeable named imports
  * Before: import * as LucideIcons from "lucide-react" (~100KB)
  * After: import { Calendar, CheckCircle, ... } from "lucide-react" (~60KB)

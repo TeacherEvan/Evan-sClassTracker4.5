@@ -31,12 +31,20 @@ describe("I18nSelect", () => {
     render(<I18nSelect {...defaultProps} language="en" />);
     // In jsdom, empty value shows first option. Check form value via onChange not called.
     // The component renders correctly with options.
-    expect(screen.getByRole("option", { name: "Option 1" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "Option 2" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Option 1" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Option 2" }),
+    ).toBeInTheDocument();
 
     render(<I18nSelect {...defaultProps} language="th" />);
-    expect(screen.getByRole("option", { name: "ตัวเลือก 1" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "ตัวเลือก 2" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "ตัวเลือก 1" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "ตัวเลือก 2" }),
+    ).toBeInTheDocument();
   });
 
   it("calls onChange with updated i18n object when select changes", () => {
@@ -70,7 +78,7 @@ describe("I18nSelect", () => {
         {...defaultProps}
         value={{ en: "1", th: "2" }}
         language="en"
-      />
+      />,
     );
     expect(screen.getByLabelText("Category")).toHaveValue("1");
 
@@ -79,19 +87,27 @@ describe("I18nSelect", () => {
         {...defaultProps}
         value={{ en: "1", th: "2" }}
         language="th"
-      />
+      />,
     );
     expect(screen.getByLabelText("หมวดหมู่")).toHaveValue("2");
   });
 
   it("syncs select value when value prop changes", () => {
     const { rerender } = render(
-      <I18nSelect {...defaultProps} value={{ en: "1", th: "2" }} language="en" />
+      <I18nSelect
+        {...defaultProps}
+        value={{ en: "1", th: "2" }}
+        language="en"
+      />,
     );
     expect(screen.getByLabelText("Category")).toHaveValue("1");
 
     rerender(
-      <I18nSelect {...defaultProps} value={{ en: "2", th: "1" }} language="en" />
+      <I18nSelect
+        {...defaultProps}
+        value={{ en: "2", th: "1" }}
+        language="en"
+      />,
     );
     expect(screen.getByLabelText("Category")).toHaveValue("2");
   });
@@ -104,22 +120,36 @@ describe("I18nSelect", () => {
         disabled
         required
         id="test-select"
-      />
+      />,
     );
     const select = screen.getByLabelText("Category");
 
     // placeholder renders as hidden option, not attribute
-    expect(select.querySelector('option[value=""]')).toHaveTextContent("Select category");
+    expect(select.querySelector('option[value=""]')).toHaveTextContent(
+      "Select category",
+    );
     expect(select).toBeDisabled();
     expect(select).toBeRequired();
     expect(select).toHaveAttribute("id", "test-select");
   });
 
   it("handles empty value gracefully", () => {
-    const { rerender } = render(<I18nSelect {...defaultProps} value={null as unknown as I18nString | null} language="en" />);
+    const { rerender } = render(
+      <I18nSelect
+        {...defaultProps}
+        value={null as unknown as I18nString | null}
+        language="en"
+      />,
+    );
     // In jsdom, empty controlled value may show first option. Component renders correctly.
 
-    rerender(<I18nSelect {...defaultProps} value={undefined as unknown as I18nString | undefined} language="en" />);
+    rerender(
+      <I18nSelect
+        {...defaultProps}
+        value={undefined as unknown as I18nString | undefined}
+        language="en"
+      />,
+    );
     // In jsdom, empty controlled value may show first option. Component renders correctly.
   });
 

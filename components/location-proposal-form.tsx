@@ -37,7 +37,10 @@ export default function LocationProposalForm({
     try {
       if (!name.trim() && !nameTh.trim()) {
         throw new Error(
-          t("Please fill in at least one location name", "กรุณากรอกชื่อสถานที่อย่างน้อยหนึ่งภาษา")
+          t(
+            "Please fill in at least one location name",
+            "กรุณากรอกชื่อสถานที่อย่างน้อยหนึ่งภาษา",
+          ),
         );
       }
 
@@ -114,7 +117,6 @@ export default function LocationProposalForm({
 
         {/* Scrollable Content */}
         <div className="overflow-y-auto flex-grow">
-
           {/* Success Message */}
           {success && (
             <div className="m-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
@@ -123,7 +125,7 @@ export default function LocationProposalForm({
                 <p className="font-medium">
                   {t(
                     "Location proposed successfully! Waiting for moderator approval.",
-                    "เสนอสถานที่สำเร็จ! รอการอนุมัติจากผู้ดูแล"
+                    "เสนอสถานที่สำเร็จ! รอการอนุมัติจากผู้ดูแล",
                   )}
                 </p>
               </div>
@@ -140,7 +142,10 @@ export default function LocationProposalForm({
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4">
             <div>
-              <label htmlFor="school" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="school"
+                className="block text-sm font-medium mb-2"
+              >
                 {t("School", "โรงเรียน")} *
               </label>
               <select
@@ -171,19 +176,25 @@ export default function LocationProposalForm({
               <select
                 id="type"
                 value={type}
-                onChange={(e) => setType(e.target.value as "school" | "guardian")}
+                onChange={(e) =>
+                  setType(e.target.value as "school" | "guardian")
+                }
                 className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
                 required
                 disabled={loading}
               >
-                <option value="school">{t("School Location", "สถานที่โรงเรียน")}</option>
-                <option value="guardian">{t("Guardian Home", "บ้านผู้ปกครอง")}</option>
+                <option value="school">
+                  {t("School Location", "สถานที่โรงเรียน")}
+                </option>
+                <option value="guardian">
+                  {t("Guardian Home", "บ้านผู้ปกครอง")}
+                </option>
               </select>
               {type === "guardian" && (
                 <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
                   {t(
                     "Guardian locations are auto-approved when booking classes",
-                    "สถานที่ผู้ปกครองจะได้รับการอนุมัติอัตโนมัติเมื่อจองคลาส"
+                    "สถานที่ผู้ปกครองจะได้รับการอนุมัติอัตโนมัติเมื่อจองคลาส",
                   )}
                 </p>
               )}
@@ -198,7 +209,10 @@ export default function LocationProposalForm({
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={t("e.g., Building A Room 201", "เช่น อาคาร A ห้อง 201")}
+                placeholder={t(
+                  "e.g., Building A Room 201",
+                  "เช่น อาคาร A ห้อง 201",
+                )}
                 className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
                 required
                 disabled={loading}
@@ -206,7 +220,10 @@ export default function LocationProposalForm({
             </div>
 
             <div>
-              <label htmlFor="nameTh" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="nameTh"
+                className="block text-sm font-medium mb-2"
+              >
                 {t("Location Name (Thai)", "ชื่อสถานที่ (ไทย)")} *
               </label>
               <input
@@ -214,7 +231,10 @@ export default function LocationProposalForm({
                 id="nameTh"
                 value={nameTh}
                 onChange={(e) => setNameTh(e.target.value)}
-                placeholder={t("e.g., อาคาร A ห้อง 201", "เช่น Building A Room 201")}
+                placeholder={t(
+                  "e.g., อาคาร A ห้อง 201",
+                  "เช่น Building A Room 201",
+                )}
                 className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600"
                 required
                 disabled={loading}
@@ -235,7 +255,9 @@ export default function LocationProposalForm({
                 className="flex-1 px-4 py-3 md:py-2 text-base md:text-sm bg-blue-500 text-white rounded-xl md:rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
               >
-                {loading ? t("Proposing...", "กำลังเสนอ...") : t("Propose Location", "เสนอสถานที่")}
+                {loading
+                  ? t("Proposing...", "กำลังเสนอ...")
+                  : t("Propose Location", "เสนอสถานที่")}
               </button>
             </div>
           </form>
@@ -261,15 +283,21 @@ export default function LocationProposalForm({
                           {proposal.schoolName} / {proposal.schoolNameTh}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {t("Type", "ประเภท")}: {proposal.type === "guardian" ? t("Guardian", "ผู้ปกครอง") : t("School", "โรงเรียน")}
+                          {t("Type", "ประเภท")}:{" "}
+                          {proposal.type === "guardian"
+                            ? t("Guardian", "ผู้ปกครอง")
+                            : t("School", "โรงเรียน")}
                         </p>
                         {!proposal.approved && proposal.rejectionReason && (
                           <p className="text-sm text-red-600 dark:text-red-400 mt-2">
-                            {t("Rejection reason", "เหตุผลที่ปฏิเสธ")}: {proposal.rejectionReason}
+                            {t("Rejection reason", "เหตุผลที่ปฏิเสธ")}:{" "}
+                            {proposal.rejectionReason}
                           </p>
                         )}
                       </div>
-                      <div className={`flex items-center gap-1 ${getStatusColor(proposal)}`}>
+                      <div
+                        className={`flex items-center gap-1 ${getStatusColor(proposal)}`}
+                      >
                         {getStatusIcon(proposal)}
                         <span className="text-sm font-medium">
                           {getStatusText(proposal)}

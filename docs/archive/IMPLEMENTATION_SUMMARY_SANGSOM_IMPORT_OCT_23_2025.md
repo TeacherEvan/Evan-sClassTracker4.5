@@ -37,9 +37,11 @@ Transcribed the complete schedule from the paper image into a structured Markdow
 
 ```markdown
 #### จันทร์ที่ 3 พ.ย. 2568 (Monday, November 3, 2025)
+
 **เวลา 9.00 - 10.30 น.**
+
 - **K.1/1** โครงงานเรื่อง ข้าว
-- ชุดกิจกรรมสอง *"Roll your hands"*
+- ชุดกิจกรรมสอง _"Roll your hands"_
 ```
 
 ### 2. Backend Seeding Logic (`convex/seedSangsomProject.ts`)
@@ -114,19 +116,7 @@ Created bilingual UI component with React/Next.js:
 #### UI Components
 
 ```tsx
-<SangsomSeedButton>
-  ├─ Header (title + description)
-  ├─ Existing Data Status
-  ├─ Warning Message
-  ├─ Action Buttons
-  │   ├─ Check Existing Data
-  │   └─ Seed Sangsom Data
-  └─ Results Display
-      ├─ Success Indicator
-      ├─ Credentials Card
-      ├─ Summary Statistics
-      └─ Sample Classes List
-</SangsomSeedButton>
+<SangsomSeedButton>├─ Header (title + description) ├─ Existing Data Status ├─ Warning Message ├─ Action Buttons │ ├─ Check Existing Data │ └─ Seed Sangsom Data └─ Results Display ├─ Success Indicator ├─ Credentials Card ├─ Summary Statistics └─ Sample Classes List</SangsomSeedButton>
 ```
 
 ### 4. Admin Integration (`app/page.tsx`)
@@ -139,9 +129,7 @@ Integrated seeding component into admin panel:
 1. **Lazy Load Component**
 
    ```tsx
-   const SangsomSeedButton = lazy(() => 
-     import("@/components/sangsom-seed-button").then(m => ({ default: m.SangsomSeedButton }))
-   );
+   const SangsomSeedButton = lazy(() => import("@/components/sangsom-seed-button").then((m) => ({ default: m.SangsomSeedButton })));
    ```
 
 2. **Added Tab to Admin Navigation**
@@ -174,14 +162,14 @@ Comprehensive documentation including:
 
 ## Files Changed/Created
 
-| File | Status | Lines | Description |
-|------|--------|-------|-------------|
-| `SangsomProjectApr.md` | Created | 196 | Transcribed schedule data |
-| `convex/seedSangsomProject.ts` | Created | 650 | Backend seeding logic |
-| `components/sangsom-seed-button.tsx` | Created | 240 | Admin UI component |
-| `app/page.tsx` | Modified | +20 | Admin tab integration |
-| `docs/SANGSOM_PROJECT_IMPORT.md` | Created | 300 | Usage documentation |
-| `README.md` | Modified | +1 | Feature listing |
+| File                                 | Status   | Lines | Description               |
+| ------------------------------------ | -------- | ----- | ------------------------- |
+| `SangsomProjectApr.md`               | Created  | 196   | Transcribed schedule data |
+| `convex/seedSangsomProject.ts`       | Created  | 650   | Backend seeding logic     |
+| `components/sangsom-seed-button.tsx` | Created  | 240   | Admin UI component        |
+| `app/page.tsx`                       | Modified | +20   | Admin tab integration     |
+| `docs/SANGSOM_PROJECT_IMPORT.md`     | Created  | 300   | Usage documentation       |
+| `README.md`                          | Modified | +1    | Feature listing           |
 
 **Total**: 6 files, ~1,400+ lines of code and documentation
 

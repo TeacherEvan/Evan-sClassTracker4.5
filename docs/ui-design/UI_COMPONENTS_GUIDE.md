@@ -66,30 +66,25 @@ The modal uses responsive, professional spacing:
 ```tsx
 <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3">
   {/* ... action buttons ... */}
-  
+
   {/* Delete Button - Only for Authorized Users */}
-  {(currentUserRole === "admin" ||
-      currentUserRole === "moderator" ||
-      (currentUserRole === "teacher" && classData.teacherId === currentUserId)) && (
-        <button
-          onClick={() => setShowDeleteConfirm(true)}
-          className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-medium"
-        >
-          <Trash2 className="w-4 h-4" />
-          {t("Delete", "ลบ")}
-        </button>
-      )}
+  {(currentUserRole === "admin" || currentUserRole === "moderator" || (currentUserRole === "teacher" && classData.teacherId === currentUserId)) && (
+    <button onClick={() => setShowDeleteConfirm(true)} className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-medium">
+      <Trash2 className="w-4 h-4" />
+      {t("Delete", "ลบ")}
+    </button>
+  )}
 </div>
 ```
 
 **Authorization Matrix:**
 
-| User Role | Can See Button? | Condition |
-|-----------|----------------|-----------|
-| Admin | ✅ Always | All classes |
-| Moderator | ✅ Always | Classes in their school |
-| Teacher | ✅ Conditional | Only their own classes |
-| Student | ❌ Never | N/A |
+| User Role | Can See Button? | Condition               |
+| --------- | --------------- | ----------------------- |
+| Admin     | ✅ Always       | All classes             |
+| Moderator | ✅ Always       | Classes in their school |
+| Teacher   | ✅ Conditional  | Only their own classes  |
+| Student   | ❌ Never        | N/A                     |
 
 ---
 
@@ -98,49 +93,44 @@ The modal uses responsive, professional spacing:
 ### Full Modal Implementation
 
 ```tsx
-{showDeleteConfirm && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6">
-      {/* Icon + Title */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
-          <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+{
+  showDeleteConfirm && (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-md w-full p-6">
+        {/* Icon + Title */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
+            <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+          </div>
+          <h3 className="text-xl font-bold">{t("Delete Class", "ลบคลาส")}</h3>
         </div>
-        <h3 className="text-xl font-bold">
-          {t("Delete Class", "ลบคลาส")}
-        </h3>
-      </div>
-      
-      {/* Warning Message */}
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-        {t(
-          "Are you sure you want to delete this class? This action cannot be undone.",
-          "คุณแน่ใจหรือไม่ว่าต้องการลบคลาสนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้"
+
+        {/* Warning Message */}
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{t("Are you sure you want to delete this class? This action cannot be undone.", "คุณแน่ใจหรือไม่ว่าต้องการลบคลาสนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้")}</p>
+
+        {/* Class Info Preview */}
+        {studentData && (
+          <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg mb-4">
+            <p className="text-sm font-medium">
+              {studentData.firstName} {studentData.lastName}
+            </p>
+            <p className="text-xs text-gray-600 dark:text-gray-400">{new Date(classData.scheduledDate).toLocaleString()}</p>
+          </div>
         )}
-      </p>
-      
-      {/* Class Info Preview */}
-      {studentData && (
-        <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg mb-4">
-          <p className="text-sm font-medium">{studentData.firstName} {studentData.lastName}</p>
-          <p className="text-xs text-gray-600 dark:text-gray-400">
-            {new Date(classData.scheduledDate).toLocaleString()}
-          </p>
+
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+            {t("Cancel", "ยกเลิก")}
+          </button>
+          <button onClick={handleDeleteClass} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-medium">
+            {t("Delete", "ลบ")}
+          </button>
         </div>
-      )}
-      
-      {/* Action Buttons */}
-      <div className="flex gap-3">
-        <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-          {t("Cancel", "ยกเลิก")}
-        </button>
-        <button onClick={handleDeleteClass} className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-medium">
-          {t("Delete", "ลบ")}
-        </button>
       </div>
     </div>
-  </div>
-)}
+  );
+}
 ```
 
 **Bilingual Support:**
@@ -174,12 +164,7 @@ await ctx.db.insert("classes", {
 Display in weekly calendar:
 
 ```tsx
-<div className="text-gray-500 dark:text-gray-400 text-[9px] md:text-[10px] mt-0.5">
-  {new Date(classItem.scheduledDate).toLocaleTimeString(
-    language === "en" ? "en-US" : "th-TH",
-    { hour: "2-digit", minute: "2-digit" }
-  )}
-</div>
+<div className="text-gray-500 dark:text-gray-400 text-[9px] md:text-[10px] mt-0.5">{new Date(classItem.scheduledDate).toLocaleTimeString(language === "en" ? "en-US" : "th-TH", { hour: "2-digit", minute: "2-digit" })}</div>
 ```
 
 **Result:**
@@ -202,17 +187,15 @@ No delay, no re-editing needed - time displays immediately from the stored times
 const toLocalDatetimeString = (timestamp: number): string => {
   const date = new Date(timestamp);
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 // Initialize state with existing time
-const [scheduledDate, setScheduledDate] = useState(
-  toLocalDatetimeString(classData.scheduledDate)
-);
+const [scheduledDate, setScheduledDate] = useState(toLocalDatetimeString(classData.scheduledDate));
 ```
 
 **Example:**
@@ -279,7 +262,7 @@ await editClass({
       {new Date(classItem.scheduledDate).toLocaleTimeString()}
     </div>
   </div>
-  
+
   {/* Quick Action Buttons - Visible on Hover (Desktop Only) */}
   <div className="absolute top-1 right-1 hidden md:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
     <button
@@ -316,41 +299,37 @@ await editClass({
 ### Implementation with Authorization
 
 ```tsx
-{canDelete && (
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      if (confirm(t(
-        "Are you sure you want to delete this class?",
-        "คุณแน่ใจหรือไม่ว่าต้องการลบคลาสนี้?"
-      ))) {
-        deleteClass({
-          userId: currentUser._id,
-          classId: classItem._id
-        }).then(() => {
-          toast.success("Class deleted", "ลบคลาสสำเร็จ");
-        }).catch((err: unknown) => {
-          toast.error(
-            err instanceof Error ? err.message : "Failed to delete",
-            err instanceof Error ? err.message : "ลบไม่สำเร็จ"
-          );
-        });
-      }
-    }}
-    className="p-1 bg-red-500 text-white rounded hover:bg-red-600 active:scale-95 transition-all"
-    title={t("Delete", "ลบ")}
-  >
-    <Trash2 className="w-3 h-3" />
-  </button>
-)}
+{
+  canDelete && (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        if (confirm(t("Are you sure you want to delete this class?", "คุณแน่ใจหรือไม่ว่าต้องการลบคลาสนี้?"))) {
+          deleteClass({
+            userId: currentUser._id,
+            classId: classItem._id,
+          })
+            .then(() => {
+              toast.success("Class deleted", "ลบคลาสสำเร็จ");
+            })
+            .catch((err: unknown) => {
+              toast.error(err instanceof Error ? err.message : "Failed to delete", err instanceof Error ? err.message : "ลบไม่สำเร็จ");
+            });
+        }
+      }}
+      className="p-1 bg-red-500 text-white rounded hover:bg-red-600 active:scale-95 transition-all"
+      title={t("Delete", "ลบ")}
+    >
+      <Trash2 className="w-3 h-3" />
+    </button>
+  );
+}
 ```
 
 **Authorization Check:**
 
 ```tsx
-const canDelete = currentUser.role === "admin" ||
-  currentUser.role === "moderator" ||
-  (currentUser.role === "teacher" && classItem.teacherId === currentUser._id);
+const canDelete = currentUser.role === "admin" || currentUser.role === "moderator" || (currentUser.role === "teacher" && classItem.teacherId === currentUser._id);
 ```
 
 **Features:**
@@ -385,12 +364,12 @@ const canDelete = currentUser.role === "admin" ||
 
 **Key Differences:**
 
-| Feature | Desktop | Mobile |
-|---------|---------|--------|
-| Quick Edit | ✅ Hover button | ❌ Open modal |
+| Feature      | Desktop         | Mobile        |
+| ------------ | --------------- | ------------- |
+| Quick Edit   | ✅ Hover button | ❌ Open modal |
 | Quick Delete | ✅ Hover button | ❌ Open modal |
-| Class Card | Clickable | Clickable |
-| Detail Modal | Full features | Full features |
+| Class Card   | Clickable       | Clickable     |
+| Detail Modal | Full features   | Full features |
 
 **Why This Works:**
 
@@ -414,10 +393,7 @@ toast.success("Class deleted successfully", "ลบคลาสสำเร็�
 #### Error Example
 
 ```typescript
-toast.error(
-  err instanceof Error ? err.message : "Failed to delete class",
-  err instanceof Error ? err.message : "ไม่สามารถลบคลาสได้"
-);
+toast.error(err instanceof Error ? err.message : "Failed to delete class", err instanceof Error ? err.message : "ไม่สามารถลบคลาสได้");
 ```
 
 ### Toast Library API
@@ -425,10 +401,18 @@ toast.error(
 ```typescript
 // From lib/toast.ts
 export const toast = {
-  success: (message: string, messageTh: string) => { /* ... */ },
-  error: (message: string, messageTh: string) => { /* ... */ },
-  info: (message: string, messageTh: string) => { /* ... */ },
-  warning: (message: string, messageTh: string) => { /* ... */ },
+  success: (message: string, messageTh: string) => {
+    /* ... */
+  },
+  error: (message: string, messageTh: string) => {
+    /* ... */
+  },
+  info: (message: string, messageTh: string) => {
+    /* ... */
+  },
+  warning: (message: string, messageTh: string) => {
+    /* ... */
+  },
 };
 ```
 
@@ -483,13 +467,9 @@ export const toast = {
 
 ```tsx
 // components/class-detail-modal.tsx
-{(currentUserRole === "admin" ||
-    currentUserRole === "moderator" ||
-    (currentUserRole === "teacher" && classData.teacherId === currentUserId)) && (
-  <button onClick={() => setShowDeleteConfirm(true)}>
-    Delete
-  </button>
-)}
+{
+  (currentUserRole === "admin" || currentUserRole === "moderator" || (currentUserRole === "teacher" && classData.teacherId === currentUserId)) && <button onClick={() => setShowDeleteConfirm(true)}>Delete</button>;
+}
 ```
 
 **Purpose:** Prevent unauthorized users from seeing the delete button at all.
@@ -498,14 +478,9 @@ export const toast = {
 
 ```typescript
 // convex/classes.ts
-async function verifyClassAccess(
-  ctx: MutationCtx,
-  userId: Id<"users">,
-  classData: Doc<"classes">,
-  options: { requireModeratorOrAdmin?: boolean; allowTeacherOwner?: boolean } = {}
-): Promise<void> {
+async function verifyClassAccess(ctx: MutationCtx, userId: Id<"users">, classData: Doc<"classes">, options: { requireModeratorOrAdmin?: boolean; allowTeacherOwner?: boolean } = {}): Promise<void> {
   const user = await ctx.db.get(userId);
-  
+
   if (!user) {
     throw new Error("User not found");
   }
@@ -563,7 +538,7 @@ export const deleteClass = mutation({
     // Verify authorization
     await verifyClassAccess(ctx, args.userId, classData, {
       requireModeratorOrAdmin: true,
-      allowTeacherOwner: true
+      allowTeacherOwner: true,
     });
 
     const user = await ctx.db.get(args.userId);
@@ -577,7 +552,7 @@ export const deleteClass = mutation({
     }
 
     // Proceed with deletion...
-  }
+  },
 });
 ```
 
@@ -589,17 +564,17 @@ export const deleteClass = mutation({
 
 ### Security Test Matrix
 
-| Scenario | Expected Result | Verified |
-|----------|----------------|----------|
-| Admin deletes any class | ✅ Success | ✅ |
-| Admin deletes past class | ✅ Success (God mode) | ✅ |
-| Moderator deletes class in their school | ✅ Success | ✅ |
-| Moderator deletes class in other school | ❌ Unauthorized | ✅ |
-| Moderator deletes past class in their school | ❌ Date error | ✅ |
-| Teacher deletes their own future class | ✅ Success | ✅ |
-| Teacher deletes their own past class | ❌ Date error | ✅ |
-| Teacher deletes another teacher's class | ❌ Unauthorized | ✅ |
-| Unauthenticated user deletes class | ❌ Unauthorized | ✅ |
+| Scenario                                     | Expected Result       | Verified |
+| -------------------------------------------- | --------------------- | -------- |
+| Admin deletes any class                      | ✅ Success            | ✅       |
+| Admin deletes past class                     | ✅ Success (God mode) | ✅       |
+| Moderator deletes class in their school      | ✅ Success            | ✅       |
+| Moderator deletes class in other school      | ❌ Unauthorized       | ✅       |
+| Moderator deletes past class in their school | ❌ Date error         | ✅       |
+| Teacher deletes their own future class       | ✅ Success            | ✅       |
+| Teacher deletes their own past class         | ❌ Date error         | ✅       |
+| Teacher deletes another teacher's class      | ❌ Unauthorized       | ✅       |
+| Unauthenticated user deletes class           | ❌ Unauthorized       | ✅       |
 
 ---
 

@@ -57,11 +57,15 @@ export interface TestStudentInput {
 
 const defaultPasswordHash = "pbkdf2$test$salt$hash";
 
-export const createTestUser = (input: TestUserInput = {}): Omit<User, "_id" | "_creationTime"> => {
+export const createTestUser = (
+  input: TestUserInput = {},
+): Omit<User, "_id" | "_creationTime"> => {
   const username = input.username || `user_${generateId("u")}`;
   return {
     username,
-    passwordHash: input.password ? `pbkdf2$test$${generateId("pw")}` : defaultPasswordHash,
+    passwordHash: input.password
+      ? `pbkdf2$test$${generateId("pw")}`
+      : defaultPasswordHash,
     role: input.role || "teacher",
     schoolId: input.schoolId,
     requirePasswordChange: input.requirePasswordChange ?? false,
@@ -70,7 +74,9 @@ export const createTestUser = (input: TestUserInput = {}): Omit<User, "_id" | "_
   };
 };
 
-export const createTestSchool = (input: TestSchoolInput = {}): Omit<School, "_id" | "_creationTime"> => {
+export const createTestSchool = (
+  input: TestSchoolInput = {},
+): Omit<School, "_id" | "_creationTime"> => {
   const name = input.name || `School ${generateId("sch")}`;
   return {
     name,
@@ -84,7 +90,9 @@ export const createTestSchool = (input: TestSchoolInput = {}): Omit<School, "_id
   };
 };
 
-export const createTestProvider = (input: TestProviderInput): Omit<Provider, "_id" | "_creationTime"> => {
+export const createTestProvider = (
+  input: TestProviderInput,
+): Omit<Provider, "_id" | "_creationTime"> => {
   const name = input.name || `Provider ${generateId("prov")}`;
   return {
     name,
@@ -97,7 +105,9 @@ export const createTestProvider = (input: TestProviderInput): Omit<Provider, "_i
   };
 };
 
-export const createTestStudent = (input: TestStudentInput = {}): Omit<Student, "_id" | "_creationTime"> => {
+export const createTestStudent = (
+  input: TestStudentInput = {},
+): Omit<Student, "_id" | "_creationTime"> => {
   const firstName = input.firstName || `First${generateId("fn")}`;
   const lastName = input.lastName || `Last${generateId("ln")}`;
   return {
@@ -200,7 +210,7 @@ export const createTestClass = (input: ClassInput) => {
   const { subject: _subject, ...rest } = input;
   const overrideKeys: string[] = CLASS_OVERRIDE_KEYS as unknown as string[];
   const extra = Object.fromEntries(
-    Object.entries(rest).filter(([key]) => !overrideKeys.includes(key))
+    Object.entries(rest).filter(([key]) => !overrideKeys.includes(key)),
   );
   return {
     teacherId: input.teacherId,
@@ -219,11 +229,13 @@ export const createTestClass = (input: ClassInput) => {
   };
 };
 
-export const createTestNotification = (input: {
-  userId?: string;
-  type?: "info" | "success" | "warning" | "error";
-  message?: string;
-} = {}) => {
+export const createTestNotification = (
+  input: {
+    userId?: string;
+    type?: "info" | "success" | "warning" | "error";
+    message?: string;
+  } = {},
+) => {
   return {
     title: input.message || "Test Notification",
     titleTh: "การแจ้งเตือนทดสอบ",

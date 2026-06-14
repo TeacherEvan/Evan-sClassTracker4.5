@@ -20,12 +20,12 @@ Implemented two major UX improvements requested by users:
 ### **Original User Requests:**
 
 1. **Post-Class Notes Issue:**
-   - *Original:* "Make sure when 'post class notes' gets trigered on a class that was previously merged, that the comment is trigered per indiviudual student and not per 'class'"
-   - *Optimized:* "When the post-class notes modal is triggered for a merged class (class with multiple students), ensure that feedback is collected individually for each student rather than once for the entire class"
+   - _Original:_ "Make sure when 'post class notes' gets trigered on a class that was previously merged, that the comment is trigered per indiviudual student and not per 'class'"
+   - _Optimized:_ "When the post-class notes modal is triggered for a merged class (class with multiple students), ensure that feedback is collected individually for each student rather than once for the entire class"
 
 2. **Edit History Issue:**
-   - *Original:* "When moderators/admin/teachers edit information, provide more detailed information then just stating: 'Admin/moderator edited'"
-   - *Optimized:* "Enhance the edit history audit trail to show detailed information about what fields were changed (e.g., 'Changed location from X to Y', 'Updated scheduled date from A to B') instead of generic 'Admin/moderator edited' messages"
+   - _Original:_ "When moderators/admin/teachers edit information, provide more detailed information then just stating: 'Admin/moderator edited'"
+   - _Optimized:_ "Enhance the edit history audit trail to show detailed information about what fields were changed (e.g., 'Changed location from X to Y', 'Updated scheduled date from A to B') instead of generic 'Admin/moderator edited' messages"
 
 ---
 
@@ -37,17 +37,23 @@ The edit history system was **already tracking detailed field-level changes** wi
 
 ```typescript
 // Schema (convex/schema.ts)
-editHistory: v.optional(v.array(v.object({
-  editedAt: v.number(),
-  editedBy: v.id("users"),
-  editedByName: v.string(),
-  editedByRole: v.string(),
-  changes: v.array(v.object({
-    field: v.string(),      // ✅ Field name tracked
-    oldValue: v.string(),   // ✅ Old value tracked
-    newValue: v.string(),   // ✅ New value tracked
-  })),
-})))
+editHistory: v.optional(
+  v.array(
+    v.object({
+      editedAt: v.number(),
+      editedBy: v.id("users"),
+      editedByName: v.string(),
+      editedByRole: v.string(),
+      changes: v.array(
+        v.object({
+          field: v.string(), // ✅ Field name tracked
+          oldValue: v.string(), // ✅ Old value tracked
+          newValue: v.string(), // ✅ New value tracked
+        }),
+      ),
+    }),
+  ),
+);
 ```
 
 **Problem:** UI was only showing "Last edited by X on Y" and **ignoring** the detailed change data!
@@ -91,25 +97,25 @@ Class {
 // Expand classes into individual student entries
 const expandedClasses = [];
 for (const cls of recentClasses) {
-    // Get all students for this class (primary + additional)
-    const studentIdsForClass = [cls.studentId, ...(cls.additionalStudentIds || [])];
-    
-    for (const studentId of studentIdsForClass) {
-        // Check if notes already exist for this student in this class
-        const existingNote = await ctx.db
-            .query("postClassNotes")
-            .withIndex("by_class", (q) => q.eq("classId", cls._id))
-            .filter((q) => q.eq(q.field("studentId"), studentId))
-            .first();
+  // Get all students for this class (primary + additional)
+  const studentIdsForClass = [cls.studentId, ...(cls.additionalStudentIds || [])];
 
-        if (!existingNote) {
-            expandedClasses.push({
-                ...cls,
-                student: studentMap.get(studentId),
-                currentStudentId: studentId, // Track which student this entry is for
-            });
-        }
+  for (const studentId of studentIdsForClass) {
+    // Check if notes already exist for this student in this class
+    const existingNote = await ctx.db
+      .query("postClassNotes")
+      .withIndex("by_class", (q) => q.eq("classId", cls._id))
+      .filter((q) => q.eq(q.field("studentId"), studentId))
+      .first();
+
+    if (!existingNote) {
+      expandedClasses.push({
+        ...cls,
+        student: studentMap.get(studentId),
+        currentStudentId: studentId, // Track which student this entry is for
+      });
     }
+  }
 }
 ```
 
@@ -119,41 +125,41 @@ Added `studentId` parameter to specify which student in a merged class:
 
 ```typescript
 export const create = mutation({
-    args: {
-        classId: v.id("classes"),
-        teacherId: v.id("users"),
-        studentId: v.optional(v.id("students")), // NEW: For merged classes
-        // ... other fields
-    },
-    handler: async (ctx, args) => {
-        // Determine which student this note is for
-        const targetStudentId = args.studentId || classData.studentId;
+  args: {
+    classId: v.id("classes"),
+    teacherId: v.id("users"),
+    studentId: v.optional(v.id("students")), // NEW: For merged classes
+    // ... other fields
+  },
+  handler: async (ctx, args) => {
+    // Determine which student this note is for
+    const targetStudentId = args.studentId || classData.studentId;
 
-        // Verify student is actually in this class
-        const allStudentIds = [classData.studentId, ...(classData.additionalStudentIds || [])];
-        if (!allStudentIds.includes(targetStudentId)) {
-            throw new Error("Student is not enrolled in this class");
-        }
-
-        // Check if notes already exist for this student in this class
-        const existing = await ctx.db
-            .query("postClassNotes")
-            .withIndex("by_class", (q) => q.eq("classId", args.classId))
-            .filter((q) => q.eq(q.field("studentId"), targetStudentId))
-            .first();
-
-        if (existing) {
-            throw new Error("Notes already exist for this student in this class");
-        }
-
-        // Create notes for specific student
-        await ctx.db.insert("postClassNotes", {
-            classId: args.classId,
-            teacherId: args.teacherId,
-            studentId: targetStudentId, // ✅ Specific student
-            // ... other fields
-        });
+    // Verify student is actually in this class
+    const allStudentIds = [classData.studentId, ...(classData.additionalStudentIds || [])];
+    if (!allStudentIds.includes(targetStudentId)) {
+      throw new Error("Student is not enrolled in this class");
     }
+
+    // Check if notes already exist for this student in this class
+    const existing = await ctx.db
+      .query("postClassNotes")
+      .withIndex("by_class", (q) => q.eq("classId", args.classId))
+      .filter((q) => q.eq(q.field("studentId"), targetStudentId))
+      .first();
+
+    if (existing) {
+      throw new Error("Notes already exist for this student in this class");
+    }
+
+    // Create notes for specific student
+    await ctx.db.insert("postClassNotes", {
+      classId: args.classId,
+      teacherId: args.teacherId,
+      studentId: targetStudentId, // ✅ Specific student
+      // ... other fields
+    });
+  },
 });
 ```
 
@@ -163,11 +169,11 @@ export const create = mutation({
 
 ```typescript
 interface ClassWithStudent extends Partial<Doc<"classes">> {
-    _id: Id<"classes">;
-    scheduledDate: number;
-    additionalStudentIds?: Id<"students">[];
-    student?: Doc<"students"> | null;
-    currentStudentId?: Id<"students">; // NEW: For merged classes
+  _id: Id<"classes">;
+  scheduledDate: number;
+  additionalStudentIds?: Id<"students">[];
+  student?: Doc<"students"> | null;
+  currentStudentId?: Id<"students">; // NEW: For merged classes
 }
 ```
 
@@ -175,18 +181,11 @@ interface ClassWithStudent extends Partial<Doc<"classes">> {
 
 ```tsx
 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-    <h3 className="font-semibold text-lg mb-2">
-        {t("Feedback for", "ข้อเสนอแนะสำหรับ")} {currentClass.student?.firstName} {currentClass.student?.lastName}
-    </h3>
-    {/* NEW: Show if this is a merged class */}
-    {currentClass.additionalStudentIds && currentClass.additionalStudentIds.length > 0 && (
-        <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-            {t(
-                `Group class (${currentClass.additionalStudentIds.length + 1} students) - Individual feedback`,
-                `คลาสกลุ่ม (${currentClass.additionalStudentIds.length + 1} คน) - ข้อเสนอแนะรายบุคคล`
-            )}
-        </p>
-    )}
+  <h3 className="font-semibold text-lg mb-2">
+    {t("Feedback for", "ข้อเสนอแนะสำหรับ")} {currentClass.student?.firstName} {currentClass.student?.lastName}
+  </h3>
+  {/* NEW: Show if this is a merged class */}
+  {currentClass.additionalStudentIds && currentClass.additionalStudentIds.length > 0 && <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">{t(`Group class (${currentClass.additionalStudentIds.length + 1} students) - Individual feedback`, `คลาสกลุ่ม (${currentClass.additionalStudentIds.length + 1} คน) - ข้อเสนอแนะรายบุคคล`)}</p>}
 </div>
 ```
 
@@ -194,11 +193,11 @@ interface ClassWithStudent extends Partial<Doc<"classes">> {
 
 ```typescript
 await createNotes({
-    classId: currentClass._id,
-    teacherId: currentUserId,
-    studentId: currentClass.currentStudentId, // ✅ Pass specific student ID
-    notes: notes || undefined,
-    // ... other fields
+  classId: currentClass._id,
+  teacherId: currentUserId,
+  studentId: currentClass.currentStudentId, // ✅ Pass specific student ID
+  notes: notes || undefined,
+  // ... other fields
 });
 ```
 
@@ -220,27 +219,25 @@ Replaced generic edit message with detailed field-level changes:
 
 ```tsx
 <div className="mt-3 space-y-2">
-    <div className="flex items-start gap-2 text-xs">
-        <span className="badge">Edited</span>
-        <span>Last edited by John on 10/28/2025</span>
-    </div>
-    
-    {/* NEW: Show what changed */}
-    <div className="pl-7 space-y-1">
-        {changes.map((change, idx) => (
-            <div key={idx}>
-                <span className="font-medium">Scheduled Date:</span>
-                <span className="line-through text-red-600">10/28/2025</span>
-                {" → "}
-                <span className="text-green-600">10/29/2025</span>
-            </div>
-        ))}
-        
-        {/* Link to view full history if multiple edits */}
-        {editHistory.length > 1 && (
-            <button>View all {editHistory.length} edits</button>
-        )}
-    </div>
+  <div className="flex items-start gap-2 text-xs">
+    <span className="badge">Edited</span>
+    <span>Last edited by John on 10/28/2025</span>
+  </div>
+
+  {/* NEW: Show what changed */}
+  <div className="pl-7 space-y-1">
+    {changes.map((change, idx) => (
+      <div key={idx}>
+        <span className="font-medium">Scheduled Date:</span>
+        <span className="line-through text-red-600">10/28/2025</span>
+        {" → "}
+        <span className="text-green-600">10/29/2025</span>
+      </div>
+    ))}
+
+    {/* Link to view full history if multiple edits */}
+    {editHistory.length > 1 && <button>View all {editHistory.length} edits</button>}
+  </div>
 </div>
 ```
 

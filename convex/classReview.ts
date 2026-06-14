@@ -1,11 +1,11 @@
 /**
  * Class Review and Reporting Management
- * 
+ *
  * Allows moderators to:
  * - Flag classes for review (with bilingual notes)
  * - Include/exclude classes from reports
  * - View flagged classes for their school
- * 
+ *
  * Security:
  * - Moderators can ONLY manage classes in their assigned school
  * - All mutations verify moderator's schoolId matches class's schoolId
@@ -43,7 +43,9 @@ export const flagForReview = mutation({
 
     // ✅ SECURITY: Only moderators and admins can flag classes
     if (user.role !== "moderator" && user.role !== "admin") {
-      throw new Error("Unauthorized: Only moderators and admins can flag classes for review");
+      throw new Error(
+        "Unauthorized: Only moderators and admins can flag classes for review",
+      );
     }
 
     // ✅ SECURITY: Rate limiting
@@ -65,7 +67,9 @@ export const flagForReview = mutation({
         throw new Error("Moderator must be assigned to a school");
       }
       if (classItem.schoolId !== user.schoolId) {
-        throw new Error("Unauthorized: Moderators can only flag classes in their assigned school");
+        throw new Error(
+          "Unauthorized: Moderators can only flag classes in their assigned school",
+        );
       }
     }
 
@@ -140,7 +144,9 @@ export const unflagClass = mutation({
 
     // ✅ SECURITY: Only moderators and admins can unflag classes
     if (user.role !== "moderator" && user.role !== "admin") {
-      throw new Error("Unauthorized: Only moderators and admins can unflag classes");
+      throw new Error(
+        "Unauthorized: Only moderators and admins can unflag classes",
+      );
     }
 
     // ✅ SECURITY: Rate limiting
@@ -162,7 +168,9 @@ export const unflagClass = mutation({
         throw new Error("Moderator must be assigned to a school");
       }
       if (classItem.schoolId !== user.schoolId) {
-        throw new Error("Unauthorized: Moderators can only unflag classes in their assigned school");
+        throw new Error(
+          "Unauthorized: Moderators can only unflag classes in their assigned school",
+        );
       }
     }
 
@@ -229,7 +237,9 @@ export const toggleIncludeInReports = mutation({
 
     // ✅ SECURITY: Only moderators and admins can toggle report inclusion
     if (user.role !== "moderator" && user.role !== "admin") {
-      throw new Error("Unauthorized: Only moderators and admins can toggle class report inclusion");
+      throw new Error(
+        "Unauthorized: Only moderators and admins can toggle class report inclusion",
+      );
     }
 
     // ✅ SECURITY: Rate limiting
@@ -251,7 +261,9 @@ export const toggleIncludeInReports = mutation({
         throw new Error("Moderator must be assigned to a school");
       }
       if (classItem.schoolId !== user.schoolId) {
-        throw new Error("Unauthorized: Moderators can only toggle report inclusion for classes in their assigned school");
+        throw new Error(
+          "Unauthorized: Moderators can only toggle report inclusion for classes in their assigned school",
+        );
       }
     }
 
@@ -309,7 +321,9 @@ export const getFlaggedClasses = query({
 
     // ✅ SECURITY: Only moderators and admins can view flagged classes
     if (user.role !== "moderator" && user.role !== "admin") {
-      throw new Error("Unauthorized: Only moderators and admins can view flagged classes");
+      throw new Error(
+        "Unauthorized: Only moderators and admins can view flagged classes",
+      );
     }
 
     // ✅ SECURITY: Moderators can ONLY view flagged classes for their own school
@@ -318,7 +332,9 @@ export const getFlaggedClasses = query({
         throw new Error("Moderator must be assigned to a school");
       }
       if (user.schoolId !== args.schoolId) {
-        throw new Error("Unauthorized: Moderators can only view flagged classes for their assigned school");
+        throw new Error(
+          "Unauthorized: Moderators can only view flagged classes for their assigned school",
+        );
       }
     }
 
@@ -326,7 +342,7 @@ export const getFlaggedClasses = query({
     const flaggedClasses = await ctx.db
       .query("classes")
       .withIndex("by_school_and_flagged", (q) =>
-        q.eq("schoolId", args.schoolId).eq("flaggedForReview", true)
+        q.eq("schoolId", args.schoolId).eq("flaggedForReview", true),
       )
       .collect();
 
@@ -335,8 +351,12 @@ export const getFlaggedClasses = query({
       flaggedClasses.map(async (cls) => {
         const student = await ctx.db.get(cls.studentId);
         const teacher = await ctx.db.get(cls.teacherId);
-        const location = cls.locationId ? await ctx.db.get(cls.locationId) : null;
-        const flaggedByUser = cls.flaggedBy ? await ctx.db.get(cls.flaggedBy) : null;
+        const location = cls.locationId
+          ? await ctx.db.get(cls.locationId)
+          : null;
+        const flaggedByUser = cls.flaggedBy
+          ? await ctx.db.get(cls.flaggedBy)
+          : null;
 
         return {
           classId: cls._id,
@@ -345,7 +365,9 @@ export const getFlaggedClasses = query({
           status: cls.status,
           // Student info
           studentId: cls.studentId,
-          studentName: student ? `${student.firstName} ${student.lastName}` : "Unknown",
+          studentName: student
+            ? `${student.firstName} ${student.lastName}`
+            : "Unknown",
           studentGrade: student?.grade || "",
           studentClass: student?.class || "",
           // Teacher info
@@ -362,7 +384,7 @@ export const getFlaggedClasses = query({
           // Report inclusion
           includeInReports: cls.includeInReports ?? true,
         };
-      })
+      }),
     );
 
     // Sort by flagged date (most recent first)

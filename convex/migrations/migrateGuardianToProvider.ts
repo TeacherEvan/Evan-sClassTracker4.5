@@ -21,33 +21,33 @@ import { mutation, query } from "../_generated/server";
  * Safe query - no modifications
  */
 export const countGuardianUsers = query({
-    args: {},
-    handler: async (ctx) => {
-        const guardians = await ctx.db
-            .query("users")
-            .withIndex("by_role", (q) => q.eq("role", "guardian"))
-            .collect();
+  args: {},
+  handler: async (ctx) => {
+    const guardians = await ctx.db
+      .query("users")
+      .withIndex("by_role", (q) => q.eq("role", "guardian"))
+      .collect();
 
-        const guardiansWithStudents = await Promise.all(
-            guardians.map(async (guardian) => {
-                const students = await ctx.db
-                    .query("students")
-                    .withIndex("by_guardian_id", (q) => q.eq("guardianId", guardian._id))
-                    .collect();
-
-                return {
-                    guardianId: guardian._id,
-                    username: guardian.username,
-                    studentCount: students.length,
-                };
-            })
-        );
+    const guardiansWithStudents = await Promise.all(
+      guardians.map(async (guardian) => {
+        const students = await ctx.db
+          .query("students")
+          .withIndex("by_guardian_id", (q) => q.eq("guardianId", guardian._id))
+          .collect();
 
         return {
-            totalGuardians: guardians.length,
-            details: guardiansWithStudents,
+          guardianId: guardian._id,
+          username: guardian.username,
+          studentCount: students.length,
         };
-    },
+      }),
+    );
+
+    return {
+      totalGuardians: guardians.length,
+      details: guardiansWithStudents,
+    };
+  },
 });
 
 /**
@@ -69,189 +69,192 @@ export const countGuardianUsers = query({
  * @returns Migration report with counts and errors
  */
 export const migrateGuardiansToProviders = mutation({
-    args: {
-        adminId: v.id("users"),
-        dryRun: v.boolean(),
-    },
-    handler: async (ctx, args) => {
-        // 1. Verify admin authorization
-        const admin = await ctx.db.get(args.adminId);
-        if (!admin || admin.role !== "admin") {
-            throw new Error("Admin access required for migration");
-        }
+  args: {
+    adminId: v.id("users"),
+    dryRun: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    // 1. Verify admin authorization
+    const admin = await ctx.db.get(args.adminId);
+    if (!admin || admin.role !== "admin") {
+      throw new Error("Admin access required for migration");
+    }
 
-        console.log("🔄 Starting guardian to provider migration", {
-            adminId: args.adminId,
-            adminUsername: admin.username,
-            dryRun: args.dryRun,
-            timestamp: new Date().toISOString(),
-        });
+    console.log("🔄 Starting guardian to provider migration", {
+      adminId: args.adminId,
+      adminUsername: admin.username,
+      dryRun: args.dryRun,
+      timestamp: new Date().toISOString(),
+    });
 
-        // 2. Find all guardian users
-        const guardians = await ctx.db
-            .query("users")
-            .withIndex("by_role", (q) => q.eq("role", "guardian"))
-            .collect();
+    // 2. Find all guardian users
+    const guardians = await ctx.db
+      .query("users")
+      .withIndex("by_role", (q) => q.eq("role", "guardian"))
+      .collect();
 
-        const report = {
-            guardiansFound: guardians.length,
-            providersCreated: 0,
-            studentsUpdated: 0,
-            classesUpdated: 0,
-            errors: [] as Array<{
-                guardianId: string;
-                username: string;
-                error: string;
-            }>,
-            details: [] as Array<{
-                guardianId: string;
-                username: string;
-                providerId?: string;
-                studentsUpdated: number;
-                classesUpdated: number;
-            }>,
+    const report = {
+      guardiansFound: guardians.length,
+      providersCreated: 0,
+      studentsUpdated: 0,
+      classesUpdated: 0,
+      errors: [] as Array<{
+        guardianId: string;
+        username: string;
+        error: string;
+      }>,
+      details: [] as Array<{
+        guardianId: string;
+        username: string;
+        providerId?: string;
+        studentsUpdated: number;
+        classesUpdated: number;
+      }>,
+    };
+
+    console.log(`📊 Found ${guardians.length} guardian users to migrate`);
+
+    // 3. For each guardian, create provider and update relationships
+    for (const guardian of guardians) {
+      try {
+        const guardianReport = {
+          guardianId: guardian._id,
+          username: guardian.username,
+          providerId: undefined as string | undefined,
+          studentsUpdated: 0,
+          classesUpdated: 0,
         };
 
-        console.log(`📊 Found ${guardians.length} guardian users to migrate`);
+        if (!args.dryRun) {
+          // Create provider entity
+          const providerId = await ctx.db.insert("providers", {
+            name: `Guardian - ${guardian.username}`,
+            nameTh: `ผู้ปกครอง - ${guardian.username}`,
+            category: "guardian",
+            createdBy: args.adminId,
+            isActive: true,
+            createdAt: Date.now(),
+          });
 
-        // 3. For each guardian, create provider and update relationships
-        for (const guardian of guardians) {
-            try {
-                const guardianReport = {
-                    guardianId: guardian._id,
-                    username: guardian.username,
-                    providerId: undefined as string | undefined,
-                    studentsUpdated: 0,
-                    classesUpdated: 0,
-                };
+          guardianReport.providerId = providerId;
+          report.providersCreated++;
 
-                if (!args.dryRun) {
-                    // Create provider entity
-                    const providerId = await ctx.db.insert("providers", {
-                        name: `Guardian - ${guardian.username}`,
-                        nameTh: `ผู้ปกครอง - ${guardian.username}`,
-                        category: "guardian",
-                        createdBy: args.adminId,
-                        isActive: true,
-                        createdAt: Date.now(),
-                    });
+          console.log(`✅ Created provider for guardian ${guardian.username}`, {
+            providerId,
+          });
 
-                    guardianReport.providerId = providerId;
-                    report.providersCreated++;
+          // Update students linked to this guardian
+          const students = await ctx.db
+            .query("students")
+            .withIndex("by_guardian_id", (q) =>
+              q.eq("guardianId", guardian._id),
+            )
+            .collect();
 
-                    console.log(`✅ Created provider for guardian ${guardian.username}`, {
-                        providerId,
-                    });
+          for (const student of students) {
+            await ctx.db.patch(student._id, {
+              providerId,
+              // Keep guardianId for rollback capability
+            });
+            guardianReport.studentsUpdated++;
+          }
 
-                    // Update students linked to this guardian
-                    const students = await ctx.db
-                        .query("students")
-                        .withIndex("by_guardian_id", (q) =>
-                            q.eq("guardianId", guardian._id)
-                        )
-                        .collect();
+          report.studentsUpdated += guardianReport.studentsUpdated;
 
-                    for (const student of students) {
-                        await ctx.db.patch(student._id, {
-                            providerId,
-                            // Keep guardianId for rollback capability
-                        });
-                        guardianReport.studentsUpdated++;
-                    }
+          console.log(
+            `✅ Updated ${students.length} students for guardian ${guardian.username}`,
+          );
 
-                    report.studentsUpdated += guardianReport.studentsUpdated;
+          // Update classes for this guardian's students
+          const classesForStudents = await Promise.all(
+            students.map(async (student) => {
+              const classes = await ctx.db
+                .query("classes")
+                .withIndex("by_student", (q) => q.eq("studentId", student._id))
+                .filter((q) => q.eq(q.field("isGuardianLinked"), true))
+                .collect();
+              return classes;
+            }),
+          );
 
-                    console.log(
-                        `✅ Updated ${students.length} students for guardian ${guardian.username}`
-                    );
+          const allClasses = classesForStudents.flat();
 
-                    // Update classes for this guardian's students
-                    const classesForStudents = await Promise.all(
-                        students.map(async (student) => {
-                            const classes = await ctx.db
-                                .query("classes")
-                                .withIndex("by_student", (q) => q.eq("studentId", student._id))
-                                .filter((q) => q.eq(q.field("isGuardianLinked"), true))
-                                .collect();
-                            return classes;
-                        })
-                    );
+          for (const classItem of allClasses) {
+            await ctx.db.patch(classItem._id, {
+              providerId,
+              // Keep isGuardianLinked for backward compatibility
+            });
+            guardianReport.classesUpdated++;
+          }
 
-                    const allClasses = classesForStudents.flat();
+          report.classesUpdated += guardianReport.classesUpdated;
 
-                    for (const classItem of allClasses) {
-                        await ctx.db.patch(classItem._id, {
-                            providerId,
-                            // Keep isGuardianLinked for backward compatibility
-                        });
-                        guardianReport.classesUpdated++;
-                    }
+          console.log(
+            `✅ Updated ${allClasses.length} classes for guardian ${guardian.username}`,
+          );
+        } else {
+          // Dry-run mode - count what would be updated
+          const students = await ctx.db
+            .query("students")
+            .withIndex("by_guardian_id", (q) =>
+              q.eq("guardianId", guardian._id),
+            )
+            .collect();
 
-                    report.classesUpdated += guardianReport.classesUpdated;
+          guardianReport.studentsUpdated = students.length;
+          report.studentsUpdated += students.length;
 
-                    console.log(
-                        `✅ Updated ${allClasses.length} classes for guardian ${guardian.username}`
-                    );
-                } else {
-                    // Dry-run mode - count what would be updated
-                    const students = await ctx.db
-                        .query("students")
-                        .withIndex("by_guardian_id", (q) =>
-                            q.eq("guardianId", guardian._id)
-                        )
-                        .collect();
+          const classesForStudents = await Promise.all(
+            students.map(async (student) => {
+              const classes = await ctx.db
+                .query("classes")
+                .withIndex("by_student", (q) => q.eq("studentId", student._id))
+                .filter((q) => q.eq(q.field("isGuardianLinked"), true))
+                .collect();
+              return classes;
+            }),
+          );
 
-                    guardianReport.studentsUpdated = students.length;
-                    report.studentsUpdated += students.length;
+          const allClasses = classesForStudents.flat();
+          guardianReport.classesUpdated = allClasses.length;
+          report.classesUpdated += allClasses.length;
 
-                    const classesForStudents = await Promise.all(
-                        students.map(async (student) => {
-                            const classes = await ctx.db
-                                .query("classes")
-                                .withIndex("by_student", (q) => q.eq("studentId", student._id))
-                                .filter((q) => q.eq(q.field("isGuardianLinked"), true))
-                                .collect();
-                            return classes;
-                        })
-                    );
-
-                    const allClasses = classesForStudents.flat();
-                    guardianReport.classesUpdated = allClasses.length;
-                    report.classesUpdated += allClasses.length;
-
-                    console.log(`📋 [DRY-RUN] Would migrate guardian ${guardian.username}`, {
-                        studentsToUpdate: students.length,
-                        classesToUpdate: allClasses.length,
-                    });
-                }
-
-                report.details.push(guardianReport);
-            } catch (error) {
-                const errorMessage =
-                    error instanceof Error ? error.message : String(error);
-                report.errors.push({
-                    guardianId: guardian._id,
-                    username: guardian.username,
-                    error: errorMessage,
-                });
-                console.error(`❌ Error migrating guardian ${guardian.username}`, {
-                    error: errorMessage,
-                });
-            }
+          console.log(
+            `📋 [DRY-RUN] Would migrate guardian ${guardian.username}`,
+            {
+              studentsToUpdate: students.length,
+              classesToUpdate: allClasses.length,
+            },
+          );
         }
 
-        // Final summary
-        console.log("✅ Migration complete", {
-            dryRun: args.dryRun,
-            guardiansFound: report.guardiansFound,
-            providersCreated: report.providersCreated,
-            studentsUpdated: report.studentsUpdated,
-            classesUpdated: report.classesUpdated,
-            errors: report.errors.length,
+        report.details.push(guardianReport);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        report.errors.push({
+          guardianId: guardian._id,
+          username: guardian.username,
+          error: errorMessage,
         });
+        console.error(`❌ Error migrating guardian ${guardian.username}`, {
+          error: errorMessage,
+        });
+      }
+    }
 
-        return report;
-    },
+    // Final summary
+    console.log("✅ Migration complete", {
+      dryRun: args.dryRun,
+      guardiansFound: report.guardiansFound,
+      providersCreated: report.providersCreated,
+      studentsUpdated: report.studentsUpdated,
+      classesUpdated: report.classesUpdated,
+      errors: report.errors.length,
+    });
+
+    return report;
+  },
 });
 
 /**
@@ -259,34 +262,34 @@ export const migrateGuardiansToProviders = mutation({
  * Safe query - no modifications
  */
 export const verifyMigration = query({
-    args: {},
-    handler: async (ctx) => {
-        // Count guardian providers
-        const guardianProviders = await ctx.db
-            .query("providers")
-            .filter((q) => q.eq(q.field("category"), "guardian"))
-            .collect();
+  args: {},
+  handler: async (ctx) => {
+    // Count guardian providers
+    const guardianProviders = await ctx.db
+      .query("providers")
+      .filter((q) => q.eq(q.field("category"), "guardian"))
+      .collect();
 
-        // Count students with providerId
-        const studentsWithProvider = await ctx.db
-            .query("students")
-            .filter((q) => q.neq(q.field("providerId"), undefined))
-            .collect();
+    // Count students with providerId
+    const studentsWithProvider = await ctx.db
+      .query("students")
+      .filter((q) => q.neq(q.field("providerId"), undefined))
+      .collect();
 
-        // Count guardian users still in system
-        const remainingGuardians = await ctx.db
-            .query("users")
-            .withIndex("by_role", (q) => q.eq("role", "guardian"))
-            .collect();
+    // Count guardian users still in system
+    const remainingGuardians = await ctx.db
+      .query("users")
+      .withIndex("by_role", (q) => q.eq("role", "guardian"))
+      .collect();
 
-        return {
-            guardianProviders: guardianProviders.length,
-            studentsWithProvider: studentsWithProvider.length,
-            remainingGuardianUsers: remainingGuardians.length,
-            migrationComplete:
-                guardianProviders.length > 0 && remainingGuardians.length === 0,
-        };
-    },
+    return {
+      guardianProviders: guardianProviders.length,
+      studentsWithProvider: studentsWithProvider.length,
+      remainingGuardianUsers: remainingGuardians.length,
+      migrationComplete:
+        guardianProviders.length > 0 && remainingGuardians.length === 0,
+    };
+  },
 });
 
 /**
@@ -298,93 +301,93 @@ export const verifyMigration = query({
  * @param dryRun - If true, reports what would change without modifying data
  */
 export const rollbackMigration = mutation({
-    args: {
-        adminId: v.id("users"),
-        dryRun: v.boolean(),
-    },
-    handler: async (ctx, args) => {
-        // Verify admin authorization
-        const admin = await ctx.db.get(args.adminId);
-        if (!admin || admin.role !== "admin") {
-            throw new Error("Admin access required for rollback");
+  args: {
+    adminId: v.id("users"),
+    dryRun: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    // Verify admin authorization
+    const admin = await ctx.db.get(args.adminId);
+    if (!admin || admin.role !== "admin") {
+      throw new Error("Admin access required for rollback");
+    }
+
+    console.log("⚠️ Starting migration rollback", {
+      adminId: args.adminId,
+      dryRun: args.dryRun,
+      timestamp: new Date().toISOString(),
+    });
+
+    const report = {
+      providersDeleted: 0,
+      studentsReverted: 0,
+      classesReverted: 0,
+      errors: [] as Array<{ error: string }>,
+    };
+
+    try {
+      // Find all guardian providers
+      const guardianProviders = await ctx.db
+        .query("providers")
+        .filter((q) => q.eq(q.field("category"), "guardian"))
+        .collect();
+
+      if (!args.dryRun) {
+        // Delete guardian providers
+        for (const provider of guardianProviders) {
+          await ctx.db.delete(provider._id);
+          report.providersDeleted++;
         }
 
-        console.log("⚠️ Starting migration rollback", {
-            adminId: args.adminId,
-            dryRun: args.dryRun,
-            timestamp: new Date().toISOString(),
-        });
+        // Revert students (remove providerId, keep guardianId)
+        const students = await ctx.db
+          .query("students")
+          .filter((q) => q.neq(q.field("providerId"), undefined))
+          .collect();
 
-        const report = {
-            providersDeleted: 0,
-            studentsReverted: 0,
-            classesReverted: 0,
-            errors: [] as Array<{ error: string }>,
-        };
-
-        try {
-            // Find all guardian providers
-            const guardianProviders = await ctx.db
-                .query("providers")
-                .filter((q) => q.eq(q.field("category"), "guardian"))
-                .collect();
-
-            if (!args.dryRun) {
-                // Delete guardian providers
-                for (const provider of guardianProviders) {
-                    await ctx.db.delete(provider._id);
-                    report.providersDeleted++;
-                }
-
-                // Revert students (remove providerId, keep guardianId)
-                const students = await ctx.db
-                    .query("students")
-                    .filter((q) => q.neq(q.field("providerId"), undefined))
-                    .collect();
-
-                for (const student of students) {
-                    await ctx.db.patch(student._id, {
-                        providerId: undefined,
-                    });
-                    report.studentsReverted++;
-                }
-
-                // Revert classes (remove providerId, keep isGuardianLinked)
-                const classes = await ctx.db
-                    .query("classes")
-                    .filter((q) => q.neq(q.field("providerId"), undefined))
-                    .collect();
-
-                for (const classItem of classes) {
-                    await ctx.db.patch(classItem._id, {
-                        providerId: undefined,
-                    });
-                    report.classesReverted++;
-                }
-            } else {
-                report.providersDeleted = guardianProviders.length;
-
-                const students = await ctx.db
-                    .query("students")
-                    .filter((q) => q.neq(q.field("providerId"), undefined))
-                    .collect();
-                report.studentsReverted = students.length;
-
-                const classes = await ctx.db
-                    .query("classes")
-                    .filter((q) => q.neq(q.field("providerId"), undefined))
-                    .collect();
-                report.classesReverted = classes.length;
-            }
-
-            console.log("✅ Rollback complete", report);
-        } catch (error) {
-            const errorMessage =
-                error instanceof Error ? error.message : String(error);
-            report.errors.push({ error: errorMessage });
-            console.error("❌ Rollback error", { error: errorMessage });
+        for (const student of students) {
+          await ctx.db.patch(student._id, {
+            providerId: undefined,
+          });
+          report.studentsReverted++;
         }
 
-        return report;
-    },
+        // Revert classes (remove providerId, keep isGuardianLinked)
+        const classes = await ctx.db
+          .query("classes")
+          .filter((q) => q.neq(q.field("providerId"), undefined))
+          .collect();
+
+        for (const classItem of classes) {
+          await ctx.db.patch(classItem._id, {
+            providerId: undefined,
+          });
+          report.classesReverted++;
+        }
+      } else {
+        report.providersDeleted = guardianProviders.length;
+
+        const students = await ctx.db
+          .query("students")
+          .filter((q) => q.neq(q.field("providerId"), undefined))
+          .collect();
+        report.studentsReverted = students.length;
+
+        const classes = await ctx.db
+          .query("classes")
+          .filter((q) => q.neq(q.field("providerId"), undefined))
+          .collect();
+        report.classesReverted = classes.length;
+      }
+
+      console.log("✅ Rollback complete", report);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      report.errors.push({ error: errorMessage });
+      console.error("❌ Rollback error", { error: errorMessage });
+    }
+
+    return report;
+  },
 });

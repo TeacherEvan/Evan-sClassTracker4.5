@@ -163,7 +163,7 @@ This guide provides step-by-step training for school moderators in both English 
 
 ### School Analytics / การวิเคราะห์โรงเรียน
 
-#### Navigate to Analytics tab / ไปที่แท็บการวิเคราะห์**
+#### Navigate to Analytics tab / ไปที่แท็บการวิเคราะห์\*\*
 
 **Summary Cards / การ์ดสรุป**:
 
@@ -253,7 +253,7 @@ This guide provides step-by-step training for school moderators in both English 
 5. [ ] Export CSV / ส่งออก CSV
 6. [ ] Send test group message / ส่งข้อความกลุ่มทดสอบ
 
-**Score / คะแนน**: ___/6
+**Score / คะแนน**: \_\_\_/6
 
 - 6/6: ✅ Certified / รับรอง
 - 4-5/6: ⚠️ Review and retake / ตรวจสอบและทำอีกครั้ง

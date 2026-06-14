@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, type ReactNode } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createQueryClient } from './query-client';
+import { createContext, useContext, useState, type ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { createQueryClient } from "./query-client";
 
 /**
  * Context for accessing the QueryClient instance
@@ -17,7 +17,9 @@ const QueryClientContext = createContext<QueryClient | null>(null);
 export function useQueryClientContext(): QueryClient {
   const client = useContext(QueryClientContext);
   if (!client) {
-    throw new Error('useQueryClientContext must be used within a QueryProvider');
+    throw new Error(
+      "useQueryClientContext must be used within a QueryProvider",
+    );
   }
   return client;
 }
@@ -25,7 +27,7 @@ export function useQueryClientContext(): QueryClient {
 /**
  * QueryProvider component that wraps the application with TanStack Query
  * Creates a single QueryClient instance that persists across renders
- * 
+ *
  * @param children - Child components to wrap with QueryClientProvider
  */
 export function QueryProvider({ children }: Readonly<{ children: ReactNode }>) {
@@ -34,9 +36,7 @@ export function QueryProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   return (
     <QueryClientContext.Provider value={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </QueryClientContext.Provider>
   );
 }

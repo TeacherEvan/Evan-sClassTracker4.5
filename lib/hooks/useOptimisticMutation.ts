@@ -4,30 +4,54 @@
 
 "use client";
 
-import { useMutation, useQueryClient, UseMutationOptions, UseMutationResult } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  UseMutationOptions,
+  UseMutationResult,
+} from "@tanstack/react-query";
 
 export interface OptimisticMutationOptions<
   TVariables extends Record<string, unknown> = Record<string, unknown>,
   TData = unknown,
   TError = Error,
-  TContext = unknown
+  TContext = unknown,
 > {
   /** The mutation function to execute */
   mutationFn: (variables: TVariables) => Promise<TData>;
   /** Called before the mutation starts - use for optimistic updates */
-  onMutate?: (variables: TVariables, queryClient: ReturnType<typeof useQueryClient>) => Promise<TContext | undefined> | TContext | undefined;
+  onMutate?: (
+    variables: TVariables,
+    queryClient: ReturnType<typeof useQueryClient>,
+  ) => Promise<TContext | undefined> | TContext | undefined;
   /** Called if the mutation fails - use to rollback optimistic updates */
-  onError?: (error: TError, variables: TVariables, context: TContext | undefined, queryClient: ReturnType<typeof useQueryClient>) => void;
+  onError?: (
+    error: TError,
+    variables: TVariables,
+    context: TContext | undefined,
+    queryClient: ReturnType<typeof useQueryClient>,
+  ) => void;
   /** Called if the mutation succeeds */
-  onSuccess?: (data: TData, variables: TVariables, context: TContext | undefined, queryClient: ReturnType<typeof useQueryClient>) => void;
+  onSuccess?: (
+    data: TData,
+    variables: TVariables,
+    context: TContext | undefined,
+    queryClient: ReturnType<typeof useQueryClient>,
+  ) => void;
   /** Called after either success or error */
-  onSettled?: (data: TData | undefined, error: TError | null, variables: TVariables, context: TContext | undefined, queryClient: ReturnType<typeof useQueryClient>) => void;
+  onSettled?: (
+    data: TData | undefined,
+    error: TError | null,
+    variables: TVariables,
+    context: TContext | undefined,
+    queryClient: ReturnType<typeof useQueryClient>,
+  ) => void;
 }
 
 /**
  * Wrapper around useMutation that provides the queryClient to callbacks
  * for easier optimistic update management
- * 
+ *
  * @example
  * ```tsx
  * const { mutate } = useOptimisticMutation({
@@ -35,13 +59,13 @@ export interface OptimisticMutationOptions<
  *   onMutate: async (vars, queryClient) => {
  *     // Cancel outgoing refetches
  *     await queryClient.cancelQueries({ queryKey: ["classes"] });
- *     
+ *
  *     // Snapshot previous value
  *     const previous = queryClient.getQueryData(["classes"]);
- *     
+ *
  *     // Optimistically update
  *     queryClient.setQueryData(["classes"], (old) => [...old, { ...vars, id: "temp" }]);
- *     
+ *
  *     return { previous };
  *   },
  *   onError: (err, vars, context, queryClient) => {
@@ -59,9 +83,9 @@ export function useOptimisticMutation<
   TVariables extends Record<string, unknown> = Record<string, unknown>,
   TData = unknown,
   TError = Error,
-  TContext = unknown
+  TContext = unknown,
 >(
-  options: OptimisticMutationOptions<TVariables, TData, TError, TContext>
+  options: OptimisticMutationOptions<TVariables, TData, TError, TContext>,
 ): UseMutationResult<TData, TError, TVariables, TContext> {
   const queryClient = useQueryClient();
 
@@ -88,7 +112,7 @@ export function useOptimisticMutation<
 export function createOptimisticUpdater<T extends Record<string, unknown>>(
   queryKey: readonly unknown[],
   newItem: T,
-  idField: keyof T = "id" as keyof T
+  idField: keyof T = "id" as keyof T,
 ) {
   return (old: T[] | undefined): T[] => {
     if (!old) return [newItem];
@@ -96,7 +120,7 @@ export function createOptimisticUpdater<T extends Record<string, unknown>>(
     const exists = old.some((item) => item[idField] === newItem[idField]);
     if (exists) {
       return old.map((item) =>
-        item[idField] === newItem[idField] ? { ...item, ...newItem } : item
+        item[idField] === newItem[idField] ? { ...item, ...newItem } : item,
       );
     }
     return [...old, newItem];
@@ -108,12 +132,13 @@ export function createOptimisticUpdater<T extends Record<string, unknown>>(
  */
 export function createOptimisticRemover<T extends Record<string, unknown>>(
   queryKey: readonly unknown[],
-  idField: keyof T = "id" as keyof T
+  idField: keyof T = "id" as keyof T,
 ) {
-  return (id: T[keyof T]) => (old: T[] | undefined): T[] => {
-    if (!old) return [];
-    return old.filter((item) => item[idField] !== id);
-  };
+  return (id: T[keyof T]) =>
+    (old: T[] | undefined): T[] => {
+      if (!old) return [];
+      return old.filter((item) => item[idField] !== id);
+    };
 }
 
 /**
@@ -123,12 +148,12 @@ export function createOptimisticUpdaterForId<T extends Record<string, unknown>>(
   queryKey: readonly unknown[],
   id: T[keyof T],
   updates: Partial<T>,
-  idField: keyof T = "id" as keyof T
+  idField: keyof T = "id" as keyof T,
 ) {
   return (old: T[] | undefined): T[] => {
     if (!old) return [];
     return old.map((item) =>
-      item[idField] === id ? { ...item, ...updates } : item
+      item[idField] === id ? { ...item, ...updates } : item,
     );
   };
 }

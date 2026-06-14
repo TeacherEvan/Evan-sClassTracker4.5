@@ -24,14 +24,15 @@
 **REQUIRED**: Use exactly **3 dashes** (`---`) for horizontal rules.
 
 ```markdown
-✅ CORRECT
+## ✅ CORRECT
+
+## ❌ WRONG
+
 ---
 
-❌ WRONG
-----
------
-___
-***
+---
+
+---
 ```
 
 **Rationale**:
@@ -49,16 +50,18 @@ ___
 
 ```markdown
 ✅ CORRECT
+
 # Heading 1
+
 ## Heading 2
+
 ### Heading 3
 
 ❌ WRONG
 Heading 1
 =========
 
-Heading 2
----------
+## Heading 2
 ```
 
 **Rationale**: ATX-style is more explicit, easier to parse, and supports all 6 heading levels.
@@ -71,19 +74,24 @@ Heading 2
 
 ```markdown
 ✅ CORRECT
+
 - Item 1
 - Item 2
 - Item 3
 
 ✅ CORRECT
+
 1. First
 2. Second
 3. Third
 
 ❌ WRONG (mixed markers)
+
 - Item 1
+
 * Item 2
-+ Item 3
+
+- Item 3
 ```
 
 **Enforcement**: Automated via markdownlint rule `MD004`
@@ -94,6 +102,7 @@ Heading 2
 
 ````markdown
 ✅ CORRECT
+
 ```typescript
 const example = "code";
 ```
@@ -103,9 +112,10 @@ npm install
 ```
 
 ❌ WRONG (indented code block)
-    const example = "code";
+const example = "code";
 
 ❌ WRONG (no language)
+
 ```
 const example = "code";
 ```
@@ -148,6 +158,7 @@ Hidden content here
 </details>
 
 ❌ WRONG (arbitrary HTML)
+
 <div class="custom">...</div>
 <script>alert('no');</script>
 ```

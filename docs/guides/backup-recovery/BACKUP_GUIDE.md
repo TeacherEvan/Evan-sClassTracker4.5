@@ -259,16 +259,12 @@ await client.connect();
 const db = client.db("convex_backups");
 
 // Get latest backup
-const backup = await db.collection("backups")
-  .find({ "metadata.status": "completed" })
-  .sort({ "metadata.timestamp": -1 })
-  .limit(1)
-  .toArray();
+const backup = await db.collection("backups").find({ "metadata.status": "completed" }).sort({ "metadata.timestamp": -1 }).limit(1).toArray();
 
 // All your data is in backup[0].data
-console.log(backup[0].data.users);     // All users
-console.log(backup[0].data.classes);   // All classes
-console.log(backup[0].data.students);  // All students
+console.log(backup[0].data.users); // All users
+console.log(backup[0].data.classes); // All classes
+console.log(backup[0].data.students); // All students
 // ... etc for all 19 tables
 ```
 
@@ -319,14 +315,14 @@ db.backups.countDocuments({ "metadata.status": "completed" })
 
 ### Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| "MONGODB_BACKUP_URI not set" | Add to `.env.local` |
-| "Unable to connect to MongoDB" | Check MongoDB is running |
-| "Convex 503 error" | Convex service down - retry later |
-| Task not running | Check Task Scheduler with Admin PowerShell |
-| "Backup too large" | MongoDB Atlas free tier = 512 MB, consider upgrading |
-| "Connection refused" | Check MongoDB IP whitelist settings |
+| Issue                          | Solution                                             |
+| ------------------------------ | ---------------------------------------------------- |
+| "MONGODB_BACKUP_URI not set"   | Add to `.env.local`                                  |
+| "Unable to connect to MongoDB" | Check MongoDB is running                             |
+| "Convex 503 error"             | Convex service down - retry later                    |
+| Task not running               | Check Task Scheduler with Admin PowerShell           |
+| "Backup too large"             | MongoDB Atlas free tier = 512 MB, consider upgrading |
+| "Connection refused"           | Check MongoDB IP whitelist settings                  |
 
 ### Debug Mode
 

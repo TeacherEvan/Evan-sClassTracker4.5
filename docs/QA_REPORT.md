@@ -25,40 +25,40 @@ This report documents the comprehensive quality assurance effort for all new fea
 
 ### Test Files Created
 
- | File | Lines | Test Areas | Test Cases |
- | ------ | ------- | ------------ | ------------ |
- | `teacher-features.spec.ts` | 320 | Unblocked booking, self-guardian, duplicates, UI/UX | 12+ |
- | `moderator-features.spec.ts` | 400 | School scoping, analytics, EN/TH flagging | 15+ |
- | `location-system.spec.ts` | 350 | Bilingual display, map data, admin management | 15+ |
- | `admin-features.spec.ts` | 440 | Audit trail, watchlist, data migration | 30+ |
- | **Total** | **1,510** | **All major features** | **70+** |
+| File                         | Lines     | Test Areas                                          | Test Cases |
+| ---------------------------- | --------- | --------------------------------------------------- | ---------- |
+| `teacher-features.spec.ts`   | 320       | Unblocked booking, self-guardian, duplicates, UI/UX | 12+        |
+| `moderator-features.spec.ts` | 400       | School scoping, analytics, EN/TH flagging           | 15+        |
+| `location-system.spec.ts`    | 350       | Bilingual display, map data, admin management       | 15+        |
+| `admin-features.spec.ts`     | 440       | Audit trail, watchlist, data migration              | 30+        |
+| **Total**                    | **1,510** | **All major features**                              | **70+**    |
 
 ### Feature Coverage Matrix
 
- | Feature Area | Test Coverage | Priority |
- | -------------- | --------------- | ---------- |
- | **Teacher Role Features** | ✅ Complete | P0 |
- | Unblocked booking (guardian-linked) | ✅ Covered | P0 |
- | Self-guardian (private tutoring) | ✅ Covered | P1 |
- | Duplicate class detection | ✅ Covered | P2 |
- | Class merging | ✅ Existing (merge-classes.spec.ts) | P1 |
- | **Moderator Role Features** | ✅ Complete | P0 |
- | School scoping (security) | ✅ Covered | P0 |
- | Analytics dashboard access | ✅ Existing (analytics.spec.ts) | P1 |
- | EN/TH language flagging | ✅ Covered | P2 |
- | Approval workflow | ✅ Covered | P0 |
- | **Location System** | ✅ Complete | P1 |
- | Bilingual location names | ✅ Covered | P1 |
- | Map data accuracy | ✅ Covered | P2 |
- | Admin management | ✅ Covered | P1 |
- | **Admin Features** | ✅ Complete | P1 |
- | Audit trail | ✅ Covered | P1 |
- | Watchlist system | ✅ Covered (if implemented) | P2 |
- | System-wide analytics | ✅ Covered | P1 |
- | **Data Migration** | ✅ Complete | P3 |
- | Guardian to Provider migration | ✅ Covered | P3 |
- | Bcrypt to PBKDF2 migration | ✅ Covered | P3 |
- | Schema cleanup | ✅ Covered | P3 |
+| Feature Area                        | Test Coverage                       | Priority |
+| ----------------------------------- | ----------------------------------- | -------- |
+| **Teacher Role Features**           | ✅ Complete                         | P0       |
+| Unblocked booking (guardian-linked) | ✅ Covered                          | P0       |
+| Self-guardian (private tutoring)    | ✅ Covered                          | P1       |
+| Duplicate class detection           | ✅ Covered                          | P2       |
+| Class merging                       | ✅ Existing (merge-classes.spec.ts) | P1       |
+| **Moderator Role Features**         | ✅ Complete                         | P0       |
+| School scoping (security)           | ✅ Covered                          | P0       |
+| Analytics dashboard access          | ✅ Existing (analytics.spec.ts)     | P1       |
+| EN/TH language flagging             | ✅ Covered                          | P2       |
+| Approval workflow                   | ✅ Covered                          | P0       |
+| **Location System**                 | ✅ Complete                         | P1       |
+| Bilingual location names            | ✅ Covered                          | P1       |
+| Map data accuracy                   | ✅ Covered                          | P2       |
+| Admin management                    | ✅ Covered                          | P1       |
+| **Admin Features**                  | ✅ Complete                         | P1       |
+| Audit trail                         | ✅ Covered                          | P1       |
+| Watchlist system                    | ✅ Covered (if implemented)         | P2       |
+| System-wide analytics               | ✅ Covered                          | P1       |
+| **Data Migration**                  | ✅ Complete                         | P3       |
+| Guardian to Provider migration      | ✅ Covered                          | P3       |
+| Bcrypt to PBKDF2 migration          | ✅ Covered                          | P3       |
+| Schema cleanup                      | ✅ Covered                          | P3       |
 
 ---
 
@@ -173,27 +173,27 @@ npm run test:e2e:replay
 
 ### High Risk Items (P0)
 
- | Risk | Impact | Mitigation |
- | ------ | -------- | ------------ |
- | School scoping bypass | 🔴 Critical | Security tests validate moderator boundaries |
- | Authentication failure | 🔴 Critical | PBKDF2 migration tests validate login |
- | Class booking breaks | 🔴 Critical | Unblocked booking tests validate workflow |
+| Risk                   | Impact      | Mitigation                                   |
+| ---------------------- | ----------- | -------------------------------------------- |
+| School scoping bypass  | 🔴 Critical | Security tests validate moderator boundaries |
+| Authentication failure | 🔴 Critical | PBKDF2 migration tests validate login        |
+| Class booking breaks   | 🔴 Critical | Unblocked booking tests validate workflow    |
 
 ### Medium Risk Items (P1)
 
- | Risk | Impact | Mitigation |
- | ------ | -------- | ------------ |
- | Analytics data leakage | 🟡 High | Teacher Comparison access control tests |
- | Bilingual display errors | 🟡 High | Location system tests validate EN/TH |
- | Audit log gaps | 🟡 High | Admin tests validate logging |
+| Risk                     | Impact  | Mitigation                              |
+| ------------------------ | ------- | --------------------------------------- |
+| Analytics data leakage   | 🟡 High | Teacher Comparison access control tests |
+| Bilingual display errors | 🟡 High | Location system tests validate EN/TH    |
+| Audit log gaps           | 🟡 High | Admin tests validate logging            |
 
 ### Low Risk Items (P2-P3)
 
- | Risk | Impact | Mitigation |
- | ------ | -------- | ------------ |
- | Duplicate detection failure | 🟢 Medium | Tests validate modal appears |
- | Map data inaccuracy | 🟢 Medium | Coordinate validation tests |
- | Migration incomplete | 🟢 Low | Data validation tests |
+| Risk                        | Impact    | Mitigation                   |
+| --------------------------- | --------- | ---------------------------- |
+| Duplicate detection failure | 🟢 Medium | Tests validate modal appears |
+| Map data inaccuracy         | 🟢 Medium | Coordinate validation tests  |
+| Migration incomplete        | 🟢 Low    | Data validation tests        |
 
 ---
 
@@ -280,13 +280,13 @@ npm run test:e2e:replay
 **Positive Test (Happy Path):**
 
 ```typescript
-test('TC-M2.2.1: Moderator sees Teacher Comparison tab', async ({ page }) => {
+test("TC-M2.2.1: Moderator sees Teacher Comparison tab", async ({ page }) => {
   await login(page, TEST_USERS.moderator);
-  await navigateToTab(page, 'Classes');
-  
+  await navigateToTab(page, "Classes");
+
   const analyticsButton = page.locator('button:has-text("Analytics")').first();
   await analyticsButton.click();
-  
+
   const teacherComparisonTab = page.locator('button:has-text("Teacher Comparison")').first();
   await expect(teacherComparisonTab).toBeVisible();
 });
@@ -295,16 +295,16 @@ test('TC-M2.2.1: Moderator sees Teacher Comparison tab', async ({ page }) => {
 **Negative Test (Security):**
 
 ```typescript
-test('TC-M2.2.3: Teacher cannot see Teacher Comparison', async ({ page }) => {
+test("TC-M2.2.3: Teacher cannot see Teacher Comparison", async ({ page }) => {
   await login(page, TEST_USERS.teacher);
-  await navigateToTab(page, 'Classes');
-  
+  await navigateToTab(page, "Classes");
+
   const analyticsButton = page.locator('button:has-text("Analytics")').first();
   await analyticsButton.click();
-  
+
   const teacherComparisonTab = page.locator('button:has-text("Teacher Comparison")').first();
   const hasTab = await teacherComparisonTab.isVisible().catch(() => false);
-  
+
   expect(hasTab).toBe(false); // Should NOT be visible
 });
 ```
@@ -318,5 +318,5 @@ test('TC-M2.2.3: Teacher cannot see Teacher Comparison', async ({ page }) => {
 
 ---
 
-*Generated: December 6, 2025*  
-*Last Updated: December 6, 2025*
+_Generated: December 6, 2025_  
+_Last Updated: December 6, 2025_

@@ -8,7 +8,7 @@
  */
 export function getStatusAriaLabel(
   status: string,
-  language: "en" | "th"
+  language: "en" | "th",
 ): string {
   const labels: Record<string, { en: string; th: string }> = {
     approved: { en: "Approved", th: "อนุมัติแล้ว" },
@@ -74,12 +74,12 @@ export interface StatusBadgeProps {
  */
 export function getStatusBadgeClasses(
   status: string,
-  className = ""
+  className = "",
 ): { bg: string; text: string; combined: string } {
   const bg = getStatusBgColor(status);
   const text = getStatusTextColor(status);
   const combined = `inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium min-h-[44px] min-w-[44px] justify-center ${bg} ${text} ${className}`;
-  
+
   return { bg, text, combined };
 }
 
@@ -87,7 +87,7 @@ export function getStatusBadgeClasses(
  * Get ARIA live region politeness level for notification type
  */
 export function getAriaLive(
-  type: "success" | "error" | "warning" | "info"
+  type: "success" | "error" | "warning" | "info",
 ): "polite" | "assertive" {
   return type === "error" ? "assertive" : "polite";
 }
@@ -109,8 +109,9 @@ export const FOCUS_RING =
 export function getSkipLinkProps() {
   return {
     href: "#main-content",
-    className: "sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-white text-blue-600 px-4 py-2 rounded-md shadow-lg z-50",
-    children: "Skip to main content"
+    className:
+      "sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-white text-blue-600 px-4 py-2 rounded-md shadow-lg z-50",
+    children: "Skip to main content",
   };
 }
 
@@ -137,7 +138,7 @@ export function announceToScreenReader(message: string) {
  */
 export function getLoadingAriaLabel(
   isLoading: boolean,
-  language: "en" | "th"
+  language: "en" | "th",
 ): string {
   if (!isLoading) return "";
   return language === "en" ? "Loading..." : "กำลังโหลด...";

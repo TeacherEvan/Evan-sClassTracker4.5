@@ -25,10 +25,14 @@ Changed label from "Scheduled Date" to **"Start Date"** for clarity.
 
 ```tsx
 // BEFORE
-{t("Scheduled Date", "วันที่กำหนด")}
+{
+  t("Scheduled Date", "วันที่กำหนด");
+}
 
 // AFTER
-{t("Start Date", "วันที่เริ่มต้น")}
+{
+  t("Start Date", "วันที่เริ่มต้น");
+}
 ```
 
 **Benefits**:
@@ -82,18 +86,14 @@ const [recurringWeeks, setRecurringWeeks] = useState(12); // Default 12 weeks ~ 
 ```tsx
 if (isRecurringWeekly && (selectedDates.length > 0 || scheduledDate)) {
   // Generate recurring weekly dates
-  const baseDate = selectedDates.length > 0 
-    ? new Date(selectedDates[0]) 
-    : new Date(scheduledDate);
-  
-  const [hours, minutes] = selectedDates.length > 0 
-    ? selectedTime.split(":") 
-    : [baseDate.getHours().toString(), baseDate.getMinutes().toString()];
-  
+  const baseDate = selectedDates.length > 0 ? new Date(selectedDates[0]) : new Date(scheduledDate);
+
+  const [hours, minutes] = selectedDates.length > 0 ? selectedTime.split(":") : [baseDate.getHours().toString(), baseDate.getMinutes().toString()];
+
   // Generate dates for each week
   for (let week = 0; week < recurringWeeks; week++) {
     const recurringDate = new Date(baseDate);
-    recurringDate.setDate(baseDate.getDate() + (week * 7)); // Add 7 days per week
+    recurringDate.setDate(baseDate.getDate() + week * 7); // Add 7 days per week
     recurringDate.setHours(Number.parseInt(hours), Number.parseInt(minutes));
     datesToBook.push(recurringDate.getTime());
   }
@@ -114,80 +114,65 @@ if (isRecurringWeekly && (selectedDates.length > 0 || scheduledDate)) {
 **Added recurring booking UI** (`components/class-booking.tsx` lines 1024-1112):
 
 ```tsx
-{/* Recurring Weekly Booking Option */}
-{(selectedDates.length > 0 || scheduledDate) && (
-  <div className="border border-green-200 dark:border-green-800 rounded-xl p-4 bg-green-50 dark:bg-green-900/20">
-    {/* Checkbox */}
-    <div className="flex items-center gap-3 mb-3">
-      <input
-        type="checkbox"
-        id="recurringWeekly"
-        checked={isRecurringWeekly}
-        onChange={(e) => {
-          setIsRecurringWeekly(e.target.checked);
-          if (!e.target.checked) {
-            setRecurringWeeks(12); // Reset when disabled
-          }
-        }}
-        className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500"
-      />
-      <label htmlFor="recurringWeekly" className="text-sm font-medium cursor-pointer">
-        {t("Recurring Weekly", "ซ้ำทุกสัปดาห์")}
-      </label>
-    </div>
+{
+  /* Recurring Weekly Booking Option */
+}
+{
+  (selectedDates.length > 0 || scheduledDate) && (
+    <div className="border border-green-200 dark:border-green-800 rounded-xl p-4 bg-green-50 dark:bg-green-900/20">
+      {/* Checkbox */}
+      <div className="flex items-center gap-3 mb-3">
+        <input
+          type="checkbox"
+          id="recurringWeekly"
+          checked={isRecurringWeekly}
+          onChange={(e) => {
+            setIsRecurringWeekly(e.target.checked);
+            if (!e.target.checked) {
+              setRecurringWeeks(12); // Reset when disabled
+            }
+          }}
+          className="w-5 h-5 text-green-600 rounded focus:ring-2 focus:ring-green-500"
+        />
+        <label htmlFor="recurringWeekly" className="text-sm font-medium cursor-pointer">
+          {t("Recurring Weekly", "ซ้ำทุกสัปดาห์")}
+        </label>
+      </div>
 
-    {isRecurringWeekly && (
-      <div className="space-y-3 mt-4">
-        {/* Number of weeks input */}
-        <div>
-          <label htmlFor="recurringWeeks" className="block text-sm font-medium mb-2">
-            {t("Number of Weeks", "จำนวนสัปดาห์")}
-          </label>
-          <input
-            type="number"
-            id="recurringWeeks"
-            min="1"
-            max="52"
-            value={recurringWeeks}
-            onChange={(e) => setRecurringWeeks(Math.max(1, Math.min(52, Number.parseInt(e.target.value) || 1)))}
-            className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-green-500"
-          />
-          <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">
-            {t(
-              `Will book ${recurringWeeks} classes, repeating every week on the same day`,
-              `จะจองคลาส ${recurringWeeks} ครั้ง ซ้ำทุกสัปดาห์ในวันเดียวกัน`
-            )}
-          </p>
-        </div>
+      {isRecurringWeekly && (
+        <div className="space-y-3 mt-4">
+          {/* Number of weeks input */}
+          <div>
+            <label htmlFor="recurringWeeks" className="block text-sm font-medium mb-2">
+              {t("Number of Weeks", "จำนวนสัปดาห์")}
+            </label>
+            <input type="number" id="recurringWeeks" min="1" max="52" value={recurringWeeks} onChange={(e) => setRecurringWeeks(Math.max(1, Math.min(52, Number.parseInt(e.target.value) || 1)))} className="w-full px-4 py-3 md:py-2 text-base md:text-sm border border-gray-300 rounded-xl md:rounded-lg focus:ring-2 focus:ring-green-500" />
+            <p className="mt-1 text-xs text-gray-600 dark:text-gray-400">{t(`Will book ${recurringWeeks} classes, repeating every week on the same day`, `จะจองคลาส ${recurringWeeks} ครั้ง ซ้ำทุกสัปดาห์ในวันเดียวกัน`)}</p>
+          </div>
 
-        {/* Preview of recurring dates */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-          <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t("Preview of Dates:", "ตัวอย่างวันที่:")}
-          </p>
-          <div className="space-y-1 max-h-40 overflow-y-auto">
-            {/* Show first 10 dates */}
-            {Array.from({ length: Math.min(recurringWeeks, 10) }, (_, i) => {
-              const date = new Date(baseDate);
-              date.setDate(baseDate.getDate() + (i * 7));
-              date.setHours(hours, minutes);
-              return (
-                <div key={i} className="text-xs text-gray-600 dark:text-gray-400">
-                  {i + 1}. {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              );
-            })}
-            {recurringWeeks > 10 && (
-              <div className="text-xs text-gray-500 italic">
-                {t(`... and ${recurringWeeks - 10} more`, `... และอีก ${recurringWeeks - 10} วัน`)}
-              </div>
-            )}
+          {/* Preview of recurring dates */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+            <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">{t("Preview of Dates:", "ตัวอย่างวันที่:")}</p>
+            <div className="space-y-1 max-h-40 overflow-y-auto">
+              {/* Show first 10 dates */}
+              {Array.from({ length: Math.min(recurringWeeks, 10) }, (_, i) => {
+                const date = new Date(baseDate);
+                date.setDate(baseDate.getDate() + i * 7);
+                date.setHours(hours, minutes);
+                return (
+                  <div key={i} className="text-xs text-gray-600 dark:text-gray-400">
+                    {i + 1}. {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                );
+              })}
+              {recurringWeeks > 10 && <div className="text-xs text-gray-500 italic">{t(`... and ${recurringWeeks - 10} more`, `... และอีก ${recurringWeeks - 10} วัน`)}</div>}
+            </div>
           </div>
         </div>
-      </div>
-    )}
-  </div>
-)}
+      )}
+    </div>
+  );
+}
 ```
 
 **UI Features**:
@@ -334,14 +319,14 @@ setRecurringWeeks(12);
 
 ## Files Modified
 
-| File | Lines Changed | Change Type | Description |
-|------|---------------|-------------|-------------|
-| `components/class-booking.tsx` | 936 | Text Update | Changed "Scheduled Date" to "Start Date" label |
-| `components/class-booking.tsx` | 74-75 | State Addition | Added recurring state variables |
-| `components/class-booking.tsx` | 204-227 | Logic Enhancement | Added recurring date generation |
-| `components/class-booking.tsx` | 1024-1112 | UI Addition | Added recurring booking UI section |
-| `components/class-booking.tsx` | 348-351 | Reset Update | Added recurring state reset |
-| `components/admin-error-reports.tsx` | 48, 78, 217, 235 | Bug Fix | Fixed TypeScript errors (unrelated to recurring feature) |
+| File                                 | Lines Changed    | Change Type       | Description                                              |
+| ------------------------------------ | ---------------- | ----------------- | -------------------------------------------------------- |
+| `components/class-booking.tsx`       | 936              | Text Update       | Changed "Scheduled Date" to "Start Date" label           |
+| `components/class-booking.tsx`       | 74-75            | State Addition    | Added recurring state variables                          |
+| `components/class-booking.tsx`       | 204-227          | Logic Enhancement | Added recurring date generation                          |
+| `components/class-booking.tsx`       | 1024-1112        | UI Addition       | Added recurring booking UI section                       |
+| `components/class-booking.tsx`       | 348-351          | Reset Update      | Added recurring state reset                              |
+| `components/admin-error-reports.tsx` | 48, 78, 217, 235 | Bug Fix           | Fixed TypeScript errors (unrelated to recurring feature) |
 
 **Total**: 6 sections modified, ~100 lines added
 
@@ -613,18 +598,18 @@ setRecurringWeeks(12);
 
 ## Implementation Metrics
 
-| Metric | Value |
-|--------|-------|
-| Development Time | ~2 hours |
-| Lines Added | ~100 |
-| Files Modified | 2 (class-booking.tsx + admin-error-reports.tsx) |
-| Backend Changes | 0 |
-| Database Migrations | 0 |
-| Breaking Changes | 0 |
-| Test Coverage | Manual testing required |
-| Build Status | ✅ Passing |
-| TypeScript Errors | ✅ 0 |
-| ESLint Warnings | ✅ 0 |
+| Metric              | Value                                           |
+| ------------------- | ----------------------------------------------- |
+| Development Time    | ~2 hours                                        |
+| Lines Added         | ~100                                            |
+| Files Modified      | 2 (class-booking.tsx + admin-error-reports.tsx) |
+| Backend Changes     | 0                                               |
+| Database Migrations | 0                                               |
+| Breaking Changes    | 0                                               |
+| Test Coverage       | Manual testing required                         |
+| Build Status        | ✅ Passing                                      |
+| TypeScript Errors   | ✅ 0                                            |
+| ESLint Warnings     | ✅ 0                                            |
 
 ---
 

@@ -1,12 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/lib/language-context";
-import { 
-  GraduationCap, 
-  Calendar, 
-  Search,
-  type LucideIcon 
-} from "lucide-react";
+import { GraduationCap, Calendar, Search, type LucideIcon } from "lucide-react";
 
 interface EmptyStateProps {
   icon?: LucideIcon;
@@ -36,36 +31,38 @@ export function EmptyState({
   const variantStyles = {
     default: {
       background: "bg-blue-100 dark:bg-blue-900/20",
-      icon: "text-blue-600 dark:text-blue-400"
+      icon: "text-blue-600 dark:text-blue-400",
     },
     search: {
       background: "bg-yellow-100 dark:bg-yellow-900/20",
-      icon: "text-yellow-600 dark:text-yellow-400"
+      icon: "text-yellow-600 dark:text-yellow-400",
     },
     filter: {
       background: "bg-purple-100 dark:bg-purple-900/20",
-      icon: "text-purple-600 dark:text-purple-400"
-    }
+      icon: "text-purple-600 dark:text-purple-400",
+    },
   };
 
   const styles = variantStyles[variant];
 
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4">
-      <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${styles.background}`}>
+      <div
+        className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${styles.background}`}
+      >
         <Icon className={`w-10 h-10 ${styles.icon}`} />
       </div>
-      
+
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 text-center">
         {t(titleEn, titleTh)}
       </h3>
-      
+
       {descriptionEn && (
         <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-sm mb-6">
           {t(descriptionEn, descriptionTh || descriptionEn)}
         </p>
       )}
-      
+
       {actionLabel && onAction && (
         <button
           onClick={onAction}
@@ -79,7 +76,11 @@ export function EmptyState({
 }
 
 // Pre-configured empty states for common scenarios
-export function NoStudentsFound({ onAddStudent }: { onAddStudent?: () => void }) {
+export function NoStudentsFound({
+  onAddStudent,
+}: {
+  onAddStudent?: () => void;
+}) {
   return (
     <EmptyState
       icon={GraduationCap}

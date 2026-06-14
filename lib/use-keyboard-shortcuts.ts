@@ -37,7 +37,7 @@ export interface KeyboardShortcutOptions {
  */
 export function useKeyboardShortcuts(
   shortcuts: KeyboardShortcut[],
-  options: KeyboardShortcutOptions = {}
+  options: KeyboardShortcutOptions = {},
 ) {
   const {
     scoped = false,
@@ -60,7 +60,11 @@ export function useKeyboardShortcuts(
       }
 
       // Check scope
-      if (scoped && elementRef.current && !elementRef.current.contains(target)) {
+      if (
+        scoped &&
+        elementRef.current &&
+        !elementRef.current.contains(target)
+      ) {
         return;
       }
 
@@ -68,7 +72,9 @@ export function useKeyboardShortcuts(
         if (shortcut.disabled) continue;
 
         const keyMatch = event.key.toLowerCase() === shortcut.key.toLowerCase();
-        const ctrlMatch = shortcut.ctrl ? (event.ctrlKey || event.metaKey) : !event.ctrlKey;
+        const ctrlMatch = shortcut.ctrl
+          ? event.ctrlKey || event.metaKey
+          : !event.ctrlKey;
         const shiftMatch = shortcut.shift ? event.shiftKey : !event.shiftKey;
         const altMatch = shortcut.alt ? event.altKey : !event.altKey;
         const metaMatch = shortcut.meta ? event.metaKey : !event.metaKey;
@@ -163,7 +169,8 @@ export function formatShortcut(shortcut: KeyboardShortcut): string {
   if (shortcut.alt) parts.push("Alt");
 
   // Capitalize key
-  const keyDisplay = shortcut.key === " " ? "Space" : shortcut.key.toUpperCase();
+  const keyDisplay =
+    shortcut.key === " " ? "Space" : shortcut.key.toUpperCase();
   parts.push(keyDisplay);
 
   return parts.join(" + ");
@@ -173,7 +180,7 @@ export function formatShortcut(shortcut: KeyboardShortcut): string {
  * Get all registered shortcuts for help modal
  */
 export function getShortcutsList(
-  shortcuts: KeyboardShortcut[]
+  shortcuts: KeyboardShortcut[],
 ): Array<{ keys: string; description: string; descriptionTh: string }> {
   return shortcuts
     .filter((s) => !s.disabled)

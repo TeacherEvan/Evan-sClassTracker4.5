@@ -1430,13 +1430,13 @@ const mutation = useMutation(api.module.function);
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setError("");
-  
+
   // Validation
   if (!field.trim()) {
     setError(t("Error message EN", "ข้อความผิดพลาด TH"));
     return;
   }
-  
+
   try {
     await mutation({ field });
     // Reset form

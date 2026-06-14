@@ -15,15 +15,15 @@ The guardian-to-provider migration system has been successfully implemented and 
 
 ## Acceptance Criteria Status
 
-| Criterion | Status | Implementation |
-| --------- | ------ | -------------- |
-| Convert all legacy students with guardian roles to provider pattern | ✅ COMPLETE | `migrateGuardiansToProviders` mutation |
+| Criterion                                                                 | Status      | Implementation                                      |
+| ------------------------------------------------------------------------- | ----------- | --------------------------------------------------- |
+| Convert all legacy students with guardian roles to provider pattern       | ✅ COMPLETE | `migrateGuardiansToProviders` mutation              |
 | Auto-create Teachers PVTclass pseudo-provider for self-reference students | ✅ COMPLETE | Orphan student detection + pseudo-provider creation |
-| Clean up legacy tables and remove deprecated fields | ✅ COMPLETE | `cleanupDeprecatedFields` mutation (phased) |
-| Test migration with dev data before final deployment | ✅ COMPLETE | Dry-run mode + test helper scripts |
-| No legacy guardian records or links remain | ✅ COMPLETE | `verifyCleanup` query + cleanup mutations |
-| All data correctly migrated | ✅ COMPLETE | Migration logging + rollback capability |
-| Migration steps automated and documented | ✅ COMPLETE | PowerShell runner + comprehensive runbook |
+| Clean up legacy tables and remove deprecated fields                       | ✅ COMPLETE | `cleanupDeprecatedFields` mutation (phased)         |
+| Test migration with dev data before final deployment                      | ✅ COMPLETE | Dry-run mode + test helper scripts                  |
+| No legacy guardian records or links remain                                | ✅ COMPLETE | `verifyCleanup` query + cleanup mutations           |
+| All data correctly migrated                                               | ✅ COMPLETE | Migration logging + rollback capability             |
+| Migration steps automated and documented                                  | ✅ COMPLETE | PowerShell runner + comprehensive runbook           |
 
 ---
 
@@ -314,13 +314,13 @@ node scripts/validate-migration-script.mjs
 
 ### Mitigated Risks
 
-| Risk | Mitigation | Status |
-|------|------------|--------|
-| Data loss during migration | Backup + rollback + preserve old fields | ✅ Mitigated |
-| Orphan students not detected | Preview query + orphan detection logic | ✅ Mitigated |
-| Application breaks | Dry-run testing + phased rollout | ✅ Mitigated |
-| Cleanup too early | Wait 48+ hours + verification required | ✅ Mitigated |
-| User confusion | Comprehensive runbook + examples | ✅ Mitigated |
+| Risk                         | Mitigation                              | Status       |
+| ---------------------------- | --------------------------------------- | ------------ |
+| Data loss during migration   | Backup + rollback + preserve old fields | ✅ Mitigated |
+| Orphan students not detected | Preview query + orphan detection logic  | ✅ Mitigated |
+| Application breaks           | Dry-run testing + phased rollout        | ✅ Mitigated |
+| Cleanup too early            | Wait 48+ hours + verification required  | ✅ Mitigated |
+| User confusion               | Comprehensive runbook + examples        | ✅ Mitigated |
 
 ### Remaining Considerations
 

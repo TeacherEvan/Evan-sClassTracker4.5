@@ -1,6 +1,6 @@
 /**
  * Pull-to-Refresh Hook
- * 
+ *
  * Provides pull-to-refresh functionality for mobile devices
  * Usage: const { isPulling, pullDistance } = usePullToRefresh(onRefresh);
  */
@@ -17,13 +17,9 @@ interface PullToRefreshOptions {
 
 export function usePullToRefresh(
   onRefresh: () => Promise<void>,
-  options: PullToRefreshOptions = {}
+  options: PullToRefreshOptions = {},
 ) {
-  const {
-    threshold = 80,
-    maxPullDistance = 120,
-    resistance = 2.5,
-  } = options;
+  const { threshold = 80, maxPullDistance = 120, resistance = 2.5 } = options;
 
   const [isPulling, setIsPulling] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -85,8 +81,12 @@ export function usePullToRefresh(
     // Only add listeners on mobile devices
     const isMobile = window.innerWidth < 768;
     if (isMobile) {
-      document.addEventListener("touchstart", handleTouchStart, { passive: true });
-      document.addEventListener("touchmove", handleTouchMove, { passive: false });
+      document.addEventListener("touchstart", handleTouchStart, {
+        passive: true,
+      });
+      document.addEventListener("touchmove", handleTouchMove, {
+        passive: false,
+      });
       document.addEventListener("touchend", handleTouchEnd, { passive: true });
     }
 
@@ -96,7 +96,15 @@ export function usePullToRefresh(
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [isPulling, pullDistance, threshold, maxPullDistance, resistance, onRefresh, isRefreshing]);
+  }, [
+    isPulling,
+    pullDistance,
+    threshold,
+    maxPullDistance,
+    resistance,
+    onRefresh,
+    isRefreshing,
+  ]);
 
   return {
     isPulling,

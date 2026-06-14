@@ -78,7 +78,7 @@ Approved by: moderator1
 ```
 Class Acknowledged
 
-Your class request with John Smith has been acknowledged by moderator1. 
+Your class request with John Smith has been acknowledged by moderator1.
 Awaiting final approval.
 ```
 
@@ -99,7 +99,7 @@ Awaiting final approval.
 ```
 Class Request Rejected
 
-Your class request with John Smith has been rejected by moderator1. 
+Your class request with John Smith has been rejected by moderator1.
 Please contact the moderator for details.
 ```
 
@@ -123,17 +123,17 @@ Please contact the moderator for details.
 **English Format**:
 
 ```typescript
-const dateStr = new Date(scheduledDate).toLocaleDateString('en-US', {
-  weekday: 'long',
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric'
+const dateStr = new Date(scheduledDate).toLocaleDateString("en-US", {
+  weekday: "long",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
 });
 // Result: "Monday, October 24, 2025"
 
-const timeStr = new Date(scheduledDate).toLocaleTimeString('en-US', {
-  hour: '2-digit',
-  minute: '2-digit'
+const timeStr = new Date(scheduledDate).toLocaleTimeString("en-US", {
+  hour: "2-digit",
+  minute: "2-digit",
 });
 // Result: "10:00 AM"
 ```
@@ -141,10 +141,10 @@ const timeStr = new Date(scheduledDate).toLocaleTimeString('en-US', {
 **Thai Format**:
 
 ```typescript
-const dateStrTh = new Date(scheduledDate).toLocaleDateString('th-TH', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric'
+const dateStrTh = new Date(scheduledDate).toLocaleDateString("th-TH", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
 });
 // Result: "24 ตุลาคม 2025"
 ```

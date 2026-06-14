@@ -33,7 +33,7 @@
 - **Current Behavior**: Users with bcrypt hashes see "Your password format is outdated. Please contact an admin to reset your password."
 - **Security Impact**: No bypass - bcrypt logins properly rejected with user-friendly error
 - **Migration Path**: Admin can use migration tools or reset individual passwords
-- **Timeline**: 
+- **Timeline**:
   - ✅ PBKDF2 implementation deployed (Nov 2, 2025)
   - ✅ Auto-upgrade on login for btoa users (working)
   - ✅ **Bcrypt verification properly rejects with error** (Dec 19, 2025)

@@ -36,26 +36,20 @@
 ```typescript
 // ❌ BEFORE - Causes runtime error
 const allStudents = await ctx.db
-    .query("students")
-    .filter((q) =>  // ERROR: q is undefined without .withIndex()
-        q.and(
-            q.eq(q.field("grade"), classStr),
-            q.eq(q.field("class"), `/${classDigit}`)
-        )
-    )
-    .collect();
+  .query("students")
+  .filter(
+    (
+      q, // ERROR: q is undefined without .withIndex()
+    ) => q.and(q.eq(q.field("grade"), classStr), q.eq(q.field("class"), `/${classDigit}`)),
+  )
+  .collect();
 ```
 
 ```typescript
 // ✅ AFTER - Fixed
-const allStudentsRaw = await ctx.db
-    .query("students")
-    .collect();  // Collect first
+const allStudentsRaw = await ctx.db.query("students").collect(); // Collect first
 
-const allStudents = allStudentsRaw.filter(student =>
-    student.grade === classStr &&
-    student.class === `/${classDigit}`
-);  // JavaScript filter
+const allStudents = allStudentsRaw.filter((student) => student.grade === classStr && student.class === `/${classDigit}`); // JavaScript filter
 ```
 
 **Files Modified**:
@@ -119,14 +113,14 @@ locations: defineTable({
 ```typescript
 // components/class-count-modal.tsx (line 85-100)
 const filteredAndSearchedClasses = useMemo(() => {
-    if (!classCountDetails) return [];
-    const { classes } = classCountDetails;  // ALL classes already loaded
+  if (!classCountDetails) return [];
+  const { classes } = classCountDetails; // ALL classes already loaded
 
-    return classes.filter(cls => {
-        const classDate = new Date(cls.scheduledDate);
-        const inDateRange = classDate >= viewStartDate && classDate <= viewEndDate;
-        // ... more filters
-    });
+  return classes.filter((cls) => {
+    const classDate = new Date(cls.scheduledDate);
+    const inDateRange = classDate >= viewStartDate && classDate <= viewEndDate;
+    // ... more filters
+  });
 }, [classCountDetails, viewStartDate, viewEndDate, selectedProvider, searchQuery]);
 ```
 
@@ -135,27 +129,28 @@ const filteredAndSearchedClasses = useMemo(() => {
 ```typescript
 // NEW: Add to convex/teacherClassCount.ts
 export const getMyClassCountDetailsFiltered = query({
-    args: {
-        teacherId: v.id("users"),
-        startDate: v.optional(v.number()),
-        endDate: v.optional(v.number()),
-        providerId: v.optional(v.string()), // "all", "schools", or specific ID
-    },
-    handler: async (ctx, args) => {
-        // Query with date range filter from backend
-        const classes = await ctx.db
-            .query("classes")
-            .withIndex("by_teacher_and_date", (q) =>
-                q.eq("teacherId", args.teacherId)
-                    .gte("scheduledDate", args.startDate || 0)
-                    .lte("scheduledDate", args.endDate || Date.now())
-            )
-            .filter((q) => q.eq(q.field("status"), "approved"))
-            .collect();
-        
-        // Apply provider filter if specified
-        // ... rest of logic
-    }
+  args: {
+    teacherId: v.id("users"),
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+    providerId: v.optional(v.string()), // "all", "schools", or specific ID
+  },
+  handler: async (ctx, args) => {
+    // Query with date range filter from backend
+    const classes = await ctx.db
+      .query("classes")
+      .withIndex("by_teacher_and_date", (q) =>
+        q
+          .eq("teacherId", args.teacherId)
+          .gte("scheduledDate", args.startDate || 0)
+          .lte("scheduledDate", args.endDate || Date.now()),
+      )
+      .filter((q) => q.eq(q.field("status"), "approved"))
+      .collect();
+
+    // Apply provider filter if specified
+    // ... rest of logic
+  },
 });
 ```
 
@@ -183,17 +178,7 @@ export const getMyClassCountDetailsFiltered = query({
 // Example: Class Count Modal
 import { PaginatedList } from "@/components/paginated-list";
 
-<PaginatedList
-    items={filteredAndSearchedClasses}
-    itemsPerPage={20}
-    renderItem={(cls) => (
-        <ClassDetailCard key={cls.classId} classData={cls} />
-    )}
-    emptyMessageEn="No classes found"
-    emptyMessageTh="ไม่พบคลาส"
-    showPageInfo={true}
-    showJumpButtons={true}
-/>
+<PaginatedList items={filteredAndSearchedClasses} itemsPerPage={20} renderItem={(cls) => <ClassDetailCard key={cls.classId} classData={cls} />} emptyMessageEn="No classes found" emptyMessageTh="ไม่พบคลาส" showPageInfo={true} showJumpButtons={true} />;
 ```
 
 **Benefit**:
@@ -760,4 +745,4 @@ import { PaginatedList } from "@/components/paginated-list";
 
 ---
 
-*This audit report is based on static code analysis, documentation review, and industry best practices. User analytics and performance profiling recommended for data-driven optimization decisions.*
+_This audit report is based on static code analysis, documentation review, and industry best practices. User analytics and performance profiling recommended for data-driven optimization decisions._

@@ -6,12 +6,14 @@ import { checkRateLimit } from "./rateLimit";
 export const list = query({
   args: {
     userId: v.id("users"),
-    status: v.optional(v.union(
-      v.literal("pending"),
-      v.literal("in_progress"),
-      v.literal("resolved"),
-      v.literal("dismissed")
-    )),
+    status: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("in_progress"),
+        v.literal("resolved"),
+        v.literal("dismissed"),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     // Verify user is admin
@@ -93,7 +95,7 @@ export const create = mutation({
       v.literal("feature_suggestion"),
       v.literal("bug_report"),
       v.literal("help_request"),
-      v.literal("notification_window_request")
+      v.literal("notification_window_request"),
     ),
     subject: v.string(),
     subjectTh: v.string(),
@@ -135,7 +137,13 @@ export const create = mutation({
       }
 
       // Validate file type (images only)
-      const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"];
+      const allowedTypes = [
+        "image/png",
+        "image/jpeg",
+        "image/jpg",
+        "image/webp",
+        "image/gif",
+      ];
       if (args.attachmentType && !allowedTypes.includes(args.attachmentType)) {
         throw new Error("Invalid file type. Only images are allowed.");
       }
@@ -197,7 +205,7 @@ export const updateStatus = mutation({
       v.literal("pending"),
       v.literal("in_progress"),
       v.literal("resolved"),
-      v.literal("dismissed")
+      v.literal("dismissed"),
     ),
     adminNotes: v.optional(v.string()),
     adminNotesTh: v.optional(v.string()),

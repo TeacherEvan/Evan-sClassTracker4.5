@@ -154,7 +154,7 @@ npm run build   # Should exit with code 0
 - `total` = total users in database
 - `migrated` = users with bcrypt hashes
 - `pending` = users with legacy btoa hashes
-- `percentage` = (migrated / total) * 100
+- `percentage` = (migrated / total) \* 100
 
 **Status**: [ ] Pass / [ ] Fail
 
@@ -351,8 +351,8 @@ See "🚨 Rollback Plan" in implementation summary
 
 ---
 
-**Testing Conducted By**: _________________  
-**Date**: _________________  
+**Testing Conducted By**: **\*\*\*\***\_**\*\*\*\***  
+**Date**: **\*\*\*\***\_**\*\*\*\***  
 **Overall Result**: [ ] Pass / [ ] Fail
 
 ---

@@ -1,7 +1,7 @@
 # 🔧 Monolithic Files - Optimization Plan
 
 **Date:** December 5, 2025 04:35 UTC  
-**Status:** Analysis Complete - Ready for Collaborative Refactoring  
+**Status:** Analysis Complete - Ready for Collaborative Refactoring
 
 ---
 
@@ -9,12 +9,12 @@
 
 ### Top 4 Monolithic Files (Priority Order)
 
-| File | Lines | Status | Priority | Est. Time |
-|------|-------|--------|----------|-----------|
-| `components/class-booking/index.tsx` | 2,495 | ⚠️ Partially split | HIGH | 3-4 hours |
-| `convex/classes/mutations.ts` | 2,089 | ⚠️ Partially split | HIGH | 2-3 hours |
-| `components/student-management.tsx` | 1,473 | 🔴 Monolithic | MEDIUM | 2-3 hours |
-| `components/class-detail-modal.tsx` | 1,192 | 🔴 Monolithic | MEDIUM | 2 hours |
+| File                                 | Lines | Status             | Priority | Est. Time |
+| ------------------------------------ | ----- | ------------------ | -------- | --------- |
+| `components/class-booking/index.tsx` | 2,495 | ⚠️ Partially split | HIGH     | 3-4 hours |
+| `convex/classes/mutations.ts`        | 2,089 | ⚠️ Partially split | HIGH     | 2-3 hours |
+| `components/student-management.tsx`  | 1,473 | 🔴 Monolithic      | MEDIUM   | 2-3 hours |
+| `components/class-detail-modal.tsx`  | 1,192 | 🔴 Monolithic      | MEDIUM   | 2 hours   |
 
 **Total Estimated Effort:** 9-12 hours for all 4 files
 
@@ -416,13 +416,13 @@ If refactoring causes issues:
 
 ## 🎯 Success Metrics
 
-| Metric | Before | Target | Measured |
-|--------|--------|--------|----------|
-| Avg File Size | 1,812 lines | <300 lines | TBD |
-| Test Coverage | 0% | 80%+ | TBD |
-| Build Time | ~30s | ~30s | TBD |
-| Bundle Size | ~2MB | ~2MB | TBD |
-| Developer Satisfaction | 6/10 | 9/10 | TBD |
+| Metric                 | Before      | Target     | Measured |
+| ---------------------- | ----------- | ---------- | -------- |
+| Avg File Size          | 1,812 lines | <300 lines | TBD      |
+| Test Coverage          | 0%          | 80%+       | TBD      |
+| Build Time             | ~30s        | ~30s       | TBD      |
+| Bundle Size            | ~2MB        | ~2MB       | TBD      |
+| Developer Satisfaction | 6/10        | 9/10       | TBD      |
 
 ---
 

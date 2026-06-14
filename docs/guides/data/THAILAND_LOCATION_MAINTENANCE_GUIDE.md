@@ -12,7 +12,7 @@ This guide provides instructions for maintaining and updating the Thailand provi
 ### Fully Populated Provinces (15)
 
 - Bangkok (BKK): 50 districts
-- Chiang Mai (CNX): 25 districts  
+- Chiang Mai (CNX): 25 districts
 - Chiang Rai (CRI): 18 districts
 - And 12 more provinces...
 

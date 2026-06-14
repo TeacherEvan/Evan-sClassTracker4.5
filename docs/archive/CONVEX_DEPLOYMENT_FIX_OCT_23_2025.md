@@ -65,7 +65,7 @@ Modified both `deploy-production.yml` and `deploy-staging.yml`:
 - name: Deploy Convex backend
   run: npx convex deploy --cmd 'npm run build'
   env:
-      CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+    CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 ```
 
 **After:**
@@ -74,7 +74,7 @@ Modified both `deploy-production.yml` and `deploy-staging.yml`:
 - name: Deploy Convex backend
   run: npx convex deploy --cmd 'npm run build' --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL
   env:
-      CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+    CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
 ```
 
 **Purpose:** The `--cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL` flag tells Convex to:

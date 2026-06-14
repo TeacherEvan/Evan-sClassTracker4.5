@@ -14,14 +14,14 @@ Document alternative providers for each stack component with migration paths, en
 
 ## Current Stack Overview
 
-| Component | Current | Purpose | Lock-in Risk |
-| :--- | :--- | :--- | :--- |
-| **Hosting** | Vercel | Next.js deployment, CDN, edge functions | Medium |
-| **Backend** | Convex | Real-time database, serverless functions | High |
-| **Database Backup** | MongoDB Atlas | Secondary backup storage | Low |
-| **Repository** | GitHub | Version control, CI/CD | Low |
-| **Auth** | Custom (localStorage) | Session management | Low |
-| **Styling** | Tailwind CSS v4 | UI framework | None |
+| Component           | Current               | Purpose                                  | Lock-in Risk |
+| :------------------ | :-------------------- | :--------------------------------------- | :----------- |
+| **Hosting**         | Vercel                | Next.js deployment, CDN, edge functions  | Medium       |
+| **Backend**         | Convex                | Real-time database, serverless functions | High         |
+| **Database Backup** | MongoDB Atlas         | Secondary backup storage                 | Low          |
+| **Repository**      | GitHub                | Version control, CI/CD                   | Low          |
+| **Auth**            | Custom (localStorage) | Session management                       | Low          |
+| **Styling**         | Tailwind CSS v4       | UI framework                             | None         |
 
 ---
 
@@ -282,21 +282,18 @@ export const list = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("classes")
-      .withIndex("by_school", q => q.eq("schoolId", args.schoolId))
+      .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId))
       .collect();
-  }
+  },
 });
 
 // FIREBASE (alternative)
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 async function list(schoolId: string) {
-  const q = query(
-    collection(db, "classes"), 
-    where("schoolId", "==", schoolId)
-  );
+  const q = query(collection(db, "classes"), where("schoolId", "==", schoolId));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 }
 ```
 
@@ -346,34 +343,28 @@ async function list(schoolId: string) {
 const data = useQuery(api.classes.list, { schoolId });
 
 // SUPABASE
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 
 const { data } = useQuery({
-  queryKey: ['classes', schoolId],
+  queryKey: ["classes", schoolId],
   queryFn: async () => {
-    const { data, error } = await supabase
-      .from('classes')
-      .select('*')
-      .eq('schoolId', schoolId);
+    const { data, error } = await supabase.from("classes").select("*").eq("schoolId", schoolId);
     if (error) throw error;
     return data;
-  }
+  },
 });
 
 // Real-time subscription
 useEffect(() => {
   const channel = supabase
-    .channel('classes-changes')
-    .on('postgres_changes', 
-      { event: '*', schema: 'public', table: 'classes' },
-      (payload) => {
-        // Handle real-time update
-        queryClient.invalidateQueries(['classes']);
-      }
-    )
+    .channel("classes-changes")
+    .on("postgres_changes", { event: "*", schema: "public", table: "classes" }, (payload) => {
+      // Handle real-time update
+      queryClient.invalidateQueries(["classes"]);
+    })
     .subscribe();
-  
+
   return () => {
     supabase.removeChannel(channel);
   };
@@ -658,14 +649,14 @@ vercel --prod
 
 ## 8. Cost Comparison (100 Active Users)
 
-| Provider Combo | Monthly Cost | Free Tier | Lock-in Risk |
-| :--- | :--- | :--- | :--- |
-| **Current** (Vercel + Convex + MongoDB) | $0-20 | Yes | Medium |
-| **Netlify + Convex** | $0-20 | Yes | Medium |
-| **Cloudflare + Supabase** | $0 | Yes | Low |
-| **Vercel + Firebase** | $0-25 | Yes | Medium |
-| **AWS (Amplify + AppSync)** | $30-50 | Limited | High |
-| **Self-Hosted (VPS + Supabase)** | $15-25 | No | None |
+| Provider Combo                          | Monthly Cost | Free Tier | Lock-in Risk |
+| :-------------------------------------- | :----------- | :-------- | :----------- |
+| **Current** (Vercel + Convex + MongoDB) | $0-20        | Yes       | Medium       |
+| **Netlify + Convex**                    | $0-20        | Yes       | Medium       |
+| **Cloudflare + Supabase**               | $0           | Yes       | Low          |
+| **Vercel + Firebase**                   | $0-25        | Yes       | Medium       |
+| **AWS (Amplify + AppSync)**             | $30-50       | Limited   | High         |
+| **Self-Hosted (VPS + Supabase)**        | $15-25       | No        | None         |
 
 ### Assumptions
 

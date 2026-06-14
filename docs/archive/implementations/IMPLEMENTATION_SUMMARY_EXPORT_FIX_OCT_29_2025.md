@@ -29,19 +29,19 @@ The `exportTeacherLogs` query in `convex/exports.ts` was attempting to fetch rel
 ```typescript
 // BEFORE - No error handling
 const exportData = await Promise.all(
-    logs.map(async (log) => {
-        const teacher = await ctx.db.get(log.teacherId);      // Could fail
-        const school = await ctx.db.get(log.schoolId);        // Could fail
-        const acknowledgedByUser = log.acknowledgedBy
-            ? await ctx.db.get(log.acknowledgedBy)            // Could fail
-            : null;
-        
-        return {
-            teacherUsername: teacher?.username || "Unknown",
-            schoolName: school?.name || "Unknown",
-            // ... rest of fields
-        };
-    })
+  logs.map(async (log) => {
+    const teacher = await ctx.db.get(log.teacherId); // Could fail
+    const school = await ctx.db.get(log.schoolId); // Could fail
+    const acknowledgedByUser = log.acknowledgedBy
+      ? await ctx.db.get(log.acknowledgedBy) // Could fail
+      : null;
+
+    return {
+      teacherUsername: teacher?.username || "Unknown",
+      schoolName: school?.name || "Unknown",
+      // ... rest of fields
+    };
+  }),
 );
 ```
 
@@ -65,49 +65,45 @@ Added comprehensive try-catch error handling around the data population logic:
 ```typescript
 // AFTER - With error handling
 const exportData = await Promise.all(
-    logs.map(async (log) => {
-        try {
-            const teacher = await ctx.db.get(log.teacherId);
-            const school = await ctx.db.get(log.schoolId);
-            const acknowledgedByUser = log.acknowledgedBy
-                ? await ctx.db.get(log.acknowledgedBy)
-                : null;
+  logs.map(async (log) => {
+    try {
+      const teacher = await ctx.db.get(log.teacherId);
+      const school = await ctx.db.get(log.schoolId);
+      const acknowledgedByUser = log.acknowledgedBy ? await ctx.db.get(log.acknowledgedBy) : null;
 
-            return {
-                logId: log._id,
-                teacherUsername: teacher?.username || "Unknown",
-                schoolName: school?.name || "Unknown",
-                schoolNameTh: school?.nameTh || "Unknown",
-                action: log.action,
-                actionTh: log.actionTh,
-                details: log.details,
-                detailsTh: log.detailsTh,
-                acknowledged: log.acknowledged ? "Yes" : "No",
-                acknowledgedBy: acknowledgedByUser?.username || "N/A",
-                acknowledgedAt: log.acknowledgedAt
-                    ? new Date(log.acknowledgedAt).toISOString()
-                    : "N/A",
-                createdAt: new Date(log.createdAt).toISOString(),
-            };
-        } catch (error) {
-            // If there's an error fetching related data, return minimal info
-            console.error(`Error processing log ${log._id}:`, error);
-            return {
-                logId: log._id,
-                teacherUsername: "Error",
-                schoolName: "Error",
-                schoolNameTh: "Error",
-                action: log.action,
-                actionTh: log.actionTh,
-                details: log.details,
-                detailsTh: log.detailsTh,
-                acknowledged: log.acknowledged ? "Yes" : "No",
-                acknowledgedBy: "N/A",
-                acknowledgedAt: "N/A",
-                createdAt: new Date(log.createdAt).toISOString(),
-            };
-        }
-    })
+      return {
+        logId: log._id,
+        teacherUsername: teacher?.username || "Unknown",
+        schoolName: school?.name || "Unknown",
+        schoolNameTh: school?.nameTh || "Unknown",
+        action: log.action,
+        actionTh: log.actionTh,
+        details: log.details,
+        detailsTh: log.detailsTh,
+        acknowledged: log.acknowledged ? "Yes" : "No",
+        acknowledgedBy: acknowledgedByUser?.username || "N/A",
+        acknowledgedAt: log.acknowledgedAt ? new Date(log.acknowledgedAt).toISOString() : "N/A",
+        createdAt: new Date(log.createdAt).toISOString(),
+      };
+    } catch (error) {
+      // If there's an error fetching related data, return minimal info
+      console.error(`Error processing log ${log._id}:`, error);
+      return {
+        logId: log._id,
+        teacherUsername: "Error",
+        schoolName: "Error",
+        schoolNameTh: "Error",
+        action: log.action,
+        actionTh: log.actionTh,
+        details: log.details,
+        detailsTh: log.detailsTh,
+        acknowledged: log.acknowledged ? "Yes" : "No",
+        acknowledgedBy: "N/A",
+        acknowledgedAt: "N/A",
+        createdAt: new Date(log.createdAt).toISOString(),
+      };
+    }
+  }),
 );
 ```
 
@@ -248,20 +244,20 @@ No changes to security model.
 ```typescript
 // Good pattern for exporting data with relationships
 const exportData = await Promise.all(
-    items.map(async (item) => {
-        try {
-            // Fetch related data
-            const related = await ctx.db.get(item.relatedId);
-            
-            // Return full data
-            return { ...item, relatedName: related?.name || "Unknown" };
-        } catch (error) {
-            console.error(`Error processing item ${item._id}:`, error);
-            
-            // Return minimal safe data
-            return { ...item, relatedName: "Error" };
-        }
-    })
+  items.map(async (item) => {
+    try {
+      // Fetch related data
+      const related = await ctx.db.get(item.relatedId);
+
+      // Return full data
+      return { ...item, relatedName: related?.name || "Unknown" };
+    } catch (error) {
+      console.error(`Error processing item ${item._id}:`, error);
+
+      // Return minimal safe data
+      return { ...item, relatedName: "Error" };
+    }
+  }),
 );
 ```
 

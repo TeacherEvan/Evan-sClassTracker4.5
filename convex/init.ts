@@ -76,8 +76,10 @@ export const initializeDatabase = mutation({
     await ctx.db.insert("notifications", {
       title: "Welcome to Class Tracker!",
       titleTh: "ยินดีต้อนรับสู่ Class Tracker!",
-      message: "Your system has been initialized. Default admin password is 'TeacherAdmin'. Please change it immediately.",
-      messageTh: "ระบบของคุณได้รับการเริ่มต้นแล้ว รหัสผ่านผู้ดูแลเริ่มต้นคือ 'TeacherAdmin' กรุณาเปลี่ยนทันที",
+      message:
+        "Your system has been initialized. Default admin password is 'TeacherAdmin'. Please change it immediately.",
+      messageTh:
+        "ระบบของคุณได้รับการเริ่มต้นแล้ว รหัสผ่านผู้ดูแลเริ่มต้นคือ 'TeacherAdmin' กรุณาเปลี่ยนทันที",
       type: "warning",
       userId: adminId,
       read: false,

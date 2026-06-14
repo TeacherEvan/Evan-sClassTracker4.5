@@ -9,7 +9,14 @@ export const seedDatabase = mutation({
   handler: async (ctx, args) => {
     // 1. Optional: Clear existing data
     if (args.clearExisting) {
-      const tables = ["schools", "users", "students", "classes", "notifications", "messages"];
+      const tables = [
+        "schools",
+        "users",
+        "students",
+        "classes",
+        "notifications",
+        "messages",
+      ];
       for (const table of tables) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const docs = await ctx.db.query(table as any).collect();
@@ -91,7 +98,7 @@ export const seedDatabase = mutation({
 
     for (let i = 0; i < 5; i++) {
       // Set time to 9:00 AM
-      const date = new Date(now + (i * day));
+      const date = new Date(now + i * day);
       date.setHours(9, 0, 0, 0);
 
       await ctx.db.insert("classes", {

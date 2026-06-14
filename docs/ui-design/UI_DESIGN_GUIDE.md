@@ -34,52 +34,52 @@
 
 ```
 
-          Book Class Form (Teacher View)                
+          Book Class Form (Teacher View)
 
-                                                         
-  Student Name                    [+ Create New]    
-          
-   Select a student                                  
-   - John Doe                                       
-   - Jane Smith                                     
-          
-                                                       
-  School                                               
-          
-   ABC School                                       
-          
-                                                       
-  
-                                                         
-         User clicks \"+ Create New\" 
+
+  Student Name                    [+ Create New]
+
+   Select a student
+   - John Doe
+   - Jane Smith
+
+
+  School
+
+   ABC School
+
+
+
+
+         User clicks \"+ Create New\"
 ```
 
 **After clicking \"+Create New\":**
 
 ```
 
-          Book Class Form (Creating Student)            
+          Book Class Form (Creating Student)
 
-                                                         
-  Student Name               [ Select Existing]        
-        
-           
-    First Name                                     
-             
-     John                                        
-             
-                                                   
-    Last Name                                      
-             
-     Wilson                                      
-             
-                                                   
-    Grade: [Grade 5]  Class: [/1]                 
-                                                   
-    [ Create & Select Student]                    
-           
-        
-         Blue highlighted box                          
+
+  Student Name               [ Select Existing]
+
+
+    First Name
+
+     John
+
+
+    Last Name
+
+     Wilson
+
+
+    Grade: [Grade 5]  Class: [/1]
+
+    [ Create & Select Student]
+
+
+         Blue highlighted box
 
 ```
 
@@ -87,11 +87,11 @@
 
 ```
 
-  [Alert: \"Student created successfully!\" ]             
-                                                         
-  Student Name: John Wilson (auto-selected)             
-  School: ABC School                                    
-  Continue booking...                                   
+  [Alert: \"Student created successfully!\" ]
+
+  Student Name: John Wilson (auto-selected)
+  School: ABC School
+  Continue booking...
 
 ```
 
@@ -103,18 +103,18 @@
 
 ```
 
-  John Doe                                      [Approved]     
-  Location: ABC School - Room 101                              
-  Scheduled: Monday, January 20, 2025, 10:00 AM                
-                                                               
-    
-                                                               
-                                
-   Edit Class     Delete Class                             
-      Blue         Red                                 
-                                
-                                                               
-  Teacher will be notified of any changes                      
+  John Doe                                      [Approved]
+  Location: ABC School - Room 101
+  Scheduled: Monday, January 20, 2025, 10:00 AM
+
+
+
+
+   Edit Class     Delete Class
+      Blue         Red
+
+
+  Teacher will be notified of any changes
 
 ```
 
@@ -122,22 +122,22 @@
 
 ```
 
-  
-    Edit Class Details                                     
-                                                             
-   Student: [John Doe ]                                     
-   School: [ABC School ]                                    
-   Location: [Room 101 ]                                    
-   Date/Time: [2025-01-20T10:00]                             
-   Status: [Approved ]                                      
-                                                             
-                             
-    Save Changes       Cancel                           
-       Green           Gray                            
-                             
-  
-                                                               
-  Teacher will be notified of any changes                      
+
+    Edit Class Details
+
+   Student: [John Doe ]
+   School: [ABC School ]
+   Location: [Room 101 ]
+   Date/Time: [2025-01-20T10:00]
+   Status: [Approved ]
+
+
+    Save Changes       Cancel
+       Green           Gray
+
+
+
+  Teacher will be notified of any changes
 
 ```
 
@@ -145,13 +145,13 @@
 
 ```
 
-   
-    Class updated successfully                             
-   
-                                                               
-  Jane Smith                                    [Pending]      
-  Location: ABC School - Room 102                              
-  Scheduled: Wednesday, January 25, 2025, 2:00 PM              
+
+    Class updated successfully
+
+
+  Jane Smith                                    [Pending]
+  Location: ABC School - Room 102
+  Scheduled: Wednesday, January 25, 2025, 2:00 PM
 
 ```
 
@@ -163,18 +163,18 @@
 
 ```
 
-  User Management                                   [+ Create] 
+  User Management                                   [+ Create]
 
-                                                               
-  [] Teacher1 (teacher)     [Edit] [Delete]                  
-  [] Teacher2 (teacher)     [Edit] [Delete]                  
-  [ ] Admin1 (admin)         [Edit] [Delete]                  
-  [] Teacher3 (teacher)     [Edit] [Delete]                  
-                                                               
-     
-                                                               
-  [Delete Selected (3)]   Red button, disabled if 0 selected 
-                                                               
+
+  [] Teacher1 (teacher)     [Edit] [Delete]
+  [] Teacher2 (teacher)     [Edit] [Delete]
+  [ ] Admin1 (admin)         [Edit] [Delete]
+  [] Teacher3 (teacher)     [Edit] [Delete]
+
+
+
+  [Delete Selected (3)]   Red button, disabled if 0 selected
+
 
 ```
 
@@ -182,27 +182,27 @@
 
 ```
 
-   Confirm Bulk Deletion                          
+   Confirm Bulk Deletion
 
-                                                    
-  You are about to delete 3 users:                 
-  - Teacher1                                        
-  - Teacher2                                        
-  - Teacher3                                        
-                                                    
-  This action is IRREVERSIBLE.                      
-                                                    
-  Reason (required):                                
-   
-   End of contract                               
-   
-                                                    
-  [ ] I understand this cannot be undone           
-                                                    
-                        
-   Delete (3)     Cancel                       
-     Red           Gray                        
-                        
+
+  You are about to delete 3 users:
+  - Teacher1
+  - Teacher2
+  - Teacher3
+
+  This action is IRREVERSIBLE.
+
+  Reason (required):
+
+   End of contract
+
+
+  [ ] I understand this cannot be undone
+
+
+   Delete (3)     Cancel
+     Red           Gray
+
 
 ```
 
@@ -334,7 +334,7 @@ Desktop (> 1024px):   3-4 columns
 - All images have lt text
 - Form inputs have ria-label
 - Error messages have
-ole=\"alert\"
+  ole=\"alert\"
 - Status changes announced via ria-live
 
 ### Color Contrast
@@ -457,8 +457,8 @@ otification-window.tsx - One-time notification system
 ## Related Documentation
 
 - [MOBILE_UI_GUIDE.md](MOBILE_UI_GUIDE.md) - Mobile-specific patterns
-- [ARCHITECTURE.md](ARCHITECTURE.md) - Component hierarchy
-- [TESTING_GUIDE.md](TESTING_GUIDE.md) - UI testing procedures
+- [ARCHITECTURE.md](../architecture/ARCHITECTURE.md) - Component hierarchy
+- [TESTING_GUIDE.md](../guides/testing/TESTING_GUIDE.md) - UI testing procedures
 - components/ - Reusable UI components
 
 ---

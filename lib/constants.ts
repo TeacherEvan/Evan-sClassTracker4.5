@@ -10,7 +10,8 @@ export const NOTIFICATION_TYPES = {
   ERROR: "error",
 } as const;
 
-export type NotificationType = typeof NOTIFICATION_TYPES[keyof typeof NOTIFICATION_TYPES];
+export type NotificationType =
+  (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
 
 // Class status types
 export const CLASS_STATUS = {
@@ -20,7 +21,7 @@ export const CLASS_STATUS = {
   REJECTED: "rejected",
 } as const;
 
-export type ClassStatus = typeof CLASS_STATUS[keyof typeof CLASS_STATUS];
+export type ClassStatus = (typeof CLASS_STATUS)[keyof typeof CLASS_STATUS];
 
 /**
  * Get Tailwind CSS classes for notification type background and border

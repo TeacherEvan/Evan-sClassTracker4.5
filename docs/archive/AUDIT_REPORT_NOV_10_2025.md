@@ -100,7 +100,7 @@ const currentUser = useMemo(() => ({
 
 - class-booking.spec.ts (4 usages)
 - student-management.spec.ts (5 usages)
-- notifications.spec.ts (3 usages)  
+- notifications.spec.ts (3 usages)
 - merge-classes.spec.ts (1 usage)
 
 **Root Cause**: Phase 4 replaced horizontal tabs with sidebar navigation, but E2E helper still targeted old structure
@@ -109,16 +109,20 @@ const currentUser = useMemo(() => ({
 
 ```typescript
 // Before (generic, matched any button on page)
-const tabButton = page.locator(
+const tabButton = page
+  .locator(
     `button:has-text("${tabName}"), button:has-text("${thaiName}"), 
-     a:has-text("${tabName}"), a:has-text("${thaiName}")`
-).first();
+     a:has-text("${tabName}"), a:has-text("${thaiName}")`,
+  )
+  .first();
 
 // After (specific, targets sidebar navigation only)
-const tabButton = page.locator(
+const tabButton = page
+  .locator(
     `nav ul li button:has-text("${tabName}"), 
-     nav ul li button:has-text("${thaiName}")`
-).first();
+     nav ul li button:has-text("${thaiName}")`,
+  )
+  .first();
 ```
 
 **Structural Context**: Sidebar uses `<nav> → <ul> → <li> → <button>` hierarchy (components/sidebar-nav.tsx lines 125-165)
@@ -216,17 +220,17 @@ npm run build
 
 ### Coverage Matrix
 
-| Area | Method | Result |
-|------|--------|--------|
-| Orphaned helpers | Code search + usage analysis | ✅ CLEAN |
-| Duplicate types | Schema definition search | ✅ CLEAN |
-| Integration gaps | Import + usage verification | ✅ CLEAN |
-| Mobile code | Pattern matching + context review | ✅ CLEAN |
-| localStorage | API usage search + validation | ✅ CLEAN |
-| Lazy imports | Cross-file comparison | ✅ CLEAN |
-| Comments | Text search for references | ✅ CLEAN |
-| Performance | Component structure analysis | 🔧 3 issues found & fixed |
-| E2E tests | Selector pattern inspection | 🔴 1 critical issue fixed |
+| Area             | Method                            | Result                    |
+| ---------------- | --------------------------------- | ------------------------- |
+| Orphaned helpers | Code search + usage analysis      | ✅ CLEAN                  |
+| Duplicate types  | Schema definition search          | ✅ CLEAN                  |
+| Integration gaps | Import + usage verification       | ✅ CLEAN                  |
+| Mobile code      | Pattern matching + context review | ✅ CLEAN                  |
+| localStorage     | API usage search + validation     | ✅ CLEAN                  |
+| Lazy imports     | Cross-file comparison             | ✅ CLEAN                  |
+| Comments         | Text search for references        | ✅ CLEAN                  |
+| Performance      | Component structure analysis      | 🔧 3 issues found & fixed |
+| E2E tests        | Selector pattern inspection       | 🔴 1 critical issue fixed |
 
 ---
 

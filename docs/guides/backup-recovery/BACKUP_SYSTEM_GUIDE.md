@@ -210,21 +210,16 @@ Output:
    const client = new MongoClient(process.env.MONGODB_BACKUP_URI);
    await client.connect();
    const db = client.db("convex_backups");
-   
+
    // Find latest backup
-   const backup = await db.collection("backups")
-     .find({ "metadata.status": "completed" })
-     .sort({ "metadata.timestamp": -1 })
-     .limit(1)
-     .toArray();
-   
+   const backup = await db.collection("backups").find({ "metadata.status": "completed" }).sort({ "metadata.timestamp": -1 }).limit(1).toArray();
+
    // Inspect data
    console.log(backup[0].data.users); // All users
    console.log(backup[0].data.classes); // All classes
    ```
 
 3. **Restore via Convex Dashboard**
-
    - Go to <https://dashboard.convex.dev>
    - Select your deployment
    - Go to "Data" tab
@@ -250,11 +245,11 @@ Output:
 
 ### Environment Variables (`.env.local`)
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `MONGODB_BACKUP_URI` | ✅ Yes | N/A | MongoDB connection string |
-| `MONGODB_BACKUP_DB` | No | `convex_backups` | Database name for backups |
-| `BACKUP_RETENTION_DAYS` | No | `30` | Days to keep old backups |
+| Variable                | Required | Default          | Description               |
+| ----------------------- | -------- | ---------------- | ------------------------- |
+| `MONGODB_BACKUP_URI`    | ✅ Yes   | N/A              | MongoDB connection string |
+| `MONGODB_BACKUP_DB`     | No       | `convex_backups` | Database name for backups |
+| `BACKUP_RETENTION_DAYS` | No       | `30`             | Days to keep old backups  |
 
 ### Retention Policy
 
@@ -309,8 +304,7 @@ npm run backup
 **Solution:** Check MongoDB backup document for error details:
 
 ```javascript
-const backup = await db.collection("backups")
-  .findOne({ "metadata.status": "failed" });
+const backup = await db.collection("backups").findOne({ "metadata.status": "failed" });
 console.log(backup.metadata.error);
 ```
 
@@ -342,30 +336,34 @@ npm run backup:list
 
 ```javascript
 // Count total backups
-db.backups.countDocuments()
+db.backups.countDocuments();
 
 // Get backup statistics
 db.backups.aggregate([
   { $match: { "metadata.status": "completed" } },
-  { $group: {
-    _id: null,
-    avgDuration: { $avg: "$metadata.duration" },
-    avgRecords: { $avg: "$metadata.totalRecords" },
-    totalSize: { $sum: { $sum: "$metadata.tables.sizeBytes" } }
-  }}
-])
+  {
+    $group: {
+      _id: null,
+      avgDuration: { $avg: "$metadata.duration" },
+      avgRecords: { $avg: "$metadata.totalRecords" },
+      totalSize: { $sum: { $sum: "$metadata.tables.sizeBytes" } },
+    },
+  },
+]);
 
 // Find largest backup
-db.backups.find().sort({ "metadata.totalRecords": -1 }).limit(1)
+db.backups.find().sort({ "metadata.totalRecords": -1 }).limit(1);
 
 // Check backup frequency
 db.backups.aggregate([
-  { $group: {
-    _id: { $dateToString: { format: "%Y-%m-%d", date: { $toDate: "$metadata.timestamp" } } },
-    count: { $sum: 1 }
-  }},
-  { $sort: { _id: -1 } }
-])
+  {
+    $group: {
+      _id: { $dateToString: { format: "%Y-%m-%d", date: { $toDate: "$metadata.timestamp" } } },
+      count: { $sum: 1 },
+    },
+  },
+  { $sort: { _id: -1 } },
+]);
 ```
 
 ### Windows Event Log
@@ -434,11 +432,11 @@ Backups contain **ALL user data**, including:
 ### Backup Size Estimates
 
 | Records | Avg Size | Duration |
-|---------|----------|----------|
-| 1,000 | ~3 MB | ~1.5s |
-| 5,000 | ~15 MB | ~4s |
-| 10,000 | ~30 MB | ~8s |
-| 50,000 | ~150 MB | ~40s |
+| ------- | -------- | -------- |
+| 1,000   | ~3 MB    | ~1.5s    |
+| 5,000   | ~15 MB   | ~4s      |
+| 10,000  | ~30 MB   | ~8s      |
+| 50,000  | ~150 MB  | ~40s     |
 
 ### MongoDB Storage Requirements
 
@@ -461,7 +459,9 @@ With 30-day retention:
 
    ```typescript
    const TABLES_TO_BACKUP = [
-     "users", "classes", "students",
+     "users",
+     "classes",
+     "students",
      // Exclude: "auditLogs", "errorReports" (large tables)
    ];
    ```
@@ -472,7 +472,7 @@ With 30-day retention:
    // Store as compressed BSON
    await backupsCollection.insertOne({
      metadata,
-     data: compress(JSON.stringify(data))
+     data: compress(JSON.stringify(data)),
    });
    ```
 
@@ -501,11 +501,7 @@ $Trigger = @(
 
 ```typescript
 // In scripts/backup-to-mongodb.ts, add:
-const BACKUP_LOCATIONS = [
-  process.env.MONGODB_BACKUP_URI,
-  process.env.MONGODB_BACKUP_URI_SECONDARY,
-  process.env.MONGODB_BACKUP_URI_OFFSITE,
-];
+const BACKUP_LOCATIONS = [process.env.MONGODB_BACKUP_URI, process.env.MONGODB_BACKUP_URI_SECONDARY, process.env.MONGODB_BACKUP_URI_OFFSITE];
 
 for (const uri of BACKUP_LOCATIONS) {
   await storeBackup(uri, backupData);
@@ -525,7 +521,7 @@ try {
   await transporter.sendMail({
     to: "admin@example.com",
     subject: "❌ Backup Failed",
-    text: `Backup failed: ${error.message}`
+    text: `Backup failed: ${error.message}`,
   });
 }
 ```

@@ -76,13 +76,13 @@
 
 ### Request Types
 
-| Type | Icon | Who Can Use | Description |
-|------|------|-------------|-------------|
-| General Inquiry | MessageSquare | All | Questions/feedback |
-| Feature Suggestion | Lightbulb | All | New feature ideas |
-| Bug Report | Bug | All | Report issues |
-| Help Request | HelpCircle | All | Assistance needed |
-| Notification Window | Bell | Teacher/Mod only | Request announcement |
+| Type                | Icon          | Who Can Use      | Description          |
+| ------------------- | ------------- | ---------------- | -------------------- |
+| General Inquiry     | MessageSquare | All              | Questions/feedback   |
+| Feature Suggestion  | Lightbulb     | All              | New feature ideas    |
+| Bug Report          | Bug           | All              | Report issues        |
+| Help Request        | HelpCircle    | All              | Assistance needed    |
+| Notification Window | Bell          | Teacher/Mod only | Request announcement |
 
 ### Status Flow
 
@@ -299,7 +299,7 @@ submits   working       final status
 ```typescript
 {
   userId: Id<"users">;
-  requestType: "general_inquiry" | "feature_suggestion" | "bug_report" | 
+  requestType: "general_inquiry" | "feature_suggestion" | "bug_report" |
                "help_request" | "notification_window_request";
   subject: string;
   subjectTh: string;
@@ -319,12 +319,12 @@ submits   working       final status
 {
   title: string;
   titleTh: string;
-  greeting: string;          // Can use {username} placeholder
+  greeting: string; // Can use {username} placeholder
   greetingTh: string;
   message: string;
   messageTh: string;
   targetRole: "all" | "teacher" | "moderator" | "admin";
-  priority: number;          // 1-10
+  priority: number; // 1-10
   isActive: boolean;
   showUpdateSummary: boolean;
   createdAt: number;
@@ -435,8 +435,8 @@ submits   working       final status
 ## Related Documentation
 
 - [GOLD_TABLET_NOTIFICATION_WINDOW.md](GOLD_TABLET_NOTIFICATION_WINDOW.md) - Gold Tablet variant
-- [AUDIT_LOGGING_IMPLEMENTATION.md](AUDIT_LOGGING_IMPLEMENTATION.md) - Admin action logging
-- [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture
+- [AUDIT_LOGGING_IMPLEMENTATION.md](../security/AUDIT_LOGGING_IMPLEMENTATION.md) - Admin action logging
+- [ARCHITECTURE.md](../architecture/ARCHITECTURE.md) - System architecture
 - [FEATURES_DOCUMENTATION.md](FEATURES_DOCUMENTATION.md) - Complete API reference
 
 ---

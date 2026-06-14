@@ -12,12 +12,12 @@ interface LineContactButtonProps {
 
 /**
  * LINE Official Account Contact Button
- * 
+ *
  * Integrates LINE Add Friend functionality with three display variants:
  * - floating: Fixed bottom-right floating action button (mobile-friendly)
  * - inline: Inline button for navigation/footer areas
  * - sidebar: Compact button for sidebar integration
- * 
+ *
  * LINE Account: https://lin.ee/oaXgLED
  */
 export function LineContactButton({
@@ -29,14 +29,14 @@ export function LineContactButton({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const lineUrl = "https://lin.ee/oaXgLED";
-  
+
   // Variant-specific styles
   const variantClasses = {
     floating: `
       fixed bottom-6 right-6 z-50
       shadow-lg hover:shadow-xl
       transition-all duration-300
-      ${isExpanded ? 'w-auto' : 'w-14 h-14'}
+      ${isExpanded ? "w-auto" : "w-14 h-14"}
     `,
     inline: `
       inline-flex items-center gap-2
@@ -70,7 +70,7 @@ export function LineContactButton({
             interactive-hover
             interactive-touch
             overflow-hidden
-            ${isExpanded ? 'px-4 py-3' : 'w-14 h-14'}
+            ${isExpanded ? "px-4 py-3" : "w-14 h-14"}
           `}
           onMouseEnter={() => setIsExpanded(true)}
           onMouseLeave={() => setIsExpanded(false)}
@@ -80,7 +80,7 @@ export function LineContactButton({
           <div className="flex-shrink-0">
             <MessageCircle className="w-6 h-6" />
           </div>
-          
+
           {/* Expanding label */}
           {isExpanded && showLabel && (
             <span className="whitespace-nowrap font-medium text-sm animate-fadeIn">
@@ -145,7 +145,7 @@ export function LineContactButton({
 
 /**
  * LINE Official "Add Friend" Banner Component
- * 
+ *
  * Uses the official LINE Add Friend button image
  * Best for footer or prominent placement
  */

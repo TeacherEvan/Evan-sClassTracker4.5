@@ -1,5 +1,6 @@
 **CRITICAL INSTRUCTIONS:**
-> You **must** process each image *sequentially and independently*. You must follow the verification loop below for each image, one at a time. **Do NOT** mix information between images. Complete the entire verification process for one image before starting the next.
+
+> You **must** process each image _sequentially and independently_. You must follow the verification loop below for each image, one at a time. **Do NOT** mix information between images. Complete the entire verification process for one image before starting the next.
 >
 > **Mandatory Processing Loop (Perform for each image):**
 >
@@ -7,8 +8,8 @@
 > 2. **Verify (Draft 2):** Re-analyze the same image from scratch. Transcribe its content to create **Draft 2**.
 > 3. **Verify (Draft 3):** Re-analyze the same image one last time. Transcribe its content to create **Draft 3**.
 > 4. **Compare & Consolidate:** Internally compare all three drafts.
->     * If they are 100% identical, proceed.
->     * If there are any differences, re-examine the source image to determine the single correct version.
+>    - If they are 100% identical, proceed.
+>    - If there are any differences, re-examine the source image to determine the single correct version.
 > 5. **Finalize:** Create one (1) final, correct, and verified Markdown file from this consolidated content.
 >
 > **FINAL OUTPUT:**
@@ -31,4 +32,3 @@
 > [File 3: (Use image name or number)]
 >
 > (Final Markdown content for File 3)
->

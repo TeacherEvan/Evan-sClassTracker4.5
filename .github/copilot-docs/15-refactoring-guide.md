@@ -76,10 +76,10 @@ components/
 
 ```typescript
 // components/class-booking/class-booking-state.ts
-import { useState, useMemo } from 'react';
-import { useQuery } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import type { Id } from '@/convex/_generated/dataModel';
+import { useState, useMemo } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
 export interface BookingState {
   // Selection state
@@ -87,16 +87,16 @@ export interface BookingState {
   selectedTeacher: Id<"users"> | null;
   selectedStudent: Id<"students"> | null;
   selectedLocation: Id<"locations"> | null;
-  
+
   // Date/time state
   selectedDates: number[];
   startTime: string;
   endTime: string;
-  
+
   // Booking mode
   isRecurring: boolean;
   weekCount: number;
-  
+
   // UI state
   showConflicts: boolean;
   isSubmitting: boolean;
@@ -108,37 +108,28 @@ export function useClassBookingState(userId: Id<"users">) {
   const [selectedTeacher, setSelectedTeacher] = useState<Id<"users"> | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<Id<"students"> | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<Id<"locations"> | null>(null);
-  
+
   // Date/time state
   const [selectedDates, setSelectedDates] = useState<number[]>([]);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("10:00");
-  
+
   // Booking mode
   const [isRecurring, setIsRecurring] = useState(false);
   const [weekCount, setWeekCount] = useState(1);
-  
+
   // UI state
   const [showConflicts, setShowConflicts] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Derived state
-  const hasSelection = useMemo(() => 
-    selectedTeacher && selectedStudent && selectedDates.length > 0,
-    [selectedTeacher, selectedStudent, selectedDates]
-  );
-  
+  const hasSelection = useMemo(() => selectedTeacher && selectedStudent && selectedDates.length > 0, [selectedTeacher, selectedStudent, selectedDates]);
+
   // Data queries
   const schools = useQuery(api.schools.list, {});
-  const teachers = useQuery(
-    api.users.byRole, 
-    selectedSchool ? { role: "teacher", schoolId: selectedSchool } : "skip"
-  );
-  const students = useQuery(
-    api.students.bySchool,
-    selectedSchool ? { schoolId: selectedSchool } : "skip"
-  );
-  
+  const teachers = useQuery(api.users.byRole, selectedSchool ? { role: "teacher", schoolId: selectedSchool } : "skip");
+  const students = useQuery(api.students.bySchool, selectedSchool ? { schoolId: selectedSchool } : "skip");
+
   return {
     // State
     selectedSchool,
@@ -152,7 +143,7 @@ export function useClassBookingState(userId: Id<"users">) {
     weekCount,
     showConflicts,
     isSubmitting,
-    
+
     // Setters
     setSelectedSchool,
     setSelectedTeacher,
@@ -165,10 +156,10 @@ export function useClassBookingState(userId: Id<"users">) {
     setWeekCount,
     setShowConflicts,
     setIsSubmitting,
-    
+
     // Derived
     hasSelection,
-    
+
     // Data
     schools,
     teachers,
@@ -202,16 +193,16 @@ export function useConflictDetection({ teacherId, dates, startTime, endTime }: C
       endDate: Math.max(...dates)
     } : "skip"
   );
-  
+
   const conflicts = useMemo(() => {
     if (!existingClasses) return [];
-    
+
     return dates.flatMap(date => {
-      const dayClasses = existingClasses.filter(c => 
+      const dayClasses = existingClasses.filter(c =>
         isSameDay(c.scheduledDate, date)
       );
-      
-      return dayClasses.filter(c => 
+
+      return dayClasses.filter(c =>
         timeOverlaps(
           { start: startTime, end: endTime },
           { start: c.startTime, end: c.endTime }
@@ -224,7 +215,7 @@ export function useConflictDetection({ teacherId, dates, startTime, endTime }: C
       }));
     });
   }, [existingClasses, dates, startTime, endTime]);
-  
+
   return {
     conflicts,
     hasConflicts: conflicts.length > 0,
@@ -234,9 +225,9 @@ export function useConflictDetection({ teacherId, dates, startTime, endTime }: C
 
 export function ConflictWarning({ conflicts }: { conflicts: any[] }) {
   const { t } = useLanguage();
-  
+
   if (conflicts.length === 0) return null;
-  
+
   return (
     <div className="rounded-lg border-2 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 p-4">
       <div className="flex items-center gap-2 mb-2">
@@ -264,7 +255,7 @@ function timeOverlaps(
   const end1 = parseTime(slot1.end);
   const start2 = parseTime(slot2.start);
   const end2 = parseTime(slot2.end);
-  
+
   return start1 < end2 && start2 < end1;
 }
 
@@ -297,20 +288,20 @@ export function RecurringBookingConfig({
   onChange: (config: RecurringConfig) => void;
 }) {
   const { t } = useLanguage();
-  
+
   // Generate array of dates based on config
   const generatedDates = useMemo(() => {
     const dates: number[] = [];
     let currentDate = config.startDate;
-    
+
     for (let week = 0; week < config.weekCount; week++) {
       dates.push(currentDate);
       currentDate = addWeeks(currentDate, 1).getTime();
     }
-    
+
     return dates;
   }, [config.startDate, config.weekCount]);
-  
+
   return (
     <div className="space-y-4">
       <div>
@@ -327,7 +318,7 @@ export function RecurringBookingConfig({
           className="input"
         />
       </div>
-      
+
       <div>
         <label className="block text-sm font-medium mb-2">
           {t("Day of Week", "วันในสัปดาห์")}
@@ -347,7 +338,7 @@ export function RecurringBookingConfig({
           ))}
         </select>
       </div>
-      
+
       <div>
         <label className="block text-sm font-medium mb-2">
           {t("Number of Weeks", "จำนวนสัปดาห์")}
@@ -370,7 +361,7 @@ export function RecurringBookingConfig({
           )}
         </p>
       </div>
-      
+
       {/* Preview */}
       <div className="rounded-lg bg-gray-50 dark:bg-gray-800 p-4">
         <h4 className="font-semibold mb-2">
@@ -422,14 +413,14 @@ export function ClassBooking({ userId }: { userId: Id<"users"> }) {
     startTime: state.startTime,
     endTime: state.endTime
   });
-  
+
   const bookClass = useMutation(api.classes.book);
-  
+
   const handleSubmit = async () => {
     if (!state.hasSelection) return;
-    
+
     state.setIsSubmitting(true);
-    
+
     try {
       await bookClass({
         teacherId: state.selectedTeacher,
@@ -440,7 +431,7 @@ export function ClassBooking({ userId }: { userId: Id<"users"> }) {
         endTime: state.endTime,
         isRecurring: state.isRecurring
       });
-      
+
       toast.success("Class booked!", "จองคลาสสำเร็จ!");
       state.setSelectedDates([]);
     } catch (error) {
@@ -449,11 +440,11 @@ export function ClassBooking({ userId }: { userId: Id<"users"> }) {
       state.setIsSubmitting(false);
     }
   };
-  
+
   return (
     <div className="space-y-6">
       <FilterPanel state={state} />
-      
+
       {state.isRecurring ? (
         <RecurringBookingConfig
           config={{
@@ -470,9 +461,9 @@ export function ClassBooking({ userId }: { userId: Id<"users"> }) {
       ) : (
         <ClassBookingForm state={state} />
       )}
-      
+
       <ConflictWarning conflicts={conflicts.conflicts} />
-      
+
       <button
         onClick={handleSubmit}
         disabled={!state.hasSelection || state.isSubmitting || conflicts.hasConflicts}
@@ -489,12 +480,14 @@ export function ClassBooking({ userId }: { userId: Id<"users"> }) {
 
 ```markdown
 Before refactoring:
+
 - [ ] Create feature branch: `git checkout -b refactor/class-booking`
 - [ ] Full backup: `npm run backup`
 - [ ] Create tests for current functionality
 - [ ] Document current behavior (screenshots)
 
 During refactoring:
+
 - [ ] Create new directory structure
 - [ ] Move one section at a time
 - [ ] Test after each move (npm run dev)
@@ -502,6 +495,7 @@ During refactoring:
 - [ ] Keep old file until fully migrated
 
 After refactoring:
+
 - [ ] Run full E2E tests
 - [ ] Compare bundle size (should be similar or smaller)
 - [ ] Test all booking scenarios:
@@ -576,11 +570,11 @@ export const list = query({
   args: {
     schoolId: v.optional(v.id("schools")),
     teacherId: v.optional(v.id("users")),
-    status: v.optional(v.string())
+    status: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Move list query here
-  }
+  },
 });
 
 export const getById = query({
@@ -626,9 +620,15 @@ function ClassManagement() {
 }
 
 // ✅ GOOD - Separate concerns
-function ClassList() { /* viewing only */ }
-function ClassBookingForm() { /* booking only */ }
-function ClassEditModal() { /* editing only */ }
+function ClassList() {
+  /* viewing only */
+}
+function ClassBookingForm() {
+  /* booking only */
+}
+function ClassEditModal() {
+  /* editing only */
+}
 ```
 
 ### 2. Extract Custom Hooks
@@ -637,28 +637,28 @@ function ClassEditModal() { /* editing only */ }
 // ❌ BAD - Logic embedded in component
 function MyComponent() {
   const [data, setData] = useState([]);
-  
+
   useEffect(() => {
     // 100 lines of data fetching logic
   }, []);
-  
+
   // 200 lines of processing logic
-  
+
   return <div>...</div>;
 }
 
 // ✅ GOOD - Logic extracted to hook
 function useProcessedData() {
   const [data, setData] = useState([]);
-  
+
   useEffect(() => {
     // 100 lines of data fetching logic
   }, []);
-  
+
   const processed = useMemo(() => {
     // 200 lines of processing logic
   }, [data]);
-  
+
   return { data, processed };
 }
 

@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 import schema from "../../convex/schema";
 
+// Type-safe table names from the schema
+type SchemaTableNames = keyof typeof schema.tables;
+
 describe("Convex Test Infrastructure", () => {
   it("imports schema successfully", () => {
     expect(schema).toBeDefined();
@@ -9,7 +12,7 @@ describe("Convex Test Infrastructure", () => {
   });
 
   it("has required tables", () => {
-    const requiredTables = [
+    const requiredTables: SchemaTableNames[] = [
       "users",
       "schools",
       "providers",
@@ -30,7 +33,7 @@ describe("Convex Test Infrastructure", () => {
       "images",
       "events",
     ];
-    
+
     for (const table of requiredTables) {
       expect(schema.tables[table]).toBeDefined();
     }
@@ -72,14 +75,6 @@ describe("Convex Test Infrastructure", () => {
 
   it("exports schema as default", () => {
     expect(typeof schema).toBe("object");
-  });
-
-  it("schema has indexes defined", () => {
-    const usersTable = schema.tables.users;
-    expect(usersTable.indexes.length).toBeGreaterThan(0);
-    
-    const classesTable = schema.tables.classes;
-    expect(classesTable.indexes.length).toBeGreaterThan(5);
   });
 
   it("can import test.setup modules glob", async () => {

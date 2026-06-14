@@ -17,12 +17,10 @@
     <div className="p-4 md:p-6 border-b bg-white dark:bg-gray-800">
       <h2>Modal Title</h2>
     </div>
-    
+
     {/* Scrollable Content */}
-    <div className="overflow-y-auto flex-grow p-4 md:p-6 space-y-3 md:space-y-4">
-      {content}
-    </div>
-    
+    <div className="overflow-y-auto flex-grow p-4 md:p-6 space-y-3 md:space-y-4">{content}</div>
+
     {/* Sticky Footer */}
     <div className="p-4 md:p-6 border-t bg-white dark:bg-gray-800">
       <button>Submit</button>
@@ -53,12 +51,12 @@
 
 ## 📐 Spacing Values Reference
 
-| Class | Mobile (base) | Desktop (md:) | Use Case |
-|-------|---------------|---------------|----------|
-| `p-4 md:p-6` | 16px | 24px | Modal padding (header/content/footer) |
-| `space-y-3 md:space-y-4` | 12px | 16px | Tight vertical gaps (scrollable content) |
-| `space-y-4 md:space-y-6` | 16px | 24px | Standard section spacing |
-| `gap-3 md:gap-4` | 12px | 16px | Grid gaps (cards, features) |
+| Class                    | Mobile (base) | Desktop (md:) | Use Case                                 |
+| ------------------------ | ------------- | ------------- | ---------------------------------------- |
+| `p-4 md:p-6`             | 16px          | 24px          | Modal padding (header/content/footer)    |
+| `space-y-3 md:space-y-4` | 12px          | 16px          | Tight vertical gaps (scrollable content) |
+| `space-y-4 md:space-y-6` | 16px          | 24px          | Standard section spacing                 |
+| `gap-3 md:gap-4`         | 12px          | 16px          | Grid gaps (cards, features)              |
 
 ---
 
@@ -112,12 +110,12 @@ Is this a modal component?
 
 ## 📊 Expected Savings
 
-| Change | Mobile Savings | Desktop Impact |
-|--------|----------------|----------------|
-| `p-6` → `p-4 md:p-6` | 16px per section | 0px (maintains 24px) |
-| `space-y-6` → `space-y-3 md:space-y-4` | 12px per gap | 0px (maintains 16-24px) |
-| `gap-6` → `gap-3 md:gap-4` | 12px per gap | 0px (maintains 16px) |
-| `max-h-[95vh]` → `max-h-[85vh]` | 108px | 108px |
+| Change                                 | Mobile Savings   | Desktop Impact          |
+| -------------------------------------- | ---------------- | ----------------------- |
+| `p-6` → `p-4 md:p-6`                   | 16px per section | 0px (maintains 24px)    |
+| `space-y-6` → `space-y-3 md:space-y-4` | 12px per gap     | 0px (maintains 16-24px) |
+| `gap-6` → `gap-3 md:gap-4`             | 12px per gap     | 0px (maintains 16px)    |
+| `max-h-[95vh]` → `max-h-[85vh]`        | 108px            | 108px                   |
 
 **Total**: 156-212px reclaimed per modal on mobile
 

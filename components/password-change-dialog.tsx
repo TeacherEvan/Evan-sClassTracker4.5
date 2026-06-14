@@ -37,12 +37,7 @@ export function PasswordChangeDialog({
     }
 
     if (newPassword.length < 1) {
-      setError(
-        t(
-          "Password cannot be empty",
-          "รหัสผ่านต้องไม่เป็นค่าว่าง"
-        )
-      );
+      setError(t("Password cannot be empty", "รหัสผ่านต้องไม่เป็นค่าว่าง"));
       return;
     }
 
@@ -56,7 +51,9 @@ export function PasswordChangeDialog({
       });
       onPasswordChanged();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to change password");
+      setError(
+        err instanceof Error ? err.message : "Failed to change password",
+      );
     } finally {
       setLoading(false);
     }
@@ -80,7 +77,7 @@ export function PasswordChangeDialog({
               <p>
                 {t(
                   "Please change your password. Note: Admin can only reset passwords, not view them.",
-                  "กรุณาเปลี่ยนรหัสผ่านของคุณ หมายเหตุ: ผู้ดูแลระบบสามารถรีเซ็ตรหัสผ่านเท่านั้น ไม่สามารถดูรหัสผ่านได้"
+                  "กรุณาเปลี่ยนรหัสผ่านของคุณ หมายเหตุ: ผู้ดูแลระบบสามารถรีเซ็ตรหัสผ่านเท่านั้น ไม่สามารถดูรหัสผ่านได้",
                 )}
               </p>
             </div>
@@ -89,9 +86,16 @@ export function PasswordChangeDialog({
 
         {/* Scrollable Content */}
         <div className="overflow-y-auto flex-grow px-6 md:px-8">
-          <form id="password-change-form" onSubmit={handleSubmit} className="space-y-4">
+          <form
+            id="password-change-form"
+            onSubmit={handleSubmit}
+            className="space-y-4"
+          >
             <div>
-              <label htmlFor="current" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="current"
+                className="block text-sm font-medium mb-2"
+              >
                 {t("Current Password", "รหัสผ่านปัจจุบัน")}
               </label>
               <input
@@ -121,13 +125,16 @@ export function PasswordChangeDialog({
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {t(
                   "No minimum requirements - create any password you want",
-                  "ไม่มีข้อกำหนดขั้นต่ำ - สร้างรหัสผ่านที่คุณต้องการได้"
+                  "ไม่มีข้อกำหนดขั้นต่ำ - สร้างรหัสผ่านที่คุณต้องการได้",
                 )}
               </p>
             </div>
 
             <div>
-              <label htmlFor="confirm" className="block text-sm font-medium mb-2">
+              <label
+                htmlFor="confirm"
+                className="block text-sm font-medium mb-2"
+              >
                 {t("Confirm New Password", "ยืนยันรหัสผ่านใหม่")}
               </label>
               <input

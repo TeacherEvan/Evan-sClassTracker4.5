@@ -8,7 +8,9 @@ import { Globe } from "lucide-react";
 
 export function LanguageSwitcher() {
   const { language, setLanguage } = useLanguage();
-  const updateLanguagePreference = useMutation(api.users.updateLanguagePreference);
+  const updateLanguagePreference = useMutation(
+    api.users.updateLanguagePreference,
+  );
 
   const handleLanguageChange = async (newLanguage: "en" | "th") => {
     // Update UI immediately
@@ -22,7 +24,9 @@ export function LanguageSwitcher() {
           userId: user._id,
           preferredLanguage: newLanguage,
         });
-        console.log(`✅ Language preference synced to database: ${newLanguage}`);
+        console.log(
+          `✅ Language preference synced to database: ${newLanguage}`,
+        );
       } catch (error) {
         console.error("Failed to sync language preference:", error);
         // Don't show error to user - UI still works via localStorage

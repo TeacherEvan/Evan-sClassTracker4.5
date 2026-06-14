@@ -9,12 +9,14 @@ export const updateClass = mutation({
     scheduledDate: v.optional(v.number()),
     studentId: v.optional(v.id("students")),
     locationId: v.optional(v.id("locations")),
-    status: v.optional(v.union(
-      v.literal("pending"),
-      v.literal("acknowledged"),
-      v.literal("approved"),
-      v.literal("rejected")
-    )),
+    status: v.optional(
+      v.union(
+        v.literal("pending"),
+        v.literal("acknowledged"),
+        v.literal("approved"),
+        v.literal("rejected"),
+      ),
+    ),
   },
   handler: async (ctx, args) => {
     const classData = await ctx.db.get(args.classId);
@@ -24,7 +26,7 @@ export const updateClass = mutation({
 
     // Verify authorization (replaces duplicate code)
     await verifyClassAccess(ctx, args.userId, classData, {
-      requireModeratorOrAdmin: true
+      requireModeratorOrAdmin: true,
     });
 
     // Get user for notification
@@ -66,15 +68,19 @@ export const updateClass = mutation({
       // Status-specific notifications with full class details
       if (args.status === "approved") {
         // Class approved by moderator - send detailed notification
-        const dateStr = new Date(args.scheduledDate || classData.scheduledDate).toLocaleDateString('en-US', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
+        const dateStr = new Date(
+          args.scheduledDate || classData.scheduledDate,
+        ).toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
         });
-        const timeStr = new Date(args.scheduledDate || classData.scheduledDate).toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit'
+        const timeStr = new Date(
+          args.scheduledDate || classData.scheduledDate,
+        ).toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
         });
 
         // Get updated class data for additional details
@@ -108,10 +114,12 @@ export const updateClass = mutation({
         detailsMessage += `\nApproved by: ${user.username}`;
 
         // Thai version
-        const dateStrTh = new Date(args.scheduledDate || classData.scheduledDate).toLocaleDateString('th-TH', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
+        const dateStrTh = new Date(
+          args.scheduledDate || classData.scheduledDate,
+        ).toLocaleDateString("th-TH", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
         });
 
         let detailsMessageTh = `✅ คลาสได้รับการอนุมัติแล้ว!\n\n`;
@@ -210,7 +218,7 @@ export const deleteClass = mutation({
     // Verify authorization - allow moderators, admins, and teachers deleting their own classes
     await verifyClassAccess(ctx, args.userId, classData, {
       requireModeratorOrAdmin: true,
-      allowTeacherOwner: true
+      allowTeacherOwner: true,
     });
 
     // Get user once for all checks (admins have God mode)
@@ -220,7 +228,9 @@ export const deleteClass = mutation({
     if (user?.role !== "admin") {
       const currentTime = Date.now();
       if (classData.scheduledDate < currentTime) {
-        throw new Error("Cannot delete classes whose dates have already passed");
+        throw new Error(
+          "Cannot delete classes whose dates have already passed",
+        );
       }
     }
 
@@ -252,7 +262,9 @@ export const deleteClass = mutation({
       action: "delete_class",
       targetType: "classes",
       targetId: args.classId,
-      targetName: student ? `${student.firstName} ${student.lastName} - ${new Date(classData.scheduledDate).toLocaleDateString()}` : undefined,
+      targetName: student
+        ? `${student.firstName} ${student.lastName} - ${new Date(classData.scheduledDate).toLocaleDateString()}`
+        : undefined,
       schoolId: classData.schoolId,
       timestamp: Date.now(),
     });
@@ -280,12 +292,14 @@ export const editClass = mutation({
       materialsTh: v.optional(v.string()),
       preparationNotes: v.optional(v.string()),
       preparationNotesTh: v.optional(v.string()),
-      classType: v.optional(v.union(
-        v.literal("regular"),
-        v.literal("makeup"),
-        v.literal("assessment"),
-        v.literal("trial")
-      )),
+      classType: v.optional(
+        v.union(
+          v.literal("regular"),
+          v.literal("makeup"),
+          v.literal("assessment"),
+          v.literal("trial"),
+        ),
+      ),
     }),
   },
   handler: async (ctx, args) => {
@@ -305,22 +319,27 @@ export const editClass = mutation({
     // Teachers can only edit their own classes
     // Moderators can edit classes in their assigned school
     // Admins can edit classes from any school
-    const isTeacher = user.role === "teacher" && classData.teacherId === args.userId;
+    const isTeacher =
+      user.role === "teacher" && classData.teacherId === args.userId;
 
     if (isTeacher) {
       // Teacher editing their own class
       await verifyClassAccess(ctx, args.userId, classData, {
-        allowTeacherOwner: true
+        allowTeacherOwner: true,
       });
     } else {
       // Moderator or admin
       await verifyClassAccess(ctx, args.userId, classData, {
-        requireModeratorOrAdmin: true
+        requireModeratorOrAdmin: true,
       });
     }
 
     // 4. Build change log
-    const changes: Array<{ field: string; oldValue: string; newValue: string }> = [];
+    const changes: Array<{
+      field: string;
+      oldValue: string;
+      newValue: string;
+    }> = [];
 
     // Helper function to format values for logging
     const formatValue = (field: string, value: unknown): string => {
@@ -332,18 +351,30 @@ export const editClass = mutation({
     };
 
     // Check each field for changes
-    if (args.updates.studentId !== undefined && args.updates.studentId !== classData.studentId) {
+    if (
+      args.updates.studentId !== undefined &&
+      args.updates.studentId !== classData.studentId
+    ) {
       const oldStudent = await ctx.db.get(classData.studentId);
       const newStudent = await ctx.db.get(args.updates.studentId);
       changes.push({
         field: "student",
-        oldValue: oldStudent ? `${oldStudent.firstName} ${oldStudent.lastName}` : "Unknown",
-        newValue: newStudent ? `${newStudent.firstName} ${newStudent.lastName}` : "Unknown",
+        oldValue: oldStudent
+          ? `${oldStudent.firstName} ${oldStudent.lastName}`
+          : "Unknown",
+        newValue: newStudent
+          ? `${newStudent.firstName} ${newStudent.lastName}`
+          : "Unknown",
       });
     }
 
-    if (args.updates.locationId !== undefined && args.updates.locationId !== classData.locationId) {
-      const oldLocation = classData.locationId ? await ctx.db.get(classData.locationId) : null;
+    if (
+      args.updates.locationId !== undefined &&
+      args.updates.locationId !== classData.locationId
+    ) {
+      const oldLocation = classData.locationId
+        ? await ctx.db.get(classData.locationId)
+        : null;
       const newLocation = await ctx.db.get(args.updates.locationId);
       changes.push({
         field: "location",
@@ -352,7 +383,10 @@ export const editClass = mutation({
       });
     }
 
-    if (args.updates.scheduledDate !== undefined && args.updates.scheduledDate !== classData.scheduledDate) {
+    if (
+      args.updates.scheduledDate !== undefined &&
+      args.updates.scheduledDate !== classData.scheduledDate
+    ) {
       changes.push({
         field: "scheduledDate",
         oldValue: formatValue("scheduledDate", classData.scheduledDate),
@@ -362,12 +396,23 @@ export const editClass = mutation({
 
     // Log optional field changes
     const optionalFields = [
-      "duration", "subject", "subjectTh", "lessonTopic", "lessonTopicTh",
-      "materials", "materialsTh", "preparationNotes", "preparationNotesTh", "classType"
+      "duration",
+      "subject",
+      "subjectTh",
+      "lessonTopic",
+      "lessonTopicTh",
+      "materials",
+      "materialsTh",
+      "preparationNotes",
+      "preparationNotesTh",
+      "classType",
     ] as const;
 
     for (const field of optionalFields) {
-      if (args.updates[field] !== undefined && args.updates[field] !== classData[field]) {
+      if (
+        args.updates[field] !== undefined &&
+        args.updates[field] !== classData[field]
+      ) {
         changes.push({
           field,
           oldValue: formatValue(field, classData[field]),
@@ -425,8 +470,8 @@ export const editClass = mutation({
         schoolId: classData.schoolId,
         action: "class_edited",
         actionTh: "แก้ไขคลาส",
-        details: `Class edited by ${user.username}. Changes: ${changes.map(c => c.field).join(", ")}`,
-        detailsTh: `แก้ไขคลาสโดย ${user.username}. การเปลี่ยนแปลง: ${changes.map(c => c.field).join(", ")}`,
+        details: `Class edited by ${user.username}. Changes: ${changes.map((c) => c.field).join(", ")}`,
+        detailsTh: `แก้ไขคลาสโดย ${user.username}. การเปลี่ยนแปลง: ${changes.map((c) => c.field).join(", ")}`,
         relatedClassId: args.classId,
         createdAt: Date.now(),
       });
@@ -437,4 +482,3 @@ export const editClass = mutation({
 });
 
 // Mutation to add additional dates to an existing class (creates copies with new dates)
-

@@ -133,24 +133,24 @@ Screenshots, diagrams → **[Images/](Images/)**, **[screenshots/](screenshots/)
 
 #### ⚠️ Important
 
-Critical documentation → **[Important/](Important/)**
+Critical documentation → **[.github/copilot-docs/](../.github/copilot-docs/)**
 
 ---
 
 ## 🗺️ Navigation by Task
 
-| I need to... | Go to... |
-| :--- | :--- |
-| Set up development environment | `guides/setup/ENVIRONMENT_SETUP_GUIDE.md` |
-| Run tests | `guides/testing/TESTING_GUIDE.md` |
-| Deploy to production | `guides/deployment/DEPLOYMENT_GUIDE.md` |
-| Understand architecture | `architecture/ARCHITECTURE.md` |
-| Learn about features | `features/FEATURES_DOCUMENTATION.md` |
-| Review security | `security/SECURITY_REVIEWS.md` |
-| Design UI components | `ui-design/STYLE_GUIDE.md` |
-| Configure backups | `guides/backup-recovery/BACKUP_SYSTEM_GUIDE.md` |
-| Troubleshoot CI/CD | `guides/deployment/TROUBLESHOOTING_CI_CD.md` |
-| Find historical docs | `archive/` |
+| I need to...                   | Go to...                                        |
+| :----------------------------- | :---------------------------------------------- |
+| Set up development environment | `guides/setup/ENVIRONMENT_SETUP_GUIDE.md`       |
+| Run tests                      | `guides/testing/TESTING_GUIDE.md`               |
+| Deploy to production           | `guides/deployment/DEPLOYMENT_GUIDE.md`         |
+| Understand architecture        | `architecture/ARCHITECTURE.md`                  |
+| Learn about features           | `features/FEATURES_DOCUMENTATION.md`            |
+| Review security                | `security/SECURITY_REVIEWS.md`                  |
+| Design UI components           | `ui-design/STYLE_GUIDE.md`                      |
+| Configure backups              | `guides/backup-recovery/BACKUP_SYSTEM_GUIDE.md` |
+| Troubleshoot CI/CD             | `guides/deployment/TROUBLESHOOTING_CI_CD.md`    |
+| Find historical docs           | `archive/`                                      |
 
 ---
 
@@ -210,7 +210,7 @@ When adding new documentation:
 ## 🔍 Search Tips
 
 - Use your editor's search functionality (Ctrl/Cmd + Shift + F) to search across all documentation
-- Check **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** for common commands
+- Check **[QUICK_REFERENCE.md](archive/QUICK_REFERENCE.md)** for common commands
 - Browse by category above for specific needs
 - Check folder READMEs for category-specific navigation
 

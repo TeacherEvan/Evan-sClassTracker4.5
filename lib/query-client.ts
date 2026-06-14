@@ -1,8 +1,8 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient } from "@tanstack/react-query";
 
 /**
  * Create a new QueryClient instance with optimized defaults
- * 
+ *
  * Configuration:
  * - staleTime: 30 seconds - Data is considered fresh for 30s, preventing unnecessary refetches
  * - gcTime: 5 minutes - Unused data is garbage collected after 5 minutes

@@ -42,7 +42,7 @@ postClassNotes: defineTable({...})
 const existing = await ctx.db
   .query("postClassNotes")
   .withIndex("by_class", (q) => q.eq("classId", args.classId))
-  .filter((q) => q.eq(q.field("studentId"), targetStudentId))  // JavaScript filter!
+  .filter((q) => q.eq(q.field("studentId"), targetStudentId)) // JavaScript filter!
   .first();
 ```
 
@@ -86,8 +86,7 @@ postClassNotes: defineTable({
 // ✅ NEW: Efficient composite index lookup
 const existing = await ctx.db
   .query("postClassNotes")
-  .withIndex("by_class_and_student", (q) => 
-    q.eq("classId", args.classId).eq("studentId", targetStudentId))
+  .withIndex("by_class_and_student", (q) => q.eq("classId", args.classId).eq("studentId", targetStudentId))
   .first();
 
 if (existing) {
@@ -110,8 +109,7 @@ if (existing) {
 // Use composite index for efficient lookup
 const existingNote = await ctx.db
   .query("postClassNotes")
-  .withIndex("by_class_and_student", (q) => 
-    q.eq("classId", cls._id).eq("studentId", studentId))
+  .withIndex("by_class_and_student", (q) => q.eq("classId", cls._id).eq("studentId", studentId))
   .first();
 ```
 
@@ -126,8 +124,8 @@ Added early return guards to all three submit handlers:
 ```typescript
 const handleSubmit = async () => {
   // Prevent double-submission
-  if (loading) return;  // ✅ NEW: Race condition protection
-  
+  if (loading) return; // ✅ NEW: Race condition protection
+
   setLoading(true);
   setError("");
   // ... rest of submission logic
@@ -135,13 +133,13 @@ const handleSubmit = async () => {
 
 const handleSkip = async () => {
   // Prevent double-submission
-  if (loading) return;  // ✅ NEW
+  if (loading) return; // ✅ NEW
   // ...
 };
 
 const handleSkipAll = async () => {
   // Prevent double-submission
-  if (loading) return;  // ✅ NEW
+  if (loading) return; // ✅ NEW
   // ...
 };
 ```
@@ -182,13 +180,13 @@ The ClassCount calculation already works correctly and was **NOT modified**:
 for (const classItem of classesWithNotes) {
   // Student count: primary student + additional students
   const studentCount = 1 + (classItem.additionalStudentIds?.length || 0);
-  
+
   // Duration in minutes (default 60 if not specified)
   const durationMinutes = classItem.duration || 60;
-  
+
   // Weighted calculation: students × (duration / 60)
   const classCount = studentCount * (durationMinutes / 60);
-  
+
   totalClassCount += classCount;
 }
 ```
@@ -342,12 +340,12 @@ This implementation is considered successful when:
 
 ### Expected Improvements
 
-| Operation | Before | After | Improvement |
-|-----------|--------|-------|-------------|
-| Duplicate check (single student) | ~10ms | ~1ms | **10x faster** |
-| Duplicate check (5-student class) | ~50ms | ~1ms | **50x faster** |
-| Query expansion for merged classes | O(n×m) | O(n) | **Linear vs quadratic** |
-| Database load | N table scans | 1 indexed lookup | **Minimal load** |
+| Operation                          | Before        | After            | Improvement             |
+| ---------------------------------- | ------------- | ---------------- | ----------------------- |
+| Duplicate check (single student)   | ~10ms         | ~1ms             | **10x faster**          |
+| Duplicate check (5-student class)  | ~50ms         | ~1ms             | **50x faster**          |
+| Query expansion for merged classes | O(n×m)        | O(n)             | **Linear vs quadratic** |
+| Database load                      | N table scans | 1 indexed lookup | **Minimal load**        |
 
 **Real-World Impact**:
 
@@ -378,7 +376,7 @@ This implementation is considered successful when:
 
 // ✅ PREFER: Composite index
 .query("table")
-  .withIndex("by_field1_and_field2", q => 
+  .withIndex("by_field1_and_field2", q =>
     q.eq("field1", value1).eq("field2", value2))
 ```
 
@@ -507,15 +505,15 @@ When reviewing duplicate detection logic, ask:
 
 ```javascript
 // In browser console, check expanded classes data:
-const classesData = await convex.query(api.postClassNotes.getClassesNeedingFeedback, { 
-  userId: "your-user-id" 
+const classesData = await convex.query(api.postClassNotes.getClassesNeedingFeedback, {
+  userId: "your-user-id",
 });
 console.log(classesData);
 // Each entry should have unique currentStudentId
 
 // Check existing notes:
-const notes = await convex.query(api.postClassNotes.getByClass, { 
-  classId: "class-id" 
+const notes = await convex.query(api.postClassNotes.getByClass, {
+  classId: "class-id",
 });
 console.log(notes);
 // Should see separate records for each student

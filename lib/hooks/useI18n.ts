@@ -19,7 +19,7 @@ export function useI18n(value: I18nString, language: Language): string {
  */
 export function useSetI18n(
   setValue: (val: I18nString | ((prev: I18nString) => I18nString)) => void,
-  language: Language
+  language: Language,
 ): (text: string) => void {
   return useCallback(
     (text: string) => {
@@ -28,7 +28,7 @@ export function useSetI18n(
         [language]: text,
       }));
     },
-    [setValue, language]
+    [setValue, language],
   );
 }
 
@@ -39,7 +39,7 @@ export function useSetI18n(
 export function useI18nInput(
   value: I18nString,
   onChange: (val: I18nString) => void,
-  language: Language
+  language: Language,
 ) {
   const [localValue, setLocalValue] = useState(() => value[language] || "");
 
@@ -53,7 +53,7 @@ export function useI18nInput(
       setLocalValue(text);
       onChange({ ...value, [language]: text });
     },
-    [onChange, value, language]
+    [onChange, value, language],
   );
 
   return { value: localValue, onChange: handleChange };

@@ -88,7 +88,7 @@ sequenceDiagram
     LoginForm->>Convex: Login mutation
     Convex->>DB: Query user by username<br/>(indexed: by_username)
     DB-->>Convex: User record + passwordHash
-    
+
     alt Account Locked
         Convex->>Convex: Check accountLockedUntil > now
         Convex-->>LoginForm: Error: Account locked (24hr)
@@ -96,7 +96,7 @@ sequenceDiagram
     else Account Active
         Convex->>PBKDF2: Verify password
         PBKDF2->>PBKDF2: Check hash format<br/>(pbkdf2$ / bcrypt / btoa)
-        
+
         alt PBKDF2 Hash (New)
             PBKDF2->>PBKDF2: Extract salt + hash
             PBKDF2->>PBKDF2: Hash input with salt<br/>(100K iterations)
@@ -110,7 +110,7 @@ sequenceDiagram
             PBKDF2-->>Convex: Match result
             Note over Convex,DB: Auto-upgrade to PBKDF2<br/>on next password change
         end
-        
+
         alt Password Correct
             Convex->>DB: Update failedLoginAttempts = 0<br/>lastSuccessfulLogin = now
             Convex-->>LoginForm: Return user object
@@ -150,7 +150,7 @@ sequenceDiagram
     DB-->>Convex: Existing classes
     Convex-->>ConflictDetector: Classes data
     ConflictDetector->>ConflictDetector: Check time overlaps
-    
+
     alt Has Conflicts
         ConflictDetector-->>BookingUI: Show conflict warning
         BookingUI-->>Teacher: Display conflicts<br/>(yellow warning banner)
@@ -158,13 +158,13 @@ sequenceDiagram
     else No Conflicts
         ConflictDetector-->>BookingUI: Clear to proceed
     end
-    
+
     Teacher->>BookingUI: Click "Book Class"
     BookingUI->>Convex: classes.book mutation
-    
+
     Convex->>Convex: Rate limit check<br/>(30 bookings/min)
     Convex->>Convex: Validate inputs<br/>(date, time, student, etc.)
-    
+
     alt Guardian-Linked Class
         Convex->>DB: Insert class<br/>status = "approved"<br/>isGuardianLinked = true
         Convex-->>BookingUI: Success (auto-approved)
@@ -172,11 +172,11 @@ sequenceDiagram
         Convex->>DB: Insert class<br/>status = "pending"
         Convex->>DB: Create notification for moderator
         Convex-->>BookingUI: Success (pending approval)
-        
+
         Note over Moderator,NotificationUI: Real-time subscription
         DB-->>NotificationUI: New notification event
         NotificationUI->>Moderator: Show unread badge + toast
-        
+
         Moderator->>NotificationUI: Click notification
         NotificationUI->>Moderator: Show class details
         Moderator->>Convex: Approve/Reject mutation
@@ -612,13 +612,13 @@ graph TB
 
 ## Legend
 
-| Color | Meaning |
-|-------|---------|
-| 🔴 Red | Critical/Error handling |
-| 🔵 Blue | Data layer/Database |
-| 🟢 Green | Security/Performance |
-| 🟡 Yellow | UI/Context layer |
-| ⚫ Black | External services |
+| Color     | Meaning                 |
+| --------- | ----------------------- |
+| 🔴 Red    | Critical/Error handling |
+| 🔵 Blue   | Data layer/Database     |
+| 🟢 Green  | Security/Performance    |
+| 🟡 Yellow | UI/Context layer        |
+| ⚫ Black  | External services       |
 
 ---
 

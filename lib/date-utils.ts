@@ -7,7 +7,10 @@ type Language = "en" | "th";
 /**
  * Format relative time from timestamp (e.g., "5 min ago", "2 hours ago")
  */
-export function formatRelativeTime(timestamp: number, language: Language): string {
+export function formatRelativeTime(
+  timestamp: number,
+  language: Language,
+): string {
   const date = new Date(timestamp);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();

@@ -1,27 +1,27 @@
 {
-    // Disable spell checking for Thai language strings
-    "cSpell.enabled": true,
-    "cSpell.language": "en,th",
-    "cSpell.ignoreRegExpList": [
-        // Ignore Thai Unicode characters (U+0E00 to U+0E7F)
-        "[\\u0E00-\\u0E7F]+"
-    ],
-    "cSpell.words": [
-        "kbps",
-        "youtu",
-        "ytdl",
-        "checkmarks",
-        "oneline",
-        "Playfair",
-        "committerdate"
-    ],
-    // Git optimization - prevent auto-stash errors
-    "git.autofetch": false,
-    "git.autoStash": false,
-    "git.fetchOnPull": false,
-    "git.pruneOnFetch": false,
-    "git.postCommitCommand": "none",
-    "git.showProgress": false,
-    "mcpExplorer.serverRegistry": "C:\\Users\\User\\.vscode\\MCP tools\\mcp-servers-registry.json",
-    "liveServer.settings.port": 5501
+  // Disable spell checking for Thai language strings
+  "cSpell.enabled": true,
+  "cSpell.language": "en,th",
+  "cSpell.ignoreRegExpList": [
+    // Ignore Thai Unicode characters (U+0E00 to U+0E7F)
+    "[\\u0E00-\\u0E7F]+"
+  ],
+  "cSpell.words": [
+    "kbps",
+    "youtu",
+    "ytdl",
+    "checkmarks",
+    "oneline",
+    "Playfair",
+    "committerdate"
+  ],
+  // Git optimization - prevent auto-stash errors
+  "git.autofetch": false,
+  "git.autoStash": false,
+  "git.fetchOnPull": false,
+  "git.pruneOnFetch": false,
+  "git.postCommitCommand": "none",
+  "git.showProgress": false,
+  "mcpExplorer.serverRegistry": "C:\\Users\\User\\.vscode\\MCP tools\\mcp-servers-registry.json",
+  "liveServer.settings.port": 5501
 }

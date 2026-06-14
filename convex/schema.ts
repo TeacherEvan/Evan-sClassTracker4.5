@@ -9,57 +9,63 @@ export default defineSchema({
       v.literal("teacher"),
       v.literal("moderator"),
       v.literal("admin"),
-      v.literal("guardian") // DEPRECATED - Data migration in progress, DO NOT USE for new users
+      v.literal("guardian"), // DEPRECATED - Data migration in progress, DO NOT USE for new users
     ),
     schoolId: v.optional(v.id("schools")),
     requirePasswordChange: v.boolean(),
     createdAt: v.number(),
     // Device detection fields
-    deviceType: v.optional(v.union(
-      v.literal("mobile"),
-      v.literal("tablet"),
-      v.literal("desktop")
-    )),
+    deviceType: v.optional(
+      v.union(v.literal("mobile"), v.literal("tablet"), v.literal("desktop")),
+    ),
     lastDeviceUpdate: v.optional(v.number()),
     pushSubscription: v.optional(v.string()), // JSON stringified PushSubscription
     // Language preference
-    preferredLanguage: v.optional(v.union(
-      v.literal("en"),
-      v.literal("th")
-    )),
+    preferredLanguage: v.optional(v.union(v.literal("en"), v.literal("th"))),
     // Login security fields
     failedLoginAttempts: v.optional(v.number()), // Track failed login attempts
     accountLockedUntil: v.optional(v.number()), // Timestamp when account unlocks (24hr lockout)
     lastSuccessfulLogin: v.optional(v.number()), // Timestamp of last successful login
     // Login history (last 10 logins)
-    loginHistory: v.optional(v.array(v.object({
-      timestamp: v.number(),
-      userAgent: v.string(),
-      deviceType: v.string(), // mobile/tablet/desktop
-      platform: v.string(), // Windows/macOS/iOS/Android
-      browser: v.string(), // Chrome/Safari/Firefox/Edge
-    }))),
+    loginHistory: v.optional(
+      v.array(
+        v.object({
+          timestamp: v.number(),
+          userAgent: v.string(),
+          deviceType: v.string(), // mobile/tablet/desktop
+          platform: v.string(), // Windows/macOS/iOS/Android
+          browser: v.string(), // Chrome/Safari/Firefox/Edge
+        }),
+      ),
+    ),
     // Wizard preferences (user-specific settings for wizards)
-    wizardPreferences: v.optional(v.object({
-      defaultDuration: v.optional(v.number()), // Default class duration in minutes
-      defaultClassType: v.optional(v.union(
-        v.literal("regular"),
-        v.literal("makeup"),
-        v.literal("assessment"),
-        v.literal("trial")
-      )),
-      preferredStartTime: v.optional(v.string()), // HH:MM format
-      recentTeacherIds: v.optional(v.array(v.id("users"))), // Last 5 selected teachers
-      recentStudentIds: v.optional(v.array(v.id("students"))), // Last 5 selected students
-      recentGrades: v.optional(v.array(v.string())), // Last 3 selected grades
-      lastReportDateRange: v.optional(v.object({ // Remember last report date range
-        startDate: v.number(),
-        endDate: v.number(),
-      })),
-      skipTeacherStep: v.optional(v.boolean()), // For teachers - skip teacher selection
-      dismissedWizards: v.optional(v.array(v.string())), // ["booking-wizard", "admin-wizard"]
-      showStartupWindow: v.optional(v.boolean()), // Master toggle for startup window
-    })),
+    wizardPreferences: v.optional(
+      v.object({
+        defaultDuration: v.optional(v.number()), // Default class duration in minutes
+        defaultClassType: v.optional(
+          v.union(
+            v.literal("regular"),
+            v.literal("makeup"),
+            v.literal("assessment"),
+            v.literal("trial"),
+          ),
+        ),
+        preferredStartTime: v.optional(v.string()), // HH:MM format
+        recentTeacherIds: v.optional(v.array(v.id("users"))), // Last 5 selected teachers
+        recentStudentIds: v.optional(v.array(v.id("students"))), // Last 5 selected students
+        recentGrades: v.optional(v.array(v.string())), // Last 3 selected grades
+        lastReportDateRange: v.optional(
+          v.object({
+            // Remember last report date range
+            startDate: v.number(),
+            endDate: v.number(),
+          }),
+        ),
+        skipTeacherStep: v.optional(v.boolean()), // For teachers - skip teacher selection
+        dismissedWizards: v.optional(v.array(v.string())), // ["booking-wizard", "admin-wizard"]
+        showStartupWindow: v.optional(v.boolean()), // Master toggle for startup window
+      }),
+    ),
   })
     .index("by_username", ["username"])
     .index("by_school", ["schoolId"])
@@ -83,17 +89,18 @@ export default defineSchema({
     .index("by_district", ["district"]),
 
   providers: defineTable({
-    name: v.string(),           // Provider name (English)
-    nameTh: v.string(),         // Provider name (Thai)
-    category: v.union(          // Provider type/category
+    name: v.string(), // Provider name (English)
+    nameTh: v.string(), // Provider name (Thai)
+    category: v.union(
+      // Provider type/category
       v.literal("personal"),
       v.literal("private"),
       v.literal("language_school"),
       v.literal("educational_camp"),
-      v.literal("guardian")     // NEW - Guardian category (replaces guardian user role)
+      v.literal("guardian"), // NEW - Guardian category (replaces guardian user role)
     ),
-    createdBy: v.id("users"),   // Teacher or admin who created it
-    isActive: v.boolean(),      // Soft delete flag
+    createdBy: v.id("users"), // Teacher or admin who created it
+    isActive: v.boolean(), // Soft delete flag
     createdAt: v.number(),
     isAutoGenerated: v.optional(v.boolean()), // NEW - True for auto-generated guardian providers
   })
@@ -120,7 +127,7 @@ export default defineSchema({
       v.literal("pending"),
       v.literal("acknowledged"),
       v.literal("approved"),
-      v.literal("rejected")
+      v.literal("rejected"),
     ),
     scheduledDate: v.number(),
     createdAt: v.number(),
@@ -134,39 +141,50 @@ export default defineSchema({
     materialsTh: v.optional(v.string()), // Thai translation
     preparationNotes: v.optional(v.string()), // Teacher prep notes
     preparationNotesTh: v.optional(v.string()), // Thai translation
-    classType: v.optional(v.union( // Type classification
-      v.literal("regular"),
-      v.literal("makeup"),
-      v.literal("assessment"),
-      v.literal("trial")
-    )),
+    classType: v.optional(
+      v.union(
+        // Type classification
+        v.literal("regular"),
+        v.literal("makeup"),
+        v.literal("assessment"),
+        v.literal("trial"),
+      ),
+    ),
     // EDIT AUDIT TRAIL
     isEdited: v.optional(v.boolean()),
     lastEditedAt: v.optional(v.number()),
     lastEditedBy: v.optional(v.id("users")),
-    editHistory: v.optional(v.array(v.object({
-      editedAt: v.number(),
-      editedBy: v.id("users"),
-      editedByName: v.string(), // Cache for performance
-      editedByRole: v.string(),
-      changes: v.array(v.object({
-        field: v.string(),
-        oldValue: v.string(),
-        newValue: v.string(),
-      })),
-    }))),
+    editHistory: v.optional(
+      v.array(
+        v.object({
+          editedAt: v.number(),
+          editedBy: v.id("users"),
+          editedByName: v.string(), // Cache for performance
+          editedByRole: v.string(),
+          changes: v.array(
+            v.object({
+              field: v.string(),
+              oldValue: v.string(),
+              newValue: v.string(),
+            }),
+          ),
+        }),
+      ),
+    ),
     bookedByUserId: v.optional(v.id("users")),
     bookedByUsername: v.optional(v.string()),
     approvedByUserId: v.optional(v.id("users")),
     approvedByUsername: v.optional(v.string()),
     approvedAt: v.optional(v.number()),
-    approvalSource: v.optional(v.union(
-      v.literal("moderator"),
-      v.literal("admin"),
-      v.literal("auto_provider"),
-      v.literal("auto_guardian"),
-      v.literal("system")
-    )),
+    approvalSource: v.optional(
+      v.union(
+        v.literal("moderator"),
+        v.literal("admin"),
+        v.literal("auto_provider"),
+        v.literal("auto_guardian"),
+        v.literal("system"),
+      ),
+    ),
     // NEW: Moderator analytics and review flags
     flaggedForReview: v.optional(v.boolean()), // Moderator can flag classes for review
     includeInReports: v.optional(v.boolean()), // Moderator can exclude classes from reports (default true)
@@ -249,7 +267,7 @@ export default defineSchema({
       v.literal("info"),
       v.literal("success"),
       v.literal("warning"),
-      v.literal("error")
+      v.literal("error"),
     ),
     userId: v.optional(v.union(v.string(), v.id("users"))),
     read: v.boolean(),
@@ -323,10 +341,7 @@ export default defineSchema({
     name: v.string(),
     nameTh: v.string(),
     schoolId: v.id("schools"),
-    type: v.optional(v.union(
-      v.literal("school"),
-      v.literal("guardian")
-    )), // Location type - guardian locations bypass moderator approval
+    type: v.optional(v.union(v.literal("school"), v.literal("guardian"))), // Location type - guardian locations bypass moderator approval
     isActive: v.boolean(), // Enable/disable without deleting
     isPending: v.optional(v.boolean()), // For teacher-requested locations awaiting approval (optional for backward compatibility)
     requestedBy: v.optional(v.id("users")), // Teacher who requested this location
@@ -354,17 +369,14 @@ export default defineSchema({
     classId: v.id("classes"),
     teacherId: v.id("users"),
     schoolId: v.optional(v.id("schools")), // Optional for provider classes
-    requestType: v.union(
-      v.literal("cancel"),
-      v.literal("postpone")
-    ),
+    requestType: v.union(v.literal("cancel"), v.literal("postpone")),
     reason: v.string(),
     reasonTh: v.string(),
     newScheduledDate: v.optional(v.number()), // For postponement
     status: v.union(
       v.literal("pending"),
       v.literal("approved"),
-      v.literal("rejected")
+      v.literal("rejected"),
     ),
     createdAt: v.number(),
     resolvedAt: v.optional(v.number()),
@@ -411,19 +423,27 @@ export default defineSchema({
     notes: v.optional(v.string()),
     notesTh: v.optional(v.string()),
     // Structured feedback
-    attendance: v.union(v.literal("present"), v.literal("absent"), v.literal("late")),
-    behavior: v.optional(v.union(
-      v.literal("excellent"),
-      v.literal("good"),
-      v.literal("fair"),
-      v.literal("needs_improvement")
-    )),
-    participation: v.optional(v.union(
-      v.literal("excellent"),
-      v.literal("good"),
-      v.literal("fair"),
-      v.literal("needs_improvement")
-    )),
+    attendance: v.union(
+      v.literal("present"),
+      v.literal("absent"),
+      v.literal("late"),
+    ),
+    behavior: v.optional(
+      v.union(
+        v.literal("excellent"),
+        v.literal("good"),
+        v.literal("fair"),
+        v.literal("needs_improvement"),
+      ),
+    ),
+    participation: v.optional(
+      v.union(
+        v.literal("excellent"),
+        v.literal("good"),
+        v.literal("fair"),
+        v.literal("needs_improvement"),
+      ),
+    ),
     homework: v.optional(v.string()), // Homework assigned
     homeworkTh: v.optional(v.string()),
     createdAt: v.number(),
@@ -444,13 +464,15 @@ export default defineSchema({
     titleTh: v.string(),
     description: v.string(), // Markdown supported
     descriptionTh: v.string(),
-    features: v.array(v.object({
-      title: v.string(),
-      titleTh: v.string(),
-      description: v.string(),
-      descriptionTh: v.string(),
-      icon: v.string(), // Lucide icon name
-    })),
+    features: v.array(
+      v.object({
+        title: v.string(),
+        titleTh: v.string(),
+        description: v.string(),
+        descriptionTh: v.string(),
+        icon: v.string(), // Lucide icon name
+      }),
+    ),
     isActive: v.boolean(), // Show this update
     createdAt: v.number(),
   })
@@ -476,7 +498,7 @@ export default defineSchema({
       v.literal("feature_suggestion"),
       v.literal("bug_report"),
       v.literal("help_request"),
-      v.literal("notification_window_request")
+      v.literal("notification_window_request"),
     ),
     subject: v.string(),
     subjectTh: v.string(),
@@ -486,7 +508,7 @@ export default defineSchema({
       v.literal("pending"),
       v.literal("in_progress"),
       v.literal("resolved"),
-      v.literal("dismissed")
+      v.literal("dismissed"),
     ),
     adminNotes: v.optional(v.string()),
     adminNotesTh: v.optional(v.string()),
@@ -513,12 +535,14 @@ export default defineSchema({
     message: v.string(),
     messageTh: v.string(),
     showUpdateSummary: v.boolean(), // Whether to show app updates section
-    targetRole: v.optional(v.union(
-      v.literal("all"),
-      v.literal("teacher"),
-      v.literal("moderator"),
-      v.literal("admin")
-    )), // Target specific role or all users
+    targetRole: v.optional(
+      v.union(
+        v.literal("all"),
+        v.literal("teacher"),
+        v.literal("moderator"),
+        v.literal("admin"),
+      ),
+    ), // Target specific role or all users
     isActive: v.boolean(),
     priority: v.number(), // Higher priority shown first
     createdBy: v.id("users"),
@@ -583,14 +607,14 @@ export default defineSchema({
       v.literal("event"), // Universal event (mods/admin)
       v.literal("holiday"), // Holiday/school closure
       v.literal("meeting"), // Meeting/conference
-      v.literal("deadline") // Important deadline
+      v.literal("deadline"), // Important deadline
     ),
     visibility: v.union(
       v.literal("personal"), // Only visible to creator (teachers)
       v.literal("school"), // Visible to all users in the school
       v.literal("all_teachers"), // Visible to all teachers across schools
       v.literal("all_moderators"), // Visible to all moderators
-      v.literal("everyone") // Visible to everyone (admins only)
+      v.literal("everyone"), // Visible to everyone (admins only)
     ),
     schoolId: v.optional(v.id("schools")), // Required for school-scoped events
     createdBy: v.id("users"),
@@ -691,19 +715,21 @@ export default defineSchema({
       v.literal("new"),
       v.literal("acknowledged"),
       v.literal("resolved"),
-      v.literal("closed")
+      v.literal("closed"),
     ),
     adminNotes: v.optional(v.string()), // Admin notes about resolution
     resolvedBy: v.optional(v.id("users")), // Admin who resolved the error
     resolvedAt: v.optional(v.number()), // When error was resolved
 
     // Classification
-    severity: v.optional(v.union(
-      v.literal("low"),
-      v.literal("medium"),
-      v.literal("high"),
-      v.literal("critical")
-    )),
+    severity: v.optional(
+      v.union(
+        v.literal("low"),
+        v.literal("medium"),
+        v.literal("high"),
+        v.literal("critical"),
+      ),
+    ),
     category: v.optional(v.string()), // "authentication", "booking", "student_management", etc.
   })
     .index("by_user", ["userId"])
@@ -732,7 +758,7 @@ export default defineSchema({
       v.literal("pending"), // Awaiting admin review
       v.literal("reviewed"), // Admin has reviewed (not merged)
       v.literal("merged"), // Students have been merged
-      v.literal("dismissed") // Admin dismissed as non-duplicate
+      v.literal("dismissed"), // Admin dismissed as non-duplicate
     ),
     reviewedBy: v.optional(v.id("users")), // Admin who reviewed
     reviewedAt: v.optional(v.number()), // When reviewed
@@ -741,10 +767,12 @@ export default defineSchema({
     mergedIntoId: v.optional(v.id("students")), // If merged, which student was kept
     createdAt: v.number(),
     // User decision context
-    userDecision: v.optional(v.union(
-      v.literal("create_new"), // User chose to create new despite warning
-      v.literal("link_existing") // User chose to link to existing (not implemented yet)
-    )),
+    userDecision: v.optional(
+      v.union(
+        v.literal("create_new"), // User chose to create new despite warning
+        v.literal("link_existing"), // User chose to link to existing (not implemented yet)
+      ),
+    ),
     userDecisionBy: v.optional(v.id("users")), // Who made the decision
   })
     .index("by_status", ["status"])

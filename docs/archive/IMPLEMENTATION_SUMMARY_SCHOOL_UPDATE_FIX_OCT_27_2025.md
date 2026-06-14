@@ -51,8 +51,8 @@ The `convex/schools.ts` file had:
 export const update = mutation({
   args: {
     schoolId: v.id("schools"),
-    name: v.string(),              // ✅ English name
-    nameTh: v.string(),             // ✅ Thai name
+    name: v.string(), // ✅ English name
+    nameTh: v.string(), // ✅ Thai name
     moderatorId: v.optional(v.union(v.id("users"), v.null())), // ✅ Moderator
     adminId: v.id("users"),
   },
@@ -104,12 +104,12 @@ export const update = mutation({
         oldNameTh: school.nameTh,
         newName: args.name,
         newNameTh: args.nameTh,
-        moderatorId: args.moderatorId
+        moderatorId: args.moderatorId,
       },
     });
 
     return { success: true };
-  }
+  },
 });
 ```
 
@@ -152,9 +152,9 @@ const deleteSchool = useMutation(api.schools.remove);
 if (editingSchool) {
   await updateSchool({
     schoolId: editingSchool,
-    name,           // ✅ Updates English name
-    nameTh,         // ✅ Updates Thai name
-    moderatorId: moderatorId || null,  // ✅ Updates or clears moderator
+    name, // ✅ Updates English name
+    nameTh, // ✅ Updates Thai name
+    moderatorId: moderatorId || null, // ✅ Updates or clears moderator
     adminId: currentUser._id,
   });
 }

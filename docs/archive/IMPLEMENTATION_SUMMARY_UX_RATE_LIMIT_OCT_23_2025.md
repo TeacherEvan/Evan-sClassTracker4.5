@@ -35,7 +35,7 @@ Replaced all legacy browser dialog calls (`alert()`, `confirm()`, `prompt()`) wi
     setPendingDeleteStudent(studentId);
     setShowDeleteConfirm(true);
   };
-  
+
   const confirmDelete = async () => {
     if (!pendingDeleteStudent) return;
     await deleteStudentMutation({ studentId: pendingDeleteStudent });
@@ -98,7 +98,7 @@ Replaced all legacy browser dialog calls (`alert()`, `confirm()`, `prompt()`) wi
     setPendingRejectId(id);
     setShowRejectDialog(true);
   };
-  
+
   const confirmReject = async () => {
     if (!pendingRejectId || !rejectionReason.trim()) return;
     await rejectClassMutation({ classId: pendingRejectId, reason: rejectionReason });
@@ -141,7 +141,7 @@ Replaced all legacy browser dialog calls (`alert()`, `confirm()`, `prompt()`) wi
     setPendingRemoveStudentId(studentId);
     setShowRemoveStudentConfirm(true);
   };
-  
+
   const confirmRemoveStudent = async () => {
     if (!pendingRemoveStudentId) return;
     await removeStudentMutation({ classId: classItem._id, studentId: pendingRemoveStudentId });
@@ -196,12 +196,12 @@ The implementation required careful consideration of React component scope:
       // Rate limit login attempts per username
       await checkRateLimit(ctx, {
         key: `login-${args.username}`,
-        limit: 5,              // 5 attempts
+        limit: 5, // 5 attempts
         windowMs: 5 * 60 * 1000, // per 5 minutes
       });
-      
+
       // ... existing login logic (unchanged)
-    }
+    },
   });
   ```
 
@@ -247,11 +247,11 @@ Ran `get_errors()` on all modified files:
 
 ## Files Modified Summary
 
-| File | Lines Changed | Purpose |
-|------|--------------|---------|
-| `components/student-management.tsx` | 70-73, 227-263, 840-901 | Replace 2 confirm() calls with modals |
-| `components/class-booking.tsx` | 150-156, 507-550, 1295-1395, 1464-1548, 1848-1875 | Replace 1 prompt(), 2 confirm() calls with modals |
-| `convex/users.ts` | 3, 160-165 | Add login rate limiting (5/5min) |
+| File                                | Lines Changed                                     | Purpose                                           |
+| ----------------------------------- | ------------------------------------------------- | ------------------------------------------------- |
+| `components/student-management.tsx` | 70-73, 227-263, 840-901                           | Replace 2 confirm() calls with modals             |
+| `components/class-booking.tsx`      | 150-156, 507-550, 1295-1395, 1464-1548, 1848-1875 | Replace 1 prompt(), 2 confirm() calls with modals |
+| `convex/users.ts`                   | 3, 160-165                                        | Add login rate limiting (5/5min)                  |
 
 **Total**: 3 files modified, 5 legacy dialog calls replaced, 1 security enhancement added
 
@@ -332,21 +332,21 @@ Ran `get_errors()` on all modified files:
 
 ```typescript
 // Example test structure for modal behavior
-describe('Student Management Modals', () => {
-  it('shows delete confirmation modal when delete clicked', () => {
+describe("Student Management Modals", () => {
+  it("shows delete confirmation modal when delete clicked", () => {
     // Click delete button
     // Assert modal visible
     // Assert correct student name displayed
   });
-  
-  it('closes modal on cancel without deleting', () => {
+
+  it("closes modal on cancel without deleting", () => {
     // Open modal
     // Click cancel
     // Assert modal closed
     // Assert student still exists
   });
-  
-  it('deletes student on confirm', () => {
+
+  it("deletes student on confirm", () => {
     // Open modal
     // Click confirm
     // Assert modal closed
@@ -426,7 +426,7 @@ describe('Student Management Modals', () => {
 ```typescript
 // components/student-management.tsx (lines 227-250)
 const handleDelete = async (studentId: Id<"students">) => {
-  const student = students?.find(s => s._id === studentId);
+  const student = students?.find((s) => s._id === studentId);
   if (!student) return;
   if (confirm(`Delete student ${student.firstName} ${student.lastName}?`)) {
     await deleteStudentMutation({ studentId });
@@ -445,10 +445,10 @@ export const login = mutation({
     // Remove checkRateLimit call
     const user = await ctx.db
       .query("users")
-      .withIndex("by_username", q => q.eq("username", args.username))
+      .withIndex("by_username", (q) => q.eq("username", args.username))
       .first();
     // ... rest of existing logic
-  }
+  },
 });
 ```
 

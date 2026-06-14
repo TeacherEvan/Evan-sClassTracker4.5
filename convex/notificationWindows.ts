@@ -22,7 +22,11 @@ export const getActiveForUser = query({
     // Filter by role and find first unviewed window
     for (const window of windows) {
       // Check if window targets this user's role
-      if (window.targetRole && window.targetRole !== "all" && window.targetRole !== user.role) {
+      if (
+        window.targetRole &&
+        window.targetRole !== "all" &&
+        window.targetRole !== user.role
+      ) {
         continue;
       }
 
@@ -30,7 +34,7 @@ export const getActiveForUser = query({
       const hasViewed = await ctx.db
         .query("notificationWindowViews")
         .withIndex("by_user_and_window", (q) =>
-          q.eq("userId", args.userId).eq("windowId", window._id)
+          q.eq("userId", args.userId).eq("windowId", window._id),
         )
         .first();
 
@@ -54,7 +58,7 @@ export const markAsViewed = mutation({
     const existing = await ctx.db
       .query("notificationWindowViews")
       .withIndex("by_user_and_window", (q) =>
-        q.eq("userId", args.userId).eq("windowId", args.windowId)
+        q.eq("userId", args.userId).eq("windowId", args.windowId),
       )
       .first();
 
@@ -80,7 +84,9 @@ export const list = query({
     // Verify user is admin
     const user = await ctx.db.get(args.userId);
     if (!user || user.role !== "admin") {
-      throw new Error("Unauthorized: Only admins can list notification windows");
+      throw new Error(
+        "Unauthorized: Only admins can list notification windows",
+      );
     }
 
     const windows = await ctx.db
@@ -92,16 +98,18 @@ export const list = query({
     // Get view counts for each window
     const windowsWithCounts = await Promise.all(
       windows.map(async (window) => {
-        const viewCount = (await ctx.db
-          .query("notificationWindowViews")
-          .withIndex("by_window", (q) => q.eq("windowId", window._id))
-          .collect()).length;
+        const viewCount = (
+          await ctx.db
+            .query("notificationWindowViews")
+            .withIndex("by_window", (q) => q.eq("windowId", window._id))
+            .collect()
+        ).length;
 
         return {
           ...window,
           viewCount,
         };
-      })
+      }),
     );
 
     return windowsWithCounts;
@@ -119,19 +127,23 @@ export const create = mutation({
     message: v.string(),
     messageTh: v.string(),
     showUpdateSummary: v.boolean(),
-    targetRole: v.optional(v.union(
-      v.literal("all"),
-      v.literal("teacher"),
-      v.literal("moderator"),
-      v.literal("admin")
-    )),
+    targetRole: v.optional(
+      v.union(
+        v.literal("all"),
+        v.literal("teacher"),
+        v.literal("moderator"),
+        v.literal("admin"),
+      ),
+    ),
     priority: v.number(),
   },
   handler: async (ctx, args) => {
     // Verify user is admin
     const user = await ctx.db.get(args.userId);
     if (!user || user.role !== "admin") {
-      throw new Error("Unauthorized: Only admins can create notification windows");
+      throw new Error(
+        "Unauthorized: Only admins can create notification windows",
+      );
     }
 
     // Validate input
@@ -173,12 +185,14 @@ export const update = mutation({
     message: v.string(),
     messageTh: v.string(),
     showUpdateSummary: v.boolean(),
-    targetRole: v.optional(v.union(
-      v.literal("all"),
-      v.literal("teacher"),
-      v.literal("moderator"),
-      v.literal("admin")
-    )),
+    targetRole: v.optional(
+      v.union(
+        v.literal("all"),
+        v.literal("teacher"),
+        v.literal("moderator"),
+        v.literal("admin"),
+      ),
+    ),
     priority: v.number(),
     isActive: v.boolean(),
   },
@@ -186,7 +200,9 @@ export const update = mutation({
     // Verify user is admin
     const user = await ctx.db.get(args.userId);
     if (!user || user.role !== "admin") {
-      throw new Error("Unauthorized: Only admins can update notification windows");
+      throw new Error(
+        "Unauthorized: Only admins can update notification windows",
+      );
     }
 
     await ctx.db.patch(args.windowId, {
@@ -216,7 +232,9 @@ export const toggleActive = mutation({
     // Verify user is admin
     const user = await ctx.db.get(args.userId);
     if (!user || user.role !== "admin") {
-      throw new Error("Unauthorized: Only admins can toggle notification window status");
+      throw new Error(
+        "Unauthorized: Only admins can toggle notification window status",
+      );
     }
 
     const window = await ctx.db.get(args.windowId);
@@ -239,7 +257,9 @@ export const remove = mutation({
     // Verify user is admin
     const user = await ctx.db.get(args.userId);
     if (!user || user.role !== "admin") {
-      throw new Error("Unauthorized: Only admins can delete notification windows");
+      throw new Error(
+        "Unauthorized: Only admins can delete notification windows",
+      );
     }
 
     // Delete all view records first

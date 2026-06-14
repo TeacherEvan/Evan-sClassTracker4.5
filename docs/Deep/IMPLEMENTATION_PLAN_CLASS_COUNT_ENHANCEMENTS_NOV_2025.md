@@ -77,7 +77,7 @@ This plan addresses three interconnected objectives:
 #### Security & Data Handling
 
 - ⚠️ **CRITICAL**: Ephemeral data only - NEVER saved to database
-- Warning disclaimer on open: *"For security purposes, values will not be saved or stored to the system. Please print report or write it down!"*
+- Warning disclaimer on open: _"For security purposes, values will not be saved or stored to the system. Please print report or write it down!"_
 - No mutation functions - client-side calculation only
 - Print-to-PDF option for record keeping
 
@@ -151,21 +151,22 @@ This plan addresses three interconnected objectives:
 
 ```typescript
 providers: defineTable({
-  name: v.string(),           // Provider name (e.g., "Happy Summer Camp")
-  nameTh: v.string(),         // Thai translation
-  category: v.union(          // Provider type
+  name: v.string(), // Provider name (e.g., "Happy Summer Camp")
+  nameTh: v.string(), // Thai translation
+  category: v.union(
+    // Provider type
     v.literal("personal"),
     v.literal("private"),
     v.literal("language_school"),
-    v.literal("educational_camp")
+    v.literal("educational_camp"),
   ),
-  createdBy: v.id("users"),   // Teacher or admin who created it
-  isActive: v.boolean(),      // Soft delete flag
+  createdBy: v.id("users"), // Teacher or admin who created it
+  isActive: v.boolean(), // Soft delete flag
   createdAt: v.number(),
 })
   .index("by_created_by", ["createdBy"])
   .index("by_category", ["category"])
-  .index("by_active", ["isActive"])
+  .index("by_active", ["isActive"]);
 ```
 
 **Modified Table: `students`**
@@ -173,12 +174,11 @@ providers: defineTable({
 ```typescript
 students: defineTable({
   // ... existing fields ...
-  schoolId: v.optional(v.id("schools")),    // NOW OPTIONAL (was required)
+  schoolId: v.optional(v.id("schools")), // NOW OPTIONAL (was required)
   providerId: v.optional(v.id("providers")), // NEW - alternative to schoolId
   // ... rest of fields ...
-})
-  .index("by_provider", ["providerId"])      // NEW INDEX
-  // ... existing indexes ...
+}).index("by_provider", ["providerId"]); // NEW INDEX
+// ... existing indexes ...
 ```
 
 **Modified Table: `classes`**
@@ -186,12 +186,11 @@ students: defineTable({
 ```typescript
 classes: defineTable({
   // ... existing fields ...
-  schoolId: v.optional(v.id("schools")),    // NOW OPTIONAL
+  schoolId: v.optional(v.id("schools")), // NOW OPTIONAL
   providerId: v.optional(v.id("providers")), // NEW - alternative to schoolId
   // ... rest of fields ...
-})
-  .index("by_provider", ["providerId"])      // NEW INDEX
-  // ... existing indexes ...
+}).index("by_provider", ["providerId"]); // NEW INDEX
+// ... existing indexes ...
 ```
 
 #### Business Rules
@@ -257,24 +256,27 @@ classes: defineTable({
 
 ```typescript
 export const create = mutation({
-  args: { 
-    name, nameTh, category, createdBy 
+  args: {
+    name,
+    nameTh,
+    category,
+    createdBy,
   },
   handler: async (ctx, args) => {
     const user = await ctx.db.get(args.createdBy);
-    
+
     // Moderators CANNOT create providers
     if (user.role === "moderator") {
       throw new Error("Moderators cannot create providers");
     }
-    
+
     // Teachers can create non-school providers
     if (user.role === "teacher" && args.category === "school") {
       throw new Error("Teachers cannot create school providers");
     }
-    
+
     // Create provider...
-  }
+  },
 });
 ```
 
@@ -395,9 +397,7 @@ const [sortBy, setSortBy] = useState<"date" | "classCount" | "students">("date")
 const [searchTerm, setSearchTerm] = useState("");
 
 // Update query to fetch post-class notes for expanded classes
-const expandedNotesQueries = Array.from(expandedClassIds).map(classId =>
-  useQuery(api.postClassNotes.getByClass, { classId })
-);
+const expandedNotesQueries = Array.from(expandedClassIds).map((classId) => useQuery(api.postClassNotes.getByClass, { classId }));
 ```
 
 **UI Layout:**
@@ -418,24 +418,14 @@ const expandedNotesQueries = Array.from(expandedClassIds).map(classId =>
         <option value="classCount">Sort by ClassCount</option>
         <option value="students">Sort by Students</option>
       </select>
-      <input 
-        type="search" 
-        placeholder="Search students..."
-        value={searchTerm}
-      />
+      <input type="search" placeholder="Search students..." value={searchTerm} />
     </div>
   </div>
 
   {/* Classes List */}
   <div className="p-4">
-    {filteredClasses.map(cls => (
-      <ClassDetailCard
-        key={cls.classId}
-        classData={cls}
-        postClassNotes={notesMap.get(cls.classId)}
-        isExpanded={expandedClassIds.has(cls.classId)}
-        onToggle={() => toggleExpand(cls.classId)}
-      />
+    {filteredClasses.map((cls) => (
+      <ClassDetailCard key={cls.classId} classData={cls} postClassNotes={notesMap.get(cls.classId)} isExpanded={expandedClassIds.has(cls.classId)} onToggle={() => toggleExpand(cls.classId)} />
     ))}
   </div>
 </div>
@@ -492,7 +482,7 @@ interface PaymentCalculatorProps {
 
 export function ClassPaymentCalculator({ teacherId, userRole, onClose }: PaymentCalculatorProps) {
   const { t, language } = useLanguage();
-  
+
   // STATE - All ephemeral (component-level only)
   const [acceptedDisclaimer, setAcceptedDisclaimer] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Id<"users"> | null>(teacherId || null);
@@ -500,7 +490,7 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: Payment
   const [startDate, setStartDate] = useState<number>(Date.now());
   const [endDate, setEndDate] = useState<number>(Date.now());
   const [filterProvider, setFilterProvider] = useState<"all" | Id<"providers"> | Id<"schools">>("all");
-  
+
   // QUERY - Read-only data fetch
   const classData = useQuery(
     api.teacherClassCount.getClassCountForPrint,
@@ -508,18 +498,18 @@ export function ClassPaymentCalculator({ teacherId, userRole, onClose }: Payment
       ? { teacherId: selectedTeacher, startDate, endDate }
       : "skip"
   );
-  
+
   // CALCULATION - Client-side only
   const filteredClasses = classData?.classes.filter(cls => {
     if (filterProvider === "all") return true;
     return cls.schoolId === filterProvider || cls.providerId === filterProvider;
   }) || [];
-  
+
   const totalClassCount = filteredClasses.reduce((sum, cls) => sum + cls.classCount, 0);
   const totalPayment = totalClassCount * rate;
-  
+
   // NO MUTATIONS - Everything is display-only
-  
+
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
       {!acceptedDisclaimer ? (
@@ -557,20 +547,13 @@ function DisclaimerScreen({ onAccept }: { onAccept: () => void }) {
     <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full p-6">
       <div className="text-center mb-6">
         <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-          {t("Important Security Notice", "ประกาศความปลอดภัยที่สำคัญ")}
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t("Important Security Notice", "ประกาศความปลอดภัยที่สำคัญ")}</h2>
       </div>
-      
+
       <div className="bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 rounded-lg p-4 mb-6">
-        <p className="text-sm text-yellow-900 dark:text-yellow-100 font-medium">
-          {t(
-            "For security purposes, values will not be saved or stored to the system. Please print the report or write it down!",
-            "เพื่อความปลอดภัย ค่าต่างๆ จะไม่ถูกบันทึกหรือเก็บไว้ในระบบ กรุณาพิมพ์รายงานหรือจดบันทึกไว้!"
-          )}
-        </p>
+        <p className="text-sm text-yellow-900 dark:text-yellow-100 font-medium">{t("For security purposes, values will not be saved or stored to the system. Please print the report or write it down!", "เพื่อความปลอดภัย ค่าต่างๆ จะไม่ถูกบันทึกหรือเก็บไว้ในระบบ กรุณาพิมพ์รายงานหรือจดบันทึกไว้!")}</p>
       </div>
-      
+
       <ul className="space-y-2 mb-6 text-sm text-gray-600 dark:text-gray-400">
         <li className="flex gap-2">
           <Lock className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -585,11 +568,8 @@ function DisclaimerScreen({ onAccept }: { onAccept: () => void }) {
           <span>{t("Use the print function to save results", "ใช้ฟังก์ชันพิมพ์เพื่อบันทึกผลลัพธ์")}</span>
         </li>
       </ul>
-      
-      <button
-        onClick={onAccept}
-        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
-      >
+
+      <button onClick={onAccept} className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">
         {t("I Understand, Continue", "ฉันเข้าใจ ดำเนินการต่อ")}
       </button>
     </div>
@@ -600,27 +580,10 @@ function DisclaimerScreen({ onAccept }: { onAccept: () => void }) {
 #### 3.3 Calculator Screen Sub-Component
 
 ```tsx
-function CalculatorScreen({
-  selectedTeacher,
-  setSelectedTeacher,
-  rate,
-  setRate,
-  startDate,
-  setStartDate,
-  endDate,
-  setEndDate,
-  filterProvider,
-  setFilterProvider,
-  totalClassCount,
-  totalPayment,
-  classData,
-  onPrint,
-  onClose,
-  userRole,
-}: CalculatorScreenProps) {
+function CalculatorScreen({ selectedTeacher, setSelectedTeacher, rate, setRate, startDate, setStartDate, endDate, setEndDate, filterProvider, setFilterProvider, totalClassCount, totalPayment, classData, onPrint, onClose, userRole }: CalculatorScreenProps) {
   const { t, language } = useLanguage();
   const teachers = useQuery(api.users.list, {}) || [];
-  
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl max-w-4xl w-full flex flex-col max-h-[85vh]">
       {/* Header */}
@@ -628,131 +591,85 @@ function CalculatorScreen({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Calculator className="w-6 h-6 text-white" />
-            <h2 className="text-2xl font-bold text-white">
-              {t("Class Payment Calculator", "เครื่องคำนวณค่าสอน")}
-            </h2>
+            <h2 className="text-2xl font-bold text-white">{t("Class Payment Calculator", "เครื่องคำนวณค่าสอน")}</h2>
           </div>
           <button onClick={onClose}>
             <X className="w-6 h-6 text-white" />
           </button>
         </div>
       </div>
-      
+
       {/* Content */}
       <div className="overflow-y-auto flex-grow p-4 md:p-6 space-y-6">
         {/* Step 1: Teacher Selection (Moderators/Admins only) */}
         {userRole !== "teacher" && (
           <div className="space-y-2">
-            <label className="font-medium">
-              {t("Step 1: Select Teacher", "ขั้นตอนที่ 1: เลือกครู")}
-            </label>
-            <select
-              value={selectedTeacher || ""}
-              onChange={(e) => setSelectedTeacher(e.target.value as Id<"users">)}
-              className="w-full p-3 border rounded-lg"
-            >
+            <label className="font-medium">{t("Step 1: Select Teacher", "ขั้นตอนที่ 1: เลือกครู")}</label>
+            <select value={selectedTeacher || ""} onChange={(e) => setSelectedTeacher(e.target.value as Id<"users">)} className="w-full p-3 border rounded-lg">
               <option value="">{t("Select a teacher...", "เลือกครู...")}</option>
-              {teachers.filter(u => u.role === "teacher").map(t => (
-                <option key={t._id} value={t._id}>{t.username}</option>
-              ))}
+              {teachers
+                .filter((u) => u.role === "teacher")
+                .map((t) => (
+                  <option key={t._id} value={t._id}>
+                    {t.username}
+                  </option>
+                ))}
             </select>
           </div>
         )}
-        
+
         {/* Step 2: Rate Input */}
         <div className="space-y-2">
-          <label className="font-medium">
-            {t("Step 2: Enter Rate per Class", "ขั้นตอนที่ 2: ระบุอัตราต่อชั้นเรียน")}
-          </label>
+          <label className="font-medium">{t("Step 2: Enter Rate per Class", "ขั้นตอนที่ 2: ระบุอัตราต่อชั้นเรียน")}</label>
           <div className="flex items-center gap-2">
             <span className="text-2xl font-bold text-gray-700 dark:text-gray-300">฿</span>
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={rate || ""}
-              onChange={(e) => setRate(parseFloat(e.target.value) || 0)}
-              placeholder="0.00"
-              className="flex-1 p-3 border rounded-lg text-lg"
-            />
+            <input type="number" min="0" step="0.01" value={rate || ""} onChange={(e) => setRate(parseFloat(e.target.value) || 0)} placeholder="0.00" className="flex-1 p-3 border rounded-lg text-lg" />
           </div>
         </div>
-        
+
         {/* Step 3: Date Range */}
         <div className="space-y-2">
-          <label className="font-medium">
-            {t("Step 3: Select Cycle Period", "ขั้นตอนที่ 3: เลือกรอบการนับ")}
-          </label>
+          <label className="font-medium">{t("Step 3: Select Cycle Period", "ขั้นตอนที่ 3: เลือกรอบการนับ")}</label>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm text-gray-600">{t("From", "จาก")}</label>
-              <input
-                type="date"
-                value={new Date(startDate).toISOString().split('T')[0]}
-                onChange={(e) => setStartDate(new Date(e.target.value).getTime())}
-                className="w-full p-3 border rounded-lg"
-              />
+              <input type="date" value={new Date(startDate).toISOString().split("T")[0]} onChange={(e) => setStartDate(new Date(e.target.value).getTime())} className="w-full p-3 border rounded-lg" />
             </div>
             <div>
               <label className="text-sm text-gray-600">{t("To", "ถึง")}</label>
-              <input
-                type="date"
-                value={new Date(endDate).toISOString().split('T')[0]}
-                onChange={(e) => setEndDate(new Date(e.target.value).getTime())}
-                className="w-full p-3 border rounded-lg"
-              />
+              <input type="date" value={new Date(endDate).toISOString().split("T")[0]} onChange={(e) => setEndDate(new Date(e.target.value).getTime())} className="w-full p-3 border rounded-lg" />
             </div>
           </div>
         </div>
-        
+
         {/* Optional: Filter by Provider */}
         <div className="space-y-2">
-          <label className="font-medium">
-            {t("Filter by Provider (Optional)", "กรองตามผู้ให้บริการ (ไม่บังคับ)")}
-          </label>
-          <select
-            value={filterProvider}
-            onChange={(e) => setFilterProvider(e.target.value as any)}
-            className="w-full p-3 border rounded-lg"
-          >
+          <label className="font-medium">{t("Filter by Provider (Optional)", "กรองตามผู้ให้บริการ (ไม่บังคับ)")}</label>
+          <select value={filterProvider} onChange={(e) => setFilterProvider(e.target.value as any)} className="w-full p-3 border rounded-lg">
             <option value="all">{t("All Providers", "ทั้งหมด")}</option>
             {/* ... populate with schools/providers ... */}
           </select>
         </div>
-        
+
         {/* Calculation Results */}
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-6 border-2 border-green-200 dark:border-green-800">
-          <h3 className="text-xl font-bold mb-4">
-            {t("Calculation Summary", "สรุปการคำนวณ")}
-          </h3>
-          
+          <h3 className="text-xl font-bold mb-4">{t("Calculation Summary", "สรุปการคำนวณ")}</h3>
+
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-gray-700 dark:text-gray-300">
-                {t("Total Classes in Period:", "ชั้นเรียนทั้งหมดในรอบ:")}
-              </span>
-              <span className="text-2xl font-bold text-green-600">
-                {totalClassCount.toFixed(1)}
-              </span>
+              <span className="text-gray-700 dark:text-gray-300">{t("Total Classes in Period:", "ชั้นเรียนทั้งหมดในรอบ:")}</span>
+              <span className="text-2xl font-bold text-green-600">{totalClassCount.toFixed(1)}</span>
             </div>
-            
+
             <div className="flex justify-between items-center">
-              <span className="text-gray-700 dark:text-gray-300">
-                {t("Rate per Class:", "อัตราต่อชั้นเรียน:")}
-              </span>
-              <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                ฿ {rate.toFixed(2)}
-              </span>
+              <span className="text-gray-700 dark:text-gray-300">{t("Rate per Class:", "อัตราต่อชั้นเรียน:")}</span>
+              <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">฿ {rate.toFixed(2)}</span>
             </div>
-            
+
             <div className="border-t-2 border-green-300 dark:border-green-700 pt-4 mt-4">
               <div className="flex justify-between items-center">
-                <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  {t("Total Payment:", "ค่าสอนรวม:")}
-                </span>
-                <span className="text-4xl font-bold text-green-600 dark:text-green-400">
-                  ฿ {totalPayment.toFixed(2)}
-                </span>
+                <span className="text-xl font-bold text-gray-900 dark:text-gray-100">{t("Total Payment:", "ค่าสอนรวม:")}</span>
+                <span className="text-4xl font-bold text-green-600 dark:text-green-400">฿ {totalPayment.toFixed(2)}</span>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 text-center">
                 {totalClassCount.toFixed(1)} × ฿ {rate.toFixed(2)} = ฿ {totalPayment.toFixed(2)}
@@ -760,7 +677,7 @@ function CalculatorScreen({
             </div>
           </div>
         </div>
-        
+
         {/* Class Breakdown Table */}
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full">
@@ -787,20 +704,14 @@ function CalculatorScreen({
           </table>
         </div>
       </div>
-      
+
       {/* Footer */}
       <div className="p-4 md:p-6 bg-gray-50 dark:bg-gray-700/50 rounded-b-xl border-t flex gap-3">
-        <button
-          onClick={onPrint}
-          className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center justify-center gap-2"
-        >
+        <button onClick={onPrint} className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center justify-center gap-2">
           <Printer className="w-5 h-5" />
           {t("Print Report", "พิมพ์รายงาน")}
         </button>
-        <button
-          onClick={onClose}
-          className="px-6 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100 rounded-lg font-medium"
-        >
+        <button onClick={onClose} className="px-6 py-3 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-900 dark:text-gray-100 rounded-lg font-medium">
           {t("Close", "ปิด")}
         </button>
       </div>
@@ -813,9 +724,9 @@ function CalculatorScreen({
 
 ```typescript
 const handlePrint = () => {
-  const printWindow = window.open('', '_blank');
+  const printWindow = window.open("", "_blank");
   if (!printWindow) return;
-  
+
   const html = `
 <!DOCTYPE html>
 <html>
@@ -859,7 +770,9 @@ const handlePrint = () => {
       </tr>
     </thead>
     <tbody>
-      ${classData.map(cls => `
+      ${classData
+        .map(
+          (cls) => `
         <tr>
           <td>${formatDate(cls.scheduledDate)}</td>
           <td>${cls.primaryStudentName}</td>
@@ -867,7 +780,9 @@ const handlePrint = () => {
           <td style="text-align: right">${cls.classCount}</td>
           <td style="text-align: right">฿ ${(cls.classCount * rate).toFixed(2)}</td>
         </tr>
-      `).join('')}
+      `,
+        )
+        .join("")}
     </tbody>
   </table>
   
@@ -883,7 +798,7 @@ const handlePrint = () => {
 </body>
 </html>
   `;
-  
+
   printWindow.document.write(html);
   printWindow.document.close();
   setTimeout(() => printWindow.print(), 250);
@@ -894,22 +809,14 @@ const handlePrint = () => {
 
 ```tsx
 // In class-count-modal.tsx header actions
-<button
-  onClick={() => setShowPaymentCalculator(true)}
-  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-  title={t("Payment Calculator", "เครื่องคำนวณค่าสอน")}
->
+<button onClick={() => setShowPaymentCalculator(true)} className="p-2 hover:bg-white/20 rounded-lg transition-colors" title={t("Payment Calculator", "เครื่องคำนวณค่าสอน")}>
   <Calculator className="w-5 h-5 text-white" />
-</button>
+</button>;
 
 // At bottom of component
-{showPaymentCalculator && (
-  <ClassPaymentCalculator
-    teacherId={teacherId}
-    userRole={userRole}
-    onClose={() => setShowPaymentCalculator(false)}
-  />
-)}
+{
+  showPaymentCalculator && <ClassPaymentCalculator teacherId={teacherId} userRole={userRole} onClose={() => setShowPaymentCalculator(false)} />;
+}
 ```
 
 **Testing Checkpoints:**
@@ -938,28 +845,28 @@ const [selectedProvider, setSelectedProvider] = useState<Id<"providers"> | null>
 const [isCreatingProvider, setIsCreatingProvider] = useState(false);
 
 // Conditional rendering based on role
-{user.role !== "moderator" && (
-  <div className="space-y-2">
-    <label>{t("Provider (Alternative to School)", "ผู้ให้บริการ")}</label>
-    <select
-      value={selectedProvider || ""}
-      onChange={(e) => {
-        setSelectedProvider(e.target.value as Id<"providers">);
-        setSelectedSchool(null); // Clear school if provider selected
-      }}
-    >
-      <option value="">{t("Select provider...", "เลือกผู้ให้บริการ...")}</option>
-      {myProviders.map(p => (
-        <option key={p._id} value={p._id}>
-          {language === "th" ? p.nameTh : p.name}
-        </option>
-      ))}
-    </select>
-    <button onClick={() => setIsCreatingProvider(true)}>
-      + {t("Create New Provider", "สร้างผู้ให้บริการใหม่")}
-    </button>
-  </div>
-)}
+{
+  user.role !== "moderator" && (
+    <div className="space-y-2">
+      <label>{t("Provider (Alternative to School)", "ผู้ให้บริการ")}</label>
+      <select
+        value={selectedProvider || ""}
+        onChange={(e) => {
+          setSelectedProvider(e.target.value as Id<"providers">);
+          setSelectedSchool(null); // Clear school if provider selected
+        }}
+      >
+        <option value="">{t("Select provider...", "เลือกผู้ให้บริการ...")}</option>
+        {myProviders.map((p) => (
+          <option key={p._id} value={p._id}>
+            {language === "th" ? p.nameTh : p.name}
+          </option>
+        ))}
+      </select>
+      <button onClick={() => setIsCreatingProvider(true)}>+ {t("Create New Provider", "สร้างผู้ให้บริการใหม่")}</button>
+    </div>
+  );
+}
 ```
 
 #### 4.2 Create Provider Modal (`components/create-provider-modal.tsx` - NEW)
@@ -974,17 +881,17 @@ interface CreateProviderModalProps {
 export function CreateProviderModal({ userId, onClose, onCreated }: CreateProviderModalProps) {
   const { t, language } = useLanguage();
   const createProvider = useMutation(api.providers.create);
-  
+
   const [name, setName] = useState("");
   const [nameTh, setNameTh] = useState("");
   const [category, setCategory] = useState<"personal" | "private" | "language_school" | "educational_camp">("personal");
-  
+
   const handleSubmit = async () => {
     if (!name.trim() || !nameTh.trim()) {
       toast.error("Please provide provider name in both languages");
       return;
     }
-    
+
     try {
       const providerId = await createProvider({
         name,
@@ -992,7 +899,7 @@ export function CreateProviderModal({ userId, onClose, onCreated }: CreateProvid
         category,
         createdBy: userId,
       });
-      
+
       toast.success("Provider created successfully!");
       onCreated(providerId);
       onClose();
@@ -1000,52 +907,30 @@ export function CreateProviderModal({ userId, onClose, onCreated }: CreateProvid
       toast.error("Failed to create provider");
     }
   };
-  
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full p-6">
-        <h2 className="text-2xl font-bold mb-4">
-          {t("Create New Provider", "สร้างผู้ให้บริการใหม่")}
-        </h2>
-        
+        <h2 className="text-2xl font-bold mb-4">{t("Create New Provider", "สร้างผู้ให้บริการใหม่")}</h2>
+
         <div className="space-y-4">
           <div>
-            <label className="block mb-2 font-medium">
-              {t("Provider Category", "ประเภทผู้ให้บริการ")}
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as any)}
-              className="w-full p-3 border rounded-lg"
-            >
+            <label className="block mb-2 font-medium">{t("Provider Category", "ประเภทผู้ให้บริการ")}</label>
+            <select value={category} onChange={(e) => setCategory(e.target.value as any)} className="w-full p-3 border rounded-lg">
               <option value="personal">{t("Personal", "ส่วนตัว")}</option>
               <option value="private">{t("Private Tutoring", "กวดวิชาเอกชน")}</option>
               <option value="language_school">{t("Language School", "โรงเรียนภาษา")}</option>
               <option value="educational_camp">{t("Educational Camp", "ค่ายการศึกษา")}</option>
             </select>
           </div>
-          
-          <BilingualInput
-            labelEn="Provider Name"
-            labelTh="ชื่อผู้ให้บริการ"
-            valueEn={name}
-            valueTh={nameTh}
-            onChangeEn={setName}
-            onChangeTh={setNameTh}
-            required
-          />
-          
+
+          <BilingualInput labelEn="Provider Name" labelTh="ชื่อผู้ให้บริการ" valueEn={name} valueTh={nameTh} onChangeEn={setName} onChangeTh={setNameTh} required />
+
           <div className="flex gap-3">
-            <button
-              onClick={handleSubmit}
-              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
-            >
+            <button onClick={handleSubmit} className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium">
               {t("Create Provider", "สร้างผู้ให้บริการ")}
             </button>
-            <button
-              onClick={onClose}
-              className="px-6 py-3 bg-gray-300 hover:bg-gray-400 rounded-lg font-medium"
-            >
+            <button onClick={onClose} className="px-6 py-3 bg-gray-300 hover:bg-gray-400 rounded-lg font-medium">
               {t("Cancel", "ยกเลิก")}
             </button>
           </div>
@@ -1083,7 +968,7 @@ const [useProvider, setUseProvider] = useState(false);
       </label>
     </div>
   )}
-  
+
   {useProvider ? (
     <select value={selectedProvider} onChange={...}>
       {/* Provider options */}
@@ -1133,63 +1018,63 @@ const [useProvider, setUseProvider] = useState(false);
 ```typescript
 test("teacher can create provider and book class", async ({ page }) => {
   await login(page, TEST_USERS.teacher);
-  
+
   // Create provider
-  await page.click('text=Create Provider');
-  await page.fill('input[name="name"]', 'Happy Camp');
-  await page.fill('input[name="nameTh"]', 'แฮปปี้แคมป์');
-  await page.selectOption('select[name="category"]', 'educational_camp');
+  await page.click("text=Create Provider");
+  await page.fill('input[name="name"]', "Happy Camp");
+  await page.fill('input[name="nameTh"]', "แฮปปี้แคมป์");
+  await page.selectOption('select[name="category"]', "educational_camp");
   await page.click('button:has-text("Create")');
-  await waitForToast(page, undefined, 'success');
-  
+  await waitForToast(page, undefined, "success");
+
   // Create student with provider
-  await page.click('text=Create Student');
+  await page.click("text=Create Student");
   await page.click('input[type="radio"][value="provider"]');
-  await page.selectOption('select[name="providerId"]', { label: 'Happy Camp' });
+  await page.selectOption('select[name="providerId"]', { label: "Happy Camp" });
   // ... complete student creation
-  
+
   // Book class with provider
-  await page.click('text=Book Class');
+  await page.click("text=Book Class");
   // ... complete class booking
-  
+
   // Verify class count includes provider class
-  await page.click('text=ClassCount');
-  await expect(page.locator('text=Happy Camp')).toBeVisible();
+  await page.click("text=ClassCount");
+  await expect(page.locator("text=Happy Camp")).toBeVisible();
 });
 
 test("moderator cannot access provider features", async ({ page }) => {
   await login(page, TEST_USERS.moderator);
-  
+
   // Verify no provider options visible
-  await page.click('text=Create Student');
-  await expect(page.locator('text=Provider')).not.toBeVisible();
+  await page.click("text=Create Student");
+  await expect(page.locator("text=Provider")).not.toBeVisible();
 });
 
 test("payment calculator does not save data", async ({ page }) => {
   await login(page, TEST_USERS.teacher);
-  
+
   // Open calculator
-  await page.click('text=Payment Calculator');
+  await page.click("text=Payment Calculator");
   await page.click('button:has-text("I Understand")');
-  
+
   // Fill in data
-  await page.fill('input[type="number"]', '500');
-  await page.fill('input[type="date"]:first-of-type', '2025-10-01');
-  await page.fill('input[type="date"]:last-of-type', '2025-10-31');
-  
+  await page.fill('input[type="number"]', "500");
+  await page.fill('input[type="date"]:first-of-type', "2025-10-01");
+  await page.fill('input[type="date"]:last-of-type', "2025-10-31");
+
   // Verify calculation appears
-  const totalElement = page.locator('text=/Total Payment:.*฿/');
+  const totalElement = page.locator("text=/Total Payment:.*฿/");
   await expect(totalElement).toBeVisible();
-  
+
   // Close calculator
   await page.click('button:has-text("Close")');
-  
+
   // Reopen calculator
-  await page.click('text=Payment Calculator');
+  await page.click("text=Payment Calculator");
   await page.click('button:has-text("I Understand")');
-  
+
   // Verify data was NOT saved
-  await expect(page.locator('input[type="number"]')).toHaveValue('');
+  await expect(page.locator('input[type="number"]')).toHaveValue("");
 });
 ```
 
@@ -1317,10 +1202,10 @@ test("payment calculator does not save data", async ({ page }) => {
 
 ```typescript
 // BAD - Breaks existing queries
-schoolId: v.id("schools")  // Changing to optional breaks current code
+schoolId: v.id("schools"); // Changing to optional breaks current code
 
 // GOOD - Backward compatible
-schoolId: v.optional(v.id("schools"))  // Add optional, validate in mutations
+schoolId: v.optional(v.id("schools")); // Add optional, validate in mutations
 ```
 
 ### 2. XOR Validation Pattern
@@ -1335,10 +1220,10 @@ if (schoolId && providerId) throw new Error("Can't have both");
 
 ```typescript
 // NEVER DO THIS
-const saveCalculation = useMutation(api.calculations.save);  // ❌ NO MUTATIONS
+const saveCalculation = useMutation(api.calculations.save); // ❌ NO MUTATIONS
 
 // ALWAYS DO THIS
-const [rate, setRate] = useState(0);  // ✅ Component state only
+const [rate, setRate] = useState(0); // ✅ Component state only
 ```
 
 ### 4. Moderator Lockdown
@@ -1347,7 +1232,7 @@ const [rate, setRate] = useState(0);  // ✅ Component state only
 // Ensure moderators never see provider data
 if (user.role === "moderator") {
   // ONLY show school-linked data
-  return classes.filter(c => c.schoolId === user.schoolId);
+  return classes.filter((c) => c.schoolId === user.schoolId);
 }
 ```
 

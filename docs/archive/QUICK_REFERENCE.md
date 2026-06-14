@@ -45,12 +45,12 @@ export const myMutation = mutation({
       limit: 20,
       windowMs: 60000, // 1 minute
     });
-    
+
     // Validate inputs
     validateLength(args.text, "Field name", 500, 1);
-    
+
     // ... rest of logic
-  }
+  },
 });
 ```
 
@@ -70,9 +70,9 @@ When adding new large components (>200 lines):
 // app/page.tsx or other route
 import { lazy, Suspense } from "react";
 
-const MyHeavyComponent = lazy(() => 
-  import("@/components/my-heavy-component").then(m => ({ 
-    default: m.MyHeavyComponent 
+const MyHeavyComponent = lazy(() =>
+  import("@/components/my-heavy-component").then(m => ({
+    default: m.MyHeavyComponent
   }))
 );
 
@@ -104,11 +104,7 @@ export const listPaginated = query({
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
-    return await ctx.db
-      .query("myTable")
-      .withIndex("by_created_at")
-      .order("desc")
-      .paginate(args.paginationOpts);
+    return await ctx.db.query("myTable").withIndex("by_created_at").order("desc").paginate(args.paginationOpts);
   },
 });
 ```
@@ -228,12 +224,12 @@ Check:
 
 ## 🎯 Performance Targets
 
-| Metric | Target | How to Check |
-|--------|--------|--------------|
-| Initial bundle | <200KB | `npm run build` |
-| Time to Interactive | <2s | Lighthouse audit |
-| Message loading | <100ms | Network tab |
-| Rate limit active | Yes | Try 20+ messages |
+| Metric              | Target | How to Check     |
+| ------------------- | ------ | ---------------- |
+| Initial bundle      | <200KB | `npm run build`  |
+| Time to Interactive | <2s    | Lighthouse audit |
+| Message loading     | <100ms | Network tab      |
+| Rate limit active   | Yes    | Try 20+ messages |
 
 ---
 

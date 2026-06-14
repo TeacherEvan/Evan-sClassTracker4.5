@@ -1,7 +1,7 @@
 # Copilot Instructions Update - Post-Implementation Requirements Added
 
 **Date:** October 23, 2025  
-**Status:** ✅ Complete  
+**Status:** ✅ Complete
 
 ---
 
@@ -44,12 +44,8 @@ The agent must now:
 
 ```typescript
 notificationWindows: defineTable({
-  targetSchool: v.optional(v.union(
-    v.id("schools"),
-    v.literal("everyone")
-  )),
-})
-.index("by_school", ["targetSchool"])
+  targetSchool: v.optional(v.union(v.id("schools"), v.literal("everyone"))),
+}).index("by_school", ["targetSchool"]);
 ```
 
 **Query Logic Update:**
@@ -117,7 +113,7 @@ if (window.targetSchool) {
 ✅ **Audit Trail** - Version history tracked in `appUpdates` table  
 ✅ **Targeted Communication** - School-specific or role-specific notifications  
 ✅ **Consistency** - Standard procedure for all feature implementations  
-✅ **Adoption** - Users more likely to use features they know about  
+✅ **Adoption** - Users more likely to use features they know about
 
 ---
 
@@ -179,7 +175,7 @@ When implementing the next feature, the agent will now:
      featuresTh: ["ฟีเจอร์ 1"],
      releaseDate: Date.now(),
      isActive: true,
-     showInWindow: true
+     showInWindow: true,
    });
    ```
 

@@ -9,7 +9,19 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, error, disabled, required, options, placeholder, value, ...props }, ref) => {
+  (
+    {
+      className,
+      error,
+      disabled,
+      required,
+      options,
+      placeholder,
+      value,
+      ...props
+    },
+    ref,
+  ) => {
     return (
       <select
         ref={ref}
@@ -39,6 +51,6 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         ))}
       </select>
     );
-  }
+  },
 );
 Select.displayName = "Select";

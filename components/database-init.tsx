@@ -36,7 +36,9 @@ export function DatabaseInit() {
       const res = await initializeDatabase({});
       setResult(res);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to initialize database");
+      setError(
+        err instanceof Error ? err.message : "Failed to initialize database",
+      );
     } finally {
       setLoading(false);
     }
@@ -57,32 +59,38 @@ export function DatabaseInit() {
             <div className="space-y-4">
               <div className="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200 p-4 rounded-lg">
                 <p className="font-medium mb-2">
-                  {t("Default Login Credentials:", "ข้อมูลเข้าสู่ระบบเริ่มต้น:")}
+                  {t(
+                    "Default Login Credentials:",
+                    "ข้อมูลเข้าสู่ระบบเริ่มต้น:",
+                  )}
                 </p>
                 <div className="space-y-2 text-sm">
                   <div className="grid grid-cols-2 gap-2">
                     <span className="font-semibold">Admin:</span>
                     <code>
-                      {result.credentials.admin.username} / {result.credentials.admin.password}
+                      {result.credentials.admin.username} /{" "}
+                      {result.credentials.admin.password}
                     </code>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <span className="font-semibold">Moderator:</span>
                     <code>
-                      {result.credentials.moderator.username} / {result.credentials.moderator.password}
+                      {result.credentials.moderator.username} /{" "}
+                      {result.credentials.moderator.password}
                     </code>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <span className="font-semibold">Teacher:</span>
                     <code>
-                      {result.credentials.teacher.username} / {result.credentials.teacher.password}
+                      {result.credentials.teacher.username} /{" "}
+                      {result.credentials.teacher.password}
                     </code>
                   </div>
                 </div>
                 <p className="mt-3 text-xs">
                   {t(
                     "⚠️ Please change all passwords after first login!",
-                    "⚠️ กรุณาเปลี่ยนรหัสผ่านทั้งหมดหลังจากเข้าสู่ระบบครั้งแรก!"
+                    "⚠️ กรุณาเปลี่ยนรหัสผ่านทั้งหมดหลังจากเข้าสู่ระบบครั้งแรก!",
                   )}
                 </p>
               </div>
@@ -139,7 +147,7 @@ export function DatabaseInit() {
           <p className="text-gray-600 dark:text-gray-400">
             {t(
               "This will set up your database with:",
-              "การดำเนินการนี้จะตั้งค่าฐานข้อมูลของคุณด้วย:"
+              "การดำเนินการนี้จะตั้งค่าฐานข้อมูลของคุณด้วย:",
             )}
           </p>
 
@@ -147,13 +155,13 @@ export function DatabaseInit() {
             <li>
               {t(
                 "Admin account (username: admin)",
-                "บัญชีผู้ดูแลระบบ (ชื่อผู้ใช้: admin)"
+                "บัญชีผู้ดูแลระบบ (ชื่อผู้ใช้: admin)",
               )}
             </li>
             <li>
               {t(
                 "Sample moderator and teacher accounts",
-                "บัญชีผู้ดูแลและครูตัวอย่าง"
+                "บัญชีผู้ดูแลและครูตัวอย่าง",
               )}
             </li>
             <li>{t("Two sample schools", "โรงเรียนตัวอย่างสองโรงเรียน")}</li>

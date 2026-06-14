@@ -243,7 +243,7 @@ docker build -f Dockerfile.test -t evan-class-tracker-test .
    # .github/workflows/test-setup.yml
    name: Test Setup
    on: workflow_dispatch
-   
+
    jobs:
      test-secrets:
        runs-on: ubuntu-latest

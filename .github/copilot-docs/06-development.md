@@ -37,21 +37,22 @@ export const migrateFieldName = mutation({
     if (!admin || admin.role !== "admin") {
       throw new Error("Only admins can run migrations");
     }
-    
+
     // 2. Fetch records using indexed query
-    const records = await ctx.db.query("table")
-      .withIndex("by_field", q => q.eq("field", value))
+    const records = await ctx.db
+      .query("table")
+      .withIndex("by_field", (q) => q.eq("field", value))
       .collect();
-    
+
     // 3. Transform and update
     for (const record of records) {
       await ctx.db.patch(record._id, {
-        newField: transformOldData(record.oldField)
+        newField: transformOldData(record.oldField),
       });
     }
-    
+
     return { migrated: records.length };
-  }
+  },
 });
 ```
 
@@ -75,10 +76,7 @@ export const migrateFieldName = mutation({
 3. **Use "skip" for conditional queries**
 
    ```tsx
-   const user = useQuery(
-     api.users.getById,
-     userId ? { id: userId } : "skip"
-   );
+   const user = useQuery(api.users.getById, userId ? { id: userId } : "skip");
    ```
 
 4. **Check for infinite loops** - mutation → query update → useEffect → mutation
@@ -108,7 +106,7 @@ export const migrateFieldName = mutation({
 2. **Test toast manually** in browser console:
 
    ```javascript
-   const { toast } = await import('/lib/toast.ts');
+   const { toast } = await import("/lib/toast.ts");
    toast.success("Test message", "ข้อความทดสอบ");
    ```
 

@@ -71,9 +71,7 @@ const passwordHash = await bcrypt.hash(password, 10); // Irreversible
 
 ```typescript
 function isBcryptHash(hash: string): boolean {
-  return hash.startsWith("$2a$") || 
-         hash.startsWith("$2b$") || 
-         hash.startsWith("$2y$");
+  return hash.startsWith("$2a$") || hash.startsWith("$2b$") || hash.startsWith("$2y$");
 }
 ```
 
@@ -126,7 +124,7 @@ if (!isBcryptHash(user.passwordHash)) {
 await ctx.db.patch(user._id, {
   passwordHash: updatedPasswordHash,
   failedLoginAttempts: 0,
-  lastSuccessfulLogin: Date.now()
+  lastSuccessfulLogin: Date.now(),
 });
 ```
 
@@ -202,20 +200,18 @@ export const getMigrationStats = query({
   args: {},
   handler: async (ctx) => {
     const allUsers = await ctx.db.query("users").collect();
-    
-    const bcryptUsers = allUsers.filter(u => isBcryptHash(u.passwordHash));
-    const legacyUsers = allUsers.filter(u => !isBcryptHash(u.passwordHash));
-    
-    const percentage = allUsers.length > 0 
-      ? Math.round((bcryptUsers.length / allUsers.length) * 100) 
-      : 0;
+
+    const bcryptUsers = allUsers.filter((u) => isBcryptHash(u.passwordHash));
+    const legacyUsers = allUsers.filter((u) => !isBcryptHash(u.passwordHash));
+
+    const percentage = allUsers.length > 0 ? Math.round((bcryptUsers.length / allUsers.length) * 100) : 0;
 
     return {
       total: allUsers.length,
       migrated: bcryptUsers.length,
       pending: legacyUsers.length,
       percentage,
-      legacyUsernames: legacyUsers.map(u => u.username),
+      legacyUsernames: legacyUsers.map((u) => u.username),
     };
   },
 });
@@ -334,7 +330,7 @@ export const getMigrationStats = query({
 ### Before (btoa)
 
 ```typescript
-passwordHash: "VGVhY2hlckV2YW4=" // Base64 of "TeacherEvan"
+passwordHash: "VGVhY2hlckV2YW4="; // Base64 of "TeacherEvan"
 ```
 
 - ❌ Reversible with `atob()`
@@ -344,7 +340,7 @@ passwordHash: "VGVhY2hlckV2YW4=" // Base64 of "TeacherEvan"
 ### After (bcrypt)
 
 ```typescript
-passwordHash: "$2b$10$N9qo8uLOickgx2ZMRZoMye1234567890ABCDEFGH"
+passwordHash: "$2b$10$N9qo8uLOickgx2ZMRZoMye1234567890ABCDEFGH";
 ```
 
 - ✅ One-way hashing (irreversible)
@@ -354,12 +350,12 @@ passwordHash: "$2b$10$N9qo8uLOickgx2ZMRZoMye1234567890ABCDEFGH"
 
 ### Attack Resistance
 
-| Attack Type | btoa (Old) | bcrypt (New) |
-|-------------|-----------|---------------|
-| Database Dump | ❌ Instant plaintext | ✅ Uncrackable without brute force |
-| Rainbow Tables | ❌ Vulnerable | ✅ Protected (unique salts) |
-| Brute Force | ❌ Fast (no delay) | ✅ Slow (10 rounds = 0.1s per attempt) |
-| Dictionary Attack | ❌ Instant | ✅ ~10 years for "password123" |
+| Attack Type       | btoa (Old)           | bcrypt (New)                           |
+| ----------------- | -------------------- | -------------------------------------- |
+| Database Dump     | ❌ Instant plaintext | ✅ Uncrackable without brute force     |
+| Rainbow Tables    | ❌ Vulnerable        | ✅ Protected (unique salts)            |
+| Brute Force       | ❌ Fast (no delay)   | ✅ Slow (10 rounds = 0.1s per attempt) |
+| Dictionary Attack | ❌ Instant           | ✅ ~10 years for "password123"         |
 
 ---
 

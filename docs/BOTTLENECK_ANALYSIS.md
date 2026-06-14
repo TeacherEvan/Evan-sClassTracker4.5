@@ -19,8 +19,8 @@ MongoDB has a strict **16MB document size limit**.
 ```typescript
 // scripts/backup-to-mongodb.ts
 const backupDocument: BackupDocument = {
-    metadata,
-    data, // <--- Contains ALL data
+  metadata,
+  data, // <--- Contains ALL data
 };
 await backupsCollection.insertOne(backupDocument);
 ```

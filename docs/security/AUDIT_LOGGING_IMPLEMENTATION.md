@@ -20,21 +20,21 @@ Implemented comprehensive audit logging system to track all administrative actio
 
 ```typescript
 auditLogs: defineTable({
-  userId: v.id("users"),           // Who performed the action
-  username: v.string(),            // Cached for display
-  userRole: v.string(),            // Role at time of action
-  action: v.string(),              // Action type
-  targetType: v.string(),          // Type of target entity
+  userId: v.id("users"), // Who performed the action
+  username: v.string(), // Cached for display
+  userRole: v.string(), // Role at time of action
+  action: v.string(), // Action type
+  targetType: v.string(), // Type of target entity
   targetId: v.optional(v.string()),
   targetName: v.optional(v.string()),
   details: v.optional(v.string()), // JSON details
-  reason: v.optional(v.string()),  // User-provided reason
+  reason: v.optional(v.string()), // User-provided reason
   affectedCount: v.optional(v.number()), // For bulk operations
   schoolId: v.optional(v.id("schools")),
   timestamp: v.number(),
   ipAddress: v.optional(v.string()),
   userAgent: v.optional(v.string()),
-})
+});
 ```
 
 **Indexes Created:**
@@ -193,7 +193,7 @@ export const yourMutation = mutation({
   handler: async (ctx, args) => {
     // Perform your mutation logic
     await ctx.db.delete(someId);
-    
+
     // Log the action
     await logAudit(ctx, {
       userId: args.userId,
@@ -204,7 +204,7 @@ export const yourMutation = mutation({
       reason: args.reason, // Optional
       schoolId: entity.schoolId, // Optional
     });
-  }
+  },
 });
 ```
 
@@ -429,7 +429,6 @@ await cleanOldLogs({
   - `createUser`
   - `deleteUser`
   - `resetPassword`
-  
 - [ ] Add to `convex/schools.ts`:
   - `create`
   - `update`
@@ -462,7 +461,7 @@ await cleanOldLogs({
 ✅ **Security** - Detect unauthorized actions  
 ✅ **Transparency** - Admins can review all changes  
 ✅ **Debugging** - Historical record helps troubleshoot issues  
-✅ **Data Recovery** - Know what was deleted and by whom  
+✅ **Data Recovery** - Know what was deleted and by whom
 
 ---
 

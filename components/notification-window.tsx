@@ -18,7 +18,7 @@ export function NotificationWindow({
 }: NotificationWindowProps) {
   const { t, language } = useLanguage();
   const [isVisible, setIsVisible] = useState(false);
-  
+
   const activeWindow = useQuery(api.notificationWindows.getActiveForUser, {
     userId: currentUserId,
   });
@@ -53,9 +53,10 @@ export function NotificationWindow({
   }
 
   // Replace {username} placeholder with actual username
-  const greeting = language === "en" 
-    ? activeWindow.greeting.replace("{username}", currentUsername)
-    : activeWindow.greetingTh.replace("{username}", currentUsername);
+  const greeting =
+    language === "en"
+      ? activeWindow.greeting.replace("{username}", currentUsername)
+      : activeWindow.greetingTh.replace("{username}", currentUsername);
 
   return (
     <>
@@ -69,7 +70,9 @@ export function NotificationWindow({
       {/* Notification Window */}
       <div
         className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
-          isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+          isVisible
+            ? "opacity-100 scale-100"
+            : "opacity-0 scale-95 pointer-events-none"
         }`}
       >
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
@@ -97,7 +100,9 @@ export function NotificationWindow({
             {/* Main Message */}
             <div className="prose dark:prose-invert max-w-none">
               <div className="text-gray-700 dark:text-gray-300 text-base leading-relaxed whitespace-pre-wrap">
-                {language === "en" ? activeWindow.message : activeWindow.messageTh}
+                {language === "en"
+                  ? activeWindow.message
+                  : activeWindow.messageTh}
               </div>
             </div>
 
@@ -116,15 +121,19 @@ export function NotificationWindow({
                     <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">
                       {new Date(latestUpdate.releaseDate).toLocaleDateString(
                         language === "en" ? "en-US" : "th-TH",
-                        { year: "numeric", month: "long", day: "numeric" }
+                        { year: "numeric", month: "long", day: "numeric" },
                       )}
                     </span>
                   </div>
                   <h4 className="font-bold text-gray-800 dark:text-white mb-2">
-                    {language === "en" ? latestUpdate.title : latestUpdate.titleTh}
+                    {language === "en"
+                      ? latestUpdate.title
+                      : latestUpdate.titleTh}
                   </h4>
                   <p className="text-sm text-gray-700 dark:text-gray-300 mb-4">
-                    {language === "en" ? latestUpdate.description : latestUpdate.descriptionTh}
+                    {language === "en"
+                      ? latestUpdate.description
+                      : latestUpdate.descriptionTh}
                   </p>
                   {latestUpdate.features.length > 0 && (
                     <div className="space-y-2">
@@ -132,14 +141,21 @@ export function NotificationWindow({
                         {t("Key Features", "ฟีเจอร์สำคัญ")}
                       </p>
                       <ul className="space-y-2">
-                        {latestUpdate.features.slice(0, 3).map((feature, index) => (
-                          <li key={index} className="flex items-start gap-2 text-sm">
-                            <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-                            <span className="text-gray-700 dark:text-gray-300">
-                              {language === "en" ? feature.title : feature.titleTh}
-                            </span>
-                          </li>
-                        ))}
+                        {latestUpdate.features
+                          .slice(0, 3)
+                          .map((feature, index) => (
+                            <li
+                              key={index}
+                              className="flex items-start gap-2 text-sm"
+                            >
+                              <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                              <span className="text-gray-700 dark:text-gray-300">
+                                {language === "en"
+                                  ? feature.title
+                                  : feature.titleTh}
+                              </span>
+                            </li>
+                          ))}
                       </ul>
                     </div>
                   )}

@@ -25,12 +25,12 @@ graph TD
     C --> D[DataProvider]
     D --> E[LanguageProvider]
     E --> F[Page Components]
-    
+
     B -.->|provides| G[useQuery/useMutation]
     C -.->|provides| H[deviceType state]
     D -.->|provides| I[schools/users data]
     E -.->|provides| J[t function for bilingual]
-    
+
     style A fill:#ff6b6b
     style B fill:#4ecdc4
     style C fill:#45b7d1
@@ -112,10 +112,10 @@ components/class-booking/
 
 ```tsx
 // Main component imports and orchestrates
-import { useClassBookingState } from './class-booking-state';
-import { ClassItemDisplay } from './ClassItemDisplay';
-import { DEFAULT_START_TIME, DEFAULT_END_TIME } from './constants';
-import type { BookingFormData } from './types';
+import { useClassBookingState } from "./class-booking-state";
+import { ClassItemDisplay } from "./ClassItemDisplay";
+import { DEFAULT_START_TIME, DEFAULT_END_TIME } from "./constants";
+import type { BookingFormData } from "./types";
 ```
 
 ### Backend Modular Structure
@@ -169,9 +169,9 @@ convex/classes/
 
 ```typescript
 // Public API - all exports go through index.ts
-export * from './queries';
-export * from './mutations';
-export * from './helpers';
+export * from "./queries";
+export * from "./mutations";
+export * from "./helpers";
 ```
 
 **Benefits**:

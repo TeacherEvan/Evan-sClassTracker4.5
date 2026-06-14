@@ -23,21 +23,22 @@ Phase 1 successfully implemented the **Provider System** backend infrastructure,
 
 ```typescript
 providers: defineTable({
-  name: v.string(),                    // English name
-  nameTh: v.string(),                  // Thai name
-  category: v.union(                   // Provider type
-    v.literal("personal"),             // Teacher's private students
-    v.literal("private"),              // Private tutoring company
-    v.literal("language_school"),      // Language centers
-    v.literal("educational_camp")      // Camps/workshops
+  name: v.string(), // English name
+  nameTh: v.string(), // Thai name
+  category: v.union(
+    // Provider type
+    v.literal("personal"), // Teacher's private students
+    v.literal("private"), // Private tutoring company
+    v.literal("language_school"), // Language centers
+    v.literal("educational_camp"), // Camps/workshops
   ),
-  createdBy: v.id("users"),            // Teacher/Admin who created
-  isActive: v.boolean(),               // Soft delete flag
+  createdBy: v.id("users"), // Teacher/Admin who created
+  isActive: v.boolean(), // Soft delete flag
   createdAt: v.number(),
 })
   .index("by_created_by", ["createdBy"])
   .index("by_category", ["category"])
-  .index("by_active", ["isActive"])
+  .index("by_active", ["isActive"]);
 ```
 
 #### Modified Tables: Made `schoolId` Optional
@@ -171,7 +172,7 @@ if (hasProvider) {
   const provider = await ctx.db.get(args.providerId!);
   if (!provider) throw new Error("Provider not found");
   if (!provider.isActive) throw new Error("Provider is not active");
-  
+
   // Teachers can only use their own providers
   if (user.role === "teacher" && provider.createdBy !== args.createdBy) {
     throw new Error("Teachers can only create students for their own providers");
@@ -195,9 +196,7 @@ if (!hasSchool && !hasProvider) {
 
 // Auto-approval for provider classes
 const isProviderLinked = args.providerId !== undefined;
-const status = isProviderLinked || isGuardianLinked || isModerator 
-  ? "approved" 
-  : "pending";
+const status = isProviderLinked || isGuardianLinked || isModerator ? "approved" : "pending";
 
 // Skip moderator notifications for provider classes
 if (!isGuardianLinked && !isProviderLinked && !isModerator && school) {
@@ -214,10 +213,10 @@ const potentialConflicts = await ctx.db
   .query("classes")
   .withIndex("by_teacher_and_date", q => ...)
   .filter(q => {
-    const entityMatch = args.schoolId 
+    const entityMatch = args.schoolId
       ? q.eq(q.field("schoolId"), args.schoolId)
       : q.eq(q.field("providerId"), args.providerId);
-    
+
     return q.and(entityMatch, /* status checks */);
   })
   .collect();
@@ -259,14 +258,8 @@ else if (args.dateOfBirth && args.area) {
 ```typescript
 const existing = await ctx.db
   .query("students")
-  .withIndex("by_school", q => q.eq("schoolId", args.schoolId))
-  .filter(q => q.and(
-    q.eq(q.field("firstName"), args.firstName),
-    q.eq(q.field("lastName"), args.lastName),
-    q.eq(q.field("grade"), args.grade),
-    q.eq(q.field("class"), args.class),
-    q.eq(q.field("isActive"), true)
-  ))
+  .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId))
+  .filter((q) => q.and(q.eq(q.field("firstName"), args.firstName), q.eq(q.field("lastName"), args.lastName), q.eq(q.field("grade"), args.grade), q.eq(q.field("class"), args.class), q.eq(q.field("isActive"), true)))
   .first();
 ```
 
@@ -275,12 +268,8 @@ const existing = await ctx.db
 ```typescript
 const existingProvider = await ctx.db
   .query("students")
-  .withIndex("by_provider", q => q.eq("providerId", args.providerId))
-  .filter(q => q.and(
-    q.eq(q.field("firstName"), args.firstName),
-    q.eq(q.field("lastName"), args.lastName),
-    q.eq(q.field("isActive"), true)
-  ))
+  .withIndex("by_provider", (q) => q.eq("providerId", args.providerId))
+  .filter((q) => q.and(q.eq(q.field("firstName"), args.firstName), q.eq(q.field("lastName"), args.lastName), q.eq(q.field("isActive"), true)))
   .first();
 ```
 
@@ -294,26 +283,26 @@ const existingProvider = await ctx.db
 
 ```typescript
 // Fetch schools
-const schoolIds = [...new Set(classes.map(c => c.schoolId).filter(Boolean))];
-const schools = await Promise.all(schoolIds.map(id => ctx.db.get(id)));
-const schoolMap = new Map(schools.filter(s => s !== null).map(s => [s!._id, s!]));
+const schoolIds = [...new Set(classes.map((c) => c.schoolId).filter(Boolean))];
+const schools = await Promise.all(schoolIds.map((id) => ctx.db.get(id)));
+const schoolMap = new Map(schools.filter((s) => s !== null).map((s) => [s!._id, s!]));
 
 // Fetch providers (NEW)
-const providerIds = [...new Set(classes.map(c => c.providerId).filter(Boolean))];
-const providers = await Promise.all(providerIds.map(id => ctx.db.get(id)));
-const providerMap = new Map(providers.filter(p => p !== null).map(p => [p!._id, p!]));
+const providerIds = [...new Set(classes.map((c) => c.providerId).filter(Boolean))];
+const providers = await Promise.all(providerIds.map((id) => ctx.db.get(id)));
+const providerMap = new Map(providers.filter((p) => p !== null).map((p) => [p!._id, p!]));
 
 // Aggregate with fallback
-const classData = classes.map(c => {
+const classData = classes.map((c) => {
   const school = c.schoolId ? schoolMap.get(c.schoolId) : null;
   const provider = c.providerId ? providerMap.get(c.providerId) : null;
-  
+
   return {
     ...c,
     schoolName: school?.name,
     schoolNameTh: school?.nameTh,
-    providerName: provider?.name,      // NEW
-    providerNameTh: provider?.nameTh,  // NEW
+    providerName: provider?.name, // NEW
+    providerNameTh: provider?.nameTh, // NEW
     student: studentMap.get(c.studentId),
     location: c.locationId ? locationMap.get(c.locationId) : null,
   };
@@ -346,11 +335,11 @@ All files updated to handle optional `schoolId`:
 
 ```typescript
 if (classData.schoolId) {
-    const schoolId = classData.schoolId; // Type-safe local variable
-    await ctx.db.insert("teacherLogs", {
-        schoolId, // Now TypeScript knows it's non-null
-        // ...
-    });
+  const schoolId = classData.schoolId; // Type-safe local variable
+  await ctx.db.insert("teacherLogs", {
+    schoolId, // Now TypeScript knows it's non-null
+    // ...
+  });
 }
 ```
 
@@ -413,9 +402,7 @@ await ctx.db.insert("table", {
 ```typescript
 // Instead of: await ctx.db.get(classData.schoolId) (type error)
 // Use ternary:
-const school = classData.schoolId 
-  ? await ctx.db.get(classData.schoolId) 
-  : null;
+const school = classData.schoolId ? await ctx.db.get(classData.schoolId) : null;
 ```
 
 ### 3. Conditional Logging
@@ -436,18 +423,16 @@ if (classData.schoolId) {
 
 ```typescript
 // Collect unique IDs
-const providerIds = [...new Set(classes.map(c => c.providerId).filter(Boolean))];
+const providerIds = [...new Set(classes.map((c) => c.providerId).filter(Boolean))];
 
 // Batch fetch (1 query instead of N)
-const providers = await Promise.all(providerIds.map(id => ctx.db.get(id)));
+const providers = await Promise.all(providerIds.map((id) => ctx.db.get(id)));
 
 // Create lookup map (O(1) access)
-const providerMap = new Map(
-  providers.filter(p => p !== null).map(p => [p!._id, p!])
-);
+const providerMap = new Map(providers.filter((p) => p !== null).map((p) => [p!._id, p!]));
 
 // Use in loop
-classes.forEach(c => {
+classes.forEach((c) => {
   const provider = c.providerId ? providerMap.get(c.providerId) : null;
 });
 ```

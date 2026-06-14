@@ -59,7 +59,7 @@ console.error("Error caught by boundary:", error, errorInfo);
 import { logger } from "@/lib/logger";
 
 // Development only logging
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === "development") {
   logger.error("Bulk delete errors:", result.errors);
 }
 
@@ -126,7 +126,7 @@ useEffect(() => {
     }
     // ... navigation logic
   };
-  
+
   window.addEventListener("keydown", handleKeyDown);
   return () => window.removeEventListener("keydown", handleKeyDown);
 }, [currentPage, totalPages]);
@@ -197,7 +197,7 @@ interface PaginatedListProps<T extends { _id?: string }> {
 
 ```typescript
 // ✅ BETTER - Add smooth animation with CSS transitions
-<div 
+<div
   className={`overflow-hidden transition-all duration-300 ${
     isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
   }`}
@@ -242,17 +242,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 // ✅ EXCELLENT - Uses indexed queries throughout
 const classes = await ctx.db
   .query("classes")
-  .withIndex("by_school_and_date", (q) =>
-    q.eq("schoolId", args.schoolId!)
-      .gte("scheduledDate", args.startDate)
-      .lte("scheduledDate", args.endDate)
-  )
+  .withIndex("by_school_and_date", (q) => q.eq("schoolId", args.schoolId!).gte("scheduledDate", args.startDate).lte("scheduledDate", args.endDate))
   .collect();
 
 // ✅ EXCELLENT - Batch fetching to avoid N+1
-const studentIds = [...new Set(classes.map(c => c.studentId))];
-const students = await Promise.all(studentIds.map(id => ctx.db.get(id)));
-const studentMap = new Map(students.map(s => [s._id, s]));
+const studentIds = [...new Set(classes.map((c) => c.studentId))];
+const students = await Promise.all(studentIds.map((id) => ctx.db.get(id)));
+const studentMap = new Map(students.map((s) => [s._id, s]));
 ```
 
 **Why This Is Excellent**:
@@ -306,13 +302,13 @@ export const mergeClasses = mutation({
     // Full type safety with Convex validators
     const TIME_TOLERANCE = 5 * 60 * 1000;
     // ... implementation
-  }
+  },
 });
 ```
 
 **Why This Is Excellent**:
 
-- Convex's v.* validators provide runtime + compile-time safety
+- Convex's v.\* validators provide runtime + compile-time safety
 - Clear parameter types
 - Proper error messages
 - Rate limiting implemented
@@ -330,10 +326,7 @@ const handleDeleteClass = (classItem: Doc<"classes">) => {
       toast.success("Class deleted", "ลบคลาสสำเร็จ");
     })
     .catch((err: unknown) => {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to delete",
-        err instanceof Error ? err.message : "ลบไม่สำเร็จ"
-      );
+      toast.error(err instanceof Error ? err.message : "Failed to delete", err instanceof Error ? err.message : "ลบไม่สำเร็จ");
     });
 };
 ```
@@ -352,10 +345,7 @@ const handleDeleteClass = (classItem: Doc<"classes">) => {
 **Location**: `components/paginated-list.tsx:59-63`
 
 ```typescript
-const visibleItems = useMemo(
-  () => items.slice(startIndex, endIndex),
-  [items, startIndex, endIndex]
-);
+const visibleItems = useMemo(() => items.slice(startIndex, endIndex), [items, startIndex, endIndex]);
 ```
 
 **Why This Is Excellent**:
@@ -390,8 +380,8 @@ const visibleItems = useMemo(
 
 ```typescript
 // ✅ CORRECT - Auto-subscribes to real-time updates
-const classes = useQuery(api.classes.listWithDetails, { 
-  teacherId: currentUser._id 
+const classes = useQuery(api.classes.listWithDetails, {
+  teacherId: currentUser._id,
 });
 ```
 
@@ -425,7 +415,7 @@ import type { User } from "@/lib/types";
 
 ```typescript
 // ✅ CORRECT - Generic pagination component
-export function PaginatedList<T>({ items, renderItem }: PaginatedListProps<T>)
+export function PaginatedList<T>({ items, renderItem }: PaginatedListProps<T>);
 ```
 
 **No `any` Types Detected**: ✅
@@ -483,7 +473,7 @@ validateLength(args.pendingLocationName, "Location name", 200, 1);
 // ✅ CORRECT - Using helper function
 await verifyClassAccess(ctx, args.userId, classData, {
   requireModeratorOrAdmin: true,
-  allowTeacherOwner: true
+  allowTeacherOwner: true,
 });
 ```
 
@@ -548,16 +538,16 @@ None identified ✅
 
 ## 🎓 Code Quality Metrics
 
-| Metric | Score | Status |
-|--------|-------|--------|
-| TypeScript Errors | 0 | ✅ Excellent |
-| Build Success | Yes | ✅ Excellent |
-| Accessibility (WCAG 2.1) | 95/100 | ✅ Excellent |
-| Performance (Lighthouse) | 92/100 | ✅ Excellent |
-| SEO | N/A | - |
-| Best Practices | 98/100 | ✅ Excellent |
-| Bundle Size Impact | +337 lines / -61 net | ✅ Good |
-| Code Coverage | N/A | ⚠️ No tests |
+| Metric                   | Score                | Status       |
+| ------------------------ | -------------------- | ------------ |
+| TypeScript Errors        | 0                    | ✅ Excellent |
+| Build Success            | Yes                  | ✅ Excellent |
+| Accessibility (WCAG 2.1) | 95/100               | ✅ Excellent |
+| Performance (Lighthouse) | 92/100               | ✅ Excellent |
+| SEO                      | N/A                  | -            |
+| Best Practices           | 98/100               | ✅ Excellent |
+| Bundle Size Impact       | +337 lines / -61 net | ✅ Good      |
+| Code Coverage            | N/A                  | ⚠️ No tests  |
 
 ---
 

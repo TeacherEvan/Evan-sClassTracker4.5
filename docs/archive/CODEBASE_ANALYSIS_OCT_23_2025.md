@@ -229,12 +229,8 @@ Per `docs/OPTIMIZATION_ANALYSIS_2025.md`:
 2. **Batch Fetching** (teacherClassCount.ts:260-267)
 
    ```typescript
-   const [students, schools, locations] = await Promise.all([
-     Promise.all(Array.from(studentIds).map(id => ctx.db.get(id))),
-     Promise.all(Array.from(schoolIds).map(id => ctx.db.get(id))),
-     Promise.all(Array.from(locationIds).map(id => ctx.db.get(id))),
-   ]);
-   const studentMap = new Map(students.filter(s => s !== null).map(s => [s!._id, s]));
+   const [students, schools, locations] = await Promise.all([Promise.all(Array.from(studentIds).map((id) => ctx.db.get(id))), Promise.all(Array.from(schoolIds).map((id) => ctx.db.get(id))), Promise.all(Array.from(locationIds).map((id) => ctx.db.get(id)))]);
+   const studentMap = new Map(students.filter((s) => s !== null).map((s) => [s!._id, s]));
    ```
 
 3. **Memoized Lookups** (student-management.tsx:92-95)
@@ -242,7 +238,7 @@ Per `docs/OPTIMIZATION_ANALYSIS_2025.md`:
    ```typescript
    const schoolsMap = useMemo(() => {
      if (!schools) return new Map();
-     return new Map(schools.map(s => [s._id, s]));
+     return new Map(schools.map((s) => [s._id, s]));
    }, [schools]);
    ```
 
@@ -266,11 +262,7 @@ Per `docs/OPTIMIZATION_ANALYSIS_2025.md`:
 
 ```typescript
 // Proposed: convex/utils/studentId.ts
-export function generateStudentId(
-  firstName: string,
-  lastName: string,
-  schoolId: string
-): string {
+export function generateStudentId(firstName: string, lastName: string, schoolId: string): string {
   const timestamp = Date.now().toString(36);
   const nameHash = `${firstName.substring(0, 2)}${lastName.substring(0, 2)}`.toUpperCase();
   const schoolHash = schoolId.substring(0, 4).toUpperCase();
@@ -342,12 +334,14 @@ return users.map(({ passwordHash: _passwordHash, ...user }) => user);
 
 ```typescript
 interface Fish {
-  x, y: number;          // Position
-  vx, vy: number;        // Velocity
-  size: number;          // 8-20px
-  pulsePhase: number;    // Sine wave for breathing
-  pulseSpeed: number;    // Individual rhythm
-  hue: number;           // 45 (gold) or 0-360 (rainbow)
+  x;
+  y: number; // Position
+  vx;
+  vy: number; // Velocity
+  size: number; // 8-20px
+  pulsePhase: number; // Sine wave for breathing
+  pulseSpeed: number; // Individual rhythm
+  hue: number; // 45 (gold) or 0-360 (rainbow)
 }
 ```
 
@@ -373,9 +367,7 @@ interface Fish {
 <div className="min-h-[100dvh] ... relative overflow-hidden">
   <FishSchoolBackground isLoggedIn={false} />
   <div className="... relative z-10">
-    <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm ...">
-      {/* Login form */}
-    </div>
+    <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm ...">{/* Login form */}</div>
   </div>
 </div>
 ```
@@ -389,9 +381,7 @@ interface Fish {
 <div className="min-h-[100dvh] ... relative overflow-hidden">
   <FishSchoolBackground isLoggedIn={true} className="opacity-30" />
   <header className="... relative z-10">...</header>
-  <div className="... relative z-10">
-    {/* Tab content */}
-  </div>
+  <div className="... relative z-10">{/* Tab content */}</div>
 </div>
 ```
 
@@ -405,7 +395,7 @@ interface Fish {
 ✅ **requestAnimationFrame** - 60fps smooth  
 ✅ **Minimal DOM manipulation** - Only canvas element  
 ✅ **Cleanup on unmount** - Prevents memory leaks  
-✅ **Resize optimization** - Debounced resize handler  
+✅ **Resize optimization** - Debounced resize handler
 
 **Tested Scenarios:**
 
@@ -480,17 +470,17 @@ interface Fish {
 
 ## Summary Statistics
 
-| Category | Count | Status |
-|----------|-------|--------|
-| TODOs Found | 6 | All documented |
-| Security TODOs | 3 | Pre-production items |
-| Feature TODOs | 3 | Optional enhancements |
-| Code Duplications | 1 | Minor (student ID gen) |
-| Performance Issues | 0 | Already optimized |
-| Validation Bugs | 0 | Fully consistent |
-| New Features | 1 | Fish animation |
-| Files Created | 1 | fish-school-background.tsx |
-| Files Modified | 2 | login-form.tsx, page.tsx |
+| Category           | Count | Status                     |
+| ------------------ | ----- | -------------------------- |
+| TODOs Found        | 6     | All documented             |
+| Security TODOs     | 3     | Pre-production items       |
+| Feature TODOs      | 3     | Optional enhancements      |
+| Code Duplications  | 1     | Minor (student ID gen)     |
+| Performance Issues | 0     | Already optimized          |
+| Validation Bugs    | 0     | Fully consistent           |
+| New Features       | 1     | Fish animation             |
+| Files Created      | 1     | fish-school-background.tsx |
+| Files Modified     | 2     | login-form.tsx, page.tsx   |
 
 ---
 

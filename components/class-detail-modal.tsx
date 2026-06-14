@@ -5,7 +5,10 @@ import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { UserRole } from "@/lib/types";
-import { COMMON_SHORTCUTS, useKeyboardShortcuts } from "@/lib/use-keyboard-shortcuts";
+import {
+  COMMON_SHORTCUTS,
+  useKeyboardShortcuts,
+} from "@/lib/use-keyboard-shortcuts";
 import { useMutation, useQuery } from "convex/react";
 import {
   AlertTriangle,
@@ -22,7 +25,7 @@ import {
   Trash2,
   User,
   Users,
-  X
+  X,
 } from "lucide-react";
 import { useState } from "react";
 import { EditClassModal } from "./edit-class-modal";
@@ -116,7 +119,9 @@ export function ClassDetailModal({
 
   const approveClass = useMutation(api.classes.approve);
   const rejectClass = useMutation(api.classes.reject);
-  const createCancellationRequest = useMutation(api.cancellationRequests.create);
+  const createCancellationRequest = useMutation(
+    api.cancellationRequests.create,
+  );
   const deleteClass = useMutation(api.classes.deleteClass);
   const deleteRecurringSeries = useMutation(api.classes.deleteRecurringSeries);
 
@@ -131,14 +136,14 @@ export function ClassDetailModal({
   // Query for recurring series
   const recurringSeries = useQuery(
     api.classes.findRecurringSeries,
-    classData ? { classId: classData._id, userId: currentUserId } : "skip"
+    classData ? { classId: classData._id, userId: currentUserId } : "skip",
   );
 
   // Check for pending requests
   const pendingRequest = useQuery(
     api.cancellationRequests.list,
-    classData ? { teacherId: classData.teacherId } : "skip"
-  )?.find(req => req.classId === classData._id && req.status === "pending");
+    classData ? { teacherId: classData.teacherId } : "skip",
+  )?.find((req) => req.classId === classData._id && req.status === "pending");
 
   const handleApprove = async () => {
     try {
@@ -148,7 +153,7 @@ export function ClassDetailModal({
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to approve class",
-        err instanceof Error ? err.message : "ไม่สามารถอนุมัติคลาสได้"
+        err instanceof Error ? err.message : "ไม่สามารถอนุมัติคลาสได้",
       );
     }
   };
@@ -168,7 +173,7 @@ export function ClassDetailModal({
         id: classData._id,
         userId: currentUserId,
         reason: rejectReason,
-        reasonTh: rejectReasonTh
+        reasonTh: rejectReasonTh,
       });
       toast.success("Class rejected successfully", "ปฏิเสธคลาสสำเร็จ");
       setShowRejectModal(false);
@@ -176,14 +181,17 @@ export function ClassDetailModal({
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to reject class",
-        err instanceof Error ? err.message : "ไม่สามารถปฏิเสธคลาสได้"
+        err instanceof Error ? err.message : "ไม่สามารถปฏิเสธคลาสได้",
       );
     }
   };
 
   const handleCancelRequest = async () => {
     if (!cancelReason.trim() && !cancelReasonTh.trim()) {
-      toast.error("Please provide a reason in at least one language", "กรุณาระบุเหตุผลอย่างน้อยหนึ่งภาษา");
+      toast.error(
+        "Please provide a reason in at least one language",
+        "กรุณาระบุเหตุผลอย่างน้อยหนึ่งภาษา",
+      );
       return;
     }
 
@@ -202,15 +210,20 @@ export function ClassDetailModal({
       onClose();
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to submit cancellation request",
-        err instanceof Error ? err.message : "ไม่สามารถส่งคำขอยกเลิกได้"
+        err instanceof Error
+          ? err.message
+          : "Failed to submit cancellation request",
+        err instanceof Error ? err.message : "ไม่สามารถส่งคำขอยกเลิกได้",
       );
     }
   };
 
   const handlePostponeRequest = async () => {
     if (!postponeReason.trim() && !postponeReasonTh.trim()) {
-      toast.error("Please provide a reason in at least one language", "กรุณาระบุเหตุผลอย่างน้อยหนึ่งภาษา");
+      toast.error(
+        "Please provide a reason in at least one language",
+        "กรุณาระบุเหตุผลอย่างน้อยหนึ่งภาษา",
+      );
       return;
     }
 
@@ -241,8 +254,10 @@ export function ClassDetailModal({
       onClose();
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to submit postponement request",
-        err instanceof Error ? err.message : "ไม่สามารถส่งคำขอเลื่อนได้"
+        err instanceof Error
+          ? err.message
+          : "Failed to submit postponement request",
+        err instanceof Error ? err.message : "ไม่สามารถส่งคำขอเลื่อนได้",
       );
     }
   };
@@ -259,7 +274,7 @@ export function ClassDetailModal({
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to delete class",
-        err instanceof Error ? err.message : "ไม่สามารถลบคลาสได้"
+        err instanceof Error ? err.message : "ไม่สามารถลบคลาสได้",
       );
     }
   };
@@ -268,7 +283,7 @@ export function ClassDetailModal({
     if (!deleteSeriesReason.trim() || deleteSeriesReason.trim().length < 3) {
       toast.error(
         "Please provide a reason (minimum 3 characters)",
-        "กรุณาให้เหตุผล (อย่างน้อย 3 ตัวอักษร)"
+        "กรุณาให้เหตุผล (อย่างน้อย 3 ตัวอักษร)",
       );
       return;
     }
@@ -279,7 +294,7 @@ export function ClassDetailModal({
     }
 
     try {
-      const classIds = recurringSeries.map(cls => cls._id);
+      const classIds = recurringSeries.map((cls) => cls._id);
       const result = await deleteRecurringSeries({
         classIds,
         userId: currentUserId,
@@ -289,14 +304,14 @@ export function ClassDetailModal({
       if (result.successful.length > 0) {
         toast.success(
           `Successfully deleted ${result.successful.length} recurring classes!`,
-          `ลบคลาสที่ซ้ำสำเร็จ ${result.successful.length} คลาส!`
+          `ลบคลาสที่ซ้ำสำเร็จ ${result.successful.length} คลาส!`,
         );
       }
 
       if (result.failed.length > 0) {
         toast.error(
           `Failed to delete ${result.failed.length} classes`,
-          `ไม่สามารถลบ ${result.failed.length} คลาสได้`
+          `ไม่สามารถลบ ${result.failed.length} คลาสได้`,
         );
       }
 
@@ -305,17 +320,22 @@ export function ClassDetailModal({
       onClose();
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to delete recurring series",
-        err instanceof Error ? err.message : "ไม่สามารถลบคลาสที่ซ้ำได้"
+        err instanceof Error
+          ? err.message
+          : "Failed to delete recurring series",
+        err instanceof Error ? err.message : "ไม่สามารถลบคลาสที่ซ้ำได้",
       );
     }
   };
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
-      acknowledged: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
-      approved: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
+      pending:
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+      acknowledged:
+        "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
+      approved:
+        "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
       rejected: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400",
     };
     return badges[status as keyof typeof badges] || badges.pending;
@@ -355,7 +375,9 @@ export function ClassDetailModal({
                 <h2 className="text-xl font-bold mb-1.5">
                   {t("Class Details", "รายละเอียดคลาส")}
                 </h2>
-                <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(classData.status)}`}>
+                <span
+                  className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(classData.status)}`}
+                >
                   {getStatusText(classData.status)}
                 </span>
               </div>
@@ -409,7 +431,7 @@ export function ClassDetailModal({
                   <p className="text-sm text-red-500 dark:text-red-400">
                     {t(
                       "This class references a deleted student. Please delete this class or contact an administrator.",
-                      "คลาสนี้อ้างอิงนักเรียนที่ถูกลบ กรุณาลบคลาสนี้หรือติดต่อผู้ดูแลระบบ"
+                      "คลาสนี้อ้างอิงนักเรียนที่ถูกลบ กรุณาลบคลาสนี้หรือติดต่อผู้ดูแลระบบ",
                     )}
                   </p>
                 </div>
@@ -422,20 +444,32 @@ export function ClassDetailModal({
                     {t("Additional Students:", "นักเรียนเพิ่มเติม:")}
                   </p>
                   <div className="space-y-2">
-                    {additionalStudents.map((student, index) => (
+                    {additionalStudents.map((student, index) =>
                       student ? (
-                        <div key={student._id} className="flex items-center gap-2 text-sm">
+                        <div
+                          key={student._id}
+                          className="flex items-center gap-2 text-sm"
+                        >
                           <User className="w-4 h-4" />
-                          <span>{student.firstName} {student.lastName}</span>
-                          <span className="text-xs text-gray-500">({student.grade})</span>
+                          <span>
+                            {student.firstName} {student.lastName}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            ({student.grade})
+                          </span>
                         </div>
                       ) : (
-                        <div key={`deleted-${index}`} className="flex items-center gap-2 text-sm text-red-500 dark:text-red-400">
+                        <div
+                          key={`deleted-${index}`}
+                          className="flex items-center gap-2 text-sm text-red-500 dark:text-red-400"
+                        >
                           <AlertTriangle className="w-4 h-4" />
-                          <span className="italic">{t("Deleted student", "นักเรียนถูกลบ")}</span>
+                          <span className="italic">
+                            {t("Deleted student", "นักเรียนถูกลบ")}
+                          </span>
                         </div>
-                      )
-                    ))}
+                      ),
+                    )}
                   </div>
                 </div>
               )}
@@ -451,7 +485,11 @@ export function ClassDetailModal({
                     {t("School", "โรงเรียน")}
                   </p>
                   <p className="font-medium text-sm">
-                    {schoolData ? (language === "en" ? schoolData.name : schoolData.nameTh) : t("Not specified", "ไม่ระบุ")}
+                    {schoolData
+                      ? language === "en"
+                        ? schoolData.name
+                        : schoolData.nameTh
+                      : t("Not specified", "ไม่ระบุ")}
                   </p>
                 </div>
               </div>
@@ -465,17 +503,19 @@ export function ClassDetailModal({
                   </p>
                   <p className="font-medium text-sm">
                     {locationData
-                      ? (language === "en" ? locationData.name : locationData.nameTh)
+                      ? language === "en"
+                        ? locationData.name
+                        : locationData.nameTh
                       : classData.pendingLocationName
                         ? `${language === "en" ? classData.pendingLocationName : classData.pendingLocationNameTh} ${t("(Pending)", "(รออนุมัติ)")}`
-                        : t("Not specified", "ไม่ระบุ")
-                    }
+                        : t("Not specified", "ไม่ระบุ")}
                   </p>
-                  {locationData?.type === "guardian" && classData.guardianTitle && (
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
-                      {t("Guardian:", "ผู้ปกครอง:")} {classData.guardianTitle}
-                    </p>
-                  )}
+                  {locationData?.type === "guardian" &&
+                    classData.guardianTitle && (
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
+                        {t("Guardian:", "ผู้ปกครอง:")} {classData.guardianTitle}
+                      </p>
+                    )}
                 </div>
               </div>
 
@@ -489,7 +529,12 @@ export function ClassDetailModal({
                   <p className="font-medium text-sm">
                     {new Date(classData.scheduledDate).toLocaleDateString(
                       language === "en" ? "en-US" : "th-TH",
-                      { weekday: "short", year: "numeric", month: "short", day: "numeric" }
+                      {
+                        weekday: "short",
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      },
                     )}
                   </p>
                 </div>
@@ -505,12 +550,13 @@ export function ClassDetailModal({
                   <p className="font-medium text-sm">
                     {new Date(classData.scheduledDate).toLocaleTimeString(
                       language === "en" ? "en-US" : "th-TH",
-                      { hour: "2-digit", minute: "2-digit" }
+                      { hour: "2-digit", minute: "2-digit" },
                     )}
                   </p>
                   {classData.duration && (
                     <p className="text-xs text-gray-500">
-                      {t("Duration:", "ระยะเวลา:")} {classData.duration} {t("min", "นาที")}
+                      {t("Duration:", "ระยะเวลา:")} {classData.duration}{" "}
+                      {t("min", "นาที")}
                     </p>
                   )}
                 </div>
@@ -533,12 +579,14 @@ export function ClassDetailModal({
             </div>
 
             {/* Optional Fields */}
-            {(classData.classType && classData.classType !== "regular") && (
+            {classData.classType && classData.classType !== "regular" && (
               <div className="p-2.5 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                 <p className="text-xs text-gray-600 dark:text-gray-400">
                   {t("Class Type", "ประเภทคลาส")}
                 </p>
-                <p className="font-medium text-sm">{getClassTypeText(classData.classType)}</p>
+                <p className="font-medium text-sm">
+                  {getClassTypeText(classData.classType)}
+                </p>
               </div>
             )}
 
@@ -551,7 +599,9 @@ export function ClassDetailModal({
                       {t("Subject", "วิชา")}
                     </p>
                     <p className="font-medium text-sm">
-                      {language === "en" ? classData.subject : classData.subjectTh}
+                      {language === "en"
+                        ? classData.subject
+                        : classData.subjectTh}
                     </p>
                   </div>
                 </div>
@@ -567,7 +617,9 @@ export function ClassDetailModal({
                       {t("Lesson Topic", "หัวข้อบทเรียน")}
                     </p>
                     <p className="font-medium text-sm">
-                      {language === "en" ? classData.lessonTopic : classData.lessonTopicTh}
+                      {language === "en"
+                        ? classData.lessonTopic
+                        : classData.lessonTopicTh}
                     </p>
                   </div>
                 </div>
@@ -583,7 +635,9 @@ export function ClassDetailModal({
                       {t("Materials", "อุปกรณ์")}
                     </p>
                     <p className="font-medium text-sm whitespace-pre-wrap">
-                      {language === "en" ? classData.materials : classData.materialsTh}
+                      {language === "en"
+                        ? classData.materials
+                        : classData.materialsTh}
                     </p>
                   </div>
                 </div>
@@ -599,7 +653,9 @@ export function ClassDetailModal({
                       {t("Preparation Notes", "หมายเหตุการเตรียมตัว")}
                     </p>
                     <p className="font-medium text-sm whitespace-pre-wrap">
-                      {language === "en" ? classData.preparationNotes : classData.preparationNotesTh}
+                      {language === "en"
+                        ? classData.preparationNotes
+                        : classData.preparationNotesTh}
                     </p>
                   </div>
                 </div>
@@ -607,111 +663,129 @@ export function ClassDetailModal({
             )}
 
             {/* Edit History */}
-            {classData.isEdited && classData.editHistory && classData.editHistory.length > 0 && (
-              <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Edit2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                  <h3 className="font-semibold text-sm">
-                    {t("Edit History", "ประวัติการแก้ไข")}
-                  </h3>
-                </div>
-                <div className="space-y-1.5 text-xs">
-                  {classData.editHistory.slice(-3).reverse().map((edit, index) => (
-                    <div key={index} className="pb-1.5 border-b border-amber-200 dark:border-amber-800 last:border-0">
-                      <p className="font-medium">
-                        {edit.editedByName} ({edit.editedByRole})
+            {classData.isEdited &&
+              classData.editHistory &&
+              classData.editHistory.length > 0 && (
+                <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Edit2 className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    <h3 className="font-semibold text-sm">
+                      {t("Edit History", "ประวัติการแก้ไข")}
+                    </h3>
+                  </div>
+                  <div className="space-y-1.5 text-xs">
+                    {classData.editHistory
+                      .slice(-3)
+                      .reverse()
+                      .map((edit, index) => (
+                        <div
+                          key={index}
+                          className="pb-1.5 border-b border-amber-200 dark:border-amber-800 last:border-0"
+                        >
+                          <p className="font-medium">
+                            {edit.editedByName} ({edit.editedByRole})
+                          </p>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            {new Date(edit.editedAt).toLocaleString(
+                              language === "en" ? "en-US" : "th-TH",
+                            )}
+                          </p>
+                        </div>
+                      ))}
+                    {classData.editHistory.length > 3 && (
+                      <p className="text-xs text-gray-500 italic">
+                        {t(
+                          `+ ${classData.editHistory.length - 3} more edits`,
+                          `+ แก้ไขอีก ${classData.editHistory.length - 3} ครั้ง`,
+                        )}
                       </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
-                        {new Date(edit.editedAt).toLocaleString(language === "en" ? "en-US" : "th-TH")}
-                      </p>
-                    </div>
-                  ))}
-                  {classData.editHistory.length > 3 && (
-                    <p className="text-xs text-gray-500 italic">
-                      {t(`+ ${classData.editHistory.length - 3} more edits`, `+ แก้ไขอีก ${classData.editHistory.length - 3} ครั้ง`)}
-                    </p>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
 
           {/* Footer Actions */}
           <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-3">
             {/* Moderator/Admin Action Buttons for Pending Classes */}
-            {(currentUserRole === "moderator" || currentUserRole === "admin") && classData.status === "pending" && (
-              <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                  {t("Class Actions:", "การจัดการคลาส:")}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={handleApprove}
-                    className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95 transition-all font-medium pulse-gold"
-                  >
-                    <Check className="w-4 h-4" />
-                    {t("Approve", "อนุมัติ")}
-                  </button>
-                  <button
-                    onClick={handleReject}
-                    className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
-                  >
-                    <X className="w-4 h-4" />
-                    {t("Reject", "ปฏิเสธ")}
-                  </button>
+            {(currentUserRole === "moderator" || currentUserRole === "admin") &&
+              classData.status === "pending" && (
+                <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                    {t("Class Actions:", "การจัดการคลาส:")}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={handleApprove}
+                      className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95 transition-all font-medium pulse-gold"
+                    >
+                      <Check className="w-4 h-4" />
+                      {t("Approve", "อนุมัติ")}
+                    </button>
+                    <button
+                      onClick={handleReject}
+                      className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
+                    >
+                      <X className="w-4 h-4" />
+                      {t("Reject", "ปฏิเสธ")}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Moderator/Admin Action Buttons for Acknowledged Classes */}
-            {(currentUserRole === "moderator" || currentUserRole === "admin") && classData.status === "acknowledged" && (
-              <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                  {t("Class Actions:", "การจัดการคลาส:")}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={handleApprove}
-                    className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95 transition-all font-medium"
-                  >
-                    <Check className="w-4 h-4" />
-                    {t("Approve", "อนุมัติ")}
-                  </button>
-                  <button
-                    onClick={handleReject}
-                    className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
-                  >
-                    <X className="w-4 h-4" />
-                    {t("Reject", "ปฏิเสธ")}
-                  </button>
+            {(currentUserRole === "moderator" || currentUserRole === "admin") &&
+              classData.status === "acknowledged" && (
+                <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                    {t("Class Actions:", "การจัดการคลาส:")}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={handleApprove}
+                      className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 active:scale-95 transition-all font-medium"
+                    >
+                      <Check className="w-4 h-4" />
+                      {t("Approve", "อนุมัติ")}
+                    </button>
+                    <button
+                      onClick={handleReject}
+                      className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
+                    >
+                      <X className="w-4 h-4" />
+                      {t("Reject", "ปฏิเสธ")}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Cancel/Postpone Buttons for Teachers */}
-            {currentUserRole === "teacher" && classData.status === "approved" && classData.scheduledDate > Date.now() && !pendingRequest && (
-              <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                  {t("Request Changes:", "ขอเปลี่ยนแปลง:")}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setShowCancelModal(true)}
-                    className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
-                  >
-                    <X className="w-4 h-4" />
-                    {t("Cancel Class", "ยกเลิกคลาส")}
-                  </button>
-                  <button
-                    onClick={() => setShowPostponeModal(true)}
-                    className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 active:scale-95 transition-all font-medium"
-                  >
-                    <Clock className="w-4 h-4" />
-                    {t("Postpone Class", "เลื่อนคลาส")}
-                  </button>
+            {currentUserRole === "teacher" &&
+              classData.status === "approved" &&
+              classData.scheduledDate > Date.now() &&
+              !pendingRequest && (
+                <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                    {t("Request Changes:", "ขอเปลี่ยนแปลง:")}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setShowCancelModal(true)}
+                      className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 active:scale-95 transition-all font-medium"
+                    >
+                      <X className="w-4 h-4" />
+                      {t("Cancel Class", "ยกเลิกคลาส")}
+                    </button>
+                    <button
+                      onClick={() => setShowPostponeModal(true)}
+                      className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 active:scale-95 transition-all font-medium"
+                    >
+                      <Clock className="w-4 h-4" />
+                      {t("Postpone Class", "เลื่อนคลาส")}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Pending Request Notice */}
             {pendingRequest && (
@@ -721,12 +795,14 @@ export function ClassDetailModal({
                   <p className="font-medium text-sm">
                     {t(
                       `${pendingRequest.requestType === "cancel" ? "Cancellation" : "Postponement"} request pending approval`,
-                      `คำขอ${pendingRequest.requestType === "cancel" ? "ยกเลิก" : "เลื่อน"}รอการอนุมัติ`
+                      `คำขอ${pendingRequest.requestType === "cancel" ? "ยกเลิก" : "เลื่อน"}รอการอนุมัติ`,
                     )}
                   </p>
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                  {language === "en" ? pendingRequest.reason : pendingRequest.reasonTh}
+                  {language === "en"
+                    ? pendingRequest.reason
+                    : pendingRequest.reasonTh}
                 </p>
               </div>
             )}
@@ -742,29 +818,36 @@ export function ClassDetailModal({
                 <Edit2 className="w-4 h-4" />
                 {t("Edit Class", "แก้ไขคลาส")}
               </button>
-              {allClasses && allClasses.length > 1 && (currentUserRole === "admin" || currentUserRole === "moderator") && (
-                <button
-                  onClick={() => setShowMergeModal(true)}
-                  className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:scale-95 transition-all font-medium"
-                >
-                  <Users className="w-4 h-4" />
-                  {t("Merge Classes", "รวมคลาส")}
-                </button>
-              )}
-              {(currentUserRole === "admin" ||
-                currentUserRole === "moderator" ||
-                (currentUserRole === "teacher" && classData.teacherId === currentUserId)) && (
+              {allClasses &&
+                allClasses.length > 1 &&
+                (currentUserRole === "admin" ||
+                  currentUserRole === "moderator") && (
                   <button
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-medium"
+                    onClick={() => setShowMergeModal(true)}
+                    className="flex-1 min-w-[140px] flex items-center justify-center gap-1.5 px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 active:scale-95 transition-all font-medium"
                   >
-                    <Trash2 className="w-4 h-4" />
-                    {t("Delete", "ลบ")}
+                    <Users className="w-4 h-4" />
+                    {t("Merge Classes", "รวมคลาส")}
                   </button>
                 )}
-              {recurringSeries && recurringSeries.length > 1 && (currentUserRole === "admin" ||
+              {(currentUserRole === "admin" ||
                 currentUserRole === "moderator" ||
-                (currentUserRole === "teacher" && classData.teacherId === currentUserId)) && (
+                (currentUserRole === "teacher" &&
+                  classData.teacherId === currentUserId)) && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-medium"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {t("Delete", "ลบ")}
+                </button>
+              )}
+              {recurringSeries &&
+                recurringSeries.length > 1 &&
+                (currentUserRole === "admin" ||
+                  currentUserRole === "moderator" ||
+                  (currentUserRole === "teacher" &&
+                    classData.teacherId === currentUserId)) && (
                   <button
                     onClick={() => setShowDeleteSeriesConfirm(true)}
                     className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm bg-red-700 text-white rounded-lg hover:bg-red-800 active:scale-95 transition-all font-medium border-2 border-red-400"
@@ -772,14 +855,15 @@ export function ClassDetailModal({
                     <Trash2 className="w-4 h-4" />
                     {t(
                       `Delete ${recurringSeries.length} Weekly Classes`,
-                      `ลบคลาสรายสัปดาห์ ${recurringSeries.length} คลาส`
+                      `ลบคลาสรายสัปดาห์ ${recurringSeries.length} คลาส`,
                     )}
                   </button>
                 )}
             </div>
           </div>
         </div>
-      </div>            {/* Edit Modal */}
+      </div>{" "}
+      {/* Edit Modal */}
       {showEditModal && (
         <EditClassModal
           classData={classData}
@@ -791,7 +875,6 @@ export function ClassDetailModal({
           }}
         />
       )}
-
       {/* Merge Modal */}
       {showMergeModal && allClasses && (
         <MergeClassesModal
@@ -804,7 +887,6 @@ export function ClassDetailModal({
           }}
         />
       )}
-
       {/* Cancel Request Modal */}
       {showCancelModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
@@ -820,7 +902,7 @@ export function ClassDetailModal({
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               {t(
                 "Please provide a reason for cancelling this class. The moderator will review your request.",
-                "กรุณาระบุเหตุผลในการยกเลิกคลาสนี้ ผู้ดูแลจะพิจารณาคำขอของคุณ"
+                "กรุณาระบุเหตุผลในการยกเลิกคลาสนี้ ผู้ดูแลจะพิจารณาคำขอของคุณ",
               )}
             </p>
             <div className="space-y-4">
@@ -870,7 +952,6 @@ export function ClassDetailModal({
           </div>
         </div>
       )}
-
       {/* Postpone Request Modal */}
       {showPostponeModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
@@ -886,7 +967,7 @@ export function ClassDetailModal({
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               {t(
                 "Select a new date and provide a reason for postponing this class.",
-                "เลือกวันที่ใหม่และระบุเหตุผลในการเลื่อนคลาสนี้"
+                "เลือกวันที่ใหม่และระบุเหตุผลในการเลื่อนคลาสนี้",
               )}
             </p>
             <div className="space-y-4">
@@ -963,7 +1044,6 @@ export function ClassDetailModal({
           </div>
         </div>
       )}
-
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
@@ -979,7 +1059,7 @@ export function ClassDetailModal({
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               {t(
                 "Are you sure you want to delete this class? This action cannot be undone.",
-                "คุณแน่ใจหรือไม่ว่าต้องการลบคลาสนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้"
+                "คุณแน่ใจหรือไม่ว่าต้องการลบคลาสนี้? การดำเนินการนี้ไม่สามารถยกเลิกได้",
               )}
             </p>
             {studentData && (
@@ -990,7 +1070,14 @@ export function ClassDetailModal({
                 <p className="text-xs text-gray-600 dark:text-gray-400">
                   {new Date(classData.scheduledDate).toLocaleString(
                     language === "en" ? "en-US" : "th-TH",
-                    { weekday: "short", year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }
+                    {
+                      weekday: "short",
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    },
                   )}
                 </p>
               </div>
@@ -1012,7 +1099,6 @@ export function ClassDetailModal({
           </div>
         </div>
       )}
-
       {/* Delete Recurring Series Confirmation Modal */}
       {showDeleteSeriesConfirm && recurringSeries && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
@@ -1030,7 +1116,7 @@ export function ClassDetailModal({
               <p className="text-sm text-red-800 dark:text-red-400 font-medium">
                 {t(
                   `⚠️ This will permanently delete ${recurringSeries.length} weekly classes. This action cannot be undone.`,
-                  `⚠️ การดำเนินการนี้จะลบคลาสรายสัปดาห์ ${recurringSeries.length} คลาสอย่างถาวร ไม่สามารถยกเลิกได้`
+                  `⚠️ การดำเนินการนี้จะลบคลาสรายสัปดาห์ ${recurringSeries.length} คลาสอย่างถาวร ไม่สามารถยกเลิกได้`,
                 )}
               </p>
             </div>
@@ -1038,12 +1124,14 @@ export function ClassDetailModal({
             {studentData && (
               <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg mb-4">
                 <p className="text-sm font-medium mb-1">
-                  {t("Student:", "นักเรียน:")} {studentData.firstName} {studentData.lastName}
+                  {t("Student:", "นักเรียน:")} {studentData.firstName}{" "}
+                  {studentData.lastName}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {t("Pattern:", "รูปแบบ:")} {t(
+                  {t("Pattern:", "รูปแบบ:")}{" "}
+                  {t(
                     `Every ${new Date(classData.scheduledDate).toLocaleDateString(language === "en" ? "en-US" : "th-TH", { weekday: "long" })}`,
-                    `ทุกวัน${new Date(classData.scheduledDate).toLocaleDateString("th-TH", { weekday: "long" })}`
+                    `ทุกวัน${new Date(classData.scheduledDate).toLocaleDateString("th-TH", { weekday: "long" })}`,
                   )}
                 </p>
               </div>
@@ -1055,18 +1143,25 @@ export function ClassDetailModal({
               </p>
               <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-3 bg-gray-50 dark:bg-gray-700/30">
                 {recurringSeries.slice(0, 10).map((cls, idx) => (
-                  <div key={cls._id} className="text-sm py-1.5 border-b border-gray-200 dark:border-gray-600 last:border-0">
+                  <div
+                    key={cls._id}
+                    className="text-sm py-1.5 border-b border-gray-200 dark:border-gray-600 last:border-0"
+                  >
                     <span className="font-mono text-xs text-gray-500 dark:text-gray-400 mr-2">
                       {idx + 1}.
                     </span>
                     {new Date(cls.scheduledDate).toLocaleDateString(
                       language === "en" ? "en-US" : "th-TH",
-                      { weekday: "short", year: "numeric", month: "short", day: "numeric" }
-                    )}
-                    {" "}
+                      {
+                        weekday: "short",
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      },
+                    )}{" "}
                     {new Date(cls.scheduledDate).toLocaleTimeString(
                       language === "en" ? "en-US" : "th-TH",
-                      { hour: "2-digit", minute: "2-digit" }
+                      { hour: "2-digit", minute: "2-digit" },
                     )}
                     <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
                       ({cls.status})
@@ -1077,7 +1172,7 @@ export function ClassDetailModal({
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
                     {t(
                       `... and ${recurringSeries.length - 10} more classes`,
-                      `... และอีก ${recurringSeries.length - 10} คลาส`
+                      `... และอีก ${recurringSeries.length - 10} คลาส`,
                     )}
                   </p>
                 )}
@@ -1086,7 +1181,10 @@ export function ClassDetailModal({
 
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2">
-                {t("Reason for deletion (required, minimum 3 characters)", "เหตุผลในการลบ (ต้องระบุ อย่างน้อย 3 ตัวอักษร)")}
+                {t(
+                  "Reason for deletion (required, minimum 3 characters)",
+                  "เหตุผลในการลบ (ต้องระบุ อย่างน้อย 3 ตัวอักษร)",
+                )}
               </label>
               <textarea
                 value={deleteSeriesReason}
@@ -1094,7 +1192,7 @@ export function ClassDetailModal({
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-red-500 dark:bg-gray-700 min-h-[80px]"
                 placeholder={t(
                   "Enter reason for deleting these classes...",
-                  "ระบุเหตุผลในการลบคลาสเหล่านี้..."
+                  "ระบุเหตุผลในการลบคลาสเหล่านี้...",
                 )}
                 required
               />
@@ -1115,13 +1213,15 @@ export function ClassDetailModal({
                 disabled={deleteSeriesReason.trim().length < 3}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {t(`Delete ${recurringSeries.length} Classes`, `ลบ ${recurringSeries.length} คลาส`)}
+                {t(
+                  `Delete ${recurringSeries.length} Classes`,
+                  `ลบ ${recurringSeries.length} คลาส`,
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
-
       {/* Reject Class Modal */}
       {showRejectModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
@@ -1137,7 +1237,7 @@ export function ClassDetailModal({
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               {t(
                 "Please provide a reason for rejecting this class.",
-                "กรุณาระบุเหตุผลในการปฏิเสธคลาสนี้"
+                "กรุณาระบุเหตุผลในการปฏิเสธคลาสนี้",
               )}
             </p>
             <div className="space-y-4">

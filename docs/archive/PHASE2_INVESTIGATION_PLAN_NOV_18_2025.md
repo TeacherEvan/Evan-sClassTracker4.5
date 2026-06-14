@@ -19,7 +19,7 @@
 
 #### 📊 **Console Usage Analysis**
 
-**Total console.* calls in components**: 20 components with console usage
+**Total console.\* calls in components**: 20 components with console usage
 
 **Priority Components** (from original plan):
 
@@ -156,13 +156,13 @@ useKeyboardShortcuts([
   {
     ...COMMON_SHORTCUTS.NEW,
     callback: () => !showForm && setShowForm(true),
-    disabled: showForm
+    disabled: showForm,
   },
   {
     ...COMMON_SHORTCUTS.CLOSE,
     callback: () => showForm && setShowForm(false),
-    disabled: !showForm
-  }
+    disabled: !showForm,
+  },
 ]);
 
 // Add MIN_TOUCH_TARGET to action buttons
@@ -191,26 +191,34 @@ useKeyboardShortcuts([
     key: "ArrowRight",
     description: "Next day",
     descriptionTh: "วันถัดไป",
-    callback: () => {/* Navigate to next day */}
+    callback: () => {
+      /* Navigate to next day */
+    },
   },
   {
     key: "ArrowLeft",
     description: "Previous day",
     descriptionTh: "วันก่อนหน้า",
-    callback: () => {/* Navigate to previous day */}
+    callback: () => {
+      /* Navigate to previous day */
+    },
   },
   {
     key: "ArrowDown",
     description: "Next week",
     descriptionTh: "สัปดาห์ถัดไป",
-    callback: () => {/* Navigate to next week */}
+    callback: () => {
+      /* Navigate to next week */
+    },
   },
   {
     key: "ArrowUp",
     description: "Previous week",
     descriptionTh: "สัปดาห์ก่อนหน้า",
-    callback: () => {/* Navigate to previous week */}
-  }
+    callback: () => {
+      /* Navigate to previous week */
+    },
+  },
 ]);
 
 // Ensure calendar cells are 44px minimum
@@ -225,46 +233,46 @@ useKeyboardShortcuts([
 
 ### Before vs After (Phase 2 Complete)
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| **Console Usage** | 6 calls | 0 calls | -100% ✅ |
-| **Keyboard Shortcuts** | 1 component | 4 components | +300% ✅ |
-| **WCAG Compliance** | 1 component | 4 components | +300% ✅ |
-| **Touch Targets < 44px** | ~20 buttons | 0 buttons | -100% ✅ |
-| **Components with Logger** | 1 | 4 | +300% ✅ |
+| Metric                     | Before      | After        | Change   |
+| -------------------------- | ----------- | ------------ | -------- |
+| **Console Usage**          | 6 calls     | 0 calls      | -100% ✅ |
+| **Keyboard Shortcuts**     | 1 component | 4 components | +300% ✅ |
+| **WCAG Compliance**        | 1 component | 4 components | +300% ✅ |
+| **Touch Targets < 44px**   | ~20 buttons | 0 buttons    | -100% ✅ |
+| **Components with Logger** | 1           | 4            | +300% ✅ |
 
 ### Accessibility Score Improvement
 
-| Component | Before | After |
-|-----------|--------|-------|
-| class-booking.tsx | 75 | 90 ✅ |
-| messaging-hub.tsx | 80 | 88 |
-| student-management.tsx | 78 | 88 |
-| monthly-calendar.tsx | 70 | 85 |
-| **Average** | **75.75** | **87.75** (+12) |
+| Component              | Before    | After           |
+| ---------------------- | --------- | --------------- |
+| class-booking.tsx      | 75        | 90 ✅           |
+| messaging-hub.tsx      | 80        | 88              |
+| student-management.tsx | 78        | 88              |
+| monthly-calendar.tsx   | 70        | 85              |
+| **Average**            | **75.75** | **87.75** (+12) |
 
 ### UX Score Improvement
 
-| Feature | Before | After |
-|---------|--------|-------|
-| Keyboard Navigation | Limited | Comprehensive ✅ |
-| Error Handling | console.error | Structured logging ✅ |
-| Touch Targets | Inconsistent | 44px minimum ✅ |
-| Screen Reader Support | Partial | Full ARIA ✅ |
-| **Overall UX** | **87/100** | **94/100** (+7) |
+| Feature               | Before        | After                 |
+| --------------------- | ------------- | --------------------- |
+| Keyboard Navigation   | Limited       | Comprehensive ✅      |
+| Error Handling        | console.error | Structured logging ✅ |
+| Touch Targets         | Inconsistent  | 44px minimum ✅       |
+| Screen Reader Support | Partial       | Full ARIA ✅          |
+| **Overall UX**        | **87/100**    | **94/100** (+7)       |
 
 ---
 
 ## ⏱️ TIME BREAKDOWN
 
-| Task | Estimated | Critical Path |
-|------|-----------|---------------|
-| Fix Convex types | 15 min | Yes ✅ |
-| messaging-hub.tsx | 30 min | No |
-| student-management.tsx | 1 hour | No |
-| monthly-calendar.tsx | 1.5 hours | No |
-| Build & Test | 1 hour | Yes ✅ |
-| **Total** | **4 hours** | |
+| Task                   | Estimated   | Critical Path |
+| ---------------------- | ----------- | ------------- |
+| Fix Convex types       | 15 min      | Yes ✅        |
+| messaging-hub.tsx      | 30 min      | No            |
+| student-management.tsx | 1 hour      | No            |
+| monthly-calendar.tsx   | 1.5 hours   | No            |
+| Build & Test           | 1 hour      | Yes ✅        |
+| **Total**              | **4 hours** |               |
 
 **Critical Path**: 1h 15min (Fix types → Build & Test)  
 **Parallel Work**: 3h (messaging, student, calendar can be done sequentially)
@@ -281,7 +289,7 @@ useKeyboardShortcuts([
 
 ### Code Quality
 
-- [ ] 0 console.* in updated components
+- [ ] 0 console.\* in updated components
 - [ ] All status badges have icons + text + color
 - [ ] All buttons have MIN_TOUCH_TARGET
 - [ ] All keyboard shortcuts documented
@@ -370,7 +378,7 @@ Phase 2 is complete when:
 2. ✅ Build passes with 0 TypeScript errors
 3. ✅ ESLint warnings < 5
 4. ✅ All keyboard shortcuts functional
-5. ✅ All console.* replaced with logger
+5. ✅ All console.\* replaced with logger
 6. ✅ All status indicators accessible (icon + text)
 7. ✅ All touch targets >= 44px
 8. ✅ Documentation updated

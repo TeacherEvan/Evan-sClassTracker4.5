@@ -55,10 +55,13 @@ export default [
       "react-hooks": reactHooksPlugin,
     },
     rules: {
-      "@typescript-eslint/no-unused-vars": ["warn", { 
-        argsIgnorePattern: "^_",
-        varsIgnorePattern: "^_" 
-      }],
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
       "@typescript-eslint/no-explicit-any": "warn",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
@@ -110,17 +113,12 @@ export const organizeImports = (fileContent: string): string => {
 };
 
 // Component extraction
-export const extractComponent = (
-  fileContent: string,
-  componentName: string
-): { component: string; imports: string[] } => {
+export const extractComponent = (fileContent: string, componentName: string): { component: string; imports: string[] } => {
   // Extract reusable components with dependency tracking
 };
 
 // Validation standardization
-export const createValidator = <T extends Record<string, unknown>>(
-  schema: ValidationSchema<T>
-): ((data: T) => ValidationResult<T>) => {
+export const createValidator = <T extends Record<string, unknown>>(schema: ValidationSchema<T>): ((data: T) => ValidationResult<T>) => {
   // Type-safe validation with bilingual error messages
 };
 ```
@@ -195,21 +193,14 @@ if (!result.isValid) {
 
 ```typescript
 // Before: Instant search (re-renders on every keystroke)
-const filteredStudents = students.filter(s => 
-  s.name.includes(searchTerm)
-);
+const filteredStudents = students.filter((s) => s.name.includes(searchTerm));
 
 // After: Debounced search + memoization
-const debouncedSearch = useMemo(
-  () => debounce((term: string) => setSearchTerm(term), 300),
-  []
-);
+const debouncedSearch = useMemo(() => debounce((term: string) => setSearchTerm(term), 300), []);
 
 const filteredStudents = useMemo(() => {
   if (!debouncedSearchTerm) return students;
-  return students.filter(s => 
-    s.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-  );
+  return students.filter((s) => s.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
 }, [students, debouncedSearchTerm]);
 ```
 
@@ -231,7 +222,7 @@ const filteredStudents = useMemo(() => {
 const StudentCard = ({ student, onSelect }) => { ... };
 
 // After: Memoized student cards
-const StudentCard = React.memo(({ student, onSelect }) => { ... }, 
+const StudentCard = React.memo(({ student, onSelect }) => { ... },
   (prev, next) => prev.student._id === next.student._id
 );
 
@@ -269,10 +260,8 @@ const hasConflicts = () => {
 // After: O(n) with memoization
 const conflictMap = useMemo(() => {
   const map = new Map<string, boolean>();
-  bookings.forEach(booking => {
-    const overlapping = bookings.find(other => 
-      other._id !== booking._id && isOverlapping(booking, other)
-    );
+  bookings.forEach((booking) => {
+    const overlapping = bookings.find((other) => other._id !== booking._id && isOverlapping(booking, other));
     map.set(booking._id, !!overlapping);
   });
   return map;
@@ -360,7 +349,7 @@ export const FormSkeleton = () => (
     {language === "th" ? "เกิดข้อผิดพลาด" : "An error occurred"}
   </h2>
   <p className="text-gray-600">{error.message}</p>
-  
+
   {/* Recovery actions */}
   <div className="flex gap-4">
     <button onClick={resetError} className="btn-primary">
@@ -370,7 +359,7 @@ export const FormSkeleton = () => (
       {language === "th" ? "กลับหน้าหลัก" : "Go Home"}
     </button>
   </div>
-  
+
   {/* Show stack trace in dev mode */}
   {process.env.NODE_ENV === "development" && (
     <details className="mt-4">
@@ -460,11 +449,11 @@ const errorMessages = {
 **Component:** `components/ui/empty-states.tsx` (NEW - 98 lines)
 
 ```typescript
-export const EmptyState = ({ 
-  icon: Icon, 
-  title, 
-  description, 
-  action 
+export const EmptyState = ({
+  icon: Icon,
+  title,
+  description,
+  action
 }: EmptyStateProps) => (
   <div className="empty-state">
     <Icon className="w-16 h-16 text-gray-400" />
@@ -482,8 +471,8 @@ export const EmptyState = ({
 <EmptyState
   icon={BookOpen}
   title={language === "th" ? "ไม่มีคลาสเรียน" : "No Classes"}
-  description={language === "th" 
-    ? "คุณยังไม่มีคลาสเรียน เริ่มต้นโดยการสร้างคลาสแรกของคุณ" 
+  description={language === "th"
+    ? "คุณยังไม่มีคลาสเรียน เริ่มต้นโดยการสร้างคลาสแรกของคุณ"
     : "You don't have any classes yet. Get started by creating your first class."
   }
   action={{
@@ -518,7 +507,7 @@ interface StudentCardProps {
 export const StudentCard = React.memo(
   ({ student, isSelected, onSelect }: StudentCardProps) => {
     return (
-      <div 
+      <div
         className={`student-card ${isSelected ? "selected" : ""}`}
         onClick={() => onSelect(student._id)}
       >
@@ -529,7 +518,7 @@ export const StudentCard = React.memo(
     );
   },
   // Custom comparison: only re-render if student ID or selection changes
-  (prev, next) => 
+  (prev, next) =>
     prev.student._id === next.student._id &&
     prev.isSelected === next.isSelected
 );
@@ -548,20 +537,13 @@ export const StudentCard = React.memo(
 
 ```typescript
 // Before: O(n²) on every render (~50ms for 100 bookings)
-const conflicts = bookings.filter(booking => 
-  bookings.some(other => 
-    other._id !== booking._id && 
-    isTimeOverlapping(booking, other)
-  )
-);
+const conflicts = bookings.filter((booking) => bookings.some((other) => other._id !== booking._id && isTimeOverlapping(booking, other)));
 
 // After: O(n) with memoization (~2ms for 100 bookings)
 const conflictMap = useMemo(() => {
   const map = new Map<string, string[]>();
-  const sorted = [...bookings].sort((a, b) => 
-    a.startTime.getTime() - b.startTime.getTime()
-  );
-  
+  const sorted = [...bookings].sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+
   for (let i = 0; i < sorted.length; i++) {
     const conflicts: string[] = [];
     for (let j = i + 1; j < sorted.length; j++) {
@@ -594,9 +576,9 @@ const conflictMap = useMemo(() => {
 ```typescript
 // Before: New function on every render
 const handleStudentSelect = (studentId: string) => {
-  setSelectedStudents(prev => {
+  setSelectedStudents((prev) => {
     if (prev.includes(studentId)) {
-      return prev.filter(id => id !== studentId);
+      return prev.filter((id) => id !== studentId);
     }
     return [...prev, studentId];
   });
@@ -604,9 +586,9 @@ const handleStudentSelect = (studentId: string) => {
 
 // After: Stable function reference
 const handleStudentSelect = useCallback((studentId: string) => {
-  setSelectedStudents(prev => {
+  setSelectedStudents((prev) => {
     if (prev.includes(studentId)) {
-      return prev.filter(id => id !== studentId);
+      return prev.filter((id) => id !== studentId);
     }
     return [...prev, studentId];
   });
@@ -687,15 +669,15 @@ const StudentDetailModal = lazy(() => import("./student-detail-modal"));
 
 ### Before/After Comparison
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| **Initial Bundle Size** | 2.4MB | 1.8MB | 25% smaller |
-| **First Contentful Paint** | 1.8s | 1.2s | 33% faster |
-| **Time to Interactive** | 3.2s | 2.1s | 34% faster |
-| **Search Re-renders** | 45/sec | 3/sec | 93% reduction |
-| **Conflict Detection** | 50ms | 2ms | 96% faster |
-| **Form Validation** | 15ms | 5ms | 67% faster |
-| **Modal Load Time** | 450ms | 150ms | 67% faster |
+| Metric                     | Before | After | Improvement   |
+| -------------------------- | ------ | ----- | ------------- |
+| **Initial Bundle Size**    | 2.4MB  | 1.8MB | 25% smaller   |
+| **First Contentful Paint** | 1.8s   | 1.2s  | 33% faster    |
+| **Time to Interactive**    | 3.2s   | 2.1s  | 34% faster    |
+| **Search Re-renders**      | 45/sec | 3/sec | 93% reduction |
+| **Conflict Detection**     | 50ms   | 2ms   | 96% faster    |
+| **Form Validation**        | 15ms   | 5ms   | 67% faster    |
+| **Modal Load Time**        | 450ms  | 150ms | 67% faster    |
 
 ### Component-Specific Benchmarks
 
@@ -730,7 +712,7 @@ npm run build
 **Result:** ✅ **SUCCESS** (52 seconds)
 
 - 0 TypeScript errors
-- 0 ESLint errors  
+- 0 ESLint errors
 - 0 Build warnings
 - All imports resolved
 - All types valid
@@ -793,23 +775,13 @@ npm run test:e2e
 7. `components/monthly-calendar.tsx` - Unused imports removed
 8. `components/student-management.tsx` - Unused imports removed
 
-**UI Components:**
-9. `components/ui/toast.tsx` - Enhanced notifications
-10. `components/error-boundary.tsx` - Better error handling
+**UI Components:** 9. `components/ui/toast.tsx` - Enhanced notifications 10. `components/error-boundary.tsx` - Better error handling
 
-**Utilities:**
-11. `lib/validation.ts` - Standardized validators
-12. `lib/performance.ts` - Performance helpers
+**Utilities:** 11. `lib/validation.ts` - Standardized validators 12. `lib/performance.ts` - Performance helpers
 
-**Configuration:**
-13. `package.json` - ESLint/Prettier dependencies
-14. `tsconfig.json` - Strict type checking enabled
-15. `.vscode/settings.json` - Auto-format on save
+**Configuration:** 13. `package.json` - ESLint/Prettier dependencies 14. `tsconfig.json` - Strict type checking enabled 15. `.vscode/settings.json` - Auto-format on save
 
-**Documentation:**
-16. `CODE_QUALITY_USER_FRIENDLINESS_AUDIT_NOV_18_2025.md` - Full audit
-17. `CODE_QUALITY_SUMMARY_NOV_18_2025.md` - Phase summaries
-18. `IMPLEMENTATION_SUMMARY_BULK_EDIT_ENHANCEMENTS_NOV_19_2025.md` - Enhancements
+**Documentation:** 16. `CODE_QUALITY_USER_FRIENDLINESS_AUDIT_NOV_18_2025.md` - Full audit 17. `CODE_QUALITY_SUMMARY_NOV_18_2025.md` - Phase summaries 18. `IMPLEMENTATION_SUMMARY_BULK_EDIT_ENHANCEMENTS_NOV_19_2025.md` - Enhancements
 
 ---
 

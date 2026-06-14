@@ -73,7 +73,7 @@
    </span>
 
    // After: Accessible with icon + text + ARIA
-   <span 
+   <span
      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${MIN_TOUCH_TARGET} ${getStatusBadge(classItem.status)}`}
      role="status"
      aria-label={getStatusText(classItem.status)}
@@ -148,11 +148,11 @@ Type error: Property 'files' does not exist
 
 ### WCAG 2.1 Compliance
 
-| Criterion | Before | After |
-|-----------|--------|-------|
-| **1.4.1 Use of Color** | ❌ Fail | ✅ Pass |
-| **2.1.1 Keyboard** | ❌ Fail | ✅ Pass |
-| **2.5.5 Target Size** | ❌ Fail | ✅ Pass |
+| Criterion                 | Before  | After   |
+| ------------------------- | ------- | ------- |
+| **1.4.1 Use of Color**    | ❌ Fail | ✅ Pass |
+| **2.1.1 Keyboard**        | ❌ Fail | ✅ Pass |
+| **2.5.5 Target Size**     | ❌ Fail | ✅ Pass |
 | **4.1.3 Status Messages** | ❌ Fail | ✅ Pass |
 
 **Result**: class-booking.tsx now WCAG 2.1 Level AA compliant for status indicators
@@ -195,12 +195,7 @@ Type error: Property 'files' does not exist
 
 ```typescript
 import { logger } from "@/lib/logger";
-import { 
-  getStatusAriaLabel, 
-  getStatusBadgeClasses, 
-  MIN_TOUCH_TARGET, 
-  FOCUS_RING 
-} from "@/lib/accessibility-utils";
+import { getStatusAriaLabel, getStatusBadgeClasses, MIN_TOUCH_TARGET, FOCUS_RING } from "@/lib/accessibility-utils";
 import { useKeyboardShortcuts, COMMON_SHORTCUTS } from "@/lib/use-keyboard-shortcuts";
 import { Check, Clock, Info, X } from "lucide-react";
 ```
@@ -222,14 +217,14 @@ import { Check, Clock, Info, X } from "lucide-react";
 
 ## ✅ Success Metrics
 
-| Metric | Target | Achieved | Status |
-|--------|--------|----------|--------|
-| Imports added | 4 utilities | 4 utilities | ✅ |
-| Keyboard shortcuts | 2 minimum | 2 (Ctrl+N, Escape) | ✅ |
-| Status badges accessible | 100% | 100% | ✅ |
-| TypeScript errors | 0 | 0 | ✅ |
-| Build time | < 120s | 81s | ✅ |
-| WCAG compliance | Level AA | Level AA | ✅ |
+| Metric                   | Target      | Achieved           | Status |
+| ------------------------ | ----------- | ------------------ | ------ |
+| Imports added            | 4 utilities | 4 utilities        | ✅     |
+| Keyboard shortcuts       | 2 minimum   | 2 (Ctrl+N, Escape) | ✅     |
+| Status badges accessible | 100%        | 100%               | ✅     |
+| TypeScript errors        | 0           | 0                  | ✅     |
+| Build time               | < 120s      | 81s                | ✅     |
+| WCAG compliance          | Level AA    | Level AA           | ✅     |
 
 ---
 
@@ -269,9 +264,11 @@ import { Check, Clock, Info, X } from "lucide-react";
 ### Status Badge Accessibility
 
 **Screen Reader Before**:
+
 > "Green badge" (no context)
 
 **Screen Reader After**:
+
 > "Status: Approved" (clear context)
 
 **Visual Before**:
@@ -320,7 +317,7 @@ import { Check, Clock, Info, X } from "lucide-react";
 
 **Warning**: `logger` and `FOCUS_RING` defined but unused  
 **Impact**: ESLint warnings only  
-**Solution**: Will be used in Phase 3 (console.* replacement)  
+**Solution**: Will be used in Phase 3 (console.\* replacement)  
 **Status**: Acceptable - prepared for next phase
 
 ### Issue 3: LogLevel Type ⚠️

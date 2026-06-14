@@ -16,13 +16,13 @@ interface State {
 
 /**
  * LazyErrorBoundary - Error boundary specifically for lazy-loaded components
- * 
+ *
  * Provides graceful fallback UI when lazy-loaded chunks fail to load.
  * Common causes:
  * - Network failures during chunk download
  * - Deployment updates while user is active (old chunks deleted)
  * - Browser cache issues
- * 
+ *
  * Recovery options:
  * - Reload the page (clears cache and fetches new chunks)
  * - Retry loading the component
@@ -40,15 +40,22 @@ export class LazyErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: unknown) {
     console.error("LazyErrorBoundary caught error:", {
-      component: this.props.componentName || 'Unknown',
+      component: this.props.componentName || "Unknown",
       error,
       errorInfo,
     });
 
     // Report to error monitoring service if available
-    if (typeof window !== 'undefined' && 'reportError' in window && typeof (window as Window & { reportError?: (details: unknown) => void }).reportError === 'function') {
-      (window as Window & { reportError: (details: unknown) => void }).reportError({
-        type: 'lazy-component-load-failure',
+    if (
+      typeof window !== "undefined" &&
+      "reportError" in window &&
+      typeof (window as Window & { reportError?: (details: unknown) => void })
+        .reportError === "function"
+    ) {
+      (
+        window as Window & { reportError: (details: unknown) => void }
+      ).reportError({
+        type: "lazy-component-load-failure",
         component: this.props.componentName,
         error: error.message,
         stack: error.stack,
@@ -65,11 +72,13 @@ export class LazyErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      return <LazyErrorFallback 
-        error={this.state.error} 
-        componentName={this.props.componentName}
-        onReset={this.handleReset}
-      />;
+      return (
+        <LazyErrorFallback
+          error={this.state.error}
+          componentName={this.props.componentName}
+          onReset={this.handleReset}
+        />
+      );
     }
 
     return this.props.children;
@@ -79,20 +88,21 @@ export class LazyErrorBoundary extends Component<Props, State> {
 /**
  * LazyErrorFallback - Premium fallback UI for lazy loading failures
  */
-function LazyErrorFallback({ 
-  error, 
+function LazyErrorFallback({
+  error,
   componentName,
-  onReset 
-}: { 
-  error: Error | null; 
+  onReset,
+}: {
+  error: Error | null;
   componentName?: string;
   onReset: () => void;
 }) {
   const { t } = useLanguage();
 
-  const isChunkLoadError = error?.message?.includes('Loading chunk') || 
-                          error?.message?.includes('Failed to fetch') ||
-                          error?.name === 'ChunkLoadError';
+  const isChunkLoadError =
+    error?.message?.includes("Loading chunk") ||
+    error?.message?.includes("Failed to fetch") ||
+    error?.name === "ChunkLoadError";
 
   return (
     <div className="flex items-center justify-center h-full min-h-[400px] p-8">
@@ -110,10 +120,9 @@ function LazyErrorFallback({
         {/* Error Message */}
         <div className="text-center space-y-4">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {isChunkLoadError 
+            {isChunkLoadError
               ? t("Unable to Load Component", "ไม่สามารถโหลดส่วนประกอบ")
-              : t("Component Error", "ข้อผิดพลาดส่วนประกอบ")
-            }
+              : t("Component Error", "ข้อผิดพลาดส่วนประกอบ")}
           </h2>
 
           {componentName && (
@@ -127,14 +136,14 @@ function LazyErrorFallback({
               <>
                 {t(
                   "This usually happens when the app was updated while you were using it. Reloading the page will fix the issue.",
-                  "สิ่งนี้มักเกิดขึ้นเมื่อแอปได้รับการอัปเดตในขณะที่คุณกำลังใช้งาน การโหลดหน้าใหม่จะแก้ไขปัญหา"
+                  "สิ่งนี้มักเกิดขึ้นเมื่อแอปได้รับการอัปเดตในขณะที่คุณกำลังใช้งาน การโหลดหน้าใหม่จะแก้ไขปัญหา",
                 )}
               </>
             ) : (
               <>
                 {t(
                   "An unexpected error occurred while loading this feature.",
-                  "เกิดข้อผิดพลาดที่ไม่คาดคิดขึ้นขณะโหลดฟีเจอร์นี้"
+                  "เกิดข้อผิดพลาดที่ไม่คาดคิดขึ้นขณะโหลดฟีเจอร์นี้",
                 )}
               </>
             )}
@@ -182,7 +191,7 @@ function LazyErrorFallback({
 
 /**
  * withLazyErrorBoundary - HOC to wrap lazy components with error boundary
- * 
+ *
  * Usage:
  * ```tsx
  * const LazyComponent = lazy(() => import('./Component'));
@@ -191,7 +200,7 @@ function LazyErrorFallback({
  */
 export function withLazyErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  componentName?: string
+  componentName?: string,
 ) {
   return function WrappedComponent(props: P) {
     return (

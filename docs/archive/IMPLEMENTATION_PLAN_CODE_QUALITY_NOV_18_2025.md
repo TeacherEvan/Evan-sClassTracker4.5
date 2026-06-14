@@ -62,8 +62,8 @@
 **Changes**:
 
 1. ✅ Create `lib/logger.ts` utility
-2. ✅ Replace console.* with logger in components
-3. ✅ Keep console.* in scripts (acceptable)
+2. ✅ Replace console.\* with logger in components
+3. ✅ Keep console.\* in scripts (acceptable)
 4. ✅ Add NODE_ENV checks for dev-only logs
 
 **Implementation**:
@@ -72,7 +72,7 @@
 // lib/logger.ts
 export const logger = {
   debug: (message: string, ...args: any[]) => {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       console.log(`[DEBUG] ${message}`, ...args);
     }
   },
@@ -84,7 +84,7 @@ export const logger = {
   },
   error: (message: string, ...args: any[]) => {
     console.error(`[ERROR] ${message}`, ...args);
-  }
+  },
 };
 ```
 
@@ -120,8 +120,8 @@ toast.show({
   action: {
     label: "Undo",
     labelTh: "เลิกทำ",
-    onClick: () => restoreClass(classId)
-  }
+    onClick: () => restoreClass(classId),
+  },
 });
 ```
 
@@ -199,15 +199,9 @@ const ClassAnalytics = dynamic(() => import("./class-analytics"), {
 ```typescript
 import { useMemo } from "react";
 
-const conflicts = useMemo(() => 
-  detectConflicts(allClasses, currentClass),
-  [allClasses, currentClass]
-);
+const conflicts = useMemo(() => detectConflicts(allClasses, currentClass), [allClasses, currentClass]);
 
-const filteredClasses = useMemo(() => 
-  classes?.filter(cls => matchesFilters(cls, filters)),
-  [classes, filters]
-);
+const filteredClasses = useMemo(() => classes?.filter((cls) => matchesFilters(cls, filters)), [classes, filters]);
 ```
 
 **Estimated Time**: 3 hours  
@@ -273,14 +267,11 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       for (const shortcut of shortcuts) {
-        const ctrlMatch = shortcut.ctrl ? (e.ctrlKey || e.metaKey) : true;
+        const ctrlMatch = shortcut.ctrl ? e.ctrlKey || e.metaKey : true;
         const shiftMatch = shortcut.shift ? e.shiftKey : true;
         const altMatch = shortcut.alt ? e.altKey : true;
-        
-        if (
-          e.key.toLowerCase() === shortcut.key.toLowerCase() &&
-          ctrlMatch && shiftMatch && altMatch
-        ) {
+
+        if (e.key.toLowerCase() === shortcut.key.toLowerCase() && ctrlMatch && shiftMatch && altMatch) {
           e.preventDefault();
           shortcut.callback();
           break;
@@ -316,15 +307,15 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
 
 ### Expected Outcomes
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| **Overall Grade** | A (90/100) | A+ (95/100) | +5 |
-| **UX Score** | 87/100 | 95/100 | +8 |
-| **Accessibility** | 75/100 | 90/100 | +15 |
-| **Performance** | 93/100 | 98/100 | +5 |
-| **Maintainability** | 82/100 | 85/100 | +3 |
-| **Bundle Size** | ~850KB | ~650KB | -200KB |
-| **Initial Load** | 2.1s | 1.6s | -24% |
+| Metric              | Before     | After       | Change |
+| ------------------- | ---------- | ----------- | ------ |
+| **Overall Grade**   | A (90/100) | A+ (95/100) | +5     |
+| **UX Score**        | 87/100     | 95/100      | +8     |
+| **Accessibility**   | 75/100     | 90/100      | +15    |
+| **Performance**     | 93/100     | 98/100      | +5     |
+| **Maintainability** | 82/100     | 85/100      | +3     |
+| **Bundle Size**     | ~850KB     | ~650KB      | -200KB |
+| **Initial Load**    | 2.1s       | 1.6s        | -24%   |
 
 ---
 
@@ -347,7 +338,7 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
 ### Day 3 (6 hours)
 
 - [ ] Create logger utility
-- [ ] Replace console.* in 15 components
+- [ ] Replace console.\* in 15 components
 - [ ] Extend toast for undo actions
 - [ ] Implement undo for class deletion
 
@@ -385,7 +376,7 @@ export function useKeyboardShortcuts(shortcuts: ShortcutConfig[]) {
 
 1. ✅ All WCAG 2.1 Level AA accessibility issues resolved
 2. ✅ Keyboard navigation works for all critical paths
-3. ✅ No console.* in production components (except error boundaries)
+3. ✅ No console.\* in production components (except error boundaries)
 4. ✅ Undo mechanism works for all destructive actions
 5. ✅ Bulk actions UI complete and tested
 6. ✅ Bundle size reduced by >150KB

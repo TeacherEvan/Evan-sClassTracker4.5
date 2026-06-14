@@ -61,7 +61,7 @@ mkdir docs/archive
 - `CONTACT_ADMIN_NOTIFICATION_WINDOW.md`
 - `CONTACT_ADMIN_QUICK_START.md`
 - `CONTACT_ADMIN_UI_VISUAL_GUIDE.md`
-**Delete after merge**: All 3 source files
+  **Delete after merge**: All 3 source files
 
 #### Merge 2: Deployment (2 → 1)
 
@@ -70,7 +70,7 @@ mkdir docs/archive
 
 - `DEPLOYMENT.md`
 - `DEPLOYMENT_CHECKLIST.md`
-**Delete after merge**: Both source files
+  **Delete after merge**: Both source files
 
 #### Merge 3: Security Reviews (4 → 1)
 
@@ -81,7 +81,7 @@ mkdir docs/archive
 - `SECURITY_REVIEW_BULK_DELETION.md`
 - `SECURITY_REVIEW_SANGSOM_IMPORT.md`
 - `SECURITY_ENHANCEMENTS_OCT_23_2025.md`
-**Delete after merge**: All 4 source files
+  **Delete after merge**: All 4 source files
 
 #### Merge 4: UI/UX Design (2 → 1)
 
@@ -90,8 +90,8 @@ mkdir docs/archive
 
 - `UI_FLOW_DIAGRAMS.md`
 - `VISUAL_UI_MOCKUP.md`
-**Keep separate**: `MOBILE_UI_GUIDE.md` (device-specific)
-**Delete after merge**: Both source files
+  **Keep separate**: `MOBILE_UI_GUIDE.md` (device-specific)
+  **Delete after merge**: Both source files
 
 #### Merge 5: Performance (2 → enhanced existing)
 
@@ -100,7 +100,7 @@ mkdir docs/archive
 
 - `OPTIMIZATION_ANALYSIS_2025.md`
 - `PENDING_OPTIMIZATIONS.md`
-**Delete after merge**: Both source files
+  **Delete after merge**: Both source files
 
 #### Merge 6: System Overview into Architecture
 

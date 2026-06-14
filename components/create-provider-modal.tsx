@@ -15,13 +15,19 @@ interface CreateProviderModalProps {
   onCreated: (providerId: Id<"providers">) => void;
 }
 
-export function CreateProviderModal({ userId, onClose, onCreated }: CreateProviderModalProps) {
+export function CreateProviderModal({
+  userId,
+  onClose,
+  onCreated,
+}: CreateProviderModalProps) {
   const { t } = useLanguage();
   const createProvider = useMutation(api.providers.create);
 
   const [name, setName] = useState("");
   const [nameTh, setNameTh] = useState("");
-  const [category, setCategory] = useState<"personal" | "private" | "language_school" | "educational_camp">("personal");
+  const [category, setCategory] = useState<
+    "personal" | "private" | "language_school" | "educational_camp"
+  >("personal");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -31,7 +37,7 @@ export function CreateProviderModal({ userId, onClose, onCreated }: CreateProvid
     if (!name.trim() && !nameTh.trim()) {
       toast.error(
         "Please provide provider name in at least one language",
-        "กรุณากรอกชื่อผู้ให้บริการในอย่างน้อยหนึ่งภาษา"
+        "กรุณากรอกชื่อผู้ให้บริการในอย่างน้อยหนึ่งภาษา",
       );
       return;
     }
@@ -48,7 +54,7 @@ export function CreateProviderModal({ userId, onClose, onCreated }: CreateProvid
 
       toast.success(
         "Provider created successfully!",
-        "สร้างผู้ให้บริการสำเร็จ!"
+        "สร้างผู้ให้บริการสำเร็จ!",
       );
 
       onCreated(providerId);
@@ -65,7 +71,7 @@ export function CreateProviderModal({ userId, onClose, onCreated }: CreateProvid
           errorFunction: "handleSubmit",
           userAction: "Attempted to create provider",
           stackTrace: error instanceof Error ? error.stack : String(error),
-        }
+        },
       );
     } finally {
       setIsSubmitting(false);
@@ -95,11 +101,15 @@ export function CreateProviderModal({ userId, onClose, onCreated }: CreateProvid
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="overflow-y-auto flex-grow p-4 md:p-6 space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="overflow-y-auto flex-grow p-4 md:p-6 space-y-6"
+        >
           {/* Provider Category */}
           <div className="space-y-2">
             <label className="block font-medium text-gray-900 dark:text-gray-100">
-              {t("Provider Category", "ประเภทผู้ให้บริการ")} <span className="text-red-500">*</span>
+              {t("Provider Category", "ประเภทผู้ให้บริการ")}{" "}
+              <span className="text-red-500">*</span>
             </label>
             <select
               value={category}
@@ -108,35 +118,51 @@ export function CreateProviderModal({ userId, onClose, onCreated }: CreateProvid
               required
             >
               <option value="personal">
-                {t("Personal - Private tutoring students", "ส่วนตัว - นักเรียนกวดวิชาส่วนตัว")}
+                {t(
+                  "Personal - Private tutoring students",
+                  "ส่วนตัว - นักเรียนกวดวิชาส่วนตัว",
+                )}
               </option>
               <option value="private">
-                {t("Private - Private tutoring company", "เอกชน - บริษัทกวดวิชาเอกชน")}
+                {t(
+                  "Private - Private tutoring company",
+                  "เอกชน - บริษัทกวดวิชาเอกชน",
+                )}
               </option>
               <option value="language_school">
-                {t("Language School - Language learning centers", "โรงเรียนภาษา - ศูนย์เรียนภาษา")}
+                {t(
+                  "Language School - Language learning centers",
+                  "โรงเรียนภาษา - ศูนย์เรียนภาษา",
+                )}
               </option>
               <option value="educational_camp">
-                {t("Educational Camp - Workshops/summer camps", "ค่ายการศึกษา - เวิร์กช็อป/ค่ายฤดูร้อน")}
+                {t(
+                  "Educational Camp - Workshops/summer camps",
+                  "ค่ายการศึกษา - เวิร์กช็อป/ค่ายฤดูร้อน",
+                )}
               </option>
             </select>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              {category === "personal" && t(
-                "For your own private tutoring students",
-                "สำหรับนักเรียนกวดวิชาส่วนตัวของคุณเอง"
-              )}
-              {category === "private" && t(
-                "For private tutoring companies you work with",
-                "สำหรับบริษัทกวดวิชาเอกชนที่คุณทำงานด้วย"
-              )}
-              {category === "language_school" && t(
-                "For language schools like British Council, Wall Street English",
-                "สำหรับโรงเรียนภาษาเช่น British Council, Wall Street English"
-              )}
-              {category === "educational_camp" && t(
-                "For workshops, summer camps, or special programs",
-                "สำหรับเวิร์กช็อป ค่ายฤดูร้อน หรือโปรแกรมพิเศษ"
-              )}
+              {category === "personal" &&
+                t(
+                  "For your own private tutoring students",
+                  "สำหรับนักเรียนกวดวิชาส่วนตัวของคุณเอง",
+                )}
+              {category === "private" &&
+                t(
+                  "For private tutoring companies you work with",
+                  "สำหรับบริษัทกวดวิชาเอกชนที่คุณทำงานด้วย",
+                )}
+              {category === "language_school" &&
+                t(
+                  "For language schools like British Council, Wall Street English",
+                  "สำหรับโรงเรียนภาษาเช่น British Council, Wall Street English",
+                )}
+              {category === "educational_camp" &&
+                t(
+                  "For workshops, summer camps, or special programs",
+                  "สำหรับเวิร์กช็อป ค่ายฤดูร้อน หรือโปรแกรมพิเศษ",
+                )}
             </p>
           </div>
 
@@ -160,7 +186,7 @@ export function CreateProviderModal({ userId, onClose, onCreated }: CreateProvid
               <strong>{t("Note:", "หมายเหตุ:")}</strong>{" "}
               {t(
                 "Providers are used to organize classes outside of traditional schools. You can create multiple providers for different contexts.",
-                "ผู้ให้บริการใช้สำหรับจัดระเบียบชั้นเรียนนอกโรงเรียนแบบดั้งเดิม คุณสามารถสร้างผู้ให้บริการหลายรายสำหรับบริบทที่แตกต่างกัน"
+                "ผู้ให้บริการใช้สำหรับจัดระเบียบชั้นเรียนนอกโรงเรียนแบบดั้งเดิม คุณสามารถสร้างผู้ให้บริการหลายรายสำหรับบริบทที่แตกต่างกัน",
               )}
             </p>
           </div>

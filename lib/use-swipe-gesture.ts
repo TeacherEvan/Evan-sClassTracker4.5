@@ -1,6 +1,6 @@
 /**
  * Swipe Gesture Hook
- * 
+ *
  * Detects swipe gestures (left/right/up/down) on touch devices
  * Usage: const swipeHandlers = useSwipeGesture({ onSwipeLeft, onSwipeRight });
  */
@@ -85,8 +85,12 @@ export function useSwipeGesture(options: SwipeGestureOptions = {}) {
     // Only add listeners on mobile devices
     const isMobile = window.innerWidth < 768;
     if (isMobile) {
-      document.addEventListener("touchstart", handleTouchStart, { passive: true });
-      document.addEventListener("touchmove", handleTouchMove, { passive: !preventDefaultTouchMove });
+      document.addEventListener("touchstart", handleTouchStart, {
+        passive: true,
+      });
+      document.addEventListener("touchmove", handleTouchMove, {
+        passive: !preventDefaultTouchMove,
+      });
       document.addEventListener("touchend", handleTouchEnd, { passive: true });
     }
 
@@ -95,7 +99,14 @@ export function useSwipeGesture(options: SwipeGestureOptions = {}) {
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [onSwipeLeft, onSwipeRight, onSwipeUp, onSwipeDown, threshold, preventDefaultTouchMove]);
+  }, [
+    onSwipeLeft,
+    onSwipeRight,
+    onSwipeUp,
+    onSwipeDown,
+    threshold,
+    preventDefaultTouchMove,
+  ]);
 
   return {
     touchStartX: touchStartX.current,

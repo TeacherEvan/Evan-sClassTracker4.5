@@ -69,12 +69,12 @@
 
 🔴 **CRITICAL: File Size Bloat**
 
-| File | Lines | Size | Complexity |
-|------|-------|------|------------|
-| `components/class-booking.tsx` | **3,120** | 99.70 KB | 🔴 CRITICAL |
-| `convex/classes.ts` | **2,213** | ~70 KB | 🔴 HIGH |
-| `components/student-management.tsx` | **1,193** | ~38 KB | 🟡 MEDIUM |
-| `components/class-detail-modal.tsx` | **1,065** | ~34 KB | 🟡 MEDIUM |
+| File                                | Lines     | Size     | Complexity  |
+| ----------------------------------- | --------- | -------- | ----------- |
+| `components/class-booking.tsx`      | **3,120** | 99.70 KB | 🔴 CRITICAL |
+| `convex/classes.ts`                 | **2,213** | ~70 KB   | 🔴 HIGH     |
+| `components/student-management.tsx` | **1,193** | ~38 KB   | 🟡 MEDIUM   |
+| `components/class-detail-modal.tsx` | **1,065** | ~34 KB   | 🟡 MEDIUM   |
 
 **Impact**:
 
@@ -97,10 +97,10 @@ From documentation review, the provider system (Oct 2025 addition) adds signific
 
 ```typescript
 // Proposed helper
-function validateEntityLinking(entity: { schoolId?: Id<"schools">, providerId?: Id<"providers"> }) {
+function validateEntityLinking(entity: { schoolId?: Id<"schools">; providerId?: Id<"providers"> }) {
   const hasSchool = !!entity.schoolId;
   const hasProvider = !!entity.providerId;
-  
+
   if (hasSchool && hasProvider) {
     throw new Error("XOR_VIOLATION: Entity cannot have both schoolId and providerId");
   }
@@ -159,15 +159,7 @@ function detectConflicts(...) {
 ```tsx
 // Before: 200+ lines duplicated across components
 // After: Single BilingualInput component (saves 61 lines per usage)
-<BilingualInput
-  labelEn="Location Name"
-  labelTh="ชื่อสถานที่"
-  valueEn={nameEn}
-  valueTh={nameTh}
-  onChangeEn={setNameEn}
-  onChangeTh={setNameTh}
-  required
-/>
+<BilingualInput labelEn="Location Name" labelTh="ชื่อสถานที่" valueEn={nameEn} valueTh={nameTh} onChangeEn={setNameEn} onChangeTh={setNameTh} required />
 ```
 
 **Opportunity**: Apply same pattern to other repeated code blocks
@@ -177,10 +169,7 @@ function detectConflicts(...) {
 Some queries use "skip" pattern correctly:
 
 ```typescript
-const students = useQuery(
-  api.students.list,
-  schoolId ? { schoolId } : "skip"
-);
+const students = useQuery(api.students.list, schoolId ? { schoolId } : "skip");
 ```
 
 Others use conditional rendering:
@@ -217,9 +206,9 @@ From Oct 2025 optimization initiative:
 
 ```typescript
 // GOOD - Batch fetch pattern (from documentation)
-const studentIds = [...new Set(classes.map(c => c.studentId))];
-const students = await Promise.all(studentIds.map(id => ctx.db.get(id)));
-const studentMap = new Map(students.map(s => [s._id, s]));
+const studentIds = [...new Set(classes.map((c) => c.studentId))];
+const students = await Promise.all(studentIds.map((id) => ctx.db.get(id)));
+const studentMap = new Map(students.map((s) => [s._id, s]));
 // O(1) lookup instead of O(n) array.find()
 ```
 
@@ -232,12 +221,9 @@ export const list = query({
   handler: async (ctx, args) => {
     return await ctx.db
       .query("classes")
-      .withIndex("by_school_and_date", q => 
-        q.eq("schoolId", args.schoolId)
-         .gte("scheduledDate", args.startDate)
-      )
+      .withIndex("by_school_and_date", (q) => q.eq("schoolId", args.schoolId).gte("scheduledDate", args.startDate))
       .collect();
-  }
+  },
 });
 ```
 
@@ -246,10 +232,7 @@ export const list = query({
 BilingualInput component uses 300ms debounce (50% fewer re-renders):
 
 ```typescript
-const debouncedOnChangeEn = useMemo(
-  () => debounce(onChangeEn, 300),
-  [onChangeEn]
-);
+const debouncedOnChangeEn = useMemo(() => debounce(onChangeEn, 300), [onChangeEn]);
 ```
 
 ### Issues
@@ -284,30 +267,28 @@ Pagination pattern (NEW Oct 2025) reduces DOM by 85-96%, but only applied to:
 async function hashPassword(password: string): Promise<{ hash: string; salt: string }> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
-  
+
   // Generate random 16-byte salt
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  
+
   // Import key for PBKDF2
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw", data, "PBKDF2", false, ["deriveBits"]
-  );
-  
+  const keyMaterial = await crypto.subtle.importKey("raw", data, "PBKDF2", false, ["deriveBits"]);
+
   // Derive 32-byte hash with 100,000 iterations
   const hashBuffer = await crypto.subtle.deriveBits(
     {
       name: "PBKDF2",
       salt: salt,
       iterations: 100000, // 100x stronger than bcrypt equivalent
-      hash: "SHA-256"
+      hash: "SHA-256",
     },
     keyMaterial,
-    256 // 32 bytes
+    256, // 32 bytes
   );
-  
+
   return {
     hash: arrayBufferToHex(hashBuffer),
-    salt: arrayBufferToHex(salt)
+    salt: arrayBufferToHex(salt),
   };
 }
 ```
@@ -325,7 +306,7 @@ async function hashPassword(password: string): Promise<{ hash: string; salt: str
 ```typescript
 if (user.failedLoginAttempts >= 5) {
   await ctx.db.patch(user._id, {
-    accountLockedUntil: Date.now() + 86400000 // 24 hours
+    accountLockedUntil: Date.now() + 86400000, // 24 hours
   });
   throw new Error("Account locked. Contact admin or try again in 24 hours.");
 }
@@ -374,10 +355,13 @@ Session stored in localStorage (24hr expiry) is vulnerable to XSS:
 ```typescript
 // lib/session-utils.ts
 export function saveUserSession(user: User) {
-  localStorage.setItem("classTrackerUser", JSON.stringify({
-    ...user,
-    expiresAt: Date.now() + SESSION_DURATION_MS
-  }));
+  localStorage.setItem(
+    "classTrackerUser",
+    JSON.stringify({
+      ...user,
+      expiresAt: Date.now() + SESSION_DURATION_MS,
+    }),
+  );
 }
 ```
 
@@ -407,31 +391,31 @@ From `IMPLEMENTATION_SUMMARY_TEST_FIXES_NOV_4_2025.md`:
 ```typescript
 // tests/e2e/helpers.ts
 export async function login(page: Page, user: TestUser) {
-  await page.goto('/');
+  await page.goto("/");
   await page.waitForSelector('#username, input[type="text"]');
-  
+
   // ID-based selectors (more reliable)
-  const usernameInput = page.locator('#username').first();
-  const passwordInput = page.locator('#password').first();
-  
+  const usernameInput = page.locator("#username").first();
+  const passwordInput = page.locator("#password").first();
+
   await usernameInput.fill(user.username);
   await passwordInput.fill(user.password);
-  
+
   // Bilingual support
   await page.locator('button:has-text("Login"), button:has-text("เข้าสู่ระบบ")').first().click();
-  
+
   // Auto-dismiss password change dialog (test users have requirePasswordChange: true)
-  const passwordChangeDialog = page.locator('text=Change Password, text=เปลี่ยนรหัสผ่าน').first();
+  const passwordChangeDialog = page.locator("text=Change Password, text=เปลี่ยนรหัสผ่าน").first();
   const isPasswordChangeVisible = await passwordChangeDialog.isVisible({ timeout: 2000 }).catch(() => false);
-  
+
   if (isPasswordChangeVisible) {
     const closeButton = page.locator('button:has-text("Close"), button:has-text("ปิด"), button:has-text("×")').first();
     await closeButton.click();
     await page.waitForTimeout(500);
   }
-  
+
   // Verify app loaded
-  await expect(page.locator('text=Class Tracker, text=ติดตามชั้นเรียน')).toBeVisible();
+  await expect(page.locator("text=Class Tracker, text=ติดตามชั้นเรียน")).toBeVisible();
 }
 ```
 
@@ -482,7 +466,10 @@ Recent fixes show tests were fragile:
 async function waitForRealtimeUpdate(page: Page, expectedText: string, timeout = 10000) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
-    const visible = await page.locator(`text=${expectedText}`).isVisible().catch(() => false);
+    const visible = await page
+      .locator(`text=${expectedText}`)
+      .isVisible()
+      .catch(() => false);
     if (visible) return;
     await page.waitForTimeout(500); // Poll every 500ms
   }
@@ -540,9 +527,9 @@ rules: {
 
 ```yaml
 # Example errors
-CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }}  # Not defined
-AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}  # Not defined
-AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # Not defined
+CONVEX_DEPLOYMENT: ${{ secrets.CONVEX_DEPLOYMENT }} # Not defined
+AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }} # Not defined
+AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # Not defined
 # ... 29 more
 ```
 
@@ -560,7 +547,7 @@ AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # Not defined
 
 # Option 2: Disable unused backup methods (if not using AWS/R2/Azure)
 - name: Upload to AWS S3
-  if: ${{ secrets.AWS_ACCESS_KEY_ID != '' }}  # Only run if secret exists
+  if: ${{ secrets.AWS_ACCESS_KEY_ID != '' }} # Only run if secret exists
   # ...
 ```
 
@@ -611,6 +598,7 @@ From `.github/copilot-instructions.md`:
 ## 🎯 Quick Decision Tree
 
 **I need to...**
+
 - **Get started immediately** → Quick Start Guide
 - **Understand the architecture** → Architecture Essentials
 - **Implement a new feature** → Non-Negotiable Patterns
@@ -787,8 +775,8 @@ convex/classes/
 
    ```typescript
    // tests/lib/session-utils.test.ts
-   describe('loadUserSession', () => {
-     test('returns null if session expired', () => {
+   describe("loadUserSession", () => {
+     test("returns null if session expired", () => {
        // ...
      });
    });
@@ -805,16 +793,16 @@ convex/classes/
 
 ## 10. Code Quality Metrics Summary
 
-| Category | Score | Grade | Trend |
-|----------|-------|-------|-------|
-| **Architecture** | 92/100 | A | ↗️ Improving |
-| **Code Quality** | 87/100 | B+ | ↗️ Improving |
-| **Performance** | 94/100 | A | ✅ Excellent |
-| **Security** | 96/100 | A+ | ✅ Excellent |
-| **Testing** | 82/100 | B | ↗️ Improving |
-| **Dependencies** | 88/100 | A- | → Stable |
-| **Documentation** | 98/100 | A+ | ✅ Exceptional |
-| **Maintainability** | 79/100 | C+ | ⚠️ Needs Work |
+| Category            | Score  | Grade | Trend          |
+| ------------------- | ------ | ----- | -------------- |
+| **Architecture**    | 92/100 | A     | ↗️ Improving   |
+| **Code Quality**    | 87/100 | B+    | ↗️ Improving   |
+| **Performance**     | 94/100 | A     | ✅ Excellent   |
+| **Security**        | 96/100 | A+    | ✅ Excellent   |
+| **Testing**         | 82/100 | B     | ↗️ Improving   |
+| **Dependencies**    | 88/100 | A-    | → Stable       |
+| **Documentation**   | 98/100 | A+    | ✅ Exceptional |
+| **Maintainability** | 79/100 | C+    | ⚠️ Needs Work  |
 
 **Overall Weighted Score**: **88/100 (A-)**
 
@@ -838,31 +826,31 @@ convex/classes/
 
 ### Next.js Best Practices ✅
 
-| Practice | Status | Notes |
-|----------|--------|-------|
-| App Router | ✅ Used | Latest Next.js 15 |
-| TypeScript strict mode | ✅ Enabled | `"strict": true` |
-| ESLint configured | ✅ Yes | Next.js + TypeScript rules |
-| Turbopack | ✅ Used | Faster builds |
-| Error boundaries | ✅ Implemented | Global error handler |
+| Practice               | Status         | Notes                      |
+| ---------------------- | -------------- | -------------------------- |
+| App Router             | ✅ Used        | Latest Next.js 15          |
+| TypeScript strict mode | ✅ Enabled     | `"strict": true`           |
+| ESLint configured      | ✅ Yes         | Next.js + TypeScript rules |
+| Turbopack              | ✅ Used        | Faster builds              |
+| Error boundaries       | ✅ Implemented | Global error handler       |
 
 ### React Best Practices ✅
 
-| Practice | Status | Notes |
-|----------|--------|-------|
-| Hooks rules | ✅ Followed | No violations found |
-| Key props | ✅ Correct | Map iterations use unique keys |
-| useMemo/useCallback | ✅ Used | BilingualInput debounce |
-| Prop types | ✅ TypeScript | Full type coverage |
+| Practice            | Status        | Notes                          |
+| ------------------- | ------------- | ------------------------------ |
+| Hooks rules         | ✅ Followed   | No violations found            |
+| Key props           | ✅ Correct    | Map iterations use unique keys |
+| useMemo/useCallback | ✅ Used       | BilingualInput debounce        |
+| Prop types          | ✅ TypeScript | Full type coverage             |
 
 ### Convex Best Practices ✅
 
-| Practice | Status | Notes |
-|----------|--------|-------|
-| Index-first queries | ✅ Enforced | All queries use .withIndex() |
-| Batch fetching | ✅ Pattern documented | N+1 eliminated |
-| Rate limiting | ✅ Implemented | 30/min class booking, 20/min messages |
-| Error handling | ✅ Comprehensive | Logged to errorReports table |
+| Practice            | Status                | Notes                                 |
+| ------------------- | --------------------- | ------------------------------------- |
+| Index-first queries | ✅ Enforced           | All queries use .withIndex()          |
+| Batch fetching      | ✅ Pattern documented | N+1 eliminated                        |
+| Rate limiting       | ✅ Implemented        | 30/min class booking, 20/min messages |
+| Error handling      | ✅ Comprehensive      | Logged to errorReports table          |
 
 ---
 

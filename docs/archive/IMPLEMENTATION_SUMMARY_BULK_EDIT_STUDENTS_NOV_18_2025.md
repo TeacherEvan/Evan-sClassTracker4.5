@@ -94,7 +94,7 @@ export const bulkUpdateStudents = mutation({
     //    - Apply updates via ctx.db.patch
     //    - Log audit action
     // 6. Return detailed results
-  }
+  },
 });
 ```
 
@@ -160,11 +160,11 @@ export const bulkUpdateStudents = mutation({
 
 ```typescript
 interface BulkEditStudentsModalProps {
-  isOpen: boolean;                        // Modal visibility
-  onClose: () => void;                    // Close handler
-  selectedStudentIds: Id<"students">[];   // Students to update
+  isOpen: boolean; // Modal visibility
+  onClose: () => void; // Close handler
+  selectedStudentIds: Id<"students">[]; // Students to update
   onSubmit: (updates: any, reason: string) => Promise<void>; // Submit handler
-  currentUser: User;                      // For permissions
+  currentUser: User; // For permissions
 }
 ```
 
@@ -220,29 +220,17 @@ interface BulkEditStudentsModalProps {
        });
 
        if (result.successful > 0) {
-         setSuccess(
-           t(
-             `Successfully updated ${result.successful} student(s)`,
-             `อัปเดตนักเรียนสำเร็จ ${result.successful} คน`
-           )
-         );
+         setSuccess(t(`Successfully updated ${result.successful} student(s)`, `อัปเดตนักเรียนสำเร็จ ${result.successful} คน`));
          setSelectedStudents(new Set()); // Clear selection
        }
 
        if (result.failed > 0) {
          const errorDetails = result.errors
            .slice(0, 5)
-           .map((err) => `• ${err.studentName || 'Unknown'}: ${err.error}`)
-           .join('\n');
-         const moreErrors = result.errors.length > 5
-           ? `\n...and ${result.errors.length - 5} more`
-           : '';
-         setError(
-           t(
-             `Failed to update ${result.failed} student(s):\n${errorDetails}${moreErrors}`,
-             `ไม่สามารถอัปเดตนักเรียนได้ ${result.failed} คน:\n${errorDetails}${moreErrors}`
-           )
-         );
+           .map((err) => `• ${err.studentName || "Unknown"}: ${err.error}`)
+           .join("\n");
+         const moreErrors = result.errors.length > 5 ? `\n...and ${result.errors.length - 5} more` : "";
+         setError(t(`Failed to update ${result.failed} student(s):\n${errorDetails}${moreErrors}`, `ไม่สามารถอัปเดตนักเรียนได้ ${result.failed} คน:\n${errorDetails}${moreErrors}`));
        }
 
        setShowBulkEditModal(false);
@@ -367,7 +355,7 @@ if ((user.role === "moderator" || user.role === "teacher") && user.schoolId) {
         index: i,
         studentId: student._id,
         studentName: `${student.firstName} ${student.lastName}`,
-        error: "You do not have permission to update this student"
+        error: "You do not have permission to update this student",
       });
       continue; // Skip this student
     }

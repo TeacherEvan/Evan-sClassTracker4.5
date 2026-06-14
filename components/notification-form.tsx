@@ -14,7 +14,7 @@ export function NotificationForm({ userId }: { userId?: string }) {
   const [message, setMessage] = useState("");
   const [messageTh, setMessageTh] = useState("");
   const [type, setType] = useState<"info" | "success" | "warning" | "error">(
-    "info"
+    "info",
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,7 +97,9 @@ export function NotificationForm({ userId }: { userId?: string }) {
           <select
             value={type}
             onChange={(e) =>
-              setType(e.target.value as "info" | "success" | "warning" | "error")
+              setType(
+                e.target.value as "info" | "success" | "warning" | "error",
+              )
             }
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-600"
           >

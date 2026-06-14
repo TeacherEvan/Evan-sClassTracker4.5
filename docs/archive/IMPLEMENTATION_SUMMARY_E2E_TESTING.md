@@ -173,10 +173,10 @@ Tests validate complete user journeys, not isolated features:
 
 ```typescript
 TEST_USERS = {
-  admin: { username: 'admin', password: 'TeacherAdmin' },
-  moderator: { username: 'moderator1', password: 'TeacherModerator1' },
-  teacher: { username: 'Evan', password: 'TeacherEvan' }
-}
+  admin: { username: "admin", password: "TeacherAdmin" },
+  moderator: { username: "moderator1", password: "TeacherModerator1" },
+  teacher: { username: "Evan", password: "TeacherEvan" },
+};
 ```
 
 **⚠️ Security:** Test credentials only - never use in production
@@ -259,7 +259,7 @@ npm run test:e2e
 ✅ Authentication (all user roles)  
 ✅ Class booking workflow (teacher → moderator → approval/rejection)  
 ✅ Student management (create, Thai names, IDs, duplicates, search)  
-✅ Notification system (post-class, windows, badges, toasts, preferences)  
+✅ Notification system (post-class, windows, badges, toasts, preferences)
 
 ### Future Coverage (Recommended)
 
@@ -269,7 +269,7 @@ npm run test:e2e
 ⏳ Analytics dashboards (data accuracy)  
 ⏳ Audit logs (admin actions logged)  
 ⏳ Bulk operations (delete, import)  
-⏳ Mobile responsiveness (viewport testing)  
+⏳ Mobile responsiveness (viewport testing)
 
 ---
 
@@ -461,7 +461,7 @@ Test users use **predictable default passwords**:
 ✅ **Tests written** - 24 tests covering critical workflows  
 ✅ **CI/CD integrated** - Automated tests after staging deployment  
 ✅ **Scripts added** - NPM commands for local testing  
-✅ **Documentation complete** - Comprehensive testing guide  
+✅ **Documentation complete** - Comprehensive testing guide
 
 🔜 **Pending verification:**
 

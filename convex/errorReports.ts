@@ -17,92 +17,101 @@ import { checkRateLimit } from "./rateLimit";
  * Automatically captures browser/device information
  */
 export const submitErrorReport = mutation({
-    args: {
-        userId: v.optional(v.id("users")),
-        errorType: v.string(),
-        errorMessage: v.string(),
-        errorCode: v.optional(v.string()),
-        errorOrigin: v.string(), // Component or file name
-        errorFunction: v.optional(v.string()), // Function or mutation name
-        stackTrace: v.optional(v.string()),
-        userAction: v.optional(v.string()), // What the user was trying to do
-        componentState: v.optional(v.string()), // JSON string of relevant state
-        deviceType: v.optional(v.string()),
-        browser: v.optional(v.string()),
-        browserVersion: v.optional(v.string()),
-        os: v.optional(v.string()),
-        screenResolution: v.optional(v.string()),
-        userAgent: v.optional(v.string()),
-    },
-    handler: async (ctx, args) => {
-        // ✅ RATE LIMIT: Prevent error report spam (5 per minute - very soft limit)
-        // Use userId if provided, otherwise use a global key for anonymous reports
-        const rateLimitKey = args.userId
-            ? `submit-error:${args.userId}`
-            : `submit-error:anonymous`;
+  args: {
+    userId: v.optional(v.id("users")),
+    errorType: v.string(),
+    errorMessage: v.string(),
+    errorCode: v.optional(v.string()),
+    errorOrigin: v.string(), // Component or file name
+    errorFunction: v.optional(v.string()), // Function or mutation name
+    stackTrace: v.optional(v.string()),
+    userAction: v.optional(v.string()), // What the user was trying to do
+    componentState: v.optional(v.string()), // JSON string of relevant state
+    deviceType: v.optional(v.string()),
+    browser: v.optional(v.string()),
+    browserVersion: v.optional(v.string()),
+    os: v.optional(v.string()),
+    screenResolution: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // ✅ RATE LIMIT: Prevent error report spam (5 per minute - very soft limit)
+    // Use userId if provided, otherwise use a global key for anonymous reports
+    const rateLimitKey = args.userId
+      ? `submit-error:${args.userId}`
+      : `submit-error:anonymous`;
 
-        await checkRateLimit(ctx, {
-            key: rateLimitKey,
-            limit: 5,
-            windowMs: 60000,
-        });
+    await checkRateLimit(ctx, {
+      key: rateLimitKey,
+      limit: 5,
+      windowMs: 60000,
+    });
 
-        // Get user details if userId provided
-        let username: string | undefined;
-        let userRole: string | undefined;
-        let schoolId: Id<"schools"> | undefined;
+    // Get user details if userId provided
+    let username: string | undefined;
+    let userRole: string | undefined;
+    let schoolId: Id<"schools"> | undefined;
 
-        if (args.userId) {
-            const user = await ctx.db.get(args.userId);
-            if (user) {
-                username = user.username;
-                userRole = user.role;
-                schoolId = user.schoolId;
-            }
-        }
+    if (args.userId) {
+      const user = await ctx.db.get(args.userId);
+      if (user) {
+        username = user.username;
+        userRole = user.role;
+        schoolId = user.schoolId;
+      }
+    }
 
-        // Auto-classify severity based on error type
-        let severity: "low" | "medium" | "high" | "critical" = "medium";
-        if (args.errorType.includes("critical") || args.errorType.includes("crash")) {
-            severity = "critical";
-        } else if (args.errorType.includes("network") || args.errorType.includes("timeout")) {
-            severity = "high";
-        } else if (args.errorType.includes("validation") || args.errorType.includes("ui")) {
-            severity = "low";
-        }
+    // Auto-classify severity based on error type
+    let severity: "low" | "medium" | "high" | "critical" = "medium";
+    if (
+      args.errorType.includes("critical") ||
+      args.errorType.includes("crash")
+    ) {
+      severity = "critical";
+    } else if (
+      args.errorType.includes("network") ||
+      args.errorType.includes("timeout")
+    ) {
+      severity = "high";
+    } else if (
+      args.errorType.includes("validation") ||
+      args.errorType.includes("ui")
+    ) {
+      severity = "low";
+    }
 
-        // Truncate stack trace if too long (max 5000 chars)
-        const stackTrace = args.stackTrace
-            ? args.stackTrace.substring(0, 5000)
-            : undefined;
+    // Truncate stack trace if too long (max 5000 chars)
+    const stackTrace = args.stackTrace
+      ? args.stackTrace.substring(0, 5000)
+      : undefined;
 
-        // Insert error report
-        const errorReportId = await ctx.db.insert("errorReports", {
-            userId: args.userId,
-            username,
-            userRole,
-            schoolId,
-            errorType: args.errorType,
-            errorMessage: args.errorMessage,
-            errorCode: args.errorCode,
-            errorOrigin: args.errorOrigin,
-            errorFunction: args.errorFunction,
-            stackTrace,
-            userAction: args.userAction,
-            componentState: args.componentState,
-            timestamp: Date.now(),
-            deviceType: args.deviceType,
-            browser: args.browser,
-            browserVersion: args.browserVersion,
-            os: args.os,
-            screenResolution: args.screenResolution,
-            userAgent: args.userAgent,
-            status: "new",
-            severity,
-        });
+    // Insert error report
+    const errorReportId = await ctx.db.insert("errorReports", {
+      userId: args.userId,
+      username,
+      userRole,
+      schoolId,
+      errorType: args.errorType,
+      errorMessage: args.errorMessage,
+      errorCode: args.errorCode,
+      errorOrigin: args.errorOrigin,
+      errorFunction: args.errorFunction,
+      stackTrace,
+      userAction: args.userAction,
+      componentState: args.componentState,
+      timestamp: Date.now(),
+      deviceType: args.deviceType,
+      browser: args.browser,
+      browserVersion: args.browserVersion,
+      os: args.os,
+      screenResolution: args.screenResolution,
+      userAgent: args.userAgent,
+      status: "new",
+      severity,
+    });
 
-        return errorReportId;
-    },
+    return errorReportId;
+  },
 });
 
 /**
@@ -110,54 +119,58 @@ export const submitErrorReport = mutation({
  * Supports filtering and pagination
  */
 export const listErrorReports = query({
-    args: {
-        adminId: v.id("users"),
-        status: v.optional(v.union(
-            v.literal("new"),
-            v.literal("acknowledged"),
-            v.literal("resolved"),
-            v.literal("closed")
-        )),
-        severity: v.optional(v.union(
-            v.literal("low"),
-            v.literal("medium"),
-            v.literal("high"),
-            v.literal("critical")
-        )),
-        limit: v.optional(v.number()),
-    },
-    handler: async (ctx, args) => {
-        // Verify admin role
-        const admin = await ctx.db.get(args.adminId);
-        if (!admin || admin.role !== "admin") {
-            throw new Error("Admin access required");
-        }
+  args: {
+    adminId: v.id("users"),
+    status: v.optional(
+      v.union(
+        v.literal("new"),
+        v.literal("acknowledged"),
+        v.literal("resolved"),
+        v.literal("closed"),
+      ),
+    ),
+    severity: v.optional(
+      v.union(
+        v.literal("low"),
+        v.literal("medium"),
+        v.literal("high"),
+        v.literal("critical"),
+      ),
+    ),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // Verify admin role
+    const admin = await ctx.db.get(args.adminId);
+    if (!admin || admin.role !== "admin") {
+      throw new Error("Admin access required");
+    }
 
-        // Get error reports based on filters (newest first)
-        let errorReports;
+    // Get error reports based on filters (newest first)
+    let errorReports;
 
-        if (args.status) {
-            errorReports = await ctx.db
-                .query("errorReports")
-                .withIndex("by_status", q => q.eq("status", args.status!))
-                .order("desc")
-                .take(args.limit || 100);
-        } else if (args.severity) {
-            errorReports = await ctx.db
-                .query("errorReports")
-                .withIndex("by_severity", q => q.eq("severity", args.severity!))
-                .order("desc")
-                .take(args.limit || 100);
-        } else {
-            errorReports = await ctx.db
-                .query("errorReports")
-                .withIndex("by_timestamp")
-                .order("desc")
-                .take(args.limit || 100);
-        }
+    if (args.status) {
+      errorReports = await ctx.db
+        .query("errorReports")
+        .withIndex("by_status", (q) => q.eq("status", args.status!))
+        .order("desc")
+        .take(args.limit || 100);
+    } else if (args.severity) {
+      errorReports = await ctx.db
+        .query("errorReports")
+        .withIndex("by_severity", (q) => q.eq("severity", args.severity!))
+        .order("desc")
+        .take(args.limit || 100);
+    } else {
+      errorReports = await ctx.db
+        .query("errorReports")
+        .withIndex("by_timestamp")
+        .order("desc")
+        .take(args.limit || 100);
+    }
 
-        return errorReports;
-    },
+    return errorReports;
+  },
 });
 
 /**
@@ -167,191 +180,215 @@ export const listErrorReports = query({
  * Performance improvement: O(n) single table scan → O(1) multiple indexed queries
  */
 export const getErrorStats = query({
-    args: {
-        adminId: v.id("users"),
-    },
-    handler: async (ctx, args) => {
-        // Verify admin role
-        const admin = await ctx.db.get(args.adminId);
-        if (!admin || admin.role !== "admin") {
-            throw new Error("Admin access required");
-        }
+  args: {
+    adminId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    // Verify admin role
+    const admin = await ctx.db.get(args.adminId);
+    if (!admin || admin.role !== "admin") {
+      throw new Error("Admin access required");
+    }
 
-        // ✅ OPTIMIZED: Use parallel indexed queries for counts
-        // Instead of fetching all records and filtering in memory,
-        // we use indexed queries for each status/severity
-        const [
-            newErrors,
-            acknowledgedErrors,
-            resolvedErrors,
-            closedErrors,
-            criticalErrors,
-            highErrors,
-            mediumErrors,
-            lowErrors,
-            recentErrors,
-        ] = await Promise.all([
-            // Status counts using by_status index
-            ctx.db.query("errorReports")
-                .withIndex("by_status", q => q.eq("status", "new"))
-                .collect(),
-            ctx.db.query("errorReports")
-                .withIndex("by_status", q => q.eq("status", "acknowledged"))
-                .collect(),
-            ctx.db.query("errorReports")
-                .withIndex("by_status", q => q.eq("status", "resolved"))
-                .collect(),
-            ctx.db.query("errorReports")
-                .withIndex("by_status", q => q.eq("status", "closed"))
-                .collect(),
-            // Severity counts using by_severity index
-            ctx.db.query("errorReports")
-                .withIndex("by_severity", q => q.eq("severity", "critical"))
-                .collect(),
-            ctx.db.query("errorReports")
-                .withIndex("by_severity", q => q.eq("severity", "high"))
-                .collect(),
-            ctx.db.query("errorReports")
-                .withIndex("by_severity", q => q.eq("severity", "medium"))
-                .collect(),
-            ctx.db.query("errorReports")
-                .withIndex("by_severity", q => q.eq("severity", "low"))
-                .collect(),
-            // Last 24 hours using by_timestamp index
-            ctx.db.query("errorReports")
-                .withIndex("by_timestamp", q => q.gte("timestamp", Date.now() - 86400000))
-                .collect(),
-        ]);
-
-        // Total count
-        const total = newErrors.length + acknowledgedErrors.length +
-            resolvedErrors.length + closedErrors.length;
-
-        // For top error types, we need all errors - but we already have them split by status
-        // Combine the arrays we already fetched
-        const allErrors = [...newErrors, ...acknowledgedErrors, ...resolvedErrors, ...closedErrors];
-
-        const topErrorTypes = Object.entries(
-            allErrors.reduce((acc, e) => {
-                acc[e.errorType] = (acc[e.errorType] || 0) + 1;
-                return acc;
-            }, {} as Record<string, number>)
+    // ✅ OPTIMIZED: Use parallel indexed queries for counts
+    // Instead of fetching all records and filtering in memory,
+    // we use indexed queries for each status/severity
+    const [
+      newErrors,
+      acknowledgedErrors,
+      resolvedErrors,
+      closedErrors,
+      criticalErrors,
+      highErrors,
+      mediumErrors,
+      lowErrors,
+      recentErrors,
+    ] = await Promise.all([
+      // Status counts using by_status index
+      ctx.db
+        .query("errorReports")
+        .withIndex("by_status", (q) => q.eq("status", "new"))
+        .collect(),
+      ctx.db
+        .query("errorReports")
+        .withIndex("by_status", (q) => q.eq("status", "acknowledged"))
+        .collect(),
+      ctx.db
+        .query("errorReports")
+        .withIndex("by_status", (q) => q.eq("status", "resolved"))
+        .collect(),
+      ctx.db
+        .query("errorReports")
+        .withIndex("by_status", (q) => q.eq("status", "closed"))
+        .collect(),
+      // Severity counts using by_severity index
+      ctx.db
+        .query("errorReports")
+        .withIndex("by_severity", (q) => q.eq("severity", "critical"))
+        .collect(),
+      ctx.db
+        .query("errorReports")
+        .withIndex("by_severity", (q) => q.eq("severity", "high"))
+        .collect(),
+      ctx.db
+        .query("errorReports")
+        .withIndex("by_severity", (q) => q.eq("severity", "medium"))
+        .collect(),
+      ctx.db
+        .query("errorReports")
+        .withIndex("by_severity", (q) => q.eq("severity", "low"))
+        .collect(),
+      // Last 24 hours using by_timestamp index
+      ctx.db
+        .query("errorReports")
+        .withIndex("by_timestamp", (q) =>
+          q.gte("timestamp", Date.now() - 86400000),
         )
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5)
-            .map(([type, count]) => ({ type, count }));
+        .collect(),
+    ]);
 
-        return {
-            total,
-            new: newErrors.length,
-            acknowledged: acknowledgedErrors.length,
-            resolved: resolvedErrors.length,
-            closed: closedErrors.length,
-            critical: criticalErrors.length,
-            high: highErrors.length,
-            medium: mediumErrors.length,
-            low: lowErrors.length,
-            last24Hours: recentErrors.length,
-            topErrorTypes,
-        };
-    },
+    // Total count
+    const total =
+      newErrors.length +
+      acknowledgedErrors.length +
+      resolvedErrors.length +
+      closedErrors.length;
+
+    // For top error types, we need all errors - but we already have them split by status
+    // Combine the arrays we already fetched
+    const allErrors = [
+      ...newErrors,
+      ...acknowledgedErrors,
+      ...resolvedErrors,
+      ...closedErrors,
+    ];
+
+    const topErrorTypes = Object.entries(
+      allErrors.reduce(
+        (acc, e) => {
+          acc[e.errorType] = (acc[e.errorType] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
+    )
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([type, count]) => ({ type, count }));
+
+    return {
+      total,
+      new: newErrors.length,
+      acknowledged: acknowledgedErrors.length,
+      resolved: resolvedErrors.length,
+      closed: closedErrors.length,
+      critical: criticalErrors.length,
+      high: highErrors.length,
+      medium: mediumErrors.length,
+      low: lowErrors.length,
+      last24Hours: recentErrors.length,
+      topErrorTypes,
+    };
+  },
 });
 
 /**
  * Update error report status (admin only)
  */
 export const updateErrorStatus = mutation({
-    args: {
-        errorReportId: v.id("errorReports"),
-        adminId: v.id("users"),
-        status: v.union(
-            v.literal("new"),
-            v.literal("acknowledged"),
-            v.literal("resolved"),
-            v.literal("closed")
-        ),
-        adminNotes: v.optional(v.string()),
-        severity: v.optional(v.union(
-            v.literal("low"),
-            v.literal("medium"),
-            v.literal("high"),
-            v.literal("critical")
-        )),
-    },
-    handler: async (ctx, args) => {
-        // Verify admin role
-        const admin = await ctx.db.get(args.adminId);
-        if (!admin || admin.role !== "admin") {
-            throw new Error("Admin access required");
-        }
+  args: {
+    errorReportId: v.id("errorReports"),
+    adminId: v.id("users"),
+    status: v.union(
+      v.literal("new"),
+      v.literal("acknowledged"),
+      v.literal("resolved"),
+      v.literal("closed"),
+    ),
+    adminNotes: v.optional(v.string()),
+    severity: v.optional(
+      v.union(
+        v.literal("low"),
+        v.literal("medium"),
+        v.literal("high"),
+        v.literal("critical"),
+      ),
+    ),
+  },
+  handler: async (ctx, args) => {
+    // Verify admin role
+    const admin = await ctx.db.get(args.adminId);
+    if (!admin || admin.role !== "admin") {
+      throw new Error("Admin access required");
+    }
 
-        // Get existing error report
-        const errorReport = await ctx.db.get(args.errorReportId);
-        if (!errorReport) {
-            throw new Error("Error report not found");
-        }
+    // Get existing error report
+    const errorReport = await ctx.db.get(args.errorReportId);
+    if (!errorReport) {
+      throw new Error("Error report not found");
+    }
 
-        // Update error report
-        const updates: Partial<{
-            status: "new" | "acknowledged" | "resolved" | "closed";
-            adminNotes: string;
-            severity: "low" | "medium" | "high" | "critical";
-            resolvedBy: Id<"users">;
-            resolvedAt: number;
-        }> = {
-            status: args.status,
-        };
+    // Update error report
+    const updates: Partial<{
+      status: "new" | "acknowledged" | "resolved" | "closed";
+      adminNotes: string;
+      severity: "low" | "medium" | "high" | "critical";
+      resolvedBy: Id<"users">;
+      resolvedAt: number;
+    }> = {
+      status: args.status,
+    };
 
-        if (args.adminNotes) {
-            updates.adminNotes = args.adminNotes;
-        }
+    if (args.adminNotes) {
+      updates.adminNotes = args.adminNotes;
+    }
 
-        if (args.severity) {
-            updates.severity = args.severity;
-        }
+    if (args.severity) {
+      updates.severity = args.severity;
+    }
 
-        // If resolving, set resolvedBy and resolvedAt
-        if (args.status === "resolved" || args.status === "closed") {
-            updates.resolvedBy = args.adminId;
-            updates.resolvedAt = Date.now();
-        }
+    // If resolving, set resolvedBy and resolvedAt
+    if (args.status === "resolved" || args.status === "closed") {
+      updates.resolvedBy = args.adminId;
+      updates.resolvedAt = Date.now();
+    }
 
-        await ctx.db.patch(args.errorReportId, updates);
+    await ctx.db.patch(args.errorReportId, updates);
 
-        return { success: true };
-    },
+    return { success: true };
+  },
 });
 
 /**
  * Get single error report details (admin only)
  */
 export const getErrorReport = query({
-    args: {
-        errorReportId: v.id("errorReports"),
-        adminId: v.id("users"),
-    },
-    handler: async (ctx, args) => {
-        // Verify admin role
-        const admin = await ctx.db.get(args.adminId);
-        if (!admin || admin.role !== "admin") {
-            throw new Error("Admin access required");
-        }
+  args: {
+    errorReportId: v.id("errorReports"),
+    adminId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    // Verify admin role
+    const admin = await ctx.db.get(args.adminId);
+    if (!admin || admin.role !== "admin") {
+      throw new Error("Admin access required");
+    }
 
-        const errorReport = await ctx.db.get(args.errorReportId);
-        if (!errorReport) {
-            throw new Error("Error report not found");
-        }
+    const errorReport = await ctx.db.get(args.errorReportId);
+    if (!errorReport) {
+      throw new Error("Error report not found");
+    }
 
-        // Get resolver info if resolved
-        let resolverName: string | undefined;
-        if (errorReport.resolvedBy) {
-            const resolver = await ctx.db.get(errorReport.resolvedBy);
-            resolverName = resolver?.username;
-        }
+    // Get resolver info if resolved
+    let resolverName: string | undefined;
+    if (errorReport.resolvedBy) {
+      const resolver = await ctx.db.get(errorReport.resolvedBy);
+      resolverName = resolver?.username;
+    }
 
-        return {
-            ...errorReport,
-            resolverName,
-        };
-    },
+    return {
+      ...errorReport,
+      resolverName,
+    };
+  },
 });

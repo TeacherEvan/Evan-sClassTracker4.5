@@ -32,12 +32,10 @@ for (const message of allMessages) {
 }
 
 // Batch fetch all partners
-const partners = await Promise.all(
-  Array.from(partnerIds).map(id => ctx.db.get(id as Id<"users">))
-);
+const partners = await Promise.all(Array.from(partnerIds).map((id) => ctx.db.get(id as Id<"users">)));
 
 // Create lookup map
-const partnerMap = new Map(partners.filter(p => p).map(p => [p!._id.toString(), p!]));
+const partnerMap = new Map(partners.filter((p) => p).map((p) => [p!._id.toString(), p!]));
 ```
 
 **Impact:** 10-100x performance improvement ✅  
@@ -74,13 +72,12 @@ export const listPaginated = query({
     paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => {
-    let query = ctx.db.query("students")
-      .withIndex(args.schoolId ? "by_school" : "by_created_at");
-    
+    let query = ctx.db.query("students").withIndex(args.schoolId ? "by_school" : "by_created_at");
+
     if (args.schoolId) {
-      query = query.withIndex("by_school", q => q.eq("schoolId", args.schoolId));
+      query = query.withIndex("by_school", (q) => q.eq("schoolId", args.schoolId));
     }
-    
+
     return await query.order("desc").paginate(args.paginationOpts);
   },
 });
@@ -208,11 +205,11 @@ export const sendMessage = mutation({
       key: args.senderId,
       count: 1,
       period: 60000, // 1 minute
-      limit: 10
+      limit: 10,
     });
-    
+
     // ... rest of logic
-  }
+  },
 });
 ```
 
@@ -361,12 +358,12 @@ import { FixedSizeList } from 'react-window';
 **Solution:** Implement toast notification system (e.g., react-hot-toast)
 
 ```typescript
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 
 // Instead of alert()
-toast.error('Failed to delete class');
-toast.success('Class approved successfully');
-toast.loading('Processing...');
+toast.error("Failed to delete class");
+toast.success("Class approved successfully");
+toast.loading("Processing...");
 ```
 
 **Expected Impact:** Better UX, less disruptive  
@@ -464,7 +461,7 @@ if (args.content.length > 5000) {
 }
 
 // Sanitize HTML
-import DOMPurify from 'isomorphic-dompurify';
+import DOMPurify from "isomorphic-dompurify";
 const cleanContent = DOMPurify.sanitize(args.content);
 ```
 
@@ -490,16 +487,16 @@ const cleanContent = DOMPurify.sanitize(args.content);
 // Store timestamp with session
 const session = {
   userId,
-  expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+  expiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
 };
-sessionStorage.setItem('session', JSON.stringify(session));
+sessionStorage.setItem("session", JSON.stringify(session));
 
 // Check on each request
-const session = JSON.parse(sessionStorage.getItem('session'));
+const session = JSON.parse(sessionStorage.getItem("session"));
 if (session.expiresAt < Date.now()) {
   // Session expired - force re-login
-  sessionStorage.removeItem('session');
-  router.push('/login');
+  sessionStorage.removeItem("session");
+  router.push("/login");
 }
 ```
 
@@ -635,20 +632,24 @@ const handlers = useSwipeable({
 
 ```typescript
 // Unit tests (Vitest)
-describe('classes.book', () => {
-  it('should create class and teacher log', async () => {
+describe("classes.book", () => {
+  it("should create class and teacher log", async () => {
     const result = await ctx.runMutation(api.classes.book, {
-      teacherId, studentId, schoolId, locationId, scheduledDate
+      teacherId,
+      studentId,
+      schoolId,
+      locationId,
+      scheduledDate,
     });
     expect(result).toBeDefined();
   });
 });
 
 // E2E tests (Playwright)
-test('teacher can book a class', async ({ page }) => {
-  await page.goto('/');
-  await page.fill('[name="username"]', 'teacher1');
-  await page.fill('[name="password"]', 'password');
+test("teacher can book a class", async ({ page }) => {
+  await page.goto("/");
+  await page.fill('[name="username"]', "teacher1");
+  await page.fill('[name="password"]', "password");
   await page.click('button[type="submit"]');
   // ... test booking flow
 });
@@ -725,15 +726,17 @@ export const importStudentsFromCSV = mutation({
   args: {
     userId: v.id("users"),
     schoolId: v.id("schools"),
-    csvData: v.array(v.object({
-      firstName: v.string(),
-      lastName: v.string(),
-      // ...
-    }))
+    csvData: v.array(
+      v.object({
+        firstName: v.string(),
+        lastName: v.string(),
+        // ...
+      }),
+    ),
   },
   handler: async (ctx, args) => {
     // Validate and insert in batch
-  }
+  },
 });
 ```
 
@@ -780,7 +783,7 @@ export const importStudentsFromCSV = mutation({
 ```typescript
 // Split class-booking.tsx into:
 - ClassBookingForm.tsx (booking form logic)
-- ClassItemDisplay.tsx (display component) 
+- ClassItemDisplay.tsx (display component)
 - ClassEditDialog.tsx (edit modal)
 - PendingLocationForm.tsx (location creation)
 ```
@@ -904,17 +907,17 @@ export const importStudentsFromCSV = mutation({
 
 ## 📊 Expected Impact Summary
 
-| Optimization | Expected Improvement | Status | User Impact |
-|--------------|---------------------|--------|-------------|
-| Fix N+1 queries | 10-100x faster | ✅ Done | All message users |
-| True pagination | 100x for large datasets | ✅ Done | Scalability |
-| Code splitting | 40-50% faster load | ✅ Done | All users, especially mobile |
-| Rate limiting | Prevent abuse | ✅ Done | System stability |
-| Input validation | Prevent attacks | ✅ Done | Security |
-| Toast notifications | Better UX | ✅ Done | Error handling |
-| Loading states | Better perceived performance | ⏳ Pending | User confidence |
-| Memoization | 20-30% fewer re-renders | ⏳ Pending | Smoother UI |
-| Bundle optimization | 15-25% smaller bundle | ⏳ Pending | Mobile users |
+| Optimization        | Expected Improvement         | Status     | User Impact                  |
+| ------------------- | ---------------------------- | ---------- | ---------------------------- |
+| Fix N+1 queries     | 10-100x faster               | ✅ Done    | All message users            |
+| True pagination     | 100x for large datasets      | ✅ Done    | Scalability                  |
+| Code splitting      | 40-50% faster load           | ✅ Done    | All users, especially mobile |
+| Rate limiting       | Prevent abuse                | ✅ Done    | System stability             |
+| Input validation    | Prevent attacks              | ✅ Done    | Security                     |
+| Toast notifications | Better UX                    | ✅ Done    | Error handling               |
+| Loading states      | Better perceived performance | ⏳ Pending | User confidence              |
+| Memoization         | 20-30% fewer re-renders      | ⏳ Pending | Smoother UI                  |
+| Bundle optimization | 15-25% smaller bundle        | ⏳ Pending | Mobile users                 |
 
 ---
 

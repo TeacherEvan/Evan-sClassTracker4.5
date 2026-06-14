@@ -32,7 +32,7 @@ Implemented a comprehensive error reporting system that allows users to report e
    - Default password pattern `Teacher{username}` is predictable
    - **TODO**: Implement progressive lockout (1hr → 6hr → 24hr) and consider CAPTCHA
 
-4. **Missing Rate Limits on Some Endpoints**
+3. **Missing Rate Limits on Some Endpoints**
    - ✅ Class bookings: 30/min (protected)
    - ✅ Messages: 20/min (protected)
    - ✅ Login attempts: Account lockout after 5 failures (24hr)
@@ -63,18 +63,18 @@ errorReports: defineTable({
   errorOrigin: v.string(), // Component/file where error occurred
   errorFunction: v.optional(v.string()),
   stackTrace: v.optional(v.string()),
-  
+
   // Context
   userAction: v.optional(v.string()), // What user was trying to do
   componentState: v.optional(v.string()), // JSON string of component state
-  
+
   // Environment
   deviceType, browser, os, screenResolution, userAgent
-  
+
   // Status & Resolution
   status: "new" | "acknowledged" | "resolved" | "closed"
   adminNotes, resolvedBy, resolvedAt
-  
+
   // Classification
   severity: "low" | "medium" | "high" | "critical"
   category: v.optional(v.string())
@@ -155,9 +155,9 @@ export interface Toast {
 
 ```typescript
 error(
-  message: string, 
-  messageTh: string, 
-  title = "Error", 
+  message: string,
+  messageTh: string,
+  title = "Error",
   titleTh = "ข้อผิดพลาด",
   errorContext?: ErrorContext // NEW
 ) {
@@ -181,23 +181,27 @@ error(
 1. **"Send to Admin" Button** - Appears on errors with errorContext
 
    ```tsx
-   {notification.showReportButton && !reportSent && (
-     <button onClick={handleSendToAdmin} disabled={isReporting}>
-       <Send className="w-3.5 h-3.5" />
-       {isReporting ? t("Sending...", "กำลังส่ง...") : t("Send to Admin", "ส่งให้ผู้ดูแล")}
-     </button>
-   )}
+   {
+     notification.showReportButton && !reportSent && (
+       <button onClick={handleSendToAdmin} disabled={isReporting}>
+         <Send className="w-3.5 h-3.5" />
+         {isReporting ? t("Sending...", "กำลังส่ง...") : t("Send to Admin", "ส่งให้ผู้ดูแล")}
+       </button>
+     );
+   }
    ```
 
 2. **Confirmation Message** - Shows after successful submission
 
    ```tsx
-   {reportSent && (
-     <p className="text-green-600">
-       <CheckCircle className="w-3.5 h-3.5" />
-       {t("Report sent to admin", "ส่งรายงานให้ผู้ดูแลแล้ว")}
-     </p>
-   )}
+   {
+     reportSent && (
+       <p className="text-green-600">
+         <CheckCircle className="w-3.5 h-3.5" />
+         {t("Report sent to admin", "ส่งรายงานให้ผู้ดูแลแล้ว")}
+       </p>
+     );
+   }
    ```
 
 3. **Auto-detection of environment:**
@@ -270,10 +274,10 @@ try {
       errorFunction: "handleSubmit",
       stackTrace: error.stack,
       userAction: "Booking a class for student",
-      componentState: JSON.stringify({ 
-        schoolId, 
-        studentId, 
-        selectedDate 
+      componentState: JSON.stringify({
+        schoolId,
+        studentId,
+        selectedDate
       })
     }
   );
@@ -289,19 +293,13 @@ try {
   await bookClass(args);
   toast.success("Class booked!", "จองคลาสสำเร็จ!");
 } catch (error) {
-  toast.error(
-    error.message || "Unknown error occurred",
-    error.message || "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ",
-    "Booking Error",
-    "ข้อผิดพลาดการจอง",
-    {
-      errorCode: "MUTATION_ERROR",
-      errorOrigin: "components/class-booking.tsx",
-      errorFunction: "api.classes.book",
-      stackTrace: error.stack,
-      userAction: `Booking class at ${location} on ${date}`,
-    }
-  );
+  toast.error(error.message || "Unknown error occurred", error.message || "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ", "Booking Error", "ข้อผิดพลาดการจอง", {
+    errorCode: "MUTATION_ERROR",
+    errorOrigin: "components/class-booking.tsx",
+    errorFunction: "api.classes.book",
+    stackTrace: error.stack,
+    userAction: `Booking class at ${location} on ${date}`,
+  });
 }
 ```
 

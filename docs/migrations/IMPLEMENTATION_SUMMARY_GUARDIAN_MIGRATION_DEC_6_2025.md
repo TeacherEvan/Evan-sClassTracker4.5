@@ -156,15 +156,15 @@ Successfully implemented a comprehensive guardian-to-provider migration system w
 
 ## Acceptance Criteria - ALL MET ✅
 
-| Criterion | Status | Implementation |
-| --------- | ------ | -------------- |
-| Convert legacy students with guardian roles | ✅ | migrateGuardiansToProviders mutation |
-| Auto-create '{Teacher'sPVTclass}' pseudo-provider | ✅ | Orphan student detection + pseudo-provider creation |
-| Clean up legacy tables and deprecated fields | ✅ | cleanupDeprecatedFields mutation (phased) |
-| Test migration with dev data | ✅ | test-guardian-migration.js helper |
-| No legacy guardian records remain | ✅ | After cleanup phase |
-| All data correctly migrated | ✅ | verifyCleanup query confirms |
-| Migration automated and documented | ✅ | PS runner + comprehensive runbook |
+| Criterion                                         | Status | Implementation                                      |
+| ------------------------------------------------- | ------ | --------------------------------------------------- |
+| Convert legacy students with guardian roles       | ✅     | migrateGuardiansToProviders mutation                |
+| Auto-create '{Teacher'sPVTclass}' pseudo-provider | ✅     | Orphan student detection + pseudo-provider creation |
+| Clean up legacy tables and deprecated fields      | ✅     | cleanupDeprecatedFields mutation (phased)           |
+| Test migration with dev data                      | ✅     | test-guardian-migration.js helper                   |
+| No legacy guardian records remain                 | ✅     | After cleanup phase                                 |
+| All data correctly migrated                       | ✅     | verifyCleanup query confirms                        |
+| Migration automated and documented                | ✅     | PS runner + comprehensive runbook                   |
 
 ---
 
@@ -246,13 +246,13 @@ Successfully implemented a comprehensive guardian-to-provider migration system w
 
 ## Risks & Mitigations
 
-| Risk | Mitigation |
-| ---- | ---------- |
-| Data loss during migration | Backup before migration + rollback capability |
-| Orphan students not detected | Preview query shows count before migration |
-| Application breaks | Dry-run testing + phased rollout |
-| Cleanup too early | Wait 48+ hours + verification required |
-| User confusion | Comprehensive runbook with examples |
+| Risk                         | Mitigation                                    |
+| ---------------------------- | --------------------------------------------- |
+| Data loss during migration   | Backup before migration + rollback capability |
+| Orphan students not detected | Preview query shows count before migration    |
+| Application breaks           | Dry-run testing + phased rollout              |
+| Cleanup too early            | Wait 48+ hours + verification required        |
+| User confusion               | Comprehensive runbook with examples           |
 
 ---
 
@@ -300,13 +300,13 @@ Successfully implemented a comprehensive guardian-to-provider migration system w
 
 ## Success Metrics
 
-| Metric | Target | Verification |
-| ------ | ------ | ------------ |
-| Migration Success Rate | 100% | No errors in migration log |
-| Data Integrity | 100% | All students have providerId |
-| Rollback Success | 100% | Complete reversal works |
-| Documentation Quality | Complete | Runbook covers all scenarios |
-| User Impact | Zero downtime | Migration during low-traffic window |
+| Metric                 | Target        | Verification                        |
+| ---------------------- | ------------- | ----------------------------------- |
+| Migration Success Rate | 100%          | No errors in migration log          |
+| Data Integrity         | 100%          | All students have providerId        |
+| Rollback Success       | 100%          | Complete reversal works             |
+| Documentation Quality  | Complete      | Runbook covers all scenarios        |
+| User Impact            | Zero downtime | Migration during low-traffic window |
 
 ---
 

@@ -13,7 +13,10 @@ export async function verifyClassAccess(
   ctx: MutationCtx,
   userId: Id<"users">,
   classData: Doc<"classes">,
-  options: { requireModeratorOrAdmin?: boolean; allowTeacherOwner?: boolean } = {}
+  options: {
+    requireModeratorOrAdmin?: boolean;
+    allowTeacherOwner?: boolean;
+  } = {},
 ): Promise<void> {
   const user = await ctx.db.get(userId);
 
@@ -29,7 +32,9 @@ export async function verifyClassAccess(
   // Moderator can only access their assigned school
   if (user.role === "moderator") {
     if (!user.schoolId || user.schoolId !== classData.schoolId) {
-      throw new Error("Unauthorized: Moderators can only manage classes from their assigned school");
+      throw new Error(
+        "Unauthorized: Moderators can only manage classes from their assigned school",
+      );
     }
     return;
   }
@@ -43,8 +48,13 @@ export async function verifyClassAccess(
   }
 
   // Check role requirements if specified (after checking teacher owner exception)
-  if (options.requireModeratorOrAdmin && !["admin", "moderator"].includes(user.role)) {
-    throw new Error("Unauthorized: Only admins and moderators can perform this action");
+  if (
+    options.requireModeratorOrAdmin &&
+    !["admin", "moderator"].includes(user.role)
+  ) {
+    throw new Error(
+      "Unauthorized: Only admins and moderators can perform this action",
+    );
   }
 
   // If we get here and teacher isn't allowed, throw error

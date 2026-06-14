@@ -30,14 +30,14 @@ Note: Guardians are no longer a separate user role. "Guardians" are data entitie
 
 ### 🟢 Teacher Role (6 tabs)
 
-| Tab | Component | Purpose | Usage |
-|-----|-----------|---------|-------|
-| **calendar** | `WeeklyCalendar` | View weekly schedule, book classes | ⭐ Daily |
-| **classes** | `ClassBooking` | Advanced booking (multi-date, recurring, filters) | ⭐ Daily |
-| **messages** | `MessagingHub` | Communication with moderators/admins | ⭐ Daily |
-| **events** | `EventManagement` | School events timeline | 🟡 Weekly |
-| **notifications** | `NotificationList` | System notifications (view only) | 🟡 Weekly |
-| **resources** | `TeacherHelper` | Help content, quick reference | 🟢 As needed |
+| Tab               | Component          | Purpose                                           | Usage        |
+| ----------------- | ------------------ | ------------------------------------------------- | ------------ |
+| **calendar**      | `WeeklyCalendar`   | View weekly schedule, book classes                | ⭐ Daily     |
+| **classes**       | `ClassBooking`     | Advanced booking (multi-date, recurring, filters) | ⭐ Daily     |
+| **messages**      | `MessagingHub`     | Communication with moderators/admins              | ⭐ Daily     |
+| **events**        | `EventManagement`  | School events timeline                            | 🟡 Weekly    |
+| **notifications** | `NotificationList` | System notifications (view only)                  | 🟡 Weekly    |
+| **resources**     | `TeacherHelper`    | Help content, quick reference                     | 🟢 As needed |
 
 **Analysis**: Well-balanced. Core daily tools (calendar, classes, messages) + supporting features. No consolidation needed.
 
@@ -45,18 +45,18 @@ Note: Guardians are no longer a separate user role. "Guardians" are data entitie
 
 ### 🟡 Moderator Role (10 tabs)
 
-| Tab | Component | Purpose | Usage | Consolidation Candidate? |
-|-----|-----------|---------|-------|-------------------------|
-| **calendar** | `WeeklyCalendar` | Weekly schedule overview | ⭐ Daily | - |
-| **classes** | `ClassBooking` | Approve/manage class bookings | ⭐ Daily | - |
-| **messages** | `MessagingHub` | Communicate with teachers/admin | ⭐ Daily | - |
-| **events** | `EventManagement` | Create/manage school events | ⭐ Daily | - |
-| **notifications** | `NotificationList` | View notifications | 🟡 Weekly | - |
-| **students** | `StudentManagement` | CRUD for students | ⭐ Daily | - |
-| **locations** | `LocationManagement` | Manage teaching locations | 🟢 As needed | - |
-| **analytics** | `SimpleAnalytics` | School performance metrics | 🟡 Weekly | ✅ **MERGE with activity** |
-| **activity** | `TeacherActivityDashboard` | Teacher activity tracking | 🟡 Weekly | ✅ **MERGE with analytics** |
-| **deleted_students** | `AdminDeletedStudentsDashboard` | View/restore deleted students | 🟢 Rare | ✅ **MERGE into students** |
+| Tab                  | Component                       | Purpose                         | Usage        | Consolidation Candidate?    |
+| -------------------- | ------------------------------- | ------------------------------- | ------------ | --------------------------- |
+| **calendar**         | `WeeklyCalendar`                | Weekly schedule overview        | ⭐ Daily     | -                           |
+| **classes**          | `ClassBooking`                  | Approve/manage class bookings   | ⭐ Daily     | -                           |
+| **messages**         | `MessagingHub`                  | Communicate with teachers/admin | ⭐ Daily     | -                           |
+| **events**           | `EventManagement`               | Create/manage school events     | ⭐ Daily     | -                           |
+| **notifications**    | `NotificationList`              | View notifications              | 🟡 Weekly    | -                           |
+| **students**         | `StudentManagement`             | CRUD for students               | ⭐ Daily     | -                           |
+| **locations**        | `LocationManagement`            | Manage teaching locations       | 🟢 As needed | -                           |
+| **analytics**        | `SimpleAnalytics`               | School performance metrics      | 🟡 Weekly    | ✅ **MERGE with activity**  |
+| **activity**         | `TeacherActivityDashboard`      | Teacher activity tracking       | 🟡 Weekly    | ✅ **MERGE with analytics** |
+| **deleted_students** | `AdminDeletedStudentsDashboard` | View/restore deleted students   | 🟢 Rare      | ✅ **MERGE into students**  |
 
 **Analysis**:
 
@@ -70,41 +70,41 @@ Note: Guardians are no longer a separate user role. "Guardians" are data entitie
 
 #### Core Operations (7 tabs) - Keep Separate
 
-| Tab | Component | Purpose | Usage |
-|-----|-----------|---------|-------|
-| **calendar** | `WeeklyCalendar` | System-wide calendar view | ⭐ Daily |
-| **classes** | `ClassBooking` | Class management | ⭐ Daily |
-| **messages** | `MessagingHub` | System communication | ⭐ Daily |
-| **events** | `EventManagement` | Event management | ⭐ Daily |
-| **notifications** | `NotificationList` + `NotificationForm` | Create/view notifications | ⭐ Daily |
-| **students** | `StudentManagement` | Student CRUD | ⭐ Daily |
-| **schools** | `SchoolManagement` | School CRUD | 🟡 Weekly |
+| Tab               | Component                               | Purpose                   | Usage     |
+| ----------------- | --------------------------------------- | ------------------------- | --------- |
+| **calendar**      | `WeeklyCalendar`                        | System-wide calendar view | ⭐ Daily  |
+| **classes**       | `ClassBooking`                          | Class management          | ⭐ Daily  |
+| **messages**      | `MessagingHub`                          | System communication      | ⭐ Daily  |
+| **events**        | `EventManagement`                       | Event management          | ⭐ Daily  |
+| **notifications** | `NotificationList` + `NotificationForm` | Create/view notifications | ⭐ Daily  |
+| **students**      | `StudentManagement`                     | Student CRUD              | ⭐ Daily  |
+| **schools**       | `SchoolManagement`                      | School CRUD               | 🟡 Weekly |
 
 #### User Management (2 tabs) ✅ **MERGE CANDIDATE**
 
-| Tab | Component | Purpose | Usage | Recommendation |
-|-----|-----------|---------|-------|----------------|
-| **users** | `UserManagement` | Manage all users | 🟡 Weekly | ✅ **MERGE** |
-| **moderators** | `ModeratorListView` | Moderator-specific view | 🟡 Weekly | ✅ **MERGE** |
+| Tab            | Component           | Purpose                 | Usage     | Recommendation |
+| -------------- | ------------------- | ----------------------- | --------- | -------------- |
+| **users**      | `UserManagement`    | Manage all users        | 🟡 Weekly | ✅ **MERGE**   |
+| **moderators** | `ModeratorListView` | Moderator-specific view | 🟡 Weekly | ✅ **MERGE**   |
 
 **Proposal**: Combine into "User Management" with role filter dropdown (Teachers, Moderators, Guardians, All)
 
 #### Data Visualization (2 tabs) ✅ **MERGE CANDIDATE**
 
-| Tab | Component | Purpose | Usage | Recommendation |
-|-----|-----------|---------|-------|----------------|
-| **analytics** | `SimpleAnalytics` | Performance metrics | 🟡 Weekly | ✅ **MERGE** |
-| **activity** | `TeacherActivityDashboard` | Activity tracking | 🟡 Weekly | ✅ **MERGE** |
+| Tab           | Component                  | Purpose             | Usage     | Recommendation |
+| ------------- | -------------------------- | ------------------- | --------- | -------------- |
+| **analytics** | `SimpleAnalytics`          | Performance metrics | 🟡 Weekly | ✅ **MERGE**   |
+| **activity**  | `TeacherActivityDashboard` | Activity tracking   | 🟡 Weekly | ✅ **MERGE**   |
 
 **Proposal**: Combine into "Analytics & Insights" with tabs/sections for different metric types
 
 #### Notification System (3 tabs) ✅ **MERGE CANDIDATE**
 
-| Tab | Component | Purpose | Usage | Recommendation |
-|-----|-----------|---------|-------|----------------|
-| **notifications** | `NotificationList` + `NotificationForm` | Daily notifications | ⭐ Daily | Keep as base |
-| **notification_windows** | `AdminNotificationWindows` | One-time modal notifications | 🟢 Monthly | ✅ **MERGE** |
-| **app_updates** | `AdminAppUpdates` | Feature announcements | 🟢 Monthly | ✅ **MERGE** |
+| Tab                      | Component                               | Purpose                      | Usage      | Recommendation |
+| ------------------------ | --------------------------------------- | ---------------------------- | ---------- | -------------- |
+| **notifications**        | `NotificationList` + `NotificationForm` | Daily notifications          | ⭐ Daily   | Keep as base   |
+| **notification_windows** | `AdminNotificationWindows`              | One-time modal notifications | 🟢 Monthly | ✅ **MERGE**   |
+| **app_updates**          | `AdminAppUpdates`                       | Feature announcements        | 🟢 Monthly | ✅ **MERGE**   |
 
 **Proposal**: Combine into unified "Announcements" tab with sections:
 
@@ -114,20 +114,20 @@ Note: Guardians are no longer a separate user role. "Guardians" are data entitie
 
 #### Supporting Features (3 tabs)
 
-| Tab | Component | Purpose | Usage | Recommendation |
-|-----|-----------|---------|-------|----------------|
-| **locations** | `LocationManagement` | Teaching locations CRUD | 🟡 Weekly | Keep separate |
-| **resources** | `TeacherHelperAdmin` | Help content | 🟢 As needed | Keep separate |
-| **deleted_students** | `AdminDeletedStudentsDashboard` | Soft-delete recovery | 🟢 Rare | ✅ **MERGE into students** |
+| Tab                  | Component                       | Purpose                 | Usage        | Recommendation             |
+| -------------------- | ------------------------------- | ----------------------- | ------------ | -------------------------- |
+| **locations**        | `LocationManagement`            | Teaching locations CRUD | 🟡 Weekly    | Keep separate              |
+| **resources**        | `TeacherHelperAdmin`            | Help content            | 🟢 As needed | Keep separate              |
+| **deleted_students** | `AdminDeletedStudentsDashboard` | Soft-delete recovery    | 🟢 Rare      | ✅ **MERGE into students** |
 
 **Proposal**: Move deleted_students to students tab with "Show Deleted" filter
 
 #### Development Tools (2 tabs) ⚠️ **REMOVAL CANDIDATES**
 
-| Tab | Component | Purpose | Usage | Recommendation |
-|-----|-----------|---------|-------|----------------|
-| **testing** | `DeviceTestingDashboard` | Device/browser testing | 🔴 Dev only | ❌ **REMOVE** (or move to resources) |
-| **data_import** | 5 Sangsom components | One-time data migration | 🔴 One-time | ❌ **REMOVE** (should be PowerShell script) |
+| Tab             | Component                | Purpose                 | Usage       | Recommendation                              |
+| --------------- | ------------------------ | ----------------------- | ----------- | ------------------------------------------- |
+| **testing**     | `DeviceTestingDashboard` | Device/browser testing  | 🔴 Dev only | ❌ **REMOVE** (or move to resources)        |
+| **data_import** | 5 Sangsom components     | One-time data migration | 🔴 One-time | ❌ **REMOVE** (should be PowerShell script) |
 
 **Proposal**:
 
@@ -136,9 +136,9 @@ Note: Guardians are no longer a separate user role. "Guardians" are data entitie
 
 #### Admin Contact (1 tab)
 
-| Tab | Component | Purpose | Usage | Recommendation |
-|-----|-----------|---------|-------|----------------|
-| **contact_requests** | `AdminContactRequests` | User support requests | 🟡 Weekly | Keep separate |
+| Tab                  | Component              | Purpose               | Usage     | Recommendation |
+| -------------------- | ---------------------- | --------------------- | --------- | -------------- |
+| **contact_requests** | `AdminContactRequests` | User support requests | 🟡 Weekly | Keep separate  |
 
 ---
 
@@ -146,12 +146,12 @@ Note: Guardians are no longer a separate user role. "Guardians" are data entitie
 
 ### Summary of Changes
 
-| Change Type | Current Tabs | Proposed Tabs | Tabs Saved |
-|-------------|--------------|---------------|------------|
-| **Moderator** | 10 | 8 | 2 |
-| **Admin** | 19 | 13 | 6 |
-| **Teacher** | 6 | 6 | 0 |
-| **Guardian** | 0 (dashboard) | 0 (dashboard) | 0 |
+| Change Type   | Current Tabs  | Proposed Tabs | Tabs Saved |
+| ------------- | ------------- | ------------- | ---------- |
+| **Moderator** | 10            | 8             | 2          |
+| **Admin**     | 19            | 13            | 6          |
+| **Teacher**   | 6             | 6             | 0          |
+| **Guardian**  | 0 (dashboard) | 0 (dashboard) | 0          |
 
 **Total Reduction**: 8 tabs eliminated across all roles
 
@@ -172,7 +172,7 @@ Note: Guardians are no longer a separate user role. "Guardians" are data entitie
 // New component: components/analytics-insights.tsx
 export function AnalyticsInsights({ userRole, schoolId, currentUser }) {
   const [activeSubTab, setActiveSubTab] = useState<"metrics" | "activity">("metrics");
-  
+
   return (
     <div>
       {/* Sub-tab navigation */}
@@ -180,7 +180,7 @@ export function AnalyticsInsights({ userRole, schoolId, currentUser }) {
         <button onClick={() => setActiveSubTab("metrics")}>Performance Metrics</button>
         <button onClick={() => setActiveSubTab("activity")}>Teacher Activity</button>
       </div>
-      
+
       {/* Content */}
       {activeSubTab === "metrics" && <SimpleAnalytics schoolId={schoolId} />}
       {activeSubTab === "activity" && <TeacherActivityDashboard schoolId={schoolId} />}
@@ -218,7 +218,7 @@ export function AnalyticsInsights({ userRole, schoolId, currentUser }) {
 // Update existing: components/user-management.tsx
 export function UserManagement({ currentUser }: UserManagementProps) {
   const [roleFilter, setRoleFilter] = useState<"all" | "teacher" | "moderator" | "guardian">("all");
-  
+
   return (
     <div>
       {/* Role filter dropdown */}
@@ -228,7 +228,7 @@ export function UserManagement({ currentUser }: UserManagementProps) {
         <option value="moderator">Moderators</option>
         <option value="guardian">Guardians</option>
       </select>
-      
+
       {/* User list filtered by role */}
       <UserList roleFilter={roleFilter} />
     </div>
@@ -266,22 +266,16 @@ export function UserManagement({ currentUser }: UserManagementProps) {
 // New component: components/announcements-hub.tsx
 export function AnnouncementsHub({ currentUser }: AnnouncementsHubProps) {
   const [activeSection, setActiveSection] = useState<"daily" | "windows" | "updates">("daily");
-  
+
   return (
     <div>
       {/* Section navigation */}
       <div className="tabs">
-        <button onClick={() => setActiveSection("daily")}>
-          Daily Notifications
-        </button>
-        <button onClick={() => setActiveSection("windows")}>
-          Notification Windows
-        </button>
-        <button onClick={() => setActiveSection("updates")}>
-          App Updates
-        </button>
+        <button onClick={() => setActiveSection("daily")}>Daily Notifications</button>
+        <button onClick={() => setActiveSection("windows")}>Notification Windows</button>
+        <button onClick={() => setActiveSection("updates")}>App Updates</button>
       </div>
-      
+
       {/* Content by section */}
       {activeSection === "daily" && (
         <div>
@@ -325,27 +319,23 @@ export function AnnouncementsHub({ currentUser }: AnnouncementsHubProps) {
 // Update existing: components/student-management.tsx
 export function StudentManagement({ currentUser }: StudentManagementProps) {
   const [showDeleted, setShowDeleted] = useState(false);
-  
+
   // Query logic
-  const students = useQuery(api.students.list, { 
+  const students = useQuery(api.students.list, {
     schoolId: currentUser.schoolId,
-    includeDeleted: showDeleted 
+    includeDeleted: showDeleted,
   });
-  
+
   return (
     <div>
       {/* Filter controls */}
       <div className="filters">
         <label>
-          <input 
-            type="checkbox" 
-            checked={showDeleted} 
-            onChange={(e) => setShowDeleted(e.target.checked)} 
-          />
+          <input type="checkbox" checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} />
           Show Deleted Students
         </label>
       </div>
-      
+
       {/* Student list (includes deleted if toggle is on) */}
       <StudentList students={students} showDeleted={showDeleted} />
     </div>
@@ -503,15 +493,15 @@ ADMIN TABS (13 total - fits in view):
 
 ### Component Changes Required
 
-| Action | Files Modified | Complexity | Time Estimate |
-|--------|---------------|------------|---------------|
-| **Merge Analytics** | 2 new, 1 update | Low | 2 hours |
-| **Merge Users** | 1 update, 1 delete | Medium | 3 hours |
-| **Merge Announcements** | 1 new, 3 updates | Medium | 4 hours |
-| **Merge Students** | 1 update, 1 delete | Low | 2 hours |
-| **Remove Testing** | 1 update | Low | 30 min |
-| **Remove Data Import** | 1 update, 5 deletes, 4 scripts | Medium | 3 hours |
-| **Update Layout** | 2 updates (page.tsx, sidebar-nav.tsx) | Low | 1 hour |
+| Action                  | Files Modified                        | Complexity | Time Estimate |
+| ----------------------- | ------------------------------------- | ---------- | ------------- |
+| **Merge Analytics**     | 2 new, 1 update                       | Low        | 2 hours       |
+| **Merge Users**         | 1 update, 1 delete                    | Medium     | 3 hours       |
+| **Merge Announcements** | 1 new, 3 updates                      | Medium     | 4 hours       |
+| **Merge Students**      | 1 update, 1 delete                    | Low        | 2 hours       |
+| **Remove Testing**      | 1 update                              | Low        | 30 min        |
+| **Remove Data Import**  | 1 update, 5 deletes, 4 scripts        | Medium     | 3 hours       |
+| **Update Layout**       | 2 updates (page.tsx, sidebar-nav.tsx) | Low        | 1 hour        |
 
 **Total Time Estimate**: 15.5 hours (~2 working days)
 
@@ -529,12 +519,12 @@ ADMIN TABS (13 total - fits in view):
   // In app/page.tsx
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const tab = params.get('tab');
-    
+    const tab = params.get("tab");
+
     // Redirect old tab names
-    if (tab === 'moderators') setActiveTab('users');
-    if (tab === 'activity') setActiveTab('analytics');
-    if (tab === 'deleted_students') setActiveTab('students');
+    if (tab === "moderators") setActiveTab("users");
+    if (tab === "activity") setActiveTab("analytics");
+    if (tab === "deleted_students") setActiveTab("students");
     // etc.
   }, []);
   ```

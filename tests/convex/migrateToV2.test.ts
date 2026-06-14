@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { migrateUsers, migrateClasses, migrateProviders, migrateLocations, migrateStudents, runAllMigrations } from "../../convex/migrateToV2";
+import {
+  migrateUsers,
+  migrateClasses,
+  migrateProviders,
+  migrateLocations,
+  migrateStudents,
+  runAllMigrations,
+} from "../../convex/migrateToV2";
 
 describe("Migration Actions", () => {
   it("exports all migration functions", () => {

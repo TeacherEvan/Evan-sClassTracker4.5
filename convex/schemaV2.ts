@@ -8,7 +8,7 @@ export default defineSchema({
     role: v.union(
       v.literal("teacher"),
       v.literal("moderator"),
-      v.literal("admin")
+      v.literal("admin"),
     ),
     schoolId: v.optional(v.id("schools")),
     requirePasswordChange: v.boolean(),
@@ -17,13 +17,17 @@ export default defineSchema({
     failedLoginAttempts: v.optional(v.number()),
     accountLockedUntil: v.optional(v.number()),
     lastSuccessfulLogin: v.optional(v.number()),
-    loginHistory: v.optional(v.array(v.object({
-      timestamp: v.number(),
-      userAgent: v.string(),
-      deviceType: v.string(),
-      platform: v.string(),
-      browser: v.string(),
-    }))),
+    loginHistory: v.optional(
+      v.array(
+        v.object({
+          timestamp: v.number(),
+          userAgent: v.string(),
+          deviceType: v.string(),
+          platform: v.string(),
+          browser: v.string(),
+        }),
+      ),
+    ),
     deletedAt: v.optional(v.number()),
   })
     .index("by_username", ["username"])
@@ -51,7 +55,7 @@ export default defineSchema({
       v.literal("personal"),
       v.literal("private"),
       v.literal("language_school"),
-      v.literal("educational_camp")
+      v.literal("educational_camp"),
     ),
     createdBy: v.id("users"),
     schoolId: v.optional(v.id("schools")),
@@ -112,29 +116,33 @@ export default defineSchema({
     preparationNotes: v.optional(v.object({ en: v.string(), th: v.string() })),
     scheduledDate: v.number(),
     duration: v.optional(v.number()),
-    classType: v.optional(v.union(
-      v.literal("regular"),
-      v.literal("makeup"),
-      v.literal("assessment"),
-      v.literal("trial")
-    )),
+    classType: v.optional(
+      v.union(
+        v.literal("regular"),
+        v.literal("makeup"),
+        v.literal("assessment"),
+        v.literal("trial"),
+      ),
+    ),
     status: v.union(
       v.literal("pending"),
       v.literal("acknowledged"),
       v.literal("approved"),
       v.literal("rejected"),
       v.literal("completed"),
-      v.literal("cancelled")
+      v.literal("cancelled"),
     ),
     approvedByUserId: v.optional(v.id("users")),
     approvedByUsername: v.optional(v.string()),
     approvedAt: v.optional(v.number()),
-    approvalSource: v.optional(v.union(
-      v.literal("moderator"),
-      v.literal("admin"),
-      v.literal("auto_provider"),
-      v.literal("system")
-    )),
+    approvalSource: v.optional(
+      v.union(
+        v.literal("moderator"),
+        v.literal("admin"),
+        v.literal("auto_provider"),
+        v.literal("system"),
+      ),
+    ),
     flaggedForReview: v.optional(v.boolean()),
     includeInReports: v.optional(v.boolean()),
     reviewNotes: v.optional(v.object({ en: v.string(), th: v.string() })),
@@ -143,24 +151,28 @@ export default defineSchema({
     isEdited: v.optional(v.boolean()),
     lastEditedAt: v.optional(v.number()),
     lastEditedBy: v.optional(v.id("users")),
-    editHistory: v.optional(v.array(v.object({
-      editedAt: v.number(),
-      editedBy: v.id("users"),
-      editedByName: v.string(),
-      editedByRole: v.string(),
-      changes: v.array(v.object({
-        field: v.string(),
-        oldValue: v.string(),
-        newValue: v.string(),
-      })),
-    }))),
+    editHistory: v.optional(
+      v.array(
+        v.object({
+          editedAt: v.number(),
+          editedBy: v.id("users"),
+          editedByName: v.string(),
+          editedByRole: v.string(),
+          changes: v.array(
+            v.object({
+              field: v.string(),
+              oldValue: v.string(),
+              newValue: v.string(),
+            }),
+          ),
+        }),
+      ),
+    ),
     loggedAt: v.optional(v.number()),
     actualDuration: v.optional(v.number()),
-    attendance: v.optional(v.union(
-      v.literal("present"),
-      v.literal("absent"),
-      v.literal("late")
-    )),
+    attendance: v.optional(
+      v.union(v.literal("present"), v.literal("absent"), v.literal("late")),
+    ),
     createdAt: v.number(),
     deletedAt: v.optional(v.number()),
   })
@@ -197,7 +209,12 @@ export default defineSchema({
     titleTh: v.string(),
     message: v.string(),
     messageTh: v.string(),
-    type: v.union(v.literal("info"), v.literal("success"), v.literal("warning"), v.literal("error")),
+    type: v.union(
+      v.literal("info"),
+      v.literal("success"),
+      v.literal("warning"),
+      v.literal("error"),
+    ),
     userId: v.optional(v.union(v.string(), v.id("users"))),
     read: v.boolean(),
     createdAt: v.number(),
@@ -293,9 +310,27 @@ export default defineSchema({
     studentId: v.id("students"),
     schoolId: v.optional(v.id("schools")),
     notes: v.optional(v.object({ en: v.string(), th: v.string() })),
-    attendance: v.union(v.literal("present"), v.literal("absent"), v.literal("late")),
-    behavior: v.optional(v.union(v.literal("excellent"), v.literal("good"), v.literal("fair"), v.literal("needs_improvement"))),
-    participation: v.optional(v.union(v.literal("excellent"), v.literal("good"), v.literal("fair"), v.literal("needs_improvement"))),
+    attendance: v.union(
+      v.literal("present"),
+      v.literal("absent"),
+      v.literal("late"),
+    ),
+    behavior: v.optional(
+      v.union(
+        v.literal("excellent"),
+        v.literal("good"),
+        v.literal("fair"),
+        v.literal("needs_improvement"),
+      ),
+    ),
+    participation: v.optional(
+      v.union(
+        v.literal("excellent"),
+        v.literal("good"),
+        v.literal("fair"),
+        v.literal("needs_improvement"),
+      ),
+    ),
     homework: v.optional(v.object({ en: v.string(), th: v.string() })),
     createdAt: v.number(),
     skipped: v.boolean(),
@@ -315,13 +350,15 @@ export default defineSchema({
     titleTh: v.string(),
     description: v.string(),
     descriptionTh: v.string(),
-    features: v.array(v.object({
-      title: v.string(),
-      titleTh: v.string(),
-      description: v.string(),
-      descriptionTh: v.string(),
-      icon: v.string(),
-    })),
+    features: v.array(
+      v.object({
+        title: v.string(),
+        titleTh: v.string(),
+        description: v.string(),
+        descriptionTh: v.string(),
+        icon: v.string(),
+      }),
+    ),
     isActive: v.boolean(),
     createdAt: v.number(),
   })
@@ -342,12 +379,23 @@ export default defineSchema({
     userId: v.id("users"),
     userRole: v.string(),
     username: v.string(),
-    requestType: v.union(v.literal("general"), v.literal("feature_suggestion"), v.literal("bug_report"), v.literal("help_request"), v.literal("notification_window_request")),
+    requestType: v.union(
+      v.literal("general"),
+      v.literal("feature_suggestion"),
+      v.literal("bug_report"),
+      v.literal("help_request"),
+      v.literal("notification_window_request"),
+    ),
     subject: v.string(),
     subjectTh: v.string(),
     message: v.string(),
     messageTh: v.string(),
-    status: v.union(v.literal("pending"), v.literal("in_progress"), v.literal("resolved"), v.literal("dismissed")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("in_progress"),
+      v.literal("resolved"),
+      v.literal("dismissed"),
+    ),
     adminNotes: v.optional(v.string()),
     adminNotesTh: v.optional(v.string()),
     resolvedBy: v.optional(v.id("users")),
@@ -371,7 +419,11 @@ export default defineSchema({
     reason: v.string(),
     reasonTh: v.string(),
     newScheduledDate: v.optional(v.number()),
-    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+    ),
     createdAt: v.number(),
     resolvedAt: v.optional(v.number()),
     resolvedBy: v.optional(v.id("users")),

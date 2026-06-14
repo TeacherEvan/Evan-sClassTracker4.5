@@ -17,6 +17,6 @@ export const Label = forwardRef<HTMLLabelElement, LabelProps>(
         {children}
       </label>
     );
-  }
+  },
 );
 Label.displayName = "Label";

@@ -22,15 +22,15 @@
 
 ```typescript
 await updateStudent({
-    id: editingStudent,
-    firstName: nickname,
-    lastName: "",
-    grade,
-    class: studentClass && studentClass.trim() ? studentClass.trim() : undefined,
-    schoolId: schoolId || undefined,
-    providerId: providerId || undefined,
-    // ... all fields properly passed
-    updatedBy: currentUser._id,
+  id: editingStudent,
+  firstName: nickname,
+  lastName: "",
+  grade,
+  class: studentClass && studentClass.trim() ? studentClass.trim() : undefined,
+  schoolId: schoolId || undefined,
+  providerId: providerId || undefined,
+  // ... all fields properly passed
+  updatedBy: currentUser._id,
 });
 ```
 
@@ -62,9 +62,7 @@ setStudentClass(student.class || "");
 **Line 414-478: Update Mutation Handler**
 
 ```typescript
-const filteredUpdates = Object.fromEntries(
-  Object.entries(updates).filter(([, v]) => v !== undefined)
-);
+const filteredUpdates = Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined));
 
 await ctx.db.patch(id, filteredUpdates);
 
@@ -212,18 +210,16 @@ console.log('[DEBUG] Update result:', result);
 
 ```typescript
 // BEFORE
-const filteredUpdates = Object.fromEntries(
-  Object.entries(updates).filter(([, v]) => v !== undefined)
-);
+const filteredUpdates = Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined));
 
 // AFTER
 const filteredUpdates = Object.fromEntries(
   Object.entries(updates).filter(([key, v]) => {
     // Allow empty strings for optional text fields (clears the field)
-    if (typeof v === 'string' && v === '') return true;
+    if (typeof v === "string" && v === "") return true;
     // Filter out undefined
     return v !== undefined;
-  })
+  }),
 );
 ```
 
@@ -236,14 +232,14 @@ const filteredUpdates = Object.fromEntries(
 ```typescript
 // BEFORE
 setTimeout(() => {
-    resetForm();
+  resetForm();
 }, 1500);
 
 // AFTER
 // Don't reset form automatically - let user close manually
 // Or increase delay to 2500ms
 setTimeout(() => {
-    resetForm();
+  resetForm();
 }, 2500);
 ```
 

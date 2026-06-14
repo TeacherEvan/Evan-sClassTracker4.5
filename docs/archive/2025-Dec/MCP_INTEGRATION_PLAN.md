@@ -292,14 +292,14 @@ From TODO.md Priority 1:
 
 ## 📈 Time Estimates
 
-| Phase | Task | Est. Time | Priority |
-|-------|------|-----------|----------|
-| 1 | High-priority MCP servers | 90 min | HIGH |
-| 2 | Student edit diagnosis & fix | 60 min | HIGH |
-| 3 | Medium-priority MCP servers | 90 min | MEDIUM |
-| 4 | Low-priority MCP servers | 60 min | LOW |
-| 5 | Documentation & review | 60 min | MEDIUM |
-| **Total** | | **6 hours** | |
+| Phase     | Task                         | Est. Time   | Priority |
+| --------- | ---------------------------- | ----------- | -------- |
+| 1         | High-priority MCP servers    | 90 min      | HIGH     |
+| 2         | Student edit diagnosis & fix | 60 min      | HIGH     |
+| 3         | Medium-priority MCP servers  | 90 min      | MEDIUM   |
+| 4         | Low-priority MCP servers     | 60 min      | LOW      |
+| 5         | Documentation & review       | 60 min      | MEDIUM   |
+| **Total** |                              | **6 hours** |          |
 
 ---
 

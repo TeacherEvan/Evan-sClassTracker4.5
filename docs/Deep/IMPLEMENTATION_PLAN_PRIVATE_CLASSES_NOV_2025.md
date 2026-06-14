@@ -73,13 +73,13 @@
 
 ### Students per session: 2-3 students
 
-| Day | Location | Students | Count |
-|-----|----------|----------|-------|
-| Monday | OLD MUSIC TOILET | BEYOND, KARTOON, GRACE | 3 |
-| Tuesday | OLD MUSIC TOILET | NANI, WINTER | 2 |
-| Wednesday | OLD MUSIC TOILET | PING, PANGPRAW, GRACE | 3 |
-| Thursday | OLD MUSIC TOILET | BLUEFIN, KIRIN, T,me | 3 |
-| Friday | OLD MUSIC TOILET | Layn, Bua | 2 |
+| Day       | Location         | Students               | Count |
+| --------- | ---------------- | ---------------------- | ----- |
+| Monday    | OLD MUSIC TOILET | BEYOND, KARTOON, GRACE | 3     |
+| Tuesday   | OLD MUSIC TOILET | NANI, WINTER           | 2     |
+| Wednesday | OLD MUSIC TOILET | PING, PANGPRAW, GRACE  | 3     |
+| Thursday  | OLD MUSIC TOILET | BLUEFIN, KIRIN, T,me   | 3     |
+| Friday    | OLD MUSIC TOILET | Layn, Bua              | 2     |
 
 **Student Codes:**
 
@@ -106,13 +106,13 @@
 
 ### Students per session: 3 students
 
-| Day | Location | Students | Count | Notes |
-|-----|----------|----------|-------|-------|
-| Monday | Big kitchen | Davin, LALYNN, PANGPRAW | 3 | |
-| Tuesday | Big kitchen | Link, THAM, IU | 3 | |
-| Wednesday | OLD TEG | THAMESN'E, Davin, BRAVE | 3 | BRAVE = ONE TIME ONLY |
-| Thursday | Big kitchen | Link, ARSENE, RUNRUN | 3 | |
-| Friday | Big kitchen | THAMESN'E, Ampere, MILIN | 3 | MILIN = 7/11/25-30/1/26 |
+| Day       | Location    | Students                 | Count | Notes                   |
+| --------- | ----------- | ------------------------ | ----- | ----------------------- |
+| Monday    | Big kitchen | Davin, LALYNN, PANGPRAW  | 3     |                         |
+| Tuesday   | Big kitchen | Link, THAM, IU           | 3     |                         |
+| Wednesday | OLD TEG     | THAMESN'E, Davin, BRAVE  | 3     | BRAVE = ONE TIME ONLY   |
+| Thursday  | Big kitchen | Link, ARSENE, RUNRUN     | 3     |                         |
+| Friday    | Big kitchen | THAMESN'E, Ampere, MILIN | 3     | MILIN = 7/11/25-30/1/26 |
 
 **Student Codes:**
 
@@ -139,13 +139,13 @@
 
 ### Students per session: 1-2 students
 
-| Day | Location | Students | Count | Notes |
-|-----|----------|----------|-------|-------|
-| Monday | - | - | 0 | No classes |
-| Tuesday | PLAY ROOM B.5 | NARA, MANOW | 2 | |
-| Wednesday | PLAY ROOM B.5 | MASTER, NARA | 2 | |
-| Thursday | PLAY ROOM B.5 | NARA, MIU | 2 | |
-| Friday | PLAY ROOM B.5 | MARINE try 1, Thang Thang try 1 | 2 | ONE TIME ONLY |
+| Day       | Location      | Students                        | Count | Notes         |
+| --------- | ------------- | ------------------------------- | ----- | ------------- |
+| Monday    | -             | -                               | 0     | No classes    |
+| Tuesday   | PLAY ROOM B.5 | NARA, MANOW                     | 2     |               |
+| Wednesday | PLAY ROOM B.5 | MASTER, NARA                    | 2     |               |
+| Thursday  | PLAY ROOM B.5 | NARA, MIU                       | 2     |               |
+| Friday    | PLAY ROOM B.5 | MARINE try 1, Thang Thang try 1 | 2     | ONE TIME ONLY |
 
 **Student Codes:**
 
@@ -168,13 +168,13 @@
 
 ### Total Weekly Classes: 10 classes (GOMU GOMU attends twice)
 
-| Day | Location | Students | Count | Notes |
-|-----|----------|----------|-------|-------|
-| Monday | PLAY ROOM B.5 | ING-ING, GOMU GOMU | 2 | |
-| Tuesday | PLAY ROOM B.5 | PIGLET | 1 | |
-| Wednesday | PLAY ROOM B.5 | LALYNN, JEDI | 2 | |
-| Thursday | PLAY ROOM B.5 | GOMU GOMU, DARIN, MAYU | 3 | GOMU GOMU's 2nd class |
-| Friday | PLAY ROOM B.5 | MICKEY | 1 | |
+| Day       | Location      | Students               | Count | Notes                 |
+| --------- | ------------- | ---------------------- | ----- | --------------------- |
+| Monday    | PLAY ROOM B.5 | ING-ING, GOMU GOMU     | 2     |                       |
+| Tuesday   | PLAY ROOM B.5 | PIGLET                 | 1     |                       |
+| Wednesday | PLAY ROOM B.5 | LALYNN, JEDI           | 2     |                       |
+| Thursday  | PLAY ROOM B.5 | GOMU GOMU, DARIN, MAYU | 3     | GOMU GOMU's 2nd class |
+| Friday    | PLAY ROOM B.5 | MICKEY                 | 1     |                       |
 
 **Student Codes:**
 
@@ -238,8 +238,8 @@ Some students appear multiple days per week:
 export const seedPrivateClasses = mutation({
   args: {
     teacherUsername: v.union(v.literal("Che"), v.literal("Cale"), v.literal("Lee")),
-    weeksCount: v.optional(v.number()),  // Default 12 weeks
-    testMode: v.optional(v.boolean()),   // If true, only creates Week 1
+    weeksCount: v.optional(v.number()), // Default 12 weeks
+    testMode: v.optional(v.boolean()), // If true, only creates Week 1
   },
   handler: async (ctx, args) => {
     // 1. Get teacher by username
@@ -253,7 +253,7 @@ export const seedPrivateClasses = mutation({
     //    - Date-range students (within date boundaries)
     // 7. Set isGuardianLinked: true for auto-approval
     // 8. Return summary with created bookings and errors
-  }
+  },
 });
 ```
 
@@ -365,12 +365,7 @@ const studentNumber = parseInt(numberStr);
 // Query by grade, class, and number
 const student = await ctx.db
   .query("students")
-  .filter(q => 
-    q.and(
-      q.eq(q.field("grade"), `${grade}/${classNum}`),
-      q.eq(q.field("studentNumber"), studentNumber)
-    )
-  )
+  .filter((q) => q.and(q.eq(q.field("grade"), `${grade}/${classNum}`), q.eq(q.field("studentNumber"), studentNumber)))
   .first();
 ```
 

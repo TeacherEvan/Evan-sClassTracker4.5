@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { useStudents, useCreateStudent, useClass, useCreateClass } from "../../../lib/convex/hooks";
+import {
+  useStudents,
+  useCreateStudent,
+  useClass,
+  useCreateClass,
+} from "../../../lib/convex/hooks";
 
 describe("Generated Convex Hooks", () => {
   it("exports useStudents hook", () => {

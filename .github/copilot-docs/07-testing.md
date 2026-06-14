@@ -59,11 +59,11 @@ Don't duplicate login/navigation logic:
 ```typescript
 // ✅ CORRECT - Use helper functions
 await login(page, TEST_USERS.teacher);
-await navigateToTab(page, 'Classes');
+await navigateToTab(page, "Classes");
 
 // ❌ WRONG - Inline login logic with incorrect selectors
-await page.fill('input[name="username"]', 'Evan'); // WRONG: Use #username instead!
-await page.fill('input[name="password"]', 'TeacherEvan');
+await page.fill('input[name="username"]', "Evan"); // WRONG: Use #username instead!
+await page.fill('input[name="password"]', "TeacherEvan");
 // ... repeated in every test
 ```
 
@@ -91,11 +91,11 @@ await page.locator('button:has-text("Delete")').click(); // Fails if not found
 
 ```typescript
 // ✅ CORRECT - Generates unique test data
-const testData = generateTestData('student');
+const testData = generateTestData("student");
 await page.fill('input[name="firstName"]', testData.firstName);
 
 // ❌ WRONG - Hardcoded values cause conflicts
-await page.fill('input[name="firstName"]', 'John');
+await page.fill('input[name="firstName"]', "John");
 ```
 
 ### 5. Wait for Real-time Updates
@@ -105,20 +105,20 @@ Convex updates are asynchronous:
 ```typescript
 // ✅ CORRECT - Wait for toast confirmation
 await submitButton.click();
-await waitForToast(page, undefined, 'success');
-await expect(page.locator('text=approved')).toBeVisible({ timeout: 5000 });
+await waitForToast(page, undefined, "success");
+await expect(page.locator("text=approved")).toBeVisible({ timeout: 5000 });
 
 // ❌ WRONG - Assumes immediate update
 await submitButton.click();
-await expect(page.locator('text=approved')).toBeVisible(); // May fail
+await expect(page.locator("text=approved")).toBeVisible(); // May fail
 ```
 
 ### 6. Test Role-Based Access
 
 ```typescript
-test('moderator cannot see admin features', async ({ page }) => {
+test("moderator cannot see admin features", async ({ page }) => {
   await login(page, TEST_USERS.moderator);
-  
+
   // Verify admin-only buttons are hidden
   await expect(page.locator('button:has-text("Delete All Users")')).not.toBeVisible();
 });
@@ -127,19 +127,19 @@ test('moderator cannot see admin features', async ({ page }) => {
 ### 7. Test Bilingual Functionality
 
 ```typescript
-test('language switcher persists across sessions', async ({ page }) => {
+test("language switcher persists across sessions", async ({ page }) => {
   await login(page, TEST_USERS.teacher);
-  
+
   // Switch to Thai
-  await switchLanguage(page, 'th');
-  await expect(page.locator('text=จองคลาส')).toBeVisible();
-  
+  await switchLanguage(page, "th");
+  await expect(page.locator("text=จองคลาส")).toBeVisible();
+
   // Logout and login again
   await logout(page);
   await login(page, TEST_USERS.teacher);
-  
+
   // Verify Thai persisted
-  await expect(page.locator('text=จองคลาส')).toBeVisible();
+  await expect(page.locator("text=จองคลาส")).toBeVisible();
 });
 ```
 
@@ -153,16 +153,24 @@ Playwright runs tests in parallel by default:
 
 ```typescript
 // These tests can run in parallel
-test('test 1', async ({ page }) => { /* ... */ });
-test('test 2', async ({ page }) => { /* ... */ });
+test("test 1", async ({ page }) => {
+  /* ... */
+});
+test("test 2", async ({ page }) => {
+  /* ... */
+});
 ```
 
 ### 2. Use test.describe.serial for Dependent Tests
 
 ```typescript
-test.describe.serial('booking workflow', () => {
-  test('create class', async ({ page }) => { /* ... */ });
-  test('approve class', async ({ page }) => { /* ... */ }); // Depends on previous
+test.describe.serial("booking workflow", () => {
+  test("create class", async ({ page }) => {
+    /* ... */
+  });
+  test("approve class", async ({ page }) => {
+    /* ... */
+  }); // Depends on previous
 });
 ```
 
@@ -172,10 +180,10 @@ Navigate within app when possible:
 
 ```typescript
 // ✅ CORRECT - Use navigation
-await navigateToTab(page, 'Students');
+await navigateToTab(page, "Students");
 
 // ❌ SLOW - Unnecessary reload
-await page.goto('/students');
+await page.goto("/students");
 ```
 
 ### 4. Use Fixtures for Test Data Setup
@@ -195,14 +203,14 @@ test.beforeEach(async ({ page }) => {
 
 ```typescript
 // from auth.spec.ts
-test('should show error for invalid credentials', async ({ page }) => {
-  await page.goto('/');
-  
-  await page.locator('input[name="username"]').first().fill('invalid_user');
-  await page.locator('input[name="password"]').first().fill('wrong_password');
+test("should show error for invalid credentials", async ({ page }) => {
+  await page.goto("/");
+
+  await page.locator('input[name="username"]').first().fill("invalid_user");
+  await page.locator('input[name="password"]').first().fill("wrong_password");
   await page.locator('button:has-text("Login")').first().click();
-  
-  await waitForToast(page, undefined, 'error'); // Wait for error toast
+
+  await waitForToast(page, undefined, "error"); // Wait for error toast
 });
 ```
 
@@ -210,23 +218,23 @@ test('should show error for invalid credentials', async ({ page }) => {
 
 ```typescript
 // from class-booking.spec.ts
-test('teacher can book a class', async ({ page }) => {
+test("teacher can book a class", async ({ page }) => {
   await login(page, TEST_USERS.teacher);
-  await navigateToTab(page, 'Classes');
-  
+  await navigateToTab(page, "Classes");
+
   // Click "Book Class" button (bilingual support)
   await page.locator('button:has-text("Book Class"), button:has-text("จองคลาส")').first().click();
-  
+
   // Fill form (selectors handle both languages)
-  const schoolSelect = page.locator('select:has-option').first();
+  const schoolSelect = page.locator("select:has-option").first();
   await schoolSelect.selectOption({ index: 1 });
-  
+
   // Submit and verify
   await page.locator('button:has-text("Book"), button[type="submit"]').first().click();
-  await waitForToast(page, undefined, 'success');
-  
+  await waitForToast(page, undefined, "success");
+
   // Verify status appears
-  await expect(page.locator('text=pending, text=รอดำเนินการ')).toBeVisible();
+  await expect(page.locator("text=pending, text=รอดำเนินการ")).toBeVisible();
 });
 ```
 
@@ -234,7 +242,7 @@ test('teacher can book a class', async ({ page }) => {
 
 ```typescript
 // from helpers.ts usage
-const testData = generateTestData('class'); // Auto-generates unique test data
+const testData = generateTestData("class"); // Auto-generates unique test data
 ```
 
 ---
@@ -289,7 +297,7 @@ E2E tests run automatically after staging deployment via `e2e-tests.yml` workflo
 
 ```typescript
 // Check if password change dialog appears
-const passwordChangeDialog = page.locator('text=Change Password, text=เปลี่ยนรหัสผ่าน').first();
+const passwordChangeDialog = page.locator("text=Change Password, text=เปลี่ยนรหัสผ่าน").first();
 const isPasswordChangeVisible = await passwordChangeDialog.isVisible({ timeout: 2000 }).catch(() => false);
 
 if (isPasswordChangeVisible) {

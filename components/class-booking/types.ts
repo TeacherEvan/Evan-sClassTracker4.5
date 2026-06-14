@@ -43,7 +43,12 @@ export interface ClassItemWithDetails {
   approvedByUserId?: Id<"users">;
   approvedByUsername?: string;
   approvedAt?: number;
-  approvalSource?: "moderator" | "admin" | "auto_provider" | "auto_guardian" | "system";
+  approvalSource?:
+    | "moderator"
+    | "admin"
+    | "auto_provider"
+    | "auto_guardian"
+    | "system";
 }
 
 /**
@@ -59,7 +64,11 @@ export interface ClassItemDisplayProps {
   onApprove: (id: Id<"classes">) => void;
   onReject: (id: Id<"classes">) => void;
   onDelete: (id: Id<"classes">) => void;
-  onRequestCancellation: (id: Id<"classes">, reason: string, reasonTh: string) => void;
+  onRequestCancellation: (
+    id: Id<"classes">,
+    reason: string,
+    reasonTh: string,
+  ) => void;
   onEdit: (classData: ClassItemWithDetails) => void;
 }
 

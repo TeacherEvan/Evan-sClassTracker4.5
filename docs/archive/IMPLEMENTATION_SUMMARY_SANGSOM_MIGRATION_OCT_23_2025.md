@@ -62,7 +62,7 @@ Added migration button to the Testing tab alongside the Sangsom seed button
 ### Option 2: Just Delete Everything
 
 1. Login as admin
-2. Go to "Testing" tab  
+2. Go to "Testing" tab
 3. Click "Delete All" button
 4. Confirm THREE times (it's permanent!)
 5. All Sangsom students deleted, no conversion

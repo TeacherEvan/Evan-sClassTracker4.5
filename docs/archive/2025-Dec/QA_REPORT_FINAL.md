@@ -13,14 +13,14 @@ Comprehensive quality assurance analysis has been completed for Evan's Class Tra
 
 ### Overall Assessment
 
-| Category | Before QA | After QA | Status |
-|----------|-----------|----------|--------|
-| **TypeScript Errors** | 24 errors | 0 errors | ✅ FIXED |
-| **ESLint Errors** | 10 errors | 0 errors | ✅ FIXED |
-| **ESLint Warnings** | 12 warnings | 3 warnings | ✅ IMPROVED |
-| **Production Build** | Unknown | ✅ Success | ✅ VERIFIED |
-| **Build Time** | N/A | 10.4s (Turbopack) | ✅ EXCELLENT |
-| **Bundle Size** | N/A | 207 kB | ✅ ACCEPTABLE |
+| Category              | Before QA   | After QA          | Status        |
+| --------------------- | ----------- | ----------------- | ------------- |
+| **TypeScript Errors** | 24 errors   | 0 errors          | ✅ FIXED      |
+| **ESLint Errors**     | 10 errors   | 0 errors          | ✅ FIXED      |
+| **ESLint Warnings**   | 12 warnings | 3 warnings        | ✅ IMPROVED   |
+| **Production Build**  | Unknown     | ✅ Success        | ✅ VERIFIED   |
+| **Build Time**        | N/A         | 10.4s (Turbopack) | ✅ EXCELLENT  |
+| **Bundle Size**       | N/A         | 207 kB            | ✅ ACCEPTABLE |
 
 ---
 
@@ -33,12 +33,14 @@ Comprehensive quality assurance analysis has been completed for Evan's Class Tra
 **Result**: 0 errors
 
 **Fixes Applied**:
+
 1. Fixed missing `showToast` → `toast.success()` / `toast.error()` (3 files)
 2. Added missing audit action types (4 new actions)
 3. Fixed type issues in teacher-features.spec.ts (missing `page` parameter)
 4. Handled incomplete API endpoints with feature stubs
 
 **Files Modified**:
+
 - `components/flagged-classes-review.tsx` - Added feature stub
 - `components/moderator-analytics-view.tsx` - Added feature stub
 - `components/teacher-connection-manager.tsx` - Added feature stub
@@ -54,6 +56,7 @@ Comprehensive quality assurance analysis has been completed for Evan's Class Tra
 **Result**: 0 errors, 3 warnings
 
 **Remaining Warnings** (Non-Critical):
+
 1. `thailand-location-dropdown.tsx:66` - Unused `language` variable
 2. `thailand-location-dropdown.tsx:268` - aria-expanded accessibility warning
 3. `thailand-location-dropdown.tsx:365` - aria-expanded accessibility warning
@@ -70,6 +73,7 @@ Comprehensive quality assurance analysis has been completed for Evan's Class Tra
 **Bundle Size**: 207 kB first load
 
 **Build Output**:
+
 ```
 Route (app)                         Size  First Load JS
 ┌ ○ /                            62.7 kB         207 kB
@@ -79,6 +83,7 @@ Route (app)                         Size  First Load JS
 ```
 
 **Performance Metrics**:
+
 - Compilation: ✅ 10.4s (60-70% faster than Webpack)
 - Bundle size: ✅ 207 kB (within acceptable limits)
 - Static pages: ✅ 6/6 generated successfully
@@ -96,20 +101,20 @@ Route (app)                         Size  First Load JS
 
 **Test Coverage by Feature**:
 
-| Test Suite | Lines | Coverage Status |
-|------------|-------|-----------------|
-| `admin-features.spec.ts` | 489 | ✅ Complete |
-| `analytics.spec.ts` | 320 | ✅ Complete |
-| `auth.spec.ts` | 103 | ✅ Complete |
-| `class-booking.spec.ts` | 169 | ✅ Complete |
-| `lazy-loading.spec.ts` | 138 | ✅ Complete |
-| `location-system.spec.ts` | 418 | ✅ Complete |
-| `merge-classes.spec.ts` | 281 | ✅ Complete |
-| `moderator-features.spec.ts` | 477 | ✅ Complete |
-| `notifications.spec.ts` | 183 | ✅ Complete |
-| `startup-wizard.spec.ts` | 278 | ✅ Complete |
-| `student-management.spec.ts` | 232 | ✅ Complete |
-| `teacher-features.spec.ts` | 346 | ✅ Complete |
+| Test Suite                   | Lines | Coverage Status |
+| ---------------------------- | ----- | --------------- |
+| `admin-features.spec.ts`     | 489   | ✅ Complete     |
+| `analytics.spec.ts`          | 320   | ✅ Complete     |
+| `auth.spec.ts`               | 103   | ✅ Complete     |
+| `class-booking.spec.ts`      | 169   | ✅ Complete     |
+| `lazy-loading.spec.ts`       | 138   | ✅ Complete     |
+| `location-system.spec.ts`    | 418   | ✅ Complete     |
+| `merge-classes.spec.ts`      | 281   | ✅ Complete     |
+| `moderator-features.spec.ts` | 477   | ✅ Complete     |
+| `notifications.spec.ts`      | 183   | ✅ Complete     |
+| `startup-wizard.spec.ts`     | 278   | ✅ Complete     |
+| `student-management.spec.ts` | 232   | ✅ Complete     |
+| `teacher-features.spec.ts`   | 346   | ✅ Complete     |
 
 **Note**: E2E tests were not executed in this CI environment due to lack of Convex connection. Tests are verified via code review and historical pass rate.
 
@@ -185,11 +190,13 @@ Three components were identified as incomplete and marked with feature stubs:
 **Status**: ⚠️ **UNRESOLVED** - Must be addressed before production deployment
 
 **Issue**:
+
 - Bcrypt library incompatible with Convex runtime
 - Users with bcrypt hashes can login with **ANY password**
 - Migration to PBKDF2 complete but not executed
 
 **Required Action**:
+
 ```powershell
 # Run migration script IMMEDIATELY before deployment
 .\scripts\migrate-bcrypt-passwords.ps1
@@ -206,6 +213,7 @@ Three components were identified as incomplete and marked with feature stubs:
 **Status**: ✅ **FIXED** (v4.5.32)
 
 **Previous Issues** (Now Resolved):
+
 - ✅ Fixed: `approvedBy` → `approvedByUserId`
 - ✅ Fixed: `studentIds` → `studentId`
 - ✅ Fixed: Index name `by_teacher_date` → `by_teacher_and_date`
@@ -218,6 +226,7 @@ Three components were identified as incomplete and marked with feature stubs:
 ### 5.1 Code Organization ✅
 
 **Modular Architecture** (PR #96-98):
+
 - ✅ `class-booking.tsx`: 2,930 lines → Modular (50% reduction)
 - ✅ `classes.ts`: 2,213 lines → Modular (45% reduction)
 - ✅ Pattern #28: Lazy Loading implemented
@@ -230,6 +239,7 @@ Three components were identified as incomplete and marked with feature stubs:
 **Security**: ✅ 0 vulnerabilities (`npm audit`)
 
 **Recent Updates** (v4.5.32):
+
 - lucide-react: 0.554.0 → 0.556.0
 - tsx: 4.20.6 → 4.21.0
 - vitest: 4.0.13 → 4.0.15
@@ -243,6 +253,7 @@ Three components were identified as incomplete and marked with feature stubs:
 ### 6.1 QA Documentation ✅
 
 **Existing Documentation**:
+
 - ✅ `docs/QA_CHECKLIST_V4.5.32.md` (22,828 characters, 60+ test cases)
 - ✅ `docs/QA_EXECUTION_REPORT_V4.5.32.md` (21,154 characters)
 - ✅ `QA_SUMMARY_V4.5.32.md` (comprehensive summary)
@@ -263,6 +274,7 @@ Three components were identified as incomplete and marked with feature stubs:
 ### 7.1 Build Performance ✅
 
 **Metrics**:
+
 - Compile time: 10.4 seconds (Turbopack)
 - Bundle size: 207 kB first load
 - Static generation: 6/6 pages
@@ -272,12 +284,14 @@ Three components were identified as incomplete and marked with feature stubs:
 ### 7.2 Query Optimization ✅
 
 **Index Coverage** (Nov 18, 2025):
+
 - ✅ Students: `by_grade_and_class`
 - ✅ Locations: `by_name_and_active`
 - ✅ Classes: `by_teacher_and_date`
 - ✅ All critical queries use `.withIndex()`
 
 **Pattern Compliance**:
+
 - ✅ No N+1 query patterns detected
 - ✅ Batch fetch + Map pattern used consistently
 - ✅ Pattern #2 (Index-first queries) enforced
@@ -316,12 +330,14 @@ Three components were identified as incomplete and marked with feature stubs:
 ### 8.2 Authorization Scoping ✅
 
 **Moderator School Scoping**:
+
 - ✅ Moderators strictly scoped to assigned schools
 - ✅ No cross-school data access
 - ✅ Authorization checks in all queries
 - ✅ Backend enforcement (not just frontend)
 
 **Admin God Mode**:
+
 - ✅ Unrestricted access documented
 - ✅ Audit logging enforced
 - ✅ No privilege escalation vectors
@@ -369,6 +385,7 @@ Three components were identified as incomplete and marked with feature stubs:
 **Approve for Deployment**: ❌ **NO** (pending bcrypt migration)
 
 **Conditions**:
+
 1. ✅ Code quality excellent → **READY**
 2. ✅ Build system clean → **READY**
 3. 🔴 Security blocker → **MUST FIX**
@@ -384,17 +401,21 @@ Three components were identified as incomplete and marked with feature stubs:
 ### 10.1 Immediate Actions (Required Before Deployment) 🔴
 
 1. **Execute Bcrypt Migration** 🔴 **CRITICAL**
+
    ```powershell
    .\scripts\migrate-bcrypt-passwords.ps1
    ```
+
    - Estimated time: 15-30 minutes
    - Verification: Admin dashboard migration query
    - Follow-up: Force password change for affected users
 
 2. **Run E2E Tests in Staging** ⚠️
+
    ```bash
    npm run test:e2e
    ```
+
    - Environment: Staging with Convex connection
    - Expected: 97%+ pass rate
    - Document: Any failures for investigation
@@ -488,6 +509,7 @@ Evan's Class Tracker v4.5.32 demonstrates **excellent code quality**, comprehens
 **Overall Score**: **A-** (would be A+ after bcrypt migration)
 
 **Key Strengths**:
+
 - ✅ Clean build (0 TypeScript errors, 0 ESLint errors)
 - ✅ Fast build time (10.4s with Turbopack)
 - ✅ Comprehensive E2E test suite (3,434 lines, 97%+ pass rate)
@@ -496,6 +518,7 @@ Evan's Class Tracker v4.5.32 demonstrates **excellent code quality**, comprehens
 - ✅ Strong security (PBKDF2, account lockout, audit logging)
 
 **Critical Weakness**:
+
 - 🔴 Bcrypt migration incomplete (security blocker)
 
 **Recommendation**: **CONDITIONAL APPROVAL** - Deploy after bcrypt migration
@@ -505,6 +528,7 @@ Evan's Class Tracker v4.5.32 demonstrates **excellent code quality**, comprehens
 ## Appendix A: Test Execution Commands
 
 ### Build & Lint Commands
+
 ```bash
 # TypeScript Compilation
 npx tsc --noEmit  # ✅ PASS (0 errors)
@@ -521,6 +545,7 @@ npm run lint:md:fix  # Auto-fix most issues
 ```
 
 ### E2E Test Commands (Not Executed - CI Limitation)
+
 ```bash
 # Full E2E suite (requires Convex connection)
 npm run test:e2e
@@ -536,6 +561,7 @@ npm run test:e2e:headed
 ```
 
 ### Migration Commands (REQUIRED)
+
 ```powershell
 # Bcrypt password migration
 .\scripts\migrate-bcrypt-passwords.ps1
@@ -586,6 +612,7 @@ npm run test:e2e:headed
 **Distribution**: Development Team, Product Owner, Technical Lead
 
 **Related Documents**:
+
 - `docs/QA_CHECKLIST_V4.5.32.md`
 - `docs/QA_EXECUTION_REPORT_V4.5.32.md`
 - `QA_SUMMARY_V4.5.32.md`
@@ -600,4 +627,4 @@ npm run test:e2e:headed
 
 ---
 
-*Generated: December 6, 2025 | Review: Pending | Sign-Off: Pending*
+_Generated: December 6, 2025 | Review: Pending | Sign-Off: Pending_

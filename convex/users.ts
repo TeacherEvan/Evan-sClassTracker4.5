@@ -13,7 +13,11 @@ const HASH_LENGTH = 32; // 256 bits
  * Detect if hash is bcrypt (starts with $2a$, $2b$, or $2y$)
  */
 function isBcryptHash(hash: string): boolean {
-  return hash.startsWith("$2a$") || hash.startsWith("$2b$") || hash.startsWith("$2y$");
+  return (
+    hash.startsWith("$2a$") ||
+    hash.startsWith("$2b$") ||
+    hash.startsWith("$2y$")
+  );
 }
 
 /**
@@ -27,7 +31,7 @@ function isPBKDF2Hash(hash: string): boolean {
  * Convert bytes to hex
  */
 function bytesToHex(bytes: Uint8Array): string {
-  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 /**
@@ -57,7 +61,7 @@ export async function hashPassword(password: string): Promise<string> {
     encoder.encode(password),
     "PBKDF2",
     false,
-    ["deriveBits"]
+    ["deriveBits"],
   );
 
   // Derive key using PBKDF2
@@ -66,10 +70,10 @@ export async function hashPassword(password: string): Promise<string> {
       name: "PBKDF2",
       salt: salt,
       iterations: PBKDF2_ITERATIONS,
-      hash: "SHA-256"
+      hash: "SHA-256",
     },
     keyMaterial,
-    HASH_LENGTH * 8
+    HASH_LENGTH * 8,
   );
 
   const hash = new Uint8Array(hashBuffer);
@@ -79,10 +83,13 @@ export async function hashPassword(password: string): Promise<string> {
 /**
  * Verify password (supports PBKDF2, legacy bcrypt, and btoa)
  */
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+export async function verifyPassword(
+  password: string,
+  hash: string,
+): Promise<boolean> {
   if (isPBKDF2Hash(hash)) {
     // New PBKDF2 hash
-    const parts = hash.split('$');
+    const parts = hash.split("$");
     if (parts.length !== 3) return false;
 
     const saltArray = hexToBytes(parts[1]);
@@ -95,7 +102,7 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
       encoder.encode(password),
       "PBKDF2",
       false,
-      ["deriveBits"]
+      ["deriveBits"],
     );
 
     const hashBuffer = await crypto.subtle.deriveBits(
@@ -103,10 +110,10 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
         name: "PBKDF2",
         salt: salt,
         iterations: PBKDF2_ITERATIONS,
-        hash: "SHA-256"
+        hash: "SHA-256",
       },
       keyMaterial,
-      HASH_LENGTH * 8
+      HASH_LENGTH * 8,
     );
 
     const computedHash = bytesToHex(new Uint8Array(hashBuffer));
@@ -122,12 +129,14 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
     // by hashing it with PBKDF2 and checking if user will be able to login after auto-upgrade
     console.warn(`⚠️ Bcrypt hash detected - rejecting login`);
 
-    throw new Error("Your password format is outdated. Please contact an admin to reset your password.");
+    throw new Error(
+      "Your password format is outdated. Please contact an admin to reset your password.",
+    );
   } else {
     // Legacy btoa hash
     return btoa(password) === hash;
   }
-}// Query to get user by username
+} // Query to get user by username
 export const getByUsername = query({
   args: {
     username: v.string(),
@@ -167,18 +176,16 @@ export const getById = query({
 // Query to list all users (admin only)
 export const list = query({
   args: {
-    role: v.optional(v.union(
-      v.literal("teacher"),
-      v.literal("moderator"),
-      v.literal("admin")
-    )),
+    role: v.optional(
+      v.union(v.literal("teacher"), v.literal("moderator"), v.literal("admin")),
+    ),
   },
   handler: async (ctx, args) => {
     const users = args.role
       ? await ctx.db
-        .query("users")
-        .withIndex("by_role", (q) => q.eq("role", args.role!))
-        .collect()
+          .query("users")
+          .withIndex("by_role", (q) => q.eq("role", args.role!))
+          .collect()
       : await ctx.db.query("users").collect();
 
     // Don't return password hashes
@@ -194,7 +201,7 @@ export const create = mutation({
     role: v.union(
       v.literal("teacher"),
       v.literal("moderator"),
-      v.literal("admin")
+      v.literal("admin"),
     ),
     schoolId: v.optional(v.id("schools")),
   },
@@ -286,9 +293,11 @@ export const login = mutation({
     // Check if account is locked
     const now = Date.now();
     if (user.accountLockedUntil && user.accountLockedUntil > now) {
-      const hoursRemaining = Math.ceil((user.accountLockedUntil - now) / (1000 * 60 * 60));
+      const hoursRemaining = Math.ceil(
+        (user.accountLockedUntil - now) / (1000 * 60 * 60),
+      );
       throw new Error(
-        `Account locked due to too many failed login attempts. Try again in ${hoursRemaining} hour(s) or contact an admin to reset your password.`
+        `Account locked due to too many failed login attempts. Try again in ${hoursRemaining} hour(s) or contact an admin to reset your password.`,
       );
     }
 
@@ -307,20 +316,22 @@ export const login = mutation({
 
       if (failedAttempts >= 5) {
         // Lock account for 24 hours
-        const lockoutUntil = now + (24 * 60 * 60 * 1000); // 24 hours
+        const lockoutUntil = now + 24 * 60 * 60 * 1000; // 24 hours
         await ctx.db.patch(user._id, {
           failedLoginAttempts: failedAttempts,
           accountLockedUntil: lockoutUntil,
         });
         throw new Error(
-          "Too many failed login attempts. Account locked for 24 hours. Contact an admin to reset your password earlier."
+          "Too many failed login attempts. Account locked for 24 hours. Contact an admin to reset your password earlier.",
         );
       } else {
         // Track failed attempt
         await ctx.db.patch(user._id, {
           failedLoginAttempts: failedAttempts,
         });
-        throw new Error(`Invalid username or password. ${5 - failedAttempts} attempt(s) remaining.`);
+        throw new Error(
+          `Invalid username or password. ${5 - failedAttempts} attempt(s) remaining.`,
+        );
       }
     }
 
@@ -350,9 +361,13 @@ export const login = mutation({
     // Auto-detect language preference on first login (if not set)
     let languageUpdate = {};
     if (!user.preferredLanguage && args.browserLanguage) {
-      const detectedLang = args.browserLanguage.toLowerCase().startsWith('th') ? 'th' : 'en';
+      const detectedLang = args.browserLanguage.toLowerCase().startsWith("th")
+        ? "th"
+        : "en";
       languageUpdate = { preferredLanguage: detectedLang };
-      console.log(`🌍 Auto-detected language for ${user.username}: ${detectedLang} (from browser: ${args.browserLanguage})`);
+      console.log(
+        `🌍 Auto-detected language for ${user.username}: ${detectedLang} (from browser: ${args.browserLanguage})`,
+      );
     }
 
     await ctx.db.patch(user._id, {
@@ -407,7 +422,9 @@ export const changePassword = mutation({
 
     // Check if account is locked
     if (user.accountLockedUntil && user.accountLockedUntil > Date.now()) {
-      throw new Error("Account is locked. Please try again later or contact admin.");
+      throw new Error(
+        "Account is locked. Please try again later or contact admin.",
+      );
     }
 
     // Verify current password (supports PBKDF2, bcrypt, and legacy btoa hashes)
@@ -460,7 +477,7 @@ export const updateDeviceType = mutation({
     deviceType: v.union(
       v.literal("mobile"),
       v.literal("tablet"),
-      v.literal("desktop")
+      v.literal("desktop"),
     ),
   },
   handler: async (ctx, args) => {
@@ -711,19 +728,20 @@ export const getMigrationStats = query({
   handler: async (ctx) => {
     const allUsers = await ctx.db.query("users").collect();
 
-    const pbkdf2Users = allUsers.filter(u => isPBKDF2Hash(u.passwordHash));
-    const legacyUsers = allUsers.filter(u => !isPBKDF2Hash(u.passwordHash));
+    const pbkdf2Users = allUsers.filter((u) => isPBKDF2Hash(u.passwordHash));
+    const legacyUsers = allUsers.filter((u) => !isPBKDF2Hash(u.passwordHash));
 
-    const percentage = allUsers.length > 0
-      ? Math.round((pbkdf2Users.length / allUsers.length) * 100)
-      : 0;
+    const percentage =
+      allUsers.length > 0
+        ? Math.round((pbkdf2Users.length / allUsers.length) * 100)
+        : 0;
 
     return {
       total: allUsers.length,
       migrated: pbkdf2Users.length,
       pending: legacyUsers.length,
       percentage,
-      legacyUsernames: legacyUsers.map(u => u.username), // For admin tracking
+      legacyUsernames: legacyUsers.map((u) => u.username), // For admin tracking
     };
   },
 });
@@ -745,7 +763,9 @@ export const updateLanguagePreference = mutation({
       preferredLanguage: args.preferredLanguage,
     });
 
-    console.log(`🌍 Updated language preference for ${user.username}: ${args.preferredLanguage}`);
+    console.log(
+      `🌍 Updated language preference for ${user.username}: ${args.preferredLanguage}`,
+    );
 
     return {
       success: true,
@@ -760,20 +780,24 @@ export const updateWizardPreferences = mutation({
     userId: v.id("users"),
     preferences: v.object({
       defaultDuration: v.optional(v.number()),
-      defaultClassType: v.optional(v.union(
-        v.literal("regular"),
-        v.literal("makeup"),
-        v.literal("assessment"),
-        v.literal("trial")
-      )),
+      defaultClassType: v.optional(
+        v.union(
+          v.literal("regular"),
+          v.literal("makeup"),
+          v.literal("assessment"),
+          v.literal("trial"),
+        ),
+      ),
       preferredStartTime: v.optional(v.string()),
       recentTeacherIds: v.optional(v.array(v.id("users"))),
       recentStudentIds: v.optional(v.array(v.id("students"))),
       recentGrades: v.optional(v.array(v.string())),
-      lastReportDateRange: v.optional(v.object({
-        startDate: v.number(),
-        endDate: v.number(),
-      })),
+      lastReportDateRange: v.optional(
+        v.object({
+          startDate: v.number(),
+          endDate: v.number(),
+        }),
+      ),
       skipTeacherStep: v.optional(v.boolean()),
     }),
   },
@@ -789,10 +813,16 @@ export const updateWizardPreferences = mutation({
     const mergedPrefs = { ...existingPrefs, ...args.preferences };
 
     // Limit recent items to prevent unbounded growth
-    if (mergedPrefs.recentTeacherIds && mergedPrefs.recentTeacherIds.length > 5) {
+    if (
+      mergedPrefs.recentTeacherIds &&
+      mergedPrefs.recentTeacherIds.length > 5
+    ) {
       mergedPrefs.recentTeacherIds = mergedPrefs.recentTeacherIds.slice(0, 5);
     }
-    if (mergedPrefs.recentStudentIds && mergedPrefs.recentStudentIds.length > 5) {
+    if (
+      mergedPrefs.recentStudentIds &&
+      mergedPrefs.recentStudentIds.length > 5
+    ) {
       mergedPrefs.recentStudentIds = mergedPrefs.recentStudentIds.slice(0, 5);
     }
     if (mergedPrefs.recentGrades && mergedPrefs.recentGrades.length > 3) {

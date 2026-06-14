@@ -22,7 +22,9 @@ export const restoreTableBatch = mutation({
   handler: async (ctx, args) => {
     const { tableName, records, isFirstBatch } = args;
 
-    console.log(`🔄 Restoring table batch: ${tableName} with ${records.length} records`);
+    console.log(
+      `🔄 Restoring table batch: ${tableName} with ${records.length} records`,
+    );
 
     // Validate table name
     const validTables = [
@@ -60,7 +62,9 @@ export const restoreTableBatch = mutation({
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const existingRecords = await ctx.db.query(tableName as any).collect();
-      console.log(`   Found ${existingRecords.length} existing records to delete`);
+      console.log(
+        `   Found ${existingRecords.length} existing records to delete`,
+      );
 
       for (const record of existingRecords) {
         await ctx.db.delete(record._id);
@@ -124,7 +128,9 @@ export const restoreTable = mutation({
   handler: async (ctx, args) => {
     const { tableName, records } = args;
 
-    console.log(`🔄 Restoring table: ${tableName} with ${records.length} records`);
+    console.log(
+      `🔄 Restoring table: ${tableName} with ${records.length} records`,
+    );
 
     // Validate table name
     const validTables = [
@@ -161,7 +167,9 @@ export const restoreTable = mutation({
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const existingRecords = await ctx.db.query(tableName as any).collect();
-    console.log(`   Found ${existingRecords.length} existing records to delete`);
+    console.log(
+      `   Found ${existingRecords.length} existing records to delete`,
+    );
 
     for (const record of existingRecords) {
       await ctx.db.delete(record._id);
@@ -194,7 +202,9 @@ export const restoreTable = mutation({
 
         // Progress logging every 100 records
         if ((i + 1) % 100 === 0) {
-          console.log(`   Progress: ${i + 1}/${records.length} records inserted`);
+          console.log(
+            `   Progress: ${i + 1}/${records.length} records inserted`,
+          );
         }
       } catch (error) {
         const errorMsg = `Record ${i}: ${error instanceof Error ? error.message : String(error)}`;
@@ -265,7 +275,9 @@ export const clearAllTables = mutation({
       for (const record of records) {
         await ctx.db.delete(record._id);
       }
-      console.log(`   ✅ Cleared ${tableName}: ${records.length} records deleted`);
+      console.log(
+        `   ✅ Cleared ${tableName}: ${records.length} records deleted`,
+      );
       totalDeleted += records.length;
     }
 

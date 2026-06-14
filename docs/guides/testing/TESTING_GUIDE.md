@@ -170,10 +170,7 @@ Open: `http://localhost:3001`
 3. Render with props:
 
    ```tsx
-   <MonthCalendarPicker
-     selectedDate={new Date()}
-     onDateSelect={(date) => console.log(date)}
-   />
+   <MonthCalendarPicker selectedDate={new Date()} onDateSelect={(date) => console.log(date)} />
    ```
 
 4. ✅ **Expected:** Calendar renders with current month
@@ -333,5 +330,5 @@ Open: `http://localhost:3001`
 
 ---
 
-*Test execution time: ~30 minutes for full suite*  
-*Critical path: Features 1-5 (user-facing UI changes)*
+_Test execution time: ~30 minutes for full suite_  
+_Critical path: Features 1-5 (user-facing UI changes)_

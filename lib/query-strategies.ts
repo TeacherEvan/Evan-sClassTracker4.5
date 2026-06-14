@@ -1,11 +1,11 @@
 /**
  * Convex Query Update Strategy Configuration
- * 
+ *
  * This file defines which data sources should use:
  * - Real-time subscriptions (instant updates)
  * - Polling (periodic updates)
  * - Manual refresh (on-demand updates)
- * 
+ *
  * Last Updated: Dec 21, 2025
  */
 
@@ -53,14 +53,16 @@ export const UPDATE_STRATEGIES = {
     classes: {
       strategy: "scoped-realtime" as const,
       scopeBy: ["teacherId", "schoolId", "dateRange"],
-      reason: "Keep real-time for booking workflow, but filter to relevant data only",
+      reason:
+        "Keep real-time for booking workflow, but filter to relevant data only",
     },
 
     // Students: Moderate changes, scope by school/provider
     students: {
       strategy: "scoped-realtime" as const,
       scopeBy: ["schoolId", "providerId", "teacherId"],
-      reason: "Student data needs to be current for booking, scope to reduce updates",
+      reason:
+        "Student data needs to be current for booking, scope to reduce updates",
     },
 
     // Notifications: User-specific, already scoped
@@ -80,7 +82,8 @@ export const UPDATE_STRATEGIES = {
     adminAnalytics: {
       strategy: "manual" as const,
       autoRefreshInterval: 10000, // 10 seconds when visible
-      reason: "Analytics expensive to calculate, refresh on demand or visibility",
+      reason:
+        "Analytics expensive to calculate, refresh on demand or visibility",
     },
 
     // Teacher class count: Historical data, changes completed
@@ -106,7 +109,8 @@ export const UPDATE_STRATEGIES = {
     // Current user session
     currentUser: {
       strategy: "realtime" as const,
-      reason: "Security-critical, must detect logout/permissions changes immediately",
+      reason:
+        "Security-critical, must detect logout/permissions changes immediately",
     },
 
     // Active booking conflicts
@@ -132,7 +136,7 @@ export function getUpdateStrategy(dataSource: string) {
       return tier[dataSource as keyof typeof tier];
     }
   }
-  
+
   // Default to scoped real-time if not specified
   return {
     strategy: "scoped-realtime" as const,
@@ -146,10 +150,10 @@ export function getUpdateStrategy(dataSource: string) {
 export const MONITORING = {
   // Log re-render counts every 30 seconds in development
   rerenderLogging: 30000,
-  
+
   // Track query response times
   performanceTracking: true,
-  
+
   // Alert if polling interval missed by > 20%
   pollingDriftThreshold: 0.2,
 } as const;

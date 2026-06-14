@@ -5,7 +5,7 @@
 When users changed the language in the moderator welcome wizard, an "Application Error" dialog appeared with the message:
 
 ```text
-Failed to execute 'removeChild' on 'Node': 
+Failed to execute 'removeChild' on 'Node':
 The node to be removed is not a child of this node.
 ```
 
@@ -34,13 +34,15 @@ In `components/startup-window.tsx`, when the language toggle button was clicked:
 ### Code Before Fix
 
 ```tsx
-{showBookingWizard && (
+{
+  showBookingWizard && (
     <BookingWizard
-        userId={user._id}
-        userRole={user.role as "teacher" | "moderator"}
-        // ... other props
+      userId={user._id}
+      userRole={user.role as "teacher" | "moderator"}
+      // ... other props
     />
-)}
+  );
+}
 ```
 
 ## The Solution
@@ -50,14 +52,16 @@ In `components/startup-window.tsx`, when the language toggle button was clicked:
 Added unique `key` props to each wizard modal that include the current language:
 
 ```tsx
-{showBookingWizard && (
+{
+  showBookingWizard && (
     <BookingWizard
-        key={`booking-wizard-${language}`}
-        userId={user._id}
-        userRole={user.role as "teacher" | "moderator"}
-        // ... other props
+      key={`booking-wizard-${language}`}
+      userId={user._id}
+      userRole={user.role as "teacher" | "moderator"}
+      // ... other props
     />
-)}
+  );
+}
 ```
 
 ### Why This Works
@@ -121,7 +125,7 @@ We specifically include the language variable because:
 
 1. **components/startup-window.tsx**
    - Added `key` prop to BookingWizard
-   - Added `key` prop to ClassCountReportWizard  
+   - Added `key` prop to ClassCountReportWizard
    - Added `key` prop to MessageWizard
    - Added `key` prop to ClassAnalytics
 

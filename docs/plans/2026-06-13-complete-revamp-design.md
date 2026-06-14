@@ -15,6 +15,7 @@
 ### 1.1 Schema Rationalization
 
 **Current Pain Points:**
+
 - 50+ deprecated/optional fields across tables (guardianId, guardianTitle, isGuardianLinked, area, acknowledged, etc.)
 - Bilingual fields duplicated everywhere (`field` + `fieldTh`)
 - Soft delete pattern inconsistent (some tables have `isDeleted`, others don't)
@@ -22,6 +23,7 @@
 - No proper migration system — schema changes are destructive
 
 **New Schema Principles:**
+
 1. **i18n object pattern** — `{ en: string, th: string }` instead of duplicated fields
 2. **Explicit soft delete** — `deletedAt: v.optional(v.number())` on ALL entity tables
 3. **Private students as providers** — Provider category `"personal"` = private students, no schoolId needed
@@ -235,13 +237,13 @@ locations: defineTable({
 
 ### 2.1 Current Monoliths to Decompose
 
-| Component | Lines | New Structure |
-|-----------|-------|---------------|
-| `class-booking/index.tsx` | ~2000+ | `components/class-booking/` (already started — complete it) |
-| `components/student-management/index.tsx` | ~1500 | `components/student-management/` with sub-components |
-| `components/teacher-activity-dashboard.tsx` | ~1200 | Split into `TeacherDashboard`, `ClassList`, `AnalyticsPanel` |
-| `components/messaging-hub.tsx` | ~1000 | Separate `MessageList`, `MessageComposer`, `GroupManager` |
-| `components/admin-analytics-dashboard.tsx` | ~900 | Composable widgets |
+| Component                                   | Lines  | New Structure                                                |
+| ------------------------------------------- | ------ | ------------------------------------------------------------ |
+| `class-booking/index.tsx`                   | ~2000+ | `components/class-booking/` (already started — complete it)  |
+| `components/student-management/index.tsx`   | ~1500  | `components/student-management/` with sub-components         |
+| `components/teacher-activity-dashboard.tsx` | ~1200  | Split into `TeacherDashboard`, `ClassList`, `AnalyticsPanel` |
+| `components/messaging-hub.tsx`              | ~1000  | Separate `MessageList`, `MessageComposer`, `GroupManager`    |
+| `components/admin-analytics-dashboard.tsx`  | ~900   | Composable widgets                                           |
 
 ### 2.2 New Component Primitive Library
 
@@ -313,22 +315,11 @@ Replace ad-hoc `useQuery`/`useMutation` with generated, typed hooks:
 ```typescript
 // lib/convex/hooks.ts (auto-generated from schema)
 
-export function useStudents(filters?: {
-  providerId?: Id<"providers">;
-  schoolId?: Id<"schools">;
-  grade?: string;
-  includeDeleted?: boolean;
-}) {
+export function useStudents(filters?: { providerId?: Id<"providers">; schoolId?: Id<"schools">; grade?: string; includeDeleted?: boolean }) {
   return useQuery(api.students.list, filters);
 }
 
-export function useClasses(filters?: {
-  teacherId?: Id<"users">;
-  schoolId?: Id<"schools">;
-  providerId?: Id<"providers">;
-  status?: ClassStatus;
-  dateRange?: { start: number; end: number };
-}) {
+export function useClasses(filters?: { teacherId?: Id<"users">; schoolId?: Id<"schools">; providerId?: Id<"providers">; status?: ClassStatus; dateRange?: { start: number; end: number } }) {
   return useQuery(api.classes.list, filters);
 }
 
@@ -338,11 +329,11 @@ export function useCreateClass() {
   return useOptimisticMutation(mutation, {
     onMutate: (newClass) => {
       // Update local cache immediately
-      queryClient.setQueryData(['classes', 'list'], (old) => [...old, newClass]);
+      queryClient.setQueryData(["classes", "list"], (old) => [...old, newClass]);
     },
     onError: (err, vars, context) => {
       // Rollback
-      queryClient.invalidateQueries(['classes']);
+      queryClient.invalidateQueries(["classes"]);
     },
   });
 }
@@ -369,13 +360,13 @@ export function useCreateClass() {
 
 ### 4.2 Mobile Routes
 
-| Route | Purpose | Key Features |
-|-------|---------|--------------|
-| `/mobile` | Today view | Today's scheduled classes, quick log button, stats cards |
-| `/mobile/log` | Log class | Minimal form: Student (search), Subject, Duration, Notes, Attendance |
-| `/mobile/history` | Past classes | Infinite scroll, filter by date/student, export CSV |
-| `/mobile/events` | Calendar | Month view, event dots, tap for details |
-| `/mobile/students` | Private students | Grid of private students, tap to log class |
+| Route              | Purpose          | Key Features                                                         |
+| ------------------ | ---------------- | -------------------------------------------------------------------- |
+| `/mobile`          | Today view       | Today's scheduled classes, quick log button, stats cards             |
+| `/mobile/log`      | Log class        | Minimal form: Student (search), Subject, Duration, Notes, Attendance |
+| `/mobile/history`  | Past classes     | Infinite scroll, filter by date/student, export CSV                  |
+| `/mobile/events`   | Calendar         | Month view, event dots, tap for details                              |
+| `/mobile/students` | Private students | Grid of private students, tap to log class                           |
 
 ### 4.3 Mobile Component Structure
 
@@ -398,6 +389,7 @@ components/mobile/
 ### 5.1 Current Problem
 
 Private students (not affiliated with any school) are handled via:
+
 - `providerId` with category `"personal"`
 - `schoolId: null`
 - Scattered logic across booking, student management, analytics
@@ -405,16 +397,19 @@ Private students (not affiliated with any school) are handled via:
 ### 5.2 Unified Approach
 
 **Every student belongs to a Provider.**
+
 - **School students:** Provider created by school (category: private/language_school/educational_camp)
 - **Private students:** Provider created by teacher (category: personal)
 
 **Teacher workflow:**
+
 1. Teacher creates "Personal Provider" (one-time setup: "My Private Students")
 2. Add students to that provider
 3. Book/log classes → providerId = personal provider, schoolId = null
 4. Auto-approval (no moderator needed)
 
 **Schema enforcement:**
+
 ```typescript
 // students table
 providerId: v.id("providers"), // REQUIRED — no optional
@@ -426,6 +421,7 @@ providerId: v.optional(v.id("providers")), // required if schoolId null
 ```
 
 **UI Integration:**
+
 - Student management shows tabs: "School Students" | "Private Students"
 - Class booking: Provider dropdown includes teacher's personal provider
 - Analytics: Filter by provider type
@@ -536,6 +532,7 @@ export function createTestCtx() {
 ### 8.2 Real-Time Subscriptions
 
 Only subscribe to:
+
 - `pendingApprovalsCount` (moderator badge)
 - `unreadNotificationsCount` (header badge)
 - `activeUsers` (presence in messaging)
@@ -549,14 +546,14 @@ Everything else: React Query with 30s stale time.
 const mutation = useMutation(api.classes.updateStatus);
 const optimistic = useOptimisticMutation(mutation, {
   onMutate: ({ classId, status }) => {
-    queryClient.setQueryData(['class', classId], (old) => ({
+    queryClient.setQueryData(["class", classId], (old) => ({
       ...old,
       status,
       isOptimistic: true,
     }));
   },
   onSuccess: (data, vars) => {
-    queryClient.invalidateQueries(['classes']);
+    queryClient.invalidateQueries(["classes"]);
   },
 });
 ```
@@ -587,19 +584,19 @@ const optimistic = useOptimisticMutation(mutation, {
 
 ### 10.1 Phased Rollout
 
-| Phase | Scope | Duration | Risk |
-|-------|-------|----------|------|
-| 1 | Schema v2 + migration scripts | 1 week | Medium |
-| 2 | Core hooks + query layer | 3 days | Low |
-| 3 | Component primitives + layout | 1 week | Low |
-| 4 | Teacher desktop pages | 1 week | Medium |
-| 5 | Moderator/Admin pages | 1 week | Medium |
-| 6 | Mobile PWA (`/mobile`) | 1 week | High (new) |
-| 7 | Private student integration | 3 days | Medium |
-| 8 | i18n migration | 2 days | Medium |
-| 9 | Testing + bug fix | 1 week | Low |
-| 10 | Staging deploy + UAT | 3 days | Low |
-| 11 | Production deploy | 1 day | Low |
+| Phase | Scope                         | Duration | Risk       |
+| ----- | ----------------------------- | -------- | ---------- |
+| 1     | Schema v2 + migration scripts | 1 week   | Medium     |
+| 2     | Core hooks + query layer      | 3 days   | Low        |
+| 3     | Component primitives + layout | 1 week   | Low        |
+| 4     | Teacher desktop pages         | 1 week   | Medium     |
+| 5     | Moderator/Admin pages         | 1 week   | Medium     |
+| 6     | Mobile PWA (`/mobile`)        | 1 week   | High (new) |
+| 7     | Private student integration   | 3 days   | Medium     |
+| 8     | i18n migration                | 2 days   | Medium     |
+| 9     | Testing + bug fix             | 1 week   | Low        |
+| 10    | Staging deploy + UAT          | 3 days   | Low        |
+| 11    | Production deploy             | 1 day    | Low        |
 
 **Total: ~6 weeks**
 
@@ -614,16 +611,16 @@ const optimistic = useOptimisticMutation(mutation, {
 
 ## 11. Success Criteria
 
-| Metric | Target |
-|--------|--------|
-| Class booking flow (desktop) | < 3 clicks, < 10s |
-| Class logging (mobile) | < 15s end-to-end |
+| Metric                        | Target                 |
+| ----------------------------- | ---------------------- |
+| Class booking flow (desktop)  | < 3 clicks, < 10s      |
+| Class logging (mobile)        | < 15s end-to-end       |
 | Page load (teacher dashboard) | < 1.5s FCP, < 2.5s TTI |
-| Bundle size (mobile) | < 150KB gzipped |
-| Test coverage (unit) | > 80% |
-| E2E test runtime | < 3 minutes |
-| Convex function cost | < 50% of current |
-| Thai teacher satisfaction | > 4.5/5 (survey) |
+| Bundle size (mobile)          | < 150KB gzipped        |
+| Test coverage (unit)          | > 80%                  |
+| E2E test runtime              | < 3 minutes            |
+| Convex function cost          | < 50% of current       |
+| Thai teacher satisfaction     | > 4.5/5 (survey)       |
 
 ---
 
@@ -648,5 +645,5 @@ const optimistic = useOptimisticMutation(mutation, {
 
 ---
 
-*Design approved: _______________*  
-*Next: Writing implementation plan (`docs/plans/2026-06-13-complete-revamp-plan.md`)*
+_Design approved: **\*\***\_\_\_**\*\***_  
+_Next: Writing implementation plan (`docs/plans/2026-06-13-complete-revamp-plan.md`)_

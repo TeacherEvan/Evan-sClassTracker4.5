@@ -5,7 +5,11 @@ import { Label } from "./Label";
 import { Input } from "./Input";
 import { I18nString, Language, useI18nInput } from "@/lib/hooks/useI18n";
 
-export interface I18nInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> {
+export interface I18nInputProps
+  extends Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    "value" | "onChange"
+  > {
   label: I18nString;
   value: I18nString | null | undefined;
   onChange: (val: I18nString) => void;
@@ -27,7 +31,7 @@ export function I18nInput({
   const { value: localValue, onChange: handleChange } = useI18nInput(
     value || { en: "", th: "" },
     onChange,
-    language
+    language,
   );
 
   return (

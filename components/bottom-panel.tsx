@@ -14,7 +14,11 @@ interface BottomPanelProps {
   onClose: () => void;
 }
 
-export default function BottomPanel({ userId, userRole, onClose }: BottomPanelProps) {
+export default function BottomPanel({
+  userId,
+  userRole,
+  onClose,
+}: BottomPanelProps) {
   const { t } = useLanguage();
 
   // Query recent activity based on user role
@@ -24,7 +28,7 @@ export default function BottomPanel({ userId, userRole, onClose }: BottomPanelPr
       ? { teacherId: userId }
       : userRole === "moderator"
         ? { status: "pending" }
-        : "skip"
+        : "skip",
   );
 
   // Get only the first 5 recent classes
@@ -67,7 +71,11 @@ export default function BottomPanel({ userId, userRole, onClose }: BottomPanelPr
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                        {classItem.subject || classItem.subjectTh || classItem.lessonTopic || classItem.lessonTopicTh || t("Class", "คลาส")}
+                        {classItem.subject ||
+                          classItem.subjectTh ||
+                          classItem.lessonTopic ||
+                          classItem.lessonTopicTh ||
+                          t("Class", "คลาส")}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
                         <Calendar className="w-3 h-3 text-gray-500" />
@@ -79,20 +87,22 @@ export default function BottomPanel({ userId, userRole, onClose }: BottomPanelPr
                     </div>
                     <div className="ml-3">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${classItem.status === "approved"
-                          ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300"
-                          : classItem.status === "pending"
-                            ? "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                          }`}
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          classItem.status === "approved"
+                            ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300"
+                            : classItem.status === "pending"
+                              ? "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                        }`}
                       >
                         {t(
-                          classItem.status.charAt(0).toUpperCase() + classItem.status.slice(1),
+                          classItem.status.charAt(0).toUpperCase() +
+                            classItem.status.slice(1),
                           classItem.status === "approved"
                             ? "อนุมัติแล้ว"
                             : classItem.status === "pending"
                               ? "รอดำเนินการ"
-                              : classItem.status
+                              : classItem.status,
                         )}
                       </span>
                     </div>
@@ -110,7 +120,10 @@ export default function BottomPanel({ userId, userRole, onClose }: BottomPanelPr
                 {t("No recent activity", "ไม่มีกิจกรรมล่าสุด")}
               </p>
               <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                {t("Activity will appear here as you use the app", "กิจกรรมจะปรากฏที่นี่เมื่อคุณใช้แอป")}
+                {t(
+                  "Activity will appear here as you use the app",
+                  "กิจกรรมจะปรากฏที่นี่เมื่อคุณใช้แอป",
+                )}
               </p>
             </div>
           )}

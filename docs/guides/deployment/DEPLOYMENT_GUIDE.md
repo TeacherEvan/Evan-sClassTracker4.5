@@ -18,12 +18,12 @@
 ### Deploy in 5 Steps
 
 1. **Setup Convex**  
-px convex dev
+   px convex dev
 2. **Deploy Functions**  
-px convex deploy --prod
-3. **Connect Vercel**  Import GitHub repo
-4. **Set Environment**  Add NEXT_PUBLIC_CONVEX_URL
-5. **Deploy**  Vercel auto-deploys on push
+   px convex deploy --prod
+3. **Connect Vercel** Import GitHub repo
+4. **Set Environment** Add NEXT_PUBLIC_CONVEX_URL
+5. **Deploy** Vercel auto-deploys on push
 
 ---
 
@@ -93,10 +93,10 @@ NEXT_PUBLIC_CONVEX_URL=https://your-project.convex.cloud
 
 **Production** (Vercel Dashboard):
 
-- Navigate to Project Settings  Environment Variables
+- Navigate to Project Settings Environment Variables
 - Add: NEXT_PUBLIC_CONVEX_URL
 - Value: Production Convex URL from
-px convex deploy
+  px convex deploy
 - Important: Never commit .env.local (already in .gitignore)
 
 ---
@@ -110,16 +110,16 @@ px convex deploy
 1. Login as User A
 2. User B sends message to User C
 3. Verify User A sees NO notification from BC
-4. Login as User C  sees notification
-5. Login as User B  sees NO notification from self
+4. Login as User C sees notification
+5. Login as User B sees NO notification from self
 
 **Expected**: Each user sees only their own notifications
 
 #### Test 2: Class Workflow
 
-1. Login as Teacher  Book class
-2. Login as Moderator  Acknowledge class
-3. Moderator  Approve class
+1. Login as Teacher Book class
+2. Login as Moderator Acknowledge class
+3. Moderator Approve class
 4. Verify status changes and notifications
 
 **Expected**: Workflow completes without errors
@@ -145,12 +145,12 @@ px convex deploy
 
 ### Performance Benchmarks
 
-| Operation | Target | Acceptable |
-|-----------|--------|------------|
-| Class list load | < 200ms | < 500ms |
-| Notification load | < 100ms | < 300ms |
-| Message list load | < 150ms | < 400ms |
-| Student list load | < 200ms | < 500ms |
+| Operation         | Target  | Acceptable |
+| ----------------- | ------- | ---------- |
+| Class list load   | < 200ms | < 500ms    |
+| Notification load | < 100ms | < 300ms    |
+| Message list load | < 150ms | < 400ms    |
+| Student list load | < 200ms | < 500ms    |
 
 **Check**: Open DevTools Network tab, verify timings
 
@@ -201,11 +201,11 @@ px convex deploy
 **Automated** (via CI/CD):
 
 - TypeScript compilation:
-pm run build
+  pm run build
 - Linting:
-pm run lint
+  pm run lint
 - Tests:
-pm test (when implemented)
+  pm test (when implemented)
 
 ---
 
@@ -225,7 +225,7 @@ pm test (when implemented)
 **Fixes**:
 
 1. Verify environment variable in Vercel dashboard
-2. Check Convex dashboard  Functions are deployed
+2. Check Convex dashboard Functions are deployed
 3. Clear browser cache, hard refresh
 4. Check browser console for specific errors
 
@@ -242,7 +242,7 @@ pm test (when implemented)
 
 1. Check Vercel build logs for specific errors
 2. Run
-pm run build locally to reproduce
+   pm run build locally to reproduce
 3. Ensure Node.js 20+ in Vercel project settings
 4. Verify all deps in package.json
 
@@ -257,10 +257,10 @@ pm run build locally to reproduce
 
 **Fixes**:
 
-1. Check Convex dashboard  Logs for specific errors
+1. Check Convex dashboard Logs for specific errors
 2. Verify schema matches types in code
 3. Run
-px convex dev to sync schema
+   px convex dev to sync schema
 4. Check rate limit settings in convex/rateLimit.ts
 
 #### \"Real-time updates not working\"
@@ -314,10 +314,10 @@ px convex dev to sync schema
 
 1. Edit convex/schema.ts
 2. Test locally:
-px convex dev
-3. Verify in Convex dashboard  Data
+   px convex dev
+3. Verify in Convex dashboard Data
 4. Deploy:
-px convex deploy --prod
+   px convex deploy --prod
 5. Re-deploy frontend (Vercel will auto-deploy)
 
 **Breaking Changes**:
@@ -363,8 +363,8 @@ px convex deploy --prod
 
 **Monthly review**:
 
-- Check Convex dashboard  Usage
-- Check Vercel dashboard  Usage
+- Check Convex dashboard Usage
+- Check Vercel dashboard Usage
 - Estimate time to upgrade
 
 ---
@@ -420,9 +420,9 @@ px convex deploy --prod
 
 **Via Dashboard**:
 
-1. Vercel  Deployments
+1. Vercel Deployments
 2. Find previous working deployment
-3. Click **...**  **Promote to Production**
+3. Click **...** **Promote to Production**
 4. Instant rollback
 
 **Via Git**:

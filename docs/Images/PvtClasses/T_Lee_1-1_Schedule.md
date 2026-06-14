@@ -46,19 +46,19 @@
 
 ### Regular Students (All 12 weeks)
 
-| Code | Student Name | Days |
-|------|-------------|------|
-| 1105 | NARA | Tue, Wed, Thu |
-| 1125 | MANOW | Tue |
-| 1103 | MASTER | Wed |
-| 1108 | MIU | Thu |
+| Code | Student Name | Days          |
+| ---- | ------------ | ------------- |
+| 1105 | NARA         | Tue, Wed, Thu |
+| 1125 | MANOW        | Tue           |
+| 1103 | MASTER       | Wed           |
+| 1108 | MIU          | Thu           |
 
 ### Trial Students (One-time - Week 1 only)
 
-| Code | Student Name | Day | Notes |
-|------|-------------|-----|-------|
-| 2015 | MARINE | Fri | Trial class |
-| 2021 | Thang Thang | Fri | Trial class |
+| Code | Student Name | Day | Notes       |
+| ---- | ------------ | --- | ----------- |
+| 2015 | MARINE       | Fri | Trial class |
+| 2021 | Thang Thang  | Fri | Trial class |
 
 ---
 

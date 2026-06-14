@@ -38,20 +38,23 @@ export const addDatesToClass = mutation({
     }
 
     // 3. Verify authorization
-    const isTeacher = user.role === "teacher" && classData.teacherId === args.userId;
+    const isTeacher =
+      user.role === "teacher" && classData.teacherId === args.userId;
 
     if (isTeacher) {
       await verifyClassAccess(ctx, args.userId, classData, {
-        allowTeacherOwner: true
+        allowTeacherOwner: true,
       });
     } else {
       await verifyClassAccess(ctx, args.userId, classData, {
-        requireModeratorOrAdmin: true
+        requireModeratorOrAdmin: true,
       });
     }
 
     // 4. Check school exists (only for school-linked classes)
-    const school = classData.schoolId ? await ctx.db.get(classData.schoolId) : null;
+    const school = classData.schoolId
+      ? await ctx.db.get(classData.schoolId)
+      : null;
     if (classData.schoolId && !school) {
       throw new Error("School not found");
     }
@@ -81,23 +84,36 @@ export const addDatesToClass = mutation({
         ...(classData.subject && { subject: classData.subject }),
         ...(classData.subjectTh && { subjectTh: classData.subjectTh }),
         ...(classData.lessonTopic && { lessonTopic: classData.lessonTopic }),
-        ...(classData.lessonTopicTh && { lessonTopicTh: classData.lessonTopicTh }),
+        ...(classData.lessonTopicTh && {
+          lessonTopicTh: classData.lessonTopicTh,
+        }),
         ...(classData.materials && { materials: classData.materials }),
         ...(classData.materialsTh && { materialsTh: classData.materialsTh }),
-        ...(classData.preparationNotes && { preparationNotes: classData.preparationNotes }),
-        ...(classData.preparationNotesTh && { preparationNotesTh: classData.preparationNotesTh }),
+        ...(classData.preparationNotes && {
+          preparationNotes: classData.preparationNotes,
+        }),
+        ...(classData.preparationNotesTh && {
+          preparationNotesTh: classData.preparationNotesTh,
+        }),
         ...(classData.classType && { classType: classData.classType }),
       });
       createdClassIds.push(newClassId);
     }
 
     // 7. Get location info for notifications
-    const location = classData.locationId ? await ctx.db.get(classData.locationId) : null;
+    const location = classData.locationId
+      ? await ctx.db.get(classData.locationId)
+      : null;
     const locationText = location?.name || "Unknown location";
     const locationTextTh = location?.nameTh || "ไม่ทราบสถานที่";
 
     // 8. Send notification to moderator (if teacher added dates AND school-linked)
-    if (!isGuardianLinked && !isModerator && classData.schoolId && school?.moderatorId) {
+    if (
+      !isGuardianLinked &&
+      !isModerator &&
+      classData.schoolId &&
+      school?.moderatorId
+    ) {
       await ctx.db.insert("notifications", {
         userId: school.moderatorId,
         title: `Additional Class Dates Requested`,
@@ -128,7 +144,7 @@ export const addDatesToClass = mutation({
     return {
       success: true,
       createdCount: createdClassIds.length,
-      classIds: createdClassIds
+      classIds: createdClassIds,
     };
   },
 });
@@ -165,11 +181,11 @@ export const addStudentToClass = mutation({
     // Teachers can add to their own classes, moderators to their school, admins to any
     if (user.role === "teacher") {
       await verifyClassAccess(ctx, args.userId, classData, {
-        allowTeacherOwner: true
+        allowTeacherOwner: true,
       });
     } else {
       await verifyClassAccess(ctx, args.userId, classData, {
-        requireModeratorOrAdmin: true
+        requireModeratorOrAdmin: true,
       });
     }
 
@@ -181,7 +197,9 @@ export const addStudentToClass = mutation({
 
     // Check if student is already in the class
     if (classData.studentId === args.studentId) {
-      throw new Error("This student is already the primary student in this class");
+      throw new Error(
+        "This student is already the primary student in this class",
+      );
     }
 
     const existingAdditionalStudents = classData.additionalStudentIds || [];
@@ -190,7 +208,10 @@ export const addStudentToClass = mutation({
     }
 
     // Add the student to the class
-    const updatedAdditionalStudents = [...existingAdditionalStudents, args.studentId];
+    const updatedAdditionalStudents = [
+      ...existingAdditionalStudents,
+      args.studentId,
+    ];
 
     await ctx.db.patch(args.classId, {
       additionalStudentIds: updatedAdditionalStudents,
@@ -227,7 +248,10 @@ export const addStudentToClass = mutation({
         createdAt: Date.now(),
       });
     }
-    return { success: true, totalStudents: updatedAdditionalStudents.length + 1 };
+    return {
+      success: true,
+      totalStudents: updatedAdditionalStudents.length + 1,
+    };
   },
 });
 
@@ -262,17 +286,19 @@ export const removeStudentFromClass = mutation({
     // Authorization check using helper
     if (user.role === "teacher") {
       await verifyClassAccess(ctx, args.userId, classData, {
-        allowTeacherOwner: true
+        allowTeacherOwner: true,
       });
     } else {
       await verifyClassAccess(ctx, args.userId, classData, {
-        requireModeratorOrAdmin: true
+        requireModeratorOrAdmin: true,
       });
     }
 
     // Cannot remove the primary student
     if (classData.studentId === args.studentId) {
-      throw new Error("Cannot remove the primary student. Consider merging or deleting the class instead.");
+      throw new Error(
+        "Cannot remove the primary student. Consider merging or deleting the class instead.",
+      );
     }
 
     const existingAdditionalStudents = classData.additionalStudentIds || [];
@@ -282,7 +308,7 @@ export const removeStudentFromClass = mutation({
 
     // Remove the student
     const updatedAdditionalStudents = existingAdditionalStudents.filter(
-      (id) => id !== args.studentId
+      (id) => id !== args.studentId,
     );
 
     await ctx.db.patch(args.classId, {
@@ -306,9 +332,11 @@ export const removeStudentFromClass = mutation({
       });
     }
 
-    return { success: true, totalStudents: updatedAdditionalStudents.length + 1 };
+    return {
+      success: true,
+      totalStudents: updatedAdditionalStudents.length + 1,
+    };
   },
 });
 
 // Mutation to merge multiple classes into one
-

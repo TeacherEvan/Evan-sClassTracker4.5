@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { loadUserSession } from "./session-utils";
 
 type Language = "en" | "th";
@@ -12,7 +18,7 @@ interface LanguageContextType {
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
@@ -26,7 +32,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       // Priority 1: Check user profile (if logged in)
       const user = loadUserSession();
       if (user?.preferredLanguage) {
-        console.log(`🌍 Loaded language from user profile: ${user.preferredLanguage}`);
+        console.log(
+          `🌍 Loaded language from user profile: ${user.preferredLanguage}`,
+        );
         setLanguageState(user.preferredLanguage as Language);
         localStorage.setItem("preferredLanguage", user.preferredLanguage);
         return;
@@ -41,9 +49,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
       // Priority 3: Auto-detect from browser if no preference
       const browserLang = navigator.language.toLowerCase();
-      const detectedLang: Language = browserLang.startsWith('th') ? 'th' : 'en';
+      const detectedLang: Language = browserLang.startsWith("th") ? "th" : "en";
 
-      console.log(`🌍 Auto-detected language: ${detectedLang} (from browser: ${navigator.language})`);
+      console.log(
+        `🌍 Auto-detected language: ${detectedLang} (from browser: ${navigator.language})`,
+      );
       setLanguageState(detectedLang);
       localStorage.setItem("preferredLanguage", detectedLang);
     }
@@ -53,7 +63,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const user = loadUserSession();
     if (user?.preferredLanguage && user.preferredLanguage !== language) {
-      console.log(`🔄 Syncing language from user profile: ${user.preferredLanguage}`);
+      console.log(
+        `🔄 Syncing language from user profile: ${user.preferredLanguage}`,
+      );
       setLanguageState(user.preferredLanguage as Language);
       localStorage.setItem("preferredLanguage", user.preferredLanguage);
     }

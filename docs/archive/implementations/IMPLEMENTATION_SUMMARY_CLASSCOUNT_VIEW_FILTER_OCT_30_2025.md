@@ -61,9 +61,9 @@ const [viewEndDate, setViewEndDate] = useState<Date>(defaultEnd);
 
 ```typescript
 // CLIENT-SIDE FILTERING based on user's selected date range
-const filteredClasses = classes.filter(cls => {
-    const classDate = new Date(cls.scheduledDate);
-    return classDate >= viewStartDate && classDate <= viewEndDate;
+const filteredClasses = classes.filter((cls) => {
+  const classDate = new Date(cls.scheduledDate);
+  return classDate >= viewStartDate && classDate <= viewEndDate;
 });
 
 // Recalculate summary stats for filtered view
@@ -92,29 +92,29 @@ const displayedClasses = showAllClasses ? filteredClasses : filteredClasses.slic
 
 ```typescript
 export const getClassCountForPrint = query({
-    args: {
-        teacherId: v.id("users"),
-        customStartDate: v.optional(v.number()), // Optional custom date range
-        customEndDate: v.optional(v.number()),
-    },
-    handler: async (ctx, args) => {
-        // Determine date range:
-        // 1. Use custom dates if provided (user's filter selection)
-        // 2. Otherwise use active cycle
-        // 3. Otherwise use current month as default
-        let cycleStartDate: number;
-        let cycleEndDate: number;
+  args: {
+    teacherId: v.id("users"),
+    customStartDate: v.optional(v.number()), // Optional custom date range
+    customEndDate: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // Determine date range:
+    // 1. Use custom dates if provided (user's filter selection)
+    // 2. Otherwise use active cycle
+    // 3. Otherwise use current month as default
+    let cycleStartDate: number;
+    let cycleEndDate: number;
 
-        if (args.customStartDate && args.customEndDate) {
-            // User provided custom date range
-            cycleStartDate = args.customStartDate;
-            cycleEndDate = args.customEndDate;
-        } else {
-            // ... fallback logic
-        }
-        
-        // ... rest of query uses these dates
-    },
+    if (args.customStartDate && args.customEndDate) {
+      // User provided custom date range
+      cycleStartDate = args.customStartDate;
+      cycleEndDate = args.customEndDate;
+    } else {
+      // ... fallback logic
+    }
+
+    // ... rest of query uses these dates
+  },
 });
 ```
 
@@ -122,10 +122,10 @@ export const getClassCountForPrint = query({
 
 ```typescript
 // Print data query WITH custom date range
-const printData = useQuery(api.teacherClassCount.getClassCountForPrint, { 
-    teacherId,
-    customStartDate: viewStartDate.getTime(),
-    customEndDate: viewEndDate.getTime(),
+const printData = useQuery(api.teacherClassCount.getClassCountForPrint, {
+  teacherId,
+  customStartDate: viewStartDate.getTime(),
+  customEndDate: viewEndDate.getTime(),
 });
 ```
 
@@ -183,25 +183,25 @@ const printData = useQuery(api.teacherClassCount.getClassCountForPrint, {
 
    ```typescript
    export const viewTeacherClassCount = mutation({
-       args: {
-           teacherId: v.id("users"),
-           viewerId: v.id("users"),
-           viewStartDate: v.number(),
-           viewEndDate: v.number(),
-       },
-       handler: async (ctx, args) => {
-           // Send soft notification to teacher
-           await ctx.db.insert("notifications", {
-               title: "ClassCount Viewed",
-               titleTh: "มีการดู ClassCount",
-               message: `${viewer.username} viewed your ClassCount for period ${startDate} - ${endDate}`,
-               messageTh: `${viewer.username} ดู ClassCount ของคุณในช่วง ${startDate} - ${endDate}`,
-               type: "info",
-               userId: args.teacherId,
-               read: false,
-               createdAt: Date.now(),
-           });
-       },
+     args: {
+       teacherId: v.id("users"),
+       viewerId: v.id("users"),
+       viewStartDate: v.number(),
+       viewEndDate: v.number(),
+     },
+     handler: async (ctx, args) => {
+       // Send soft notification to teacher
+       await ctx.db.insert("notifications", {
+         title: "ClassCount Viewed",
+         titleTh: "มีการดู ClassCount",
+         message: `${viewer.username} viewed your ClassCount for period ${startDate} - ${endDate}`,
+         messageTh: `${viewer.username} ดู ClassCount ของคุณในช่วง ${startDate} - ${endDate}`,
+         type: "info",
+         userId: args.teacherId,
+         read: false,
+         createdAt: Date.now(),
+       });
+     },
    });
    ```
 

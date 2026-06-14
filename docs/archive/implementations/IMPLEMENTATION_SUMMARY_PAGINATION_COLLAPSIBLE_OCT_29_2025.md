@@ -88,16 +88,7 @@ Created `components/paginated-list.tsx` - a reusable pagination component that r
 import { PaginatedList } from "./paginated-list";
 
 // Usage
-<PaginatedList
-  items={students}
-  itemsPerPage={15}
-  renderItem={(student) => (
-    <StudentCard key={student._id} student={student} />
-  )}
-  className="space-y-3"
-  emptyMessageEn="No students found"
-  emptyMessageTh="ไม่พบนักเรียน"
-/>
+<PaginatedList items={students} itemsPerPage={15} renderItem={(student) => <StudentCard key={student._id} student={student} />} className="space-y-3" emptyMessageEn="No students found" emptyMessageTh="ไม่พบนักเรียน" />;
 ```
 
 ### Performance Impact
@@ -167,17 +158,12 @@ Created `components/collapsible-section.tsx` - a reusable component for expandab
 import { CollapsibleSection } from "./collapsible-section";
 
 // Usage
-<CollapsibleSection
-  titleEn="Optional Fields"
-  titleTh="ฟิลด์เพิ่มเติม"
-  defaultOpen={!!editingId}
-  icon={ChevronDown}
->
+<CollapsibleSection titleEn="Optional Fields" titleTh="ฟิลด์เพิ่มเติม" defaultOpen={!!editingId} icon={ChevronDown}>
   {/* Form fields */}
   <input name="duration" />
   <input name="subject" />
   {/* ... more fields */}
-</CollapsibleSection>
+</CollapsibleSection>;
 ```
 
 ### UX Impact
@@ -372,28 +358,28 @@ npm run build
 
 ### DOM Node Count
 
-| Scenario | Before | After | Improvement |
-|----------|--------|-------|-------------|
-| 100 students displayed | 2,847 | 412 | -85.5% |
-| 200 audit logs | 5,200 | 820 | -84.2% |
-| 50 notifications | 1,425 | 425 | -70.2% |
-| 30 locations | 850 | 450 | -47.1% |
+| Scenario               | Before | After | Improvement |
+| ---------------------- | ------ | ----- | ----------- |
+| 100 students displayed | 2,847  | 412   | -85.5%      |
+| 200 audit logs         | 5,200  | 820   | -84.2%      |
+| 50 notifications       | 1,425  | 425   | -70.2%      |
+| 30 locations           | 850    | 450   | -47.1%      |
 
 ### Memory Usage (Chrome DevTools)
 
-| Component | Before (MB) | After (MB) | Reduction |
-|-----------|-------------|------------|-----------|
-| Student Management | 87.3 | 31.2 | -64.3% |
-| Audit Logs | 95.8 | 38.4 | -59.9% |
-| Notification List | 42.6 | 18.9 | -55.6% |
+| Component          | Before (MB) | After (MB) | Reduction |
+| ------------------ | ----------- | ---------- | --------- |
+| Student Management | 87.3        | 31.2       | -64.3%    |
+| Audit Logs         | 95.8        | 38.4       | -59.9%    |
+| Notification List  | 42.6        | 18.9       | -55.6%    |
 
 ### Scroll Performance (FPS)
 
-| Device | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Desktop (60Hz) | 58 | 60 | +3.4% |
-| Mobile (60Hz) | 42 | 60 | +42.9% |
-| Low-end Mobile | 28 | 55 | +96.4% |
+| Device         | Before | After | Improvement |
+| -------------- | ------ | ----- | ----------- |
+| Desktop (60Hz) | 58     | 60    | +3.4%       |
+| Mobile (60Hz)  | 42     | 60    | +42.9%      |
+| Low-end Mobile | 28     | 55    | +96.4%      |
 
 ---
 
@@ -445,12 +431,12 @@ git revert <commit-hash>
 
 **1. Add Pagination to More Components** (15-30 min each)
 
-| Component | Estimated Items | Priority | Effort |
-|-----------|----------------|----------|--------|
-| user-management.tsx | 50-200 users | HIGH | 15 min |
-| teacher-logs-manager.tsx | 100-500 logs | HIGH | 20 min |
-| school-management.tsx | 10-50 schools | MEDIUM | 15 min |
-| messaging-hub.tsx | 50-200 messages | MEDIUM | 25 min |
+| Component                | Estimated Items | Priority | Effort |
+| ------------------------ | --------------- | -------- | ------ |
+| user-management.tsx      | 50-200 users    | HIGH     | 15 min |
+| teacher-logs-manager.tsx | 100-500 logs    | HIGH     | 20 min |
+| school-management.tsx    | 10-50 schools   | MEDIUM   | 15 min |
+| messaging-hub.tsx        | 50-200 messages | MEDIUM   | 25 min |
 
 **2. Expand Quick Actions Pattern** (30-45 min each)
 

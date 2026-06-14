@@ -187,20 +187,20 @@ Added 3 new keyboard shortcuts to `useKeyboardShortcuts` array:
    useKeyboardShortcuts([
      // ... existing shortcuts (NEW, CLOSE)
      {
-       key: 'a',
+       key: "a",
        ctrlKey: true,
        description: { en: "Select all students", th: "เลือกนักเรียนทั้งหมด" },
-       callback: () => filteredStudents && setSelectedStudents(new Set(filteredStudents.map(s => s._id))),
+       callback: () => filteredStudents && setSelectedStudents(new Set(filteredStudents.map((s) => s._id))),
        disabled: !filteredStudents || filteredStudents.length === 0,
      },
      {
-       key: 'Escape',
+       key: "Escape",
        description: { en: "Clear selection", th: "ล้างการเลือก" },
        callback: () => setSelectedStudents(new Set()),
        disabled: selectedStudents.size === 0,
      },
      {
-       key: 'e',
+       key: "e",
        ctrlKey: true,
        description: { en: "Edit selected students", th: "แก้ไขนักเรียนที่เลือก" },
        callback: () => setShowBulkEditModal(true),
@@ -448,14 +448,16 @@ npm run test:e2e tests/e2e/student-management.spec.ts
 
    ```markdown
    ## [Unreleased]
-   
+
    ### Added
+
    - BulkActionBar: Edit button for student entity type with blue color scheme
    - Student Management: Keyboard shortcuts (Ctrl+A, Escape, Ctrl+E)
    - Student Management: Selection count badge in page header
    - Student Management: ARIA labels for all checkboxes (accessibility)
-   
+
    ### Changed
+
    - BulkActionBar: Enhanced with optional onEdit prop for flexible entity support
    - Student Management: Improved visual feedback for selected students
    ```

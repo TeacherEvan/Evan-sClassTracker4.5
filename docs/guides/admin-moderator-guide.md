@@ -304,7 +304,7 @@ STUDENT
 4. Moderator reviews details
    ↓
 5. Moderator approves/rejects
-   ↓ 
+   ↓
 6. Status: APPROVED (green) or REJECTED (red)
    ↓
 7. Teacher notified
@@ -432,7 +432,7 @@ STUDENT
 
 ```typescript
 users: {
-  role: "teacher" | "moderator" | "admin" | "guardian"
+  role: "teacher" | "moderator" | "admin" | "guardian";
 }
 ```
 
@@ -477,13 +477,13 @@ classes: {
 #### Before (bcrypt)
 
 ```typescript
-passwordHash: bcrypt.hash(password, 10)
+passwordHash: bcrypt.hash(password, 10);
 ```
 
 #### After (PBKDF2)
 
 ```typescript
-passwordHash: await pbkdf2Hash(password)
+passwordHash: await pbkdf2Hash(password);
 // 100,000 iterations, SHA-256, 32-byte hash
 ```
 
@@ -581,14 +581,14 @@ users: {
 
 ```typescript
 Array<{
-  studentId: Id<"students">,
-  studentName: string,
-  totalClasses: number,
-  attendedClasses: number,
-  attendanceRate: number,
-  avgClassSize: number,
-  performanceRating: "excellent" | "good" | "needs_improvement"
-}>
+  studentId: Id<"students">;
+  studentName: string;
+  totalClasses: number;
+  attendedClasses: number;
+  attendanceRate: number;
+  avgClassSize: number;
+  performanceRating: "excellent" | "good" | "needs_improvement";
+}>;
 ```
 
 **Performance Rating Logic**:
@@ -655,12 +655,12 @@ if (bookingUser.role === "moderator") {
   if (!bookingUser.schoolId) {
     throw new Error("Moderator account must have an assigned school");
   }
-  
+
   // School ID must match
   if (args.schoolId && args.schoolId !== bookingUser.schoolId) {
     throw new Error(`Authorization failed: Moderators can only book classes at their assigned school`);
   }
-  
+
   // Cannot create provider classes
   if (args.providerId) {
     throw new Error("Moderators cannot create provider classes");
@@ -703,7 +703,7 @@ Attempted school: Bangkok International (k2def456ghi).
 // Moderator query (auto-filtered)
 const classes = await ctx.db
   .query("classes")
-  .withIndex("by_school", q => q.eq("schoolId", user.schoolId))
+  .withIndex("by_school", (q) => q.eq("schoolId", user.schoolId))
   .collect();
 ```
 
@@ -733,21 +733,21 @@ const classes = await ctx.db
 
 ### 3. Access Control Matrix
 
-| Feature | Admin | Moderator | Teacher |
-| ------- | ----- | --------- | ------- |
-| Create Users | ✅ | ❌ | ❌ |
-| Assign Moderators | ✅ | ❌ | ❌ |
-| Create Schools | ✅ | ❌ | ❌ |
-| Create Providers | ✅ | ❌ | ✅ |
-| Book Classes (Any School) | ✅ | ❌ | ✅ |
-| Book Classes (Own School) | ✅ | ✅ | ✅ |
-| Approve Classes | ✅ | ✅ (own school) | ❌ |
-| View All Analytics | ✅ | ❌ | ❌ |
-| View School Analytics | ✅ | ✅ (own school) | ❌ |
-| View Own Analytics | ✅ | ✅ | ✅ |
-| Manage Students | ✅ | ⚠️ (view only) | ⚠️ (limited) |
-| Send Broadcasts | ✅ | ❌ | ❌ |
-| Send School Messages | ✅ | ✅ (own school) | ❌ |
+| Feature                   | Admin | Moderator       | Teacher      |
+| ------------------------- | ----- | --------------- | ------------ |
+| Create Users              | ✅    | ❌              | ❌           |
+| Assign Moderators         | ✅    | ❌              | ❌           |
+| Create Schools            | ✅    | ❌              | ❌           |
+| Create Providers          | ✅    | ❌              | ✅           |
+| Book Classes (Any School) | ✅    | ❌              | ✅           |
+| Book Classes (Own School) | ✅    | ✅              | ✅           |
+| Approve Classes           | ✅    | ✅ (own school) | ❌           |
+| View All Analytics        | ✅    | ❌              | ❌           |
+| View School Analytics     | ✅    | ✅ (own school) | ❌           |
+| View Own Analytics        | ✅    | ✅              | ✅           |
+| Manage Students           | ✅    | ⚠️ (view only)  | ⚠️ (limited) |
+| Send Broadcasts           | ✅    | ❌              | ❌           |
+| Send School Messages      | ✅    | ✅ (own school) | ❌           |
 
 ---
 

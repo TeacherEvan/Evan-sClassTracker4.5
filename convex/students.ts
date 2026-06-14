@@ -8,14 +8,21 @@ function generateGuardianStudentId(
   firstName: string,
   lastName: string,
   birthDate: number,
-  area: string
+  area: string,
 ): string {
   // Area code: first 5 chars of area, uppercase, alphanumeric only
-  const areaCode = area.substring(0, 5).toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const areaCode = area
+    .substring(0, 5)
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
   // Name hash: first 2 chars of first name + first 2 chars of last name
-  const nameHash = `${firstName.substring(0, 2)}${lastName.substring(0, 2)}`.toUpperCase();
+  const nameHash =
+    `${firstName.substring(0, 2)}${lastName.substring(0, 2)}`.toUpperCase();
   // Birth hash: YYYYMMDD format
-  const birthHash = new Date(birthDate).toISOString().split('T')[0].replace(/-/g, ''); // YYYYMMDD
+  const birthHash = new Date(birthDate)
+    .toISOString()
+    .split("T")[0]
+    .replace(/-/g, ""); // YYYYMMDD
   // Random component for collision prevention
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
 
@@ -23,9 +30,14 @@ function generateGuardianStudentId(
 }
 
 // Helper function to generate unique ID for SCHOOL students
-function generateStudentId(firstName: string, lastName: string, schoolId: string): string {
+function generateStudentId(
+  firstName: string,
+  lastName: string,
+  schoolId: string,
+): string {
   const timestamp = Date.now().toString(36);
-  const nameHash = `${firstName.substring(0, 2)}${lastName.substring(0, 2)}`.toUpperCase();
+  const nameHash =
+    `${firstName.substring(0, 2)}${lastName.substring(0, 2)}`.toUpperCase();
   const schoolHash = schoolId.substring(0, 4).toUpperCase();
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
 
@@ -132,14 +144,18 @@ export const create = mutation({
 
     // If both school and provider are provided, reject
     if (hasSchool && hasProvider) {
-      throw new Error("Student cannot be linked to both a school and a provider. Please choose one.");
+      throw new Error(
+        "Student cannot be linked to both a school and a provider. Please choose one.",
+      );
     }
 
     // Guardian students can exist without school or provider
     // Provider students require providerId
     // School students require schoolId
     if (!hasGuardian && !hasSchool && !hasProvider) {
-      throw new Error("Student must be linked to either a school, provider, or guardian");
+      throw new Error(
+        "Student must be linked to either a school, provider, or guardian",
+      );
     }
 
     // ✅ SECURITY: Verify user permissions
@@ -154,15 +170,21 @@ export const create = mutation({
       if (creator.role === "teacher" || creator.role === "moderator") {
         // Teachers and moderators can only create students for their own school
         if (creator.schoolId !== args.schoolId) {
-          throw new Error("Unauthorized: Cannot create students for other schools");
+          throw new Error(
+            "Unauthorized: Cannot create students for other schools",
+          );
         }
       } else if (creator.role !== "admin") {
-        throw new Error("Unauthorized: Only teachers, moderators, and admins can create school-linked students");
+        throw new Error(
+          "Unauthorized: Only teachers, moderators, and admins can create school-linked students",
+        );
       }
     } else if (args.providerId) {
       // NEW: Provider-linked students (teachers and admins only)
       if (creator.role === "moderator") {
-        throw new Error("Unauthorized: Moderators cannot create provider-linked students");
+        throw new Error(
+          "Unauthorized: Moderators cannot create provider-linked students",
+        );
       }
 
       // Verify provider exists and teacher has access
@@ -173,12 +195,16 @@ export const create = mutation({
 
       // Teachers can only use their own providers, admins can use any
       if (creator.role === "teacher" && provider.createdBy !== creator._id) {
-        throw new Error("Unauthorized: You can only create students for providers you created");
+        throw new Error(
+          "Unauthorized: You can only create students for providers you created",
+        );
       }
     } else if (hasGuardian) {
       // Guardian-linked students
       if (creator.role === "guardian" && args.guardianId !== creator._id) {
-        throw new Error("Guardians can only create students linked to themselves");
+        throw new Error(
+          "Guardians can only create students linked to themselves",
+        );
       }
     }
 
@@ -206,10 +232,14 @@ export const create = mutation({
     const isGuardianStudent = hasGuardian;
     if (isGuardianStudent) {
       if (!args.dateOfBirth) {
-        throw new Error("Guardian students must have a birth date for unique identification");
+        throw new Error(
+          "Guardian students must have a birth date for unique identification",
+        );
       }
       if (!args.area) {
-        throw new Error("Guardian students must have a teaching area for unique identification");
+        throw new Error(
+          "Guardian students must have a teaching area for unique identification",
+        );
       }
     }
 
@@ -223,14 +253,15 @@ export const create = mutation({
       const duplicate = duplicateCheck.find(
         (s) =>
           s.firstName.toLowerCase() === args.firstName.toLowerCase() &&
-          (s.lastName || "").toLowerCase() === (args.lastName || "").toLowerCase() &&
+          (s.lastName || "").toLowerCase() ===
+            (args.lastName || "").toLowerCase() &&
           s.grade === args.grade &&
-          s.class === args.class
+          s.class === args.class,
       );
 
       if (duplicate) {
         throw new Error(
-          `Student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" already exists in ${args.grade}${args.class}`
+          `Student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" already exists in ${args.grade}${args.class}`,
         );
       }
     }
@@ -245,14 +276,15 @@ export const create = mutation({
       const providerDuplicate = providerStudents.find(
         (s) =>
           s.firstName.toLowerCase() === args.firstName.toLowerCase() &&
-          (s.lastName || "").toLowerCase() === (args.lastName || "").toLowerCase() &&
-          s.grade === args.grade
+          (s.lastName || "").toLowerCase() ===
+            (args.lastName || "").toLowerCase() &&
+          s.grade === args.grade,
       );
 
       if (providerDuplicate) {
         const provider = await ctx.db.get(args.providerId);
         throw new Error(
-          `Student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" already exists in ${args.grade} for provider "${provider?.name || "Unknown"}" (ID: ${providerDuplicate.studentId})`
+          `Student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" already exists in ${args.grade} for provider "${provider?.name || "Unknown"}" (ID: ${providerDuplicate.studentId})`,
         );
       }
     }
@@ -267,13 +299,14 @@ export const create = mutation({
       const guardianDuplicate = areaStudents.find(
         (s) =>
           s.firstName.toLowerCase() === args.firstName.toLowerCase() &&
-          (s.lastName || "").toLowerCase() === (args.lastName || "").toLowerCase() &&
-          s.dateOfBirth === args.dateOfBirth
+          (s.lastName || "").toLowerCase() ===
+            (args.lastName || "").toLowerCase() &&
+          s.dateOfBirth === args.dateOfBirth,
       );
 
       if (guardianDuplicate) {
         throw new Error(
-          `Guardian student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" with this birth date already exists in ${args.area} (ID: ${guardianDuplicate.studentId})`
+          `Guardian student "${args.firstName}${args.lastName ? " " + args.lastName : ""}" with this birth date already exists in ${args.area} (ID: ${guardianDuplicate.studentId})`,
         );
       }
     }
@@ -287,16 +320,24 @@ export const create = mutation({
         args.firstName,
         args.lastName || "",
         args.dateOfBirth,
-        args.area
+        args.area,
       );
     } else if (args.providerId) {
       // NEW: Provider student: use provider-based ID
       const providerIdForHash = args.providerId;
-      studentId = generateStudentId(args.firstName, args.lastName || "", providerIdForHash);
+      studentId = generateStudentId(
+        args.firstName,
+        args.lastName || "",
+        providerIdForHash,
+      );
     } else {
       // School student: use school-based ID
       const schoolIdForHash = args.schoolId || "NOSCHOOL";
-      studentId = generateStudentId(args.firstName, args.lastName || "", schoolIdForHash);
+      studentId = generateStudentId(
+        args.firstName,
+        args.lastName || "",
+        schoolIdForHash,
+      );
     }
 
     // Check for duplicates and regenerate if necessary
@@ -315,18 +356,33 @@ export const create = mutation({
 
       // Regenerate with new random component based on student type
       if (isGuardianStudent && args.dateOfBirth && args.area) {
-        studentId = generateGuardianStudentId(args.firstName, args.lastName || "", args.dateOfBirth, args.area);
+        studentId = generateGuardianStudentId(
+          args.firstName,
+          args.lastName || "",
+          args.dateOfBirth,
+          args.area,
+        );
       } else if (args.providerId) {
-        studentId = generateStudentId(args.firstName, args.lastName || "", args.providerId);
+        studentId = generateStudentId(
+          args.firstName,
+          args.lastName || "",
+          args.providerId,
+        );
       } else {
         const schoolIdForHash = args.schoolId || "NOSCHOOL";
-        studentId = generateStudentId(args.firstName, args.lastName || "", schoolIdForHash);
+        studentId = generateStudentId(
+          args.firstName,
+          args.lastName || "",
+          schoolIdForHash,
+        );
       }
       attempts++;
     }
 
     if (attempts === maxAttempts) {
-      throw new Error("Failed to generate unique student ID after multiple attempts");
+      throw new Error(
+        "Failed to generate unique student ID after multiple attempts",
+      );
     }
 
     const id = await ctx.db.insert("students", {
@@ -461,7 +517,9 @@ export const update = mutation({
     if (user.role === "teacher" || user.role === "moderator") {
       // Teachers/moderators can only modify students from their school
       if (!student.schoolId || student.schoolId !== user.schoolId) {
-        throw new Error("Unauthorized: Cannot modify students from other schools");
+        throw new Error(
+          "Unauthorized: Cannot modify students from other schools",
+        );
       }
     } else if (user.role === "guardian") {
       // Guardians can only modify their own students
@@ -473,7 +531,8 @@ export const update = mutation({
     }
 
     // ✅ SECURITY: Input validation for updated fields
-    if (updates.firstName) validateLength(updates.firstName, "First name", 100, 1);
+    if (updates.firstName)
+      validateLength(updates.firstName, "First name", 100, 1);
     if (updates.lastName) validateLength(updates.lastName, "Last name", 100, 1);
     if (updates.nickname) validateLength(updates.nickname, "Nickname", 100, 0);
     if (updates.notes) validateLength(updates.notes, "Notes", 2000, 0);
@@ -484,7 +543,7 @@ export const update = mutation({
     }
 
     const filteredUpdates = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
+      Object.entries(updates).filter(([, v]) => v !== undefined),
     );
 
     await ctx.db.patch(id, filteredUpdates);
@@ -539,7 +598,9 @@ export const remove = mutation({
     if (user.role === "teacher" || user.role === "moderator") {
       // Teachers/moderators can only delete students from their school
       if (!student.schoolId || student.schoolId !== user.schoolId) {
-        throw new Error("Unauthorized: Cannot delete students from other schools");
+        throw new Error(
+          "Unauthorized: Cannot delete students from other schools",
+        );
       }
     } else if (user.role === "guardian") {
       // Guardians can only delete their own students
@@ -559,12 +620,15 @@ export const remove = mutation({
     if (activeClasses.length > 0) {
       // Get count by status
       const pendingOrApproved = activeClasses.filter(
-        (c) => c.status === "pending" || c.status === "acknowledged" || c.status === "approved"
+        (c) =>
+          c.status === "pending" ||
+          c.status === "acknowledged" ||
+          c.status === "approved",
       ).length;
 
       if (pendingOrApproved > 0) {
         throw new Error(
-          `Cannot delete student with ${pendingOrApproved} active/pending classes. Please cancel or complete classes first.`
+          `Cannot delete student with ${pendingOrApproved} active/pending classes. Please cancel or complete classes first.`,
         );
       }
     }
@@ -585,7 +649,7 @@ export const remove = mutation({
         guardianId: student.guardianId,
         area: student.area,
         affectedClasses: activeClasses.length,
-        affectedClassIds: activeClasses.map(c => c._id),
+        affectedClassIds: activeClasses.map((c) => c._id),
       },
     });
 
@@ -614,7 +678,11 @@ export const duplicate = mutation({
 
     // Generate new unique student ID
     const schoolIdForHash = "GUARDIAN";
-    let studentId = generateStudentId(originalStudent.firstName, originalStudent.lastName, schoolIdForHash);
+    let studentId = generateStudentId(
+      originalStudent.firstName,
+      originalStudent.lastName,
+      schoolIdForHash,
+    );
 
     let attempts = 0;
     const maxAttempts = 10;
@@ -629,12 +697,18 @@ export const duplicate = mutation({
         break;
       }
 
-      studentId = generateStudentId(originalStudent.firstName, originalStudent.lastName, schoolIdForHash);
+      studentId = generateStudentId(
+        originalStudent.firstName,
+        originalStudent.lastName,
+        schoolIdForHash,
+      );
       attempts++;
     }
 
     if (attempts === maxAttempts) {
-      throw new Error("Failed to generate unique student ID after multiple attempts");
+      throw new Error(
+        "Failed to generate unique student ID after multiple attempts",
+      );
     }
 
     // Create duplicate with new ID
@@ -738,16 +812,24 @@ export const migrateClassField = mutation({
         student.lastName,
         nickname || "",
         notes || "",
-      ].join(" ").toUpperCase();
+      ]
+        .join(" ")
+        .toUpperCase();
 
       let detectedClass: string | null = null;
 
       // Check for K1, K2, K3 patterns
       if (/\bK1\b/.test(searchFields) || /\bK\s*1\b/.test(searchFields)) {
         detectedClass = "K1";
-      } else if (/\bK2\b/.test(searchFields) || /\bK\s*2\b/.test(searchFields)) {
+      } else if (
+        /\bK2\b/.test(searchFields) ||
+        /\bK\s*2\b/.test(searchFields)
+      ) {
         detectedClass = "K2";
-      } else if (/\bK3\b/.test(searchFields) || /\bK\s*3\b/.test(searchFields)) {
+      } else if (
+        /\bK3\b/.test(searchFields) ||
+        /\bK\s*3\b/.test(searchFields)
+      ) {
         detectedClass = "K3";
       }
 
@@ -761,7 +843,7 @@ export const migrateClassField = mutation({
     return {
       success: true,
       message: `Successfully updated ${updatedCount} student(s) with detected class`,
-      updatedCount
+      updatedCount,
     };
   },
 });

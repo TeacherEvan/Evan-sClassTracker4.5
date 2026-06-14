@@ -10,7 +10,7 @@
 
 - ✅ **Admins**: Can delete any students from any school
 - ✅ **Moderators**: Can delete students from their own school only
-- ✅ **Teachers**: Can delete students from their own school only  
+- ✅ **Teachers**: Can delete students from their own school only
 - ❌ **Guardians**: Cannot bulk delete (security restriction)
 
 **Files Changed:**
@@ -44,12 +44,12 @@
 ```typescript
 // Non-admins can only delete students from their own school
 if (user.role !== "admin") {
-    if (student.schoolId !== user.schoolId) {
-        errors.push({
-            error: "Cannot delete students from other schools",
-        });
-        continue;
-    }
+  if (student.schoolId !== user.schoolId) {
+    errors.push({
+      error: "Cannot delete students from other schools",
+    });
+    continue;
+  }
 }
 ```
 
@@ -58,7 +58,7 @@ if (user.role !== "admin") {
 ```typescript
 // Only admins can bypass class checks
 if (operationArgs.force && user.role !== "admin") {
-    throw new Error("Unauthorized: Only admins can force delete students with classes");
+  throw new Error("Unauthorized: Only admins can force delete students with classes");
 }
 ```
 
@@ -117,15 +117,15 @@ Same as above, PLUS:
 ```typescript
 // Line 238-252: Enhanced role-based authorization
 if (user.role === "guardian") {
-    throw new Error("Unauthorized: Guardians cannot bulk delete students");
+  throw new Error("Unauthorized: Guardians cannot bulk delete students");
 }
 
 if (user.role !== "admin" && user.role !== "moderator" && user.role !== "teacher") {
-    throw new Error("Unauthorized: Insufficient permissions for bulk deletion");
+  throw new Error("Unauthorized: Insufficient permissions for bulk deletion");
 }
 
 if (operationArgs.force && user.role !== "admin") {
-    throw new Error("Unauthorized: Only admins can force delete students with classes");
+  throw new Error("Unauthorized: Only admins can force delete students with classes");
 }
 ```
 
@@ -134,12 +134,12 @@ if (operationArgs.force && user.role !== "admin") {
 ```typescript
 // Lines 275-298: School access check + detailed class info
 errors.push({
-    index: i,
-    studentId,
-    studentName: `${student.firstName} ${student.lastName}`,
-    error: `Has ${classCount} classes (${activeClasses.length} active). Please cancel classes first or use force option (admin only).`,
-    classCount,
-    activeClassCount: activeClasses.length,
+  index: i,
+  studentId,
+  studentName: `${student.firstName} ${student.lastName}`,
+  error: `Has ${classCount} classes (${activeClasses.length} active). Please cancel classes first or use force option (admin only).`,
+  classCount,
+  activeClassCount: activeClasses.length,
 });
 ```
 
@@ -151,12 +151,7 @@ errors.push({
 // Lines 290-298: Admin force delete confirmation
 let forceDelete = false;
 if (currentUser.role === "admin") {
-    forceDelete = confirm(
-        t(
-            "Force delete students even if they have classes? (ADMIN ONLY - Use with caution)",
-            "บังคับลบนักเรียนแม้ว่าจะมีคลาส? (ผู้จัดการเท่านั้น - ใช้ด้วยความระมัดระวัง)"
-        )
-    );
+  forceDelete = confirm(t("Force delete students even if they have classes? (ADMIN ONLY - Use with caution)", "บังคับลบนักเรียนแม้ว่าจะมีคลาส? (ผู้จัดการเท่านั้น - ใช้ด้วยความระมัดระวัง)"));
 }
 ```
 
@@ -165,13 +160,11 @@ if (currentUser.role === "admin") {
 ```typescript
 // Lines 313-324: Show first 5 errors with details
 const errorDetails = result.errors
-    .slice(0, 5)
-    .map((err: any) => `• ${err.studentName}: ${err.error}`)
-    .join('\n');
+  .slice(0, 5)
+  .map((err: any) => `• ${err.studentName}: ${err.error}`)
+  .join("\n");
 
-const moreErrors = result.errors.length > 5 
-    ? `\n...and ${result.errors.length - 5} more`
-    : '';
+const moreErrors = result.errors.length > 5 ? `\n...and ${result.errors.length - 5} more` : "";
 ```
 
 ---

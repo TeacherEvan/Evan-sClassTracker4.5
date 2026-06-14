@@ -14,7 +14,9 @@ import { useState } from "react";
  */
 export function SangsomSeedButton() {
   const { t } = useLanguage();
-  const seedSangsomProject = useMutation(api.seedSangsomProject.seedSangsomProject);
+  const seedSangsomProject = useMutation(
+    api.seedSangsomProject.seedSangsomProject,
+  );
   const checkSangsomData = useMutation(api.seedSangsomProject.checkSangsomData);
 
   const [loading, setLoading] = useState(false);
@@ -25,7 +27,12 @@ export function SangsomSeedButton() {
       teacher: { username: string; password: string };
       moderator: { username: string; password: string };
     };
-    events?: Array<{ date: string; time: string; classCode: string; topic: string }>;
+    events?: Array<{
+      date: string;
+      time: string;
+      classCode: string;
+      topic: string;
+    }>;
   } | null>(null);
   const [existingData, setExistingData] = useState<{
     exists: boolean;
@@ -41,18 +48,18 @@ export function SangsomSeedButton() {
       if (data.exists) {
         toast.info(
           `Found Sangsom data: ${data.eventCount} events`,
-          `พบข้อมูลสังสม: ${data.eventCount} กิจกรรม`
+          `พบข้อมูลสังสม: ${data.eventCount} กิจกรรม`,
         );
       } else {
         toast.info(
           "No Sangsom data found. Ready to seed.",
-          "ไม่พบข้อมูลสังสม พร้อมที่จะเพิ่มข้อมูล"
+          "ไม่พบข้อมูลสังสม พร้อมที่จะเพิ่มข้อมูล",
         );
       }
     } catch (err) {
       toast.error(
         `Failed to check data: ${err instanceof Error ? err.message : "Unknown error"}`,
-        `ตรวจสอบข้อมูลไม่สำเร็จ: ${err instanceof Error ? err.message : "ข้อผิดพลาดที่ไม่ทราบสาเหตุ"}`
+        `ตรวจสอบข้อมูลไม่สำเร็จ: ${err instanceof Error ? err.message : "ข้อผิดพลาดที่ไม่ทราบสาเหตุ"}`,
       );
     } finally {
       setLoading(false);
@@ -69,12 +76,12 @@ export function SangsomSeedButton() {
 
       toast.success(
         `Successfully created ${res.eventsCreated} events!`,
-        `สร้าง ${res.eventsCreated} กิจกรรมสำเร็จ!`
+        `สร้าง ${res.eventsCreated} กิจกรรมสำเร็จ!`,
       );
     } catch (err) {
       toast.error(
         `Failed to seed data: ${err instanceof Error ? err.message : "Unknown error"}`,
-        `เพิ่มข้อมูลไม่สำเร็จ: ${err instanceof Error ? err.message : "ข้อผิดพลาดที่ไม่ทราบสาเหตุ"}`
+        `เพิ่มข้อมูลไม่สำเร็จ: ${err instanceof Error ? err.message : "ข้อผิดพลาดที่ไม่ทราบสาเหตุ"}`,
       );
     } finally {
       setLoading(false);
@@ -92,7 +99,7 @@ export function SangsomSeedButton() {
           <p className="text-sm text-gray-600 dark:text-gray-400">
             {t(
               "Import November 2025 schedule as EVENTS from paper document",
-              "นำเข้าตารางเดือนพฤศจิกายน 2568 เป็นกิจกรรมจากเอกสาร"
+              "นำเข้าตารางเดือนพฤศจิกายน 2568 เป็นกิจกรรมจากเอกสาร",
             )}
           </p>
         </div>
@@ -105,7 +112,10 @@ export function SangsomSeedButton() {
               <>
                 {t("Existing data found:", "พบข้อมูลที่มีอยู่:")}
                 <br />
-                {t(`${existingData.eventCount} events`, `${existingData.eventCount} กิจกรรม`)}
+                {t(
+                  `${existingData.eventCount} events`,
+                  `${existingData.eventCount} กิจกรรม`,
+                )}
               </>
             ) : (
               t("No existing data found", "ไม่พบข้อมูลที่มีอยู่")
@@ -119,7 +129,7 @@ export function SangsomSeedButton() {
           <p className="text-sm text-yellow-800 dark:text-yellow-200">
             {t(
               "This will create Sangsom School, teacher พงศกร หน่อไฟ, and all scheduled EVENTS for November 3-24, 2025. No students or classes will be created.",
-              "จะสร้างโรงเรียนสังสม, ครู พงศกร หน่อไฟ, และกิจกรรมทั้งหมดที่กำหนดไว้วันที่ 3-24 พฤศจิกายน 2568 จะไม่สร้างนักเรียนหรือคลาส"
+              "จะสร้างโรงเรียนสังสม, ครู พงศกร หน่อไฟ, และกิจกรรมทั้งหมดที่กำหนดไว้วันที่ 3-24 พฤศจิกายน 2568 จะไม่สร้างนักเรียนหรือคลาส",
             )}
           </p>
         </div>
@@ -163,13 +173,15 @@ export function SangsomSeedButton() {
                 <div className="grid grid-cols-2 gap-2">
                   <span className="font-semibold">Teacher:</span>
                   <code className="text-green-800 dark:text-green-200">
-                    {result.credentials.teacher.username} / {result.credentials.teacher.password}
+                    {result.credentials.teacher.username} /{" "}
+                    {result.credentials.teacher.password}
                   </code>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <span className="font-semibold">Moderator:</span>
                   <code className="text-green-800 dark:text-green-200">
-                    {result.credentials.moderator.username} / {result.credentials.moderator.password}
+                    {result.credentials.moderator.username} /{" "}
+                    {result.credentials.moderator.password}
                   </code>
                 </div>
               </div>
@@ -184,20 +196,17 @@ export function SangsomSeedButton() {
               <li>
                 {t(
                   `✓ Created ${result.eventsCreated} events`,
-                  `✓ สร้าง ${result.eventsCreated} กิจกรรม`
+                  `✓ สร้าง ${result.eventsCreated} กิจกรรม`,
                 )}
               </li>
               <li>
                 {t(
                   "✓ Schedule period: November 3-24, 2025",
-                  "✓ ช่วงเวลา: 3-24 พฤศจิกายน 2568"
+                  "✓ ช่วงเวลา: 3-24 พฤศจิกายน 2568",
                 )}
               </li>
               <li>
-                {t(
-                  "✓ Events visible on calendar",
-                  "✓ กิจกรรมแสดงบนปฏิทิน"
-                )}
+                {t("✓ Events visible on calendar", "✓ กิจกรรมแสดงบนปฏิทิน")}
               </li>
             </ul>
           </div>
@@ -217,7 +226,7 @@ export function SangsomSeedButton() {
                   <li className="text-gray-500 dark:text-gray-500 italic">
                     {t(
                       `... and ${result.events.length - 10} more`,
-                      `... และอีก ${result.events.length - 10} กิจกรรม`
+                      `... และอีก ${result.events.length - 10} กิจกรรม`,
                     )}
                   </li>
                 )}

@@ -58,14 +58,18 @@ Created a responsive filter panel that:
 Applied filtering to classes list:
 
 ```typescript
-{classes?.filter((classItem) => {
-  if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
-  if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
-  if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
-  return true;
-}).map((classItem) => {
-  // Render filtered classes
-})}
+{
+  classes
+    ?.filter((classItem) => {
+      if (filterTeacherId !== "all" && classItem.teacherId !== filterTeacherId) return false;
+      if (filterSchoolId !== "all" && classItem.schoolId !== filterSchoolId) return false;
+      if (filterStudentId !== "all" && classItem.studentId !== filterStudentId) return false;
+      return true;
+    })
+    .map((classItem) => {
+      // Render filtered classes
+    });
+}
 ```
 
 ### 4. Enhanced Empty State

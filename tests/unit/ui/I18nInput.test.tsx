@@ -29,7 +29,7 @@ describe("I18nInput", () => {
         {...defaultProps}
         value={{ en: "Hello", th: "สวัสดี" }}
         language="en"
-      />
+      />,
     );
     expect(screen.getByLabelText("Name")).toHaveValue("Hello");
 
@@ -38,7 +38,7 @@ describe("I18nInput", () => {
         {...defaultProps}
         value={{ en: "Hello", th: "สวัสดี" }}
         language="th"
-      />
+      />,
     );
     expect(screen.getByLabelText("ชื่อ")).toHaveValue("สวัสดี");
   });
@@ -57,9 +57,7 @@ describe("I18nInput", () => {
 
   it("updates only the current language value", () => {
     const initialValue = { en: "Hello", th: "สวัสดี" };
-    render(
-      <I18nInput {...defaultProps} value={initialValue} language="th" />
-    );
+    render(<I18nInput {...defaultProps} value={initialValue} language="th" />);
     const input = screen.getByLabelText("ชื่อ");
 
     fireEvent.change(input, { target: { value: "สวัสดีครับ" } });
@@ -76,7 +74,7 @@ describe("I18nInput", () => {
         {...defaultProps}
         value={{ en: "Hello", th: "สวัสดี" }}
         language="en"
-      />
+      />,
     );
     expect(screen.getByLabelText("Name")).toHaveValue("Hello");
 
@@ -85,19 +83,27 @@ describe("I18nInput", () => {
         {...defaultProps}
         value={{ en: "Hello", th: "สวัสดี" }}
         language="th"
-      />
+      />,
     );
     expect(screen.getByLabelText("ชื่อ")).toHaveValue("สวัสดี");
   });
 
   it("syncs input value when value prop changes", () => {
     const { rerender } = render(
-      <I18nInput {...defaultProps} value={{ en: "Old", th: "เก่า" }} language="en" />
+      <I18nInput
+        {...defaultProps}
+        value={{ en: "Old", th: "เก่า" }}
+        language="en"
+      />,
     );
     expect(screen.getByLabelText("Name")).toHaveValue("Old");
 
     rerender(
-      <I18nInput {...defaultProps} value={{ en: "New", th: "ใหม่" }} language="en" />
+      <I18nInput
+        {...defaultProps}
+        value={{ en: "New", th: "ใหม่" }}
+        language="en"
+      />,
     );
     expect(screen.getByLabelText("Name")).toHaveValue("New");
   });
@@ -110,7 +116,7 @@ describe("I18nInput", () => {
         disabled
         required
         id="test-input"
-      />
+      />,
     );
     const input = screen.getByLabelText("Name");
 
@@ -121,10 +127,22 @@ describe("I18nInput", () => {
   });
 
   it("handles empty value gracefully", () => {
-    const { rerender } = render(<I18nInput {...defaultProps} value={null as unknown as I18nString | null} language="en" />);
+    const { rerender } = render(
+      <I18nInput
+        {...defaultProps}
+        value={null as unknown as I18nString | null}
+        language="en"
+      />,
+    );
     expect(screen.getByLabelText("Name")).toHaveValue("");
 
-    rerender(<I18nInput {...defaultProps} value={undefined as unknown as I18nString | undefined} language="en" />);
+    rerender(
+      <I18nInput
+        {...defaultProps}
+        value={undefined as unknown as I18nString | undefined}
+        language="en"
+      />,
+    );
     expect(screen.getByLabelText("Name")).toHaveValue("");
   });
 

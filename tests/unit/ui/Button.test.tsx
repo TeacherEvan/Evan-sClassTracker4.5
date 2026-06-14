@@ -5,7 +5,9 @@ import { Button } from "../../../components/ui/Button";
 describe("Button", () => {
   it("renders button with children", () => {
     render(<Button>Click me</Button>);
-    expect(screen.getByRole("button", { name: /click me/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /click me/i }),
+    ).toBeInTheDocument();
   });
 
   it("applies variant classes", () => {

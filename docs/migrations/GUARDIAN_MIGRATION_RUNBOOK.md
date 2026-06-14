@@ -141,7 +141,7 @@ Run the migration in preview mode to see what would happen:
 
    ```json
    {
-     "adminId": "jd7...",  // Your admin ID
+     "adminId": "jd7...", // Your admin ID
      "dryRun": true
    }
    ```
@@ -246,13 +246,13 @@ If dry run looks good, run the actual migration:
 {
   "students": {
     "total": 150,
-    "withGuardianId": 25,  // Still has guardianId (not cleaned yet)
-    "withProviderId": 33,  // 25 migrated + 8 orphans
+    "withGuardianId": 25, // Still has guardianId (not cleaned yet)
+    "withProviderId": 33, // 25 migrated + 8 orphans
     "cleanupComplete": false
   },
   "classes": {
     "total": 300,
-    "withGuardianLinked": 47,  // Still has isGuardianLinked (not cleaned yet)
+    "withGuardianLinked": 47, // Still has isGuardianLinked (not cleaned yet)
     "withProviderId": 47,
     "cleanupComplete": false
   },

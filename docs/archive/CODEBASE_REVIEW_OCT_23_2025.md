@@ -94,10 +94,7 @@ toast.confirm(
 
 ```typescript
 // Conditional execution prevents runtime errors
-const teachers = useQuery(
-  api.users.list,
-  currentUser && (currentUser.role === "admin") ? { role: "teacher" } : "skip"
-);
+const teachers = useQuery(api.users.list, currentUser && currentUser.role === "admin" ? { role: "teacher" } : "skip");
 ```
 
 **Recommendation:** Continue current patterns. Type safety is well-maintained.
@@ -126,8 +123,7 @@ const teachers = useQuery(
 ```typescript
 const classes = await ctx.db
   .query("classes")
-  .withIndex("by_school_and_date", q => 
-    q.eq("schoolId", schoolId).gte("scheduledDate", startDate))
+  .withIndex("by_school_and_date", (q) => q.eq("schoolId", schoolId).gte("scheduledDate", startDate))
   .collect();
 ```
 
@@ -214,8 +210,10 @@ await checkRateLimit(ctx, { key: `contact-${args.userId}`, limit: 5, windowMs: 3
 // ✅ GOOD
 toast.success("Class booked!", "จองคลาสสำเร็จ!");
 
-// ✅ GOOD  
-{t("Approve", "อนุมัติ")}
+// ✅ GOOD
+{
+  t("Approve", "อนุมัติ");
+}
 
 // ⚠️ CHECK - Is this user-facing?
 throw new Error("Invalid class status");

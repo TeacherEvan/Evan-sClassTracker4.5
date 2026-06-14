@@ -34,7 +34,7 @@ This made it difficult for users (especially those with many classes) to quickly
    - Filter icon in header with clear labeling
    - Individual filter cards with colored icons:
      - 🔵 Blue user icon for **Teacher Filter**
-     - 🟢 Green building icon for **School Filter**  
+     - 🟢 Green building icon for **School Filter**
      - 🟣 Purple book icon for **Student Filter**
    - Larger, more touch-friendly dropdowns
    - Clear "Results Count" badge showing filtered vs total classes
@@ -58,17 +58,21 @@ This made it difficult for users (especially those with many classes) to quickly
 #### 1. Filter Section Repositioned (Lines 779-910)
 
 ```tsx
-{/* Filter Navigation Tabs - Always visible when classes exist */}
-{classes && classes.length > 0 && (
-  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-750 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 mb-4 border-2 border-blue-200 dark:border-blue-900">
-    {/* Filter icon header */}
-    {/* Teacher filter with blue user icon */}
-    {/* School filter with green building icon */}
-    {/* Student filter with purple book icon */}
-    {/* Results count with badge */}
-    {/* Clear all filters button */}
-  </div>
-)}
+{
+  /* Filter Navigation Tabs - Always visible when classes exist */
+}
+{
+  classes && classes.length > 0 && (
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-750 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 mb-4 border-2 border-blue-200 dark:border-blue-900">
+      {/* Filter icon header */}
+      {/* Teacher filter with blue user icon */}
+      {/* School filter with green building icon */}
+      {/* Student filter with purple book icon */}
+      {/* Results count with badge */}
+      {/* Clear all filters button */}
+    </div>
+  );
+}
 ```
 
 **Before:**
@@ -204,17 +208,17 @@ This made it difficult for users (especially those with many classes) to quickly
 
 All filter labels support English/Thai:
 
-| English | Thai |
-|---------|------|
+| English                   | Thai             |
+| ------------------------- | ---------------- |
 | Filter & Navigate Classes | กรองและค้นหาคลาส |
-| Filter by Teacher | กรองตามครู |
-| Filter by School | กรองตามโรงเรียน |
-| Filter by Student | กรองตามนักเรียน |
-| All Teachers | ครูทั้งหมด |
-| All Schools | โรงเรียนทั้งหมด |
-| All Students | นักเรียนทั้งหมด |
-| Clear All Filters | ล้างตัวกรอง |
-| of X classes | จาก X คลาส |
+| Filter by Teacher         | กรองตามครู       |
+| Filter by School          | กรองตามโรงเรียน  |
+| Filter by Student         | กรองตามนักเรียน  |
+| All Teachers              | ครูทั้งหมด       |
+| All Schools               | โรงเรียนทั้งหมด  |
+| All Students              | นักเรียนทั้งหมด  |
+| Clear All Filters         | ล้างตัวกรอง      |
+| of X classes              | จาก X คลาส       |
 
 ---
 

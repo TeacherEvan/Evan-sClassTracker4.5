@@ -84,7 +84,7 @@ export function I18nTextarea({
         onChangeEn(newValue);
       }, debounceMs);
     },
-    [onChangeEn, debounceMs]
+    [onChangeEn, debounceMs],
   );
 
   const handleChangeTh = useCallback(
@@ -102,7 +102,7 @@ export function I18nTextarea({
         onChangeTh(newValue);
       }, debounceMs);
     },
-    [onChangeTh, debounceMs]
+    [onChangeTh, debounceMs],
   );
 
   const baseTextareaClasses =
@@ -111,10 +111,18 @@ export function I18nTextarea({
   const labelClasses = "block text-sm font-medium mb-2";
 
   return (
-    <div data-testid="i18n-textarea-container" className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${className}`}>
+    <div
+      data-testid="i18n-textarea-container"
+      className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${className}`}
+    >
       {/* English Textarea */}
       <div>
-        <label htmlFor={`i18n-textarea-en-${labelEn.replace(/\s+/g, "-").toLowerCase()}`} className={labelClasses}>{labelEn} (English)</label>
+        <label
+          htmlFor={`i18n-textarea-en-${labelEn.replace(/\s+/g, "-").toLowerCase()}`}
+          className={labelClasses}
+        >
+          {labelEn} (English)
+        </label>
         <textarea
           id={`i18n-textarea-en-${labelEn.replace(/\s+/g, "-").toLowerCase()}`}
           value={localValueEn}
@@ -129,7 +137,12 @@ export function I18nTextarea({
 
       {/* Thai Textarea */}
       <div>
-        <label htmlFor={`i18n-textarea-th-${labelTh.replace(/\s+/g, "-").toLowerCase()}`} className={labelClasses}>{labelTh} (ไทย)</label>
+        <label
+          htmlFor={`i18n-textarea-th-${labelTh.replace(/\s+/g, "-").toLowerCase()}`}
+          className={labelClasses}
+        >
+          {labelTh} (ไทย)
+        </label>
         <textarea
           id={`i18n-textarea-th-${labelTh.replace(/\s+/g, "-").toLowerCase()}`}
           value={localValueTh}

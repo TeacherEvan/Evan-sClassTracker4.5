@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Generate Convex Hooks from API Schema
- * 
+ *
  * This script reads the Convex API schema and generates typed React hooks
  * for use with TanStack Query. Run with: `npx tsx scripts/generate-hooks.ts`
  */
@@ -303,7 +303,7 @@ export function useMarkAllNotificationsRead() {
 
 function main() {
   const outputPath = resolve("lib/convex/hooks.ts");
-  
+
   try {
     writeFileSync(outputPath, HOOKS_TEMPLATE);
     console.log(`✅ Generated hooks at ${outputPath}`);

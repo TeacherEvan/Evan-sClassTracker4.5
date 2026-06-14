@@ -50,9 +50,7 @@ Located at: `app/page.tsx`
 
 ```tsx
 <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t z-50 md:hidden safe-area-inset-bottom">
-  <div className="flex justify-around items-center h-16 px-2">
-    {/* Tab buttons */}
-  </div>
+  <div className="flex justify-around items-center h-16 px-2">{/* Tab buttons */}</div>
 </nav>
 ```
 
@@ -102,9 +100,7 @@ useSwipeGesture({
 **Example**:
 
 ```tsx
-<input
-  className="px-4 py-3 md:py-2 text-base md:text-sm border rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 touch-manipulation"
-/>
+<input className="px-4 py-3 md:py-2 text-base md:text-sm border rounded-xl md:rounded-lg focus:ring-2 focus:ring-blue-500 touch-manipulation" />
 ```
 
 ### Buttons
@@ -119,11 +115,7 @@ useSwipeGesture({
 **Example**:
 
 ```tsx
-<button
-  className="w-full bg-blue-500 text-white px-4 py-3.5 md:py-2.5 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-98 transition-all touch-manipulation shadow-lg shadow-blue-500/20 text-base md:text-sm font-medium"
->
-  Submit
-</button>
+<button className="w-full bg-blue-500 text-white px-4 py-3.5 md:py-2.5 rounded-xl md:rounded-lg hover:bg-blue-600 active:scale-98 transition-all touch-manipulation shadow-lg shadow-blue-500/20 text-base md:text-sm font-medium">Submit</button>
 ```
 
 ### Cards & Containers
@@ -138,9 +130,7 @@ useSwipeGesture({
 **Example**:
 
 ```tsx
-<div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 active:scale-[0.99] transition-transform">
-  {/* Content */}
-</div>
+<div className="bg-white dark:bg-gray-800 rounded-2xl md:rounded-lg shadow-lg p-4 md:p-6 active:scale-[0.99] transition-transform">{/* Content */}</div>
 ```
 
 ## Component-Specific Optimizations

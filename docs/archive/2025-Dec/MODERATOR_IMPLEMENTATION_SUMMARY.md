@@ -235,9 +235,7 @@ Applied to all mutations:
 
 ```typescript
 // Display logic
-const reviewNotesDisplay = language === "th"
-    ? (cls.reviewNotesTh || cls.reviewNotes)
-    : (cls.reviewNotes || cls.reviewNotesTh);
+const reviewNotesDisplay = language === "th" ? cls.reviewNotesTh || cls.reviewNotes : cls.reviewNotes || cls.reviewNotesTh;
 ```
 
 ## Testing Checklist

@@ -12,6 +12,7 @@
 **Critical UX Issue**: Contact Admin form displayed misleading validation labels that confused users.
 
 **User Report**:
+
 > "WHEN CONTACTING THE ADMINISTRATOR VIA THE CONTACT ADMIN BUTTON IT STILL FORCES YOU TO PROVIDE A THAI INPUT!!!!!!!!!!!!!!!!!!!!!!!! EVEN AFTER IT SAYS OPTIONAL!!!!"
 
 **Root Cause**:
@@ -34,9 +35,7 @@
 ```tsx
 <label>
   {t("Subject", "หัวเรื่อง")}
-  <span className="text-red-500">
-    {t("(Required)", "(จำเป็น)")}  // ❌ Misleading!
-  </span>
+  <span className="text-red-500">{t("(Required)", "(จำเป็น)")} // ❌ Misleading!</span>
 </label>
 ```
 
@@ -45,9 +44,7 @@
 ```tsx
 <label>
   {t("Subject", "หัวเรื่อง")}
-  <span className="text-blue-600 dark:text-blue-400">
-    {t("(At least one language required)", "(ต้องระบุอย่างน้อยหนึ่งภาษา)")}  // ✅ Accurate!
-  </span>
+  <span className="text-blue-600 dark:text-blue-400">{t("(At least one language required)", "(ต้องระบุอย่างน้อยหนึ่งภาษา)")} // ✅ Accurate!</span>
 </label>
 ```
 

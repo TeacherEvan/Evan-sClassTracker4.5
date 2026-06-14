@@ -7,13 +7,13 @@
 ## 🎯 Accessibility (`lib/accessibility-utils.ts`)
 
 ```typescript
-import { 
-  getStatusAriaLabel, 
+import {
+  getStatusAriaLabel,
   getStatusBadgeClasses,
   getStatusIconName,
   MIN_TOUCH_TARGET,
   FOCUS_RING,
-  announceToScreenReader 
+  announceToScreenReader
 } from "@/lib/accessibility-utils";
 
 // Status badge with icon + text + color
@@ -48,12 +48,12 @@ const shortcuts = [
   { ...COMMON_SHORTCUTS.NEW, callback: () => setShowForm(true) },
   { ...COMMON_SHORTCUTS.SAVE, callback: handleSave, disabled: !isDirty },
   { ...COMMON_SHORTCUTS.CLOSE, callback: () => setShowForm(false) },
-  { 
-    key: "?", 
-    shift: true, 
+  {
+    key: "?",
+    shift: true,
     description: "Show help",
     descriptionTh: "แสดงความช่วยเหลือ",
-    callback: () => setShowHelp(true) 
+    callback: () => setShowHelp(true)
   },
 ];
 
@@ -61,17 +61,17 @@ useKeyboardShortcuts(shortcuts);
 
 // Help modal
 const [showHelp, setShowHelp] = useState(false);
-<KeyboardShortcutsHelp 
+<KeyboardShortcutsHelp
   shortcuts={shortcuts}
-  isOpen={showHelp} 
-  onClose={() => setShowHelp(false)} 
+  isOpen={showHelp}
+  onClose={() => setShowHelp(false)}
 />
 ```
 
 **Available Shortcuts**:
 
 - `Ctrl+N` - Create new item
-- `Ctrl+S` - Save  
+- `Ctrl+S` - Save
 - `Ctrl+K` - Search/Filter
 - `Escape` - Close modal
 - `?` - Show help
@@ -87,9 +87,9 @@ const [showHelp, setShowHelp] = useState(false);
 import { logger } from "@/lib/logger";
 
 // Development only (stripped in production)
-logger.debug("Component rendered", { 
+logger.debug("Component rendered", {
   component: "ClassBooking",
-  props: { studentId, schoolId } 
+  props: { studentId, schoolId },
 });
 
 // Info (all environments)
@@ -102,7 +102,7 @@ logger.warn("Deprecated API used", { function: "oldMethod" });
 logger.error("Failed to save class", error, {
   component: "ClassBooking",
   action: "save",
-  userId
+  userId,
 });
 
 // Performance tracking
@@ -121,7 +121,7 @@ import { toast } from "@/lib/toast";
 // Delete with undo
 const handleDelete = async (classId: Id<"classes">) => {
   await softDeleteClass({ classId }); // Soft delete first
-  
+
   toast.show({
     title: "Class deleted",
     titleTh: "ลบชั้นเรียนแล้ว",
@@ -135,8 +135,8 @@ const handleDelete = async (classId: Id<"classes">) => {
       onClick: async () => {
         await restoreClass({ classId });
         toast.success("Class restored", "กู้คืนชั้นเรียนแล้ว");
-      }
-    }
+      },
+    },
   });
 };
 ```
@@ -181,13 +181,13 @@ const handleBulkReject = async (ids: Id<"classes">[]) => {
 // UI
 <>
   {/* Checkbox for each class */}
-  <input 
-    type="checkbox" 
+  <input
+    type="checkbox"
     checked={selectedClasses.has(class._id)}
     onChange={() => toggleSelection(class._id)}
     className={MIN_TOUCH_TARGET}
   />
-  
+
   {/* Bulk action bar */}
   <BulkActionBar
     selectedIds={selectedClasses}
@@ -242,7 +242,9 @@ logger.debug("User action", { action, userId, component: "ClassBooking" });
 
 ```typescript
 // Before
-{/* No shortcuts */}
+{
+  /* No shortcuts */
+}
 
 // After
 useKeyboardShortcuts([
@@ -287,8 +289,8 @@ const handleDelete = async (id) => {
     action: {
       label: "Undo",
       labelTh: "เลิกทำ",
-      onClick: () => restoreClass({ classId: id })
-    }
+      onClick: () => restoreClass({ classId: id }),
+    },
   });
 };
 ```
@@ -299,21 +301,10 @@ const handleDelete = async (id) => {
 
 ```typescript
 // Accessibility
-import { 
-  getStatusAriaLabel, 
-  getStatusBadgeClasses, 
-  getStatusIconName,
-  MIN_TOUCH_TARGET, 
-  FOCUS_RING,
-  announceToScreenReader 
-} from "@/lib/accessibility-utils";
+import { getStatusAriaLabel, getStatusBadgeClasses, getStatusIconName, MIN_TOUCH_TARGET, FOCUS_RING, announceToScreenReader } from "@/lib/accessibility-utils";
 
 // Keyboard Shortcuts
-import { 
-  useKeyboardShortcuts, 
-  COMMON_SHORTCUTS,
-  formatShortcut 
-} from "@/lib/use-keyboard-shortcuts";
+import { useKeyboardShortcuts, COMMON_SHORTCUTS, formatShortcut } from "@/lib/use-keyboard-shortcuts";
 import { KeyboardShortcutsHelp } from "@/components/keyboard-shortcuts-help";
 
 // Logging
@@ -341,8 +332,8 @@ useKeyboardShortcuts([
     description: "Close modal",
     descriptionTh: "ปิดหน้าต่าง",
     callback: () => setShowModal(false),
-    disabled: !showModal
-  }
+    disabled: !showModal,
+  },
 ]);
 ```
 
@@ -355,8 +346,8 @@ useKeyboardShortcuts([
   {
     ...COMMON_SHORTCUTS.SAVE,
     callback: handleSubmit,
-    disabled: !isDirty
-  }
+    disabled: !isDirty,
+  },
 ]);
 ```
 
@@ -370,14 +361,14 @@ useKeyboardShortcuts([
     key: "ArrowDown",
     description: "Next item",
     descriptionTh: "รายการถัดไป",
-    callback: () => setSelectedIndex(i => Math.min(i + 1, items.length - 1))
+    callback: () => setSelectedIndex((i) => Math.min(i + 1, items.length - 1)),
   },
   {
     key: "ArrowUp",
     description: "Previous item",
     descriptionTh: "รายการก่อนหน้า",
-    callback: () => setSelectedIndex(i => Math.max(i - 1, 0))
-  }
+    callback: () => setSelectedIndex((i) => Math.max(i - 1, 0)),
+  },
 ]);
 ```
 
@@ -391,7 +382,7 @@ useKeyboardShortcuts([
 - [ ] ARIA labels present on all status elements
 - [ ] Keyboard shortcuts don't conflict with browser
 - [ ] Escape key closes all modals
-- [ ] Console.*replaced with logger.* in components
+- [ ] Console._replaced with logger._ in components
 - [ ] Undo available for all destructive actions
 - [ ] Bulk actions have confirmation modals
 - [ ] Screen reader announces dynamic changes

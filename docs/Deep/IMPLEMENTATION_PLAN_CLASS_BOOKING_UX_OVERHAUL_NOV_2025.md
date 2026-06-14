@@ -58,20 +58,24 @@ Focused UX improvements for the Class Booking interface based on **user feedback
 
 ```typescript
 // BEFORE (Lines 804-807)
-{userRole === "moderator" || userRole === "admin"
-  ? t("Book Class", "จองชั้นเรียน")
-  : t("Req/Book Class", "ขอ/จองชั้นเรียน")}
+{
+  userRole === "moderator" || userRole === "admin" ? t("Book Class", "จองชั้นเรียน") : t("Req/Book Class", "ขอ/จองชั้นเรียน");
+}
 
 // AFTER
-{t("Book Class", "จองชั้นเรียน")} // Same for all roles
+{
+  t("Book Class", "จองชั้นเรียน");
+} // Same for all roles
 
 // BEFORE (Lines 1021-1022)
-{userRole === "moderator" || userRole === "admin"
-  ? t("Book a New Class", "จองชั้นเรียนใหม่")
-  : t("Request a New Class", "ขอชั้นเรียนใหม่")}
+{
+  userRole === "moderator" || userRole === "admin" ? t("Book a New Class", "จองชั้นเรียนใหม่") : t("Request a New Class", "ขอชั้นเรียนใหม่");
+}
 
 // AFTER
-{t("Book a New Class", "จองชั้นเรียนใหม่")} // Same for all roles
+{
+  t("Book a New Class", "จองชั้นเรียนใหม่");
+} // Same for all roles
 ```
 
 **Testing:**
@@ -134,13 +138,13 @@ Focused UX improvements for the Class Booking interface based on **user feedback
 // Replace vertical dropdown stack with horizontal chip filter
 const FilterPanel = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 mb-4">
       {/* Collapsed State - Single Row with Active Filter Chips */}
       {!isExpanded && (
         <div className="flex items-center gap-3 flex-wrap">
-          <button 
+          <button
             onClick={() => setIsExpanded(true)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
@@ -152,14 +156,14 @@ const FilterPanel = () => {
               </span>
             )}
           </button>
-          
+
           {/* Active Filter Chips */}
           {filterStudentId !== "all" && (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-100 dark:bg-purple-900/30 rounded-full">
               <span className="text-sm text-purple-700 dark:text-purple-400">
                 {studentName}
               </span>
-              <button 
+              <button
                 onClick={() => setFilterStudentId("all")}
                 className="text-purple-600 hover:text-purple-800"
               >
@@ -167,25 +171,25 @@ const FilterPanel = () => {
               </button>
             </div>
           )}
-          
+
           {/* Similar chips for Grade, Class, Provider */}
-          
+
           {activeFilterCount > 0 && (
-            <button 
+            <button
               onClick={clearAllFilters}
               className="text-sm text-red-600 hover:text-red-700 font-medium"
             >
               {t("Clear All", "ล้างทั้งหมด")}
             </button>
           )}
-          
+
           {/* Results Count */}
           <div className="ml-auto text-sm text-gray-600 dark:text-gray-400">
             <span className="font-semibold text-blue-600">{filteredCount}</span> of {totalCount} classes
           </div>
         </div>
       )}
-      
+
       {/* Expanded State - Full Filter Controls */}
       {isExpanded && (
         <div className="space-y-4">
@@ -195,7 +199,7 @@ const FilterPanel = () => {
               <ChevronUp className="w-5 h-5" />
             </button>
           </div>
-          
+
           {/* Grid Layout for Filters */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Student Filter */}
@@ -205,7 +209,7 @@ const FilterPanel = () => {
               </label>
               <select className="w-full ...">...</select>
             </div>
-            
+
             {/* Grade Filter */}
             <div>
               <label className="text-sm font-medium mb-1 block">
@@ -213,7 +217,7 @@ const FilterPanel = () => {
               </label>
               <select className="w-full ...">...</select>
             </div>
-            
+
             {/* Class Filter */}
             <div>
               <label className="text-sm font-medium mb-1 block">
@@ -221,7 +225,7 @@ const FilterPanel = () => {
               </label>
               <select className="w-full ...">...</select>
             </div>
-            
+
             {/* Provider Filter (Teachers/Admins) */}
             {(userRole === "teacher" || userRole === "admin") && (
               <div>
@@ -232,16 +236,16 @@ const FilterPanel = () => {
               </div>
             )}
           </div>
-          
+
           {/* Quick Actions */}
           <div className="flex items-center gap-2 pt-2 border-t">
-            <button 
+            <button
               onClick={clearAllFilters}
               className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg text-sm"
             >
               {t("Clear All", "ล้างทั้งหมด")}
             </button>
-            <button 
+            <button
               onClick={() => setIsExpanded(false)}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"
             >
@@ -261,7 +265,7 @@ const FilterPanel = () => {
 // Step-based wizard approach for complex bookings
 const BookingForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
       {/* Progress Indicator */}
@@ -273,18 +277,18 @@ const BookingForm = () => {
             {currentStep > 1 ? <Check className="w-4 h-4" /> : '1'}
           </div>
           <span className="text-sm font-medium">{t("Entity", "หน่วยงาน")}</span>
-          
+
           <div className="w-12 h-0.5 bg-gray-200" />
-          
+
           <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
             currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
           }`}>
             {currentStep > 2 ? <Check className="w-4 h-4" /> : '2'}
           </div>
           <span className="text-sm font-medium">{t("Student", "นักเรียน")}</span>
-          
+
           <div className="w-12 h-0.5 bg-gray-200" />
-          
+
           <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
             currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
           }`}>
@@ -293,7 +297,7 @@ const BookingForm = () => {
           <span className="text-sm font-medium">{t("Details", "รายละเอียด")}</span>
         </div>
       </div>
-      
+
       {/* Step 1: School or Provider Selection */}
       {currentStep === 1 && (
         <div className="space-y-4">
@@ -313,7 +317,7 @@ const BookingForm = () => {
                 {t("Book for a school-based class", "จองสำหรับคลาสในโรงเรียน")}
               </p>
             </button>
-            
+
             {/* Provider Option (Teachers/Admins) */}
             {(userRole === "teacher" || userRole === "admin") && (
               <button
@@ -332,7 +336,7 @@ const BookingForm = () => {
               </button>
             )}
           </div>
-          
+
           {/* Show entity selection dropdown after choice */}
           {schoolId === "" && (
             <select className="w-full p-3 border-2 rounded-xl">
@@ -340,7 +344,7 @@ const BookingForm = () => {
               {schools?.map(school => <option key={school._id} value={school._id}>{school.name}</option>)}
             </select>
           )}
-          
+
           {providerId === "" && (userRole === "teacher" || userRole === "admin") && (
             <select className="w-full p-3 border-2 rounded-xl">
               <option value="">{t("Select a provider", "เลือกผู้ให้บริการ")}</option>
@@ -349,7 +353,7 @@ const BookingForm = () => {
           )}
         </div>
       )}
-      
+
       {/* Step 2: Student Selection with Hierarchical Selector */}
       {currentStep === 2 && (
         <HierarchicalStudentSelector
@@ -358,7 +362,7 @@ const BookingForm = () => {
           onChange={setStudentId}
         />
       )}
-      
+
       {/* Step 3: Date, Location, and Optional Details */}
       {currentStep === 3 && (
         <div className="space-y-4">
@@ -373,7 +377,7 @@ const BookingForm = () => {
                 onDatesChange={setSelectedDates}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium mb-2">
                 {t("Time", "เวลา")} *
@@ -383,7 +387,7 @@ const BookingForm = () => {
               </select>
             </div>
           </div>
-          
+
           {/* Location */}
           <div>
             <label className="block text-sm font-medium mb-2">
@@ -393,7 +397,7 @@ const BookingForm = () => {
               {locations?.map(...)}
             </select>
           </div>
-          
+
           {/* Collapsible Optional Fields */}
           <CollapsibleSection
             titleEn="Optional Details"
@@ -404,7 +408,7 @@ const BookingForm = () => {
           </CollapsibleSection>
         </div>
       )}
-      
+
       {/* Navigation Buttons - Always Visible */}
       <div className="flex items-center justify-between mt-6 pt-6 border-t">
         {currentStep > 1 && (
@@ -415,7 +419,7 @@ const BookingForm = () => {
             {t("Back", "ย้อนกลับ")}
           </button>
         )}
-        
+
         {currentStep < 3 ? (
           <button
             onClick={() => setCurrentStep(s => s + 1)}
@@ -463,19 +467,19 @@ function ClassItemDisplay({ classItem, ... }) {
     api.users.getById,
     classItem.bookedByUserId ? { id: classItem.bookedByUserId } : "skip"
   );
-  
+
   const approvedByUser = useQuery(
     api.users.getById,
     classItem.approvedByUserId ? { id: classItem.approvedByUserId } : "skip"
   );
-  
+
   // Check if past class (show post-class notes button)
   const isPastClass = classItem.scheduledDate < Date.now();
-  
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
       {/* Existing class header */}
-      
+
       {/* NEW: Metadata Row */}
       <div className="flex items-center gap-4 px-4 py-2 bg-gray-50 dark:bg-gray-750 border-t text-xs">
         {/* Booked By */}
@@ -492,7 +496,7 @@ function ClassItemDisplay({ classItem, ... }) {
             </span>
           </div>
         )}
-        
+
         {/* Approved By */}
         {classItem.status === "approved" && classItem.approvedByUserId && approvedByUser && (
           <div className="flex items-center gap-1.5">
@@ -508,7 +512,7 @@ function ClassItemDisplay({ classItem, ... }) {
             </span>
           </div>
         )}
-        
+
         {/* Auto-Approval Source */}
         {classItem.approvalSource && classItem.approvalSource.startsWith("auto") && (
           <div className="flex items-center gap-1.5">
@@ -522,7 +526,7 @@ function ClassItemDisplay({ classItem, ... }) {
             </span>
           </div>
         )}
-        
+
         {/* Post-Class Notes Button (Past Classes Only) */}
         {isPastClass && (
           <button
@@ -534,7 +538,7 @@ function ClassItemDisplay({ classItem, ... }) {
           </button>
         )}
       </div>
-      
+
       {/* Existing class actions */}
     </div>
   );
@@ -547,7 +551,7 @@ function ClassItemDisplay({ classItem, ... }) {
 // New component: components/class-analytics.tsx
 export function ClassAnalytics({ userId, userRole, userSchoolId }) {
   const { t } = useLanguage();
-  
+
   // Fetch analytics data based on role
   const analytics = useQuery(
     api.analytics.getClassAnalytics,
@@ -557,7 +561,7 @@ export function ClassAnalytics({ userId, userRole, userSchoolId }) {
         ? { schoolId: userSchoolId }
         : {}
   );
-  
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
@@ -576,7 +580,7 @@ export function ClassAnalytics({ userId, userRole, userSchoolId }) {
             {t("This month", "เดือนนี้")}: +{analytics?.thisMonthClasses || 0}
           </p>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -591,7 +595,7 @@ export function ClassAnalytics({ userId, userRole, userSchoolId }) {
             {t("Last 30 days", "30 วันที่ผ่านมา")}
           </p>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -606,7 +610,7 @@ export function ClassAnalytics({ userId, userRole, userSchoolId }) {
             {t("This month", "เดือนนี้")}
           </p>
         </div>
-        
+
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
           <div className="flex items-center justify-between mb-2">
             <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -622,7 +626,7 @@ export function ClassAnalytics({ userId, userRole, userSchoolId }) {
           </p>
         </div>
       </div>
-      
+
       {/* Student Performance Table (Teachers & Moderators) */}
       {(userRole === "teacher" || userRole === "moderator") && (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
@@ -677,7 +681,7 @@ export function ClassAnalytics({ userId, userRole, userSchoolId }) {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="flex-1 bg-gray-200 rounded-full h-2">
-                          <div 
+                          <div
                             className={`h-2 rounded-full ${
                               student.attendanceRate >= 90 ? 'bg-green-600' :
                               student.attendanceRate >= 70 ? 'bg-yellow-600' :
@@ -738,55 +742,48 @@ export const getClassAnalytics = query({
       // Teachers see only their classes
       classes = await ctx.db
         .query("classes")
-        .withIndex("by_teacher", q => q.eq("teacherId", args.teacherId))
+        .withIndex("by_teacher", (q) => q.eq("teacherId", args.teacherId))
         .collect();
     } else if (args.schoolId) {
       // Moderators see only their school's classes
       classes = await ctx.db
         .query("classes")
-        .withIndex("by_school", q => q.eq("schoolId", args.schoolId))
+        .withIndex("by_school", (q) => q.eq("schoolId", args.schoolId))
         .collect();
     } else {
       // Admins see all classes
       classes = await ctx.db.query("classes").collect();
     }
-    
+
     // Fetch post-class notes for completed classes
     const postClassNotes = await Promise.all(
       classes
-        .filter(c => c.status === "approved" && c.scheduledDate < Date.now())
-        .map(c => ctx.db
-          .query("postClassNotes")
-          .withIndex("by_class", q => q.eq("classId", c._id))
-          .first()
-        )
+        .filter((c) => c.status === "approved" && c.scheduledDate < Date.now())
+        .map((c) =>
+          ctx.db
+            .query("postClassNotes")
+            .withIndex("by_class", (q) => q.eq("classId", c._id))
+            .first(),
+        ),
     );
-    
+
     // Calculate analytics
     const totalClasses = classes.length;
-    const thisMonthClasses = classes.filter(c => 
-      c.scheduledDate >= startOfMonth() && c.scheduledDate <= endOfMonth()
-    ).length;
-    
+    const thisMonthClasses = classes.filter((c) => c.scheduledDate >= startOfMonth() && c.scheduledDate <= endOfMonth()).length;
+
     // Attendance rate (classes with post-notes vs total completed)
-    const completedClasses = classes.filter(c => 
-      c.status === "approved" && c.scheduledDate < Date.now()
-    );
-    const attendedClasses = postClassNotes.filter(note => 
-      note?.attendanceStatus === "present"
-    ).length;
-    const attendanceRate = completedClasses.length > 0
-      ? Math.round((attendedClasses / completedClasses.length) * 100)
-      : 0;
-    
+    const completedClasses = classes.filter((c) => c.status === "approved" && c.scheduledDate < Date.now());
+    const attendedClasses = postClassNotes.filter((note) => note?.attendanceStatus === "present").length;
+    const attendanceRate = completedClasses.length > 0 ? Math.round((attendedClasses / completedClasses.length) * 100) : 0;
+
     // Student performance data
     const studentPerformance = await calculateStudentPerformance(ctx, classes, postClassNotes);
-    
+
     return {
       totalClasses,
       thisMonthClasses,
       attendanceRate,
-      activeStudents: new Set(classes.map(c => c.studentId)).size,
+      activeStudents: new Set(classes.map((c) => c.studentId)).size,
       avgClassCount: calculateAvgClassCount(postClassNotes),
       studentPerformance,
     };
@@ -798,18 +795,18 @@ export const getClassAnalytics = query({
 
 ## 📅 Implementation Timeline
 
-| Phase | Task | Duration | Dependencies |
-|-------|------|----------|--------------|
-| **1A** | Standardize terminology (button/form text) | 0.5 days | None |
-| **1B** | Add filter access for teachers | 1 day | None |
-| **1C** | Implement "nothing displayed" logic | 1 day | 1B |
-| **2A** | Redesign filter panel (chip-based UI) | 2 days | 1B |
-| **2B** | Redesign booking form (step wizard) | 3 days | None |
-| **3A** | Add metadata display (booked/approved by) | 1 day | None |
-| **3B** | Build analytics dashboard | 3 days | 3A |
-| **3C** | Implement role-based analytics backend | 2 days | 3B |
-| **Testing** | E2E tests for all roles | 2 days | All phases |
-| **Documentation** | Update docs and create implementation summary | 1 day | All phases |
+| Phase             | Task                                          | Duration | Dependencies |
+| ----------------- | --------------------------------------------- | -------- | ------------ |
+| **1A**            | Standardize terminology (button/form text)    | 0.5 days | None         |
+| **1B**            | Add filter access for teachers                | 1 day    | None         |
+| **1C**            | Implement "nothing displayed" logic           | 1 day    | 1B           |
+| **2A**            | Redesign filter panel (chip-based UI)         | 2 days   | 1B           |
+| **2B**            | Redesign booking form (step wizard)           | 3 days   | None         |
+| **3A**            | Add metadata display (booked/approved by)     | 1 day    | None         |
+| **3B**            | Build analytics dashboard                     | 3 days   | 3A           |
+| **3C**            | Implement role-based analytics backend        | 2 days   | 3B           |
+| **Testing**       | E2E tests for all roles                       | 2 days   | All phases   |
+| **Documentation** | Update docs and create implementation summary | 1 day    | All phases   |
 
 **Total Estimated Time:** 16.5 days (~3.5 weeks)
 

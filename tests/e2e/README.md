@@ -60,13 +60,13 @@ Login happens **once per worker** (not per test), saving ~54 seconds per run.
 Import from `./fixtures.ts`:
 
 ```typescript
-import { test, expect } from './fixtures';
+import { test, expect } from "./fixtures";
 ```
 
 ### Option 1: Standard Login (Existing Pattern)
 
 ```typescript
-test('my test', async ({ page }) => {
+test("my test", async ({ page }) => {
   await login(page, TEST_USERS.teacher);
   // test code
 });
@@ -75,8 +75,8 @@ test('my test', async ({ page }) => {
 ### Option 2: Worker-Scoped Auth (Faster)
 
 ```typescript
-test('my test', async ({ authenticatedPage }) => {
-  await authenticatedPage.goto('/');
+test("my test", async ({ authenticatedPage }) => {
+  await authenticatedPage.goto("/");
   // Already logged in!
 });
 ```
@@ -84,7 +84,7 @@ test('my test', async ({ authenticatedPage }) => {
 ### Option 3: HAR Mocking (Fastest)
 
 ```typescript
-test('my test', async ({ harMockedPage }) => {
+test("my test", async ({ harMockedPage }) => {
   await login(harMockedPage, TEST_USERS.teacher);
   // Convex calls from HAR file
 });
@@ -93,10 +93,10 @@ test('my test', async ({ harMockedPage }) => {
 ### Option 4: Both Optimizations (Recommended)
 
 ```typescript
-test.use({ storageState: '.auth/worker-0.json' });
+test.use({ storageState: ".auth/worker-0.json" });
 
-test('my test', async ({ harMockedPage }) => {
-  await harMockedPage.goto('/');
+test("my test", async ({ harMockedPage }) => {
+  await harMockedPage.goto("/");
   // Logged in + Convex mocked = ⚡ blazing fast
 });
 ```
@@ -140,11 +140,11 @@ npm run test:e2e:replay
 
 ## Performance Comparison
 
-| Mode | Duration | Reliability | External Deps |
-|------|----------|-------------|---------------|
-| **HAR Replay** | <1 min | 99.9% | None ✅ |
-| **HAR Record** | ~2 min | 95% | Convex |
-| **Standard** | 4.7 min | 0-95% | Convex |
+| Mode           | Duration | Reliability | External Deps |
+| -------------- | -------- | ----------- | ------------- |
+| **HAR Replay** | <1 min   | 99.9%       | None ✅       |
+| **HAR Record** | ~2 min   | 95%         | Convex        |
+| **Standard**   | 4.7 min  | 0-95%       | Convex        |
 
 **Recommendation**: Use HAR Replay for daily development.
 
@@ -189,7 +189,7 @@ tests/e2e/
 - name: Update HAR Files
   if: github.event_name == 'schedule' # Weekly cron
   run: npm run test:e2e:record
-  
+
 - name: Commit Updated HARs
   run: |
     git add tests/e2e/hars/*.har
@@ -233,9 +233,9 @@ HAR_MODE=replay npm run test:e2e
 Mock only specific URLs:
 
 ```typescript
-await page.routeFromHAR('./hars/auth-only.har', {
-  url: '**/api/auth/**',
-  update: false
+await page.routeFromHAR("./hars/auth-only.har", {
+  url: "**/api/auth/**",
+  update: false,
 });
 ```
 
@@ -259,4 +259,4 @@ tests/e2e/hars/
 
 ---
 
-*Last Updated: November 4, 2025*
+_Last Updated: November 4, 2025_

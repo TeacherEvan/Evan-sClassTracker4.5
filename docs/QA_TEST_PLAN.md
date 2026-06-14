@@ -29,7 +29,7 @@ This document outlines the comprehensive quality assurance plan for all new feat
 
 #### TC-T1.1.1: Teacher with Guardian-Linked Class
 
-```gherkin
+````gherkin
 Given: A teacher user logged in
 And: The teacher has guardian-linked classes (isGuardianLinked: true)
 When: The teacher creates a new class booking
@@ -706,10 +706,11 @@ And: No NULL values in required fields
 
 ## Sign-off
 
-**QA Engineer:** _______________  
-**Date:** _______________  
+**QA Engineer:** _______________
+**Date:** _______________
 **Status:** ⚪ Not Started | 🟡 In Progress | 🟢 Passed | 🔴 Blocked
 
 **Approved for Deployment:** ☐ Yes  ☐ No  ☐ Conditional
 
 **Notes:**
+````

@@ -65,10 +65,10 @@ providers: defineTable({
     v.literal("private"),
     v.literal("language_school"),
     v.literal("educational_camp"),
-    v.literal("guardian") // NEW
+    v.literal("guardian"), // NEW
   ),
   // ... rest
-})
+});
 ```
 
 1. Mark guardian role as deprecated (don't remove yet):
@@ -81,7 +81,7 @@ users: defineTable({
     v.literal("admin"),
     // v.literal("guardian") // DEPRECATED - will be removed after migration
   ),
-})
+});
 ```
 
 1. Mark guardian fields as deprecated in students:
@@ -95,7 +95,7 @@ students: defineTable({
   guardianName: v.optional(v.string()),
   guardianPhone: v.optional(v.string()),
   guardianEmail: v.optional(v.string()),
-})
+});
 ```
 
 1. Mark guardian fields as deprecated in classes:
@@ -105,7 +105,7 @@ classes: defineTable({
   providerId: v.optional(v.id("providers")), // Use this instead
   // isGuardianLinked: v.optional(v.boolean()), // DEPRECATED - use providerId check
   guardianTitle: v.optional(v.string()), // Keep temporarily for display
-})
+});
 ```
 
 ### PHASE 2: Data Migration
@@ -127,7 +127,7 @@ export const migrateGuardiansToProviders = mutation({
     // 2. Find all guardian users
     const guardians = await ctx.db
       .query("users")
-      .withIndex("by_role", q => q.eq("role", "guardian"))
+      .withIndex("by_role", (q) => q.eq("role", "guardian"))
       .collect();
 
     const migrationLog = [];
@@ -147,7 +147,7 @@ export const migrateGuardiansToProviders = mutation({
       // 4. Update students linked to this guardian
       const students = await ctx.db
         .query("students")
-        .withIndex("by_guardian_id", q => q.eq("guardianId", guardian._id))
+        .withIndex("by_guardian_id", (q) => q.eq("guardianId", guardian._id))
         .collect();
 
       for (const student of students) {
@@ -161,8 +161,8 @@ export const migrateGuardiansToProviders = mutation({
       for (const student of students) {
         const classes = await ctx.db
           .query("classes")
-          .withIndex("by_student", q => q.eq("studentId", student._id))
-          .filter(q => q.eq(q.field("isGuardianLinked"), true))
+          .withIndex("by_student", (q) => q.eq("studentId", student._id))
+          .filter((q) => q.eq(q.field("isGuardianLinked"), true))
           .collect();
 
         for (const classItem of classes) {

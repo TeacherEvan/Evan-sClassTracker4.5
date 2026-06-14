@@ -9,7 +9,10 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import WorkspaceLayout from "@/app/workspace-layout";
 import { AdminContactButton } from "@/components/admin-contact-button";
 import { DatabaseInit } from "@/components/database-init";
-import { ToastContainer, type ToastNotification } from "@/components/desktop-notification-toast";
+import {
+  ToastContainer,
+  type ToastNotification,
+} from "@/components/desktop-notification-toast";
 import { DesktopNotificationWindow } from "@/components/desktop-notification-window";
 import { FishSchoolBackground } from "@/components/fish-school-background";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -22,18 +25,36 @@ import { StartupWindow } from "@/components/startup-window";
 import { api } from "@/convex/_generated/api";
 import { isDesktopDevice } from "@/lib/device-detection";
 // import { initServiceWorker } from "@/lib/init-sw"; // DISABLED: Service worker not implemented
-import { ImageUploader } from '@/components/image-upload';
+import { ImageUploader } from "@/components/image-upload";
 import { useLanguage } from "@/lib/language-context";
-import { clearUserSession, loadUserSession, saveUserSession } from "@/lib/session-utils";
+import {
+  clearUserSession,
+  loadUserSession,
+  saveUserSession,
+} from "@/lib/session-utils";
 import { toast as toastManager } from "@/lib/toast";
 import type { User } from "@/lib/types";
 import { usePullToRefresh } from "@/lib/use-pull-to-refresh";
 
 // Lazy-loaded modals and overlays (loaded on demand - these stay in page.tsx)
-const PostClassNotesModal = lazy(() => import("@/components/post-class-notes-modal").then(m => ({ default: m.PostClassNotesModal })));
-const UpdateAnnouncementModal = lazy(() => import("@/components/update-announcement-modal").then(m => ({ default: m.UpdateAnnouncementModal })));
-const ClassCountModal = lazy(() => import("@/components/class-count-modal").then(m => ({ default: m.ClassCountModal })));
-const HelpWindow = lazy(() => import("@/components/help-window").then(m => ({ default: m.HelpWindow })));
+const PostClassNotesModal = lazy(() =>
+  import("@/components/post-class-notes-modal").then((m) => ({
+    default: m.PostClassNotesModal,
+  })),
+);
+const UpdateAnnouncementModal = lazy(() =>
+  import("@/components/update-announcement-modal").then((m) => ({
+    default: m.UpdateAnnouncementModal,
+  })),
+);
+const ClassCountModal = lazy(() =>
+  import("@/components/class-count-modal").then((m) => ({
+    default: m.ClassCountModal,
+  })),
+);
+const HelpWindow = lazy(() =>
+  import("@/components/help-window").then((m) => ({ default: m.HelpWindow })),
+);
 
 export default function Home() {
   const { t } = useLanguage();
@@ -52,13 +73,13 @@ export default function Home() {
   // Query classes needing feedback for teachers
   const classesNeedingFeedback = useQuery(
     api.postClassNotes.getClassesNeedingFeedback,
-    user?.role === "teacher" ? { userId: user._id } : "skip"
+    user?.role === "teacher" ? { userId: user._id } : "skip",
   );
 
   // Query teacher's class count (only for teachers)
   const teacherClassCount = useQuery(
     api.teacherClassCount.getTeacherClassCount,
-    user?.role === "teacher" ? { teacherId: user._id } : "skip"
+    user?.role === "teacher" ? { teacherId: user._id } : "skip",
   );
 
   // Query active app update
@@ -67,7 +88,9 @@ export default function Home() {
   // Check if user has viewed the active update
   const hasViewedUpdate = useQuery(
     api.appUpdates.hasUserViewed,
-    user && activeUpdate ? { userId: user._id, updateId: activeUpdate._id } : "skip"
+    user && activeUpdate
+      ? { userId: user._id, updateId: activeUpdate._id }
+      : "skip",
   );
 
   // Mark update as viewed mutation
@@ -86,12 +109,13 @@ export default function Home() {
   // Pull-to-refresh functionality
   const handleRefresh = async () => {
     // Simulate refresh by waiting a bit
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     // The useQuery hooks will automatically refetch when the component re-renders
     window.location.reload();
   };
 
-  const { isPulling, isRefreshing, pullDistance } = usePullToRefresh(handleRefresh);
+  const { isPulling, isRefreshing, pullDistance } =
+    usePullToRefresh(handleRefresh);
 
   // Check device type on mount
   useEffect(() => {
@@ -121,11 +145,16 @@ export default function Home() {
 
   // Show startup window on login (highest priority) - MODERATORS ONLY
   useEffect(() => {
-    if (user && user.role === "moderator" && !showPasswordChange && !hasCheckedStartupWindow.current) {
+    if (
+      user &&
+      user.role === "moderator" &&
+      !showPasswordChange &&
+      !hasCheckedStartupWindow.current
+    ) {
       // Check if user has dismissed startup window
       if (typeof window !== "undefined") {
         const dismissed = localStorage.getItem(
-          `startupWindowDismissed_${user._id}`
+          `startupWindowDismissed_${user._id}`,
         );
         if (!dismissed) {
           hasCheckedStartupWindow.current = true; // Mark as checked
@@ -156,7 +185,13 @@ export default function Home() {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [user, classesNeedingFeedback, showPasswordChange, showStartupWindow, showPostClassNotes]);
+  }, [
+    user,
+    classesNeedingFeedback,
+    showPasswordChange,
+    showStartupWindow,
+    showPostClassNotes,
+  ]);
 
   // Check for unviewed app updates on login
   useEffect(() => {
@@ -175,7 +210,15 @@ export default function Home() {
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [user, activeUpdate, hasViewedUpdate, showPasswordChange, showStartupWindow, showPostClassNotes, showUpdateAnnouncement]);
+  }, [
+    user,
+    activeUpdate,
+    hasViewedUpdate,
+    showPasswordChange,
+    showStartupWindow,
+    showPostClassNotes,
+    showUpdateAnnouncement,
+  ]);
 
   const handleLoginSuccess = (loggedInUser: User) => {
     setUser(loggedInUser);
@@ -224,7 +267,11 @@ export default function Home() {
   const handleStartupWindowClose = () => {
     setShowStartupWindow(false);
     // After startup window closes, show other priority modals if needed
-    if (user?.role === "teacher" && classesNeedingFeedback && classesNeedingFeedback.length > 0) {
+    if (
+      user?.role === "teacher" &&
+      classesNeedingFeedback &&
+      classesNeedingFeedback.length > 0
+    ) {
       setTimeout(() => {
         setShowPostClassNotes(true);
       }, 500);
@@ -333,11 +380,11 @@ export default function Home() {
           style={{
             height: `${pullDistance}px`,
             opacity: pullDistance > 0 ? 1 : 0,
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            backgroundColor: "rgba(59, 130, 246, 0.1)",
           }}
         >
           <RefreshCw
-            className={`text-blue-600 dark:text-blue-400 transition-transform duration-300 ${isRefreshing || isPulling ? 'animate-spin' : ''}`}
+            className={`text-blue-600 dark:text-blue-400 transition-transform duration-300 ${isRefreshing || isPulling ? "animate-spin" : ""}`}
             style={{
               transform: `rotate(${pullDistance * 3}deg) scale(${Math.min(pullDistance / 80, 1)})`,
             }}
@@ -397,7 +444,7 @@ export default function Home() {
                   ? "ครู"
                   : user.role === "moderator"
                     ? "ผู้ดูแล"
-                    : "ผู้จัดการ"
+                    : "ผู้จัดการ",
               )}
             </p>
           </div>
@@ -421,7 +468,9 @@ export default function Home() {
               className="flex items-center gap-1 md:gap-2 px-3 md:px-4 py-2.5 md:py-2 text-sm md:text-base bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 active:scale-95 transition-all touch-manipulation"
             >
               <LogOut className="w-5 h-5 md:w-5 md:h-5" />
-              <span className="hidden sm:inline">{t("Logout", "ออกจากระบบ")}</span>
+              <span className="hidden sm:inline">
+                {t("Logout", "ออกจากระบบ")}
+              </span>
             </button>
           </div>
         </div>
@@ -444,16 +493,19 @@ export default function Home() {
       )}
 
       {/* Post-Class Notes Modal - Teachers only */}
-      {showPostClassNotes && classesNeedingFeedback && classesNeedingFeedback.length > 0 && user && (
-        <Suspense fallback={null}>
-          <PostClassNotesModal
-            classes={classesNeedingFeedback}
-            currentUserId={user._id}
-            onClose={() => setShowPostClassNotes(false)}
-            onComplete={handlePostClassNotesComplete}
-          />
-        </Suspense>
-      )}
+      {showPostClassNotes &&
+        classesNeedingFeedback &&
+        classesNeedingFeedback.length > 0 &&
+        user && (
+          <Suspense fallback={null}>
+            <PostClassNotesModal
+              classes={classesNeedingFeedback}
+              currentUserId={user._id}
+              onClose={() => setShowPostClassNotes(false)}
+              onComplete={handlePostClassNotesComplete}
+            />
+          </Suspense>
+        )}
 
       {/* Update Announcement Modal - All users */}
       {showUpdateAnnouncement && activeUpdate && user && (

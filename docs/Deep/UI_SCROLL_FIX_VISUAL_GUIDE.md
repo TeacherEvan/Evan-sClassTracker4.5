@@ -206,15 +206,15 @@
 
 **Role-Based Filtering:**
 
-| Option           | Teacher | Moderator | Admin | Guardian |
-|------------------|---------|-----------|-------|----------|
-| Book Class       | ✅      | ❌        | ❌    | ✅       |
-| Investigate      | ❌      | ✅        | ✅    | ❌       |
-| Create Reminder  | ❌      | ✅        | ✅    | ❌       |
-| Calendar         | ✅      | ✅        | ✅    | ✅       |
-| Messages         | ✅      | ✅        | ✅    | ✅       |
-| Help             | ✅      | ✅        | ✅    | ✅       |
-| Dashboard        | ✅      | ✅        | ✅    | ✅       |
+| Option          | Teacher | Moderator | Admin | Guardian |
+| --------------- | ------- | --------- | ----- | -------- |
+| Book Class      | ✅      | ❌        | ❌    | ✅       |
+| Investigate     | ❌      | ✅        | ✅    | ❌       |
+| Create Reminder | ❌      | ✅        | ✅    | ❌       |
+| Calendar        | ✅      | ✅        | ✅    | ✅       |
+| Messages        | ✅      | ✅        | ✅    | ✅       |
+| Help            | ✅      | ✅        | ✅    | ✅       |
+| Dashboard       | ✅      | ✅        | ✅    | ✅       |
 
 **Key Improvements:**
 
@@ -235,15 +235,9 @@ const [showSection, setShowSection] = useState(false);
 
 // UI
 <div className="border rounded-lg overflow-hidden">
-  <button onClick={() => setShowSection(!showSection)}>
-    Section Title {showSection ? <ChevronUp/> : <ChevronDown/>}
-  </button>
-  {showSection && (
-    <div className="p-4">
-      {/* Content */}
-    </div>
-  )}
-</div>
+  <button onClick={() => setShowSection(!showSection)}>Section Title {showSection ? <ChevronUp /> : <ChevronDown />}</button>
+  {showSection && <div className="p-4">{/* Content */}</div>}
+</div>;
 ```
 
 ### **Flex Layout Pattern**
@@ -253,10 +247,10 @@ const [showSection, setShowSection] = useState(false);
 <div className="flex flex-col max-h-[95vh]">
   {/* Sticky Header */}
   <div className="p-6 border-b">...</div>
-  
+
   {/* Scrollable Content */}
   <div className="overflow-y-auto flex-grow">...</div>
-  
+
   {/* Sticky Footer */}
   <div className="p-6 border-t">...</div>
 </div>
@@ -265,7 +259,7 @@ const [showSection, setShowSection] = useState(false);
 ### **Role-Based Filtering**
 
 ```tsx
-const filteredOptions = menuOptions.filter(option => {
+const filteredOptions = menuOptions.filter((option) => {
   if (!option.roles) return true; // Show to all
   return option.roles.includes(user.role);
 });

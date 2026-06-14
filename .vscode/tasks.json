@@ -4,9 +4,7 @@
     {
       "type": "npm",
       "script": "test:e2e:report",
-      "problemMatcher": [
-        "$armcc5"
-      ],
+      "problemMatcher": ["$armcc5"],
       "label": "npm: test:e2e:report",
       "detail": "playwright show-report"
     }

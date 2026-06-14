@@ -14,7 +14,7 @@ export const TIME_TOLERANCE = 5 * 60 * 1000; // 5 minutes in milliseconds
  */
 export function detectConflicts(
   classes: ConflictCheckClass[],
-  targetClass: ConflictCheckClass
+  targetClass: ConflictCheckClass,
 ): Array<Id<"classes">> {
   const startRange = targetClass.scheduledDate - TIME_TOLERANCE;
   const endRange = targetClass.scheduledDate + TIME_TOLERANCE;
@@ -25,8 +25,10 @@ export function detectConflicts(
       if (cls.teacherId !== targetClass.teacherId) return false; // Different teacher
       if (cls.schoolId !== targetClass.schoolId) return false; // Different school
       if (cls.locationId !== targetClass.locationId) return false; // Different location
-      if (!["approved", "pending", "acknowledged"].includes(cls.status)) return false; // Ignore rejected
-      if (cls.scheduledDate < startRange || cls.scheduledDate > endRange) return false; // Outside time window
+      if (!["approved", "pending", "acknowledged"].includes(cls.status))
+        return false; // Ignore rejected
+      if (cls.scheduledDate < startRange || cls.scheduledDate > endRange)
+        return false; // Outside time window
       return true;
     })
     .map((cls) => cls._id);
