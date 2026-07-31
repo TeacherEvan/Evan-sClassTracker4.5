@@ -177,10 +177,11 @@ jobs:
           NEXT_PUBLIC_CONVEX_URL: ${{ secrets.NEXT_PUBLIC_CONVEX_URL || 'https://dummy.convex.cloud' }}
           NEXT_TELEMETRY_DISABLED: 1
 
-      - name: Start dev server
-        run: |
-          npm run dev &
-          sleep 10
+      # NOTE: Do NOT start a dev server here. Playwright's `webServer`
+      # (playwright.config.ts) already runs `npm run dev` on port 3001 and
+      # waits for readiness. Starting one manually collides on the port
+      # (reuseExistingServer is false in CI) and fails the job with
+      # "http://localhost:3001 is already used".
 
       - name: Run E2E tests
         run: npm run test:e2e:raw
