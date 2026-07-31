@@ -138,12 +138,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Validate Convex with a dedicated tsconfig (inherits the project's
+      # ES2017 + bundler resolution) so type-only Set-iteration errors and
+      # `convex/values` module-resolution failures are not emitted. The old
+      # per-file `tsc <file>` defaulted to an ES3 target and could not resolve
+      # Convex's own modules.
       - name: Validate Convex schema syntax
-        run: npx tsc convex/schema.ts --noEmit --skipLibCheck
+        run: npx tsc -p tsconfig.convex.json --noEmit --skipLibCheck
 
       - name: Check Convex functions
-        run: |
-          find convex -name "*.ts" -not -path "convex/_generated/*" -exec npx tsc {} --noEmit --skipLibCheck \;
+        run: npx tsc -p tsconfig.convex.json --noEmit --skipLibCheck
 
   # Job 7: E2E tests (requires build, runs last)
   e2e-test:

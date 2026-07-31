@@ -276,7 +276,7 @@ export async function switchLanguage(page: Page, language: "en" | "th") {
 /**
  * Wait for toast notification
  */
- 
+
 export async function waitForToast(
   page: Page,
   message?: string,

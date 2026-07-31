@@ -277,14 +277,11 @@ async function restoreFromBackup(backupId?: string): Promise<void> {
         const isFirstBatch = batchIndex === 0;
 
         try {
-          const result = await client.mutation(
-            api.restore.restoreTableBatch,  
-            {
-              tableName,
-              records: batch,
-              isFirstBatch,
-            },
-          );
+          const result = await client.mutation(api.restore.restoreTableBatch, {
+            tableName,
+            records: batch,
+            isFirstBatch,
+          });
 
           totalInserted += result.insertedCount || batch.length;
 
