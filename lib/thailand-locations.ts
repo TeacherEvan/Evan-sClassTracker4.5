@@ -451,7 +451,9 @@ export const THAILAND_PROVINCES: ThailandProvince[] = [
       {
         nameEn: "Phra Nakhon Si Ayutthaya",
         nameTh: "พระนครศรีอยุธยา",
-        searchKey: normalizeForSearch("Phra Nakhon Si Ayutthaya พระนครศรีอยุธยา"),
+        searchKey: normalizeForSearch(
+          "Phra Nakhon Si Ayutthaya พระนครศรีอยุธยา",
+        ),
       },
       {
         nameEn: "Tha Ruea",
@@ -1139,7 +1141,9 @@ export const THAILAND_PROVINCES: ThailandProvince[] = [
       {
         nameEn: "Mueang Samut Songkhram",
         nameTh: "เมืองสมุทรสงคราม",
-        searchKey: normalizeForSearch("Mueang Samut Songkhram เมืองสมุทรสงคราม"),
+        searchKey: normalizeForSearch(
+          "Mueang Samut Songkhram เมืองสมุทรสงคราม",
+        ),
       },
     ],
   },
@@ -2210,7 +2214,9 @@ export const THAILAND_PROVINCES: ThailandProvince[] = [
       {
         nameEn: "Mueang Ubon Ratchathani",
         nameTh: "เมืองอุบลราชธานี",
-        searchKey: normalizeForSearch("Mueang Ubon Ratchathani เมืองอุบลราชธานี"),
+        searchKey: normalizeForSearch(
+          "Mueang Ubon Ratchathani เมืองอุบลราชธานี",
+        ),
       },
       {
         nameEn: "Khemarat",
@@ -3090,7 +3096,9 @@ export const THAILAND_PROVINCES: ThailandProvince[] = [
       {
         nameEn: "Mueang Nakhon Ratchasima",
         nameTh: "เมืองนครราชสีมา",
-        searchKey: normalizeForSearch("Mueang Nakhon Ratchasima เมืองนครราชสีมา"),
+        searchKey: normalizeForSearch(
+          "Mueang Nakhon Ratchasima เมืองนครราชสีมา",
+        ),
       },
       {
         nameEn: "Mueang Yang",
@@ -4517,7 +4525,9 @@ export const THAILAND_PROVINCES: ThailandProvince[] = [
       {
         nameEn: "Mueang Nakhon Si Thammarat",
         nameTh: "เมืองนครศรีธรรมราช",
-        searchKey: normalizeForSearch("Mueang Nakhon Si Thammarat เมืองนครศรีธรรมราช"),
+        searchKey: normalizeForSearch(
+          "Mueang Nakhon Si Thammarat เมืองนครศรีธรรมราช",
+        ),
       },
       {
         nameEn: "Na Bon",
@@ -5320,7 +5330,9 @@ export const THAILAND_PROVINCES: ThailandProvince[] = [
       {
         nameEn: "Mueang Prachuap Khiri Khan",
         nameTh: "เมืองประจวบคีรีขันธ์",
-        searchKey: normalizeForSearch("Mueang Prachuap Khiri Khan เมืองประจวบคีรีขันธ์"),
+        searchKey: normalizeForSearch(
+          "Mueang Prachuap Khiri Khan เมืองประจวบคีรีขันธ์",
+        ),
       },
       {
         nameEn: "Pran Buri",
