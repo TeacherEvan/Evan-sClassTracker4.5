@@ -84,19 +84,6 @@ export const getByStudentId = query({
   },
 });
 
-// Query to get students by guardian
-export const getByGuardian = query({
-  args: {
-    guardianName: v.string(),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("students")
-      .withIndex("by_guardian", (q) => q.eq("guardianName", args.guardianName))
-      .collect();
-  },
-});
-
 // Mutation to create a new student
 export const create = mutation({
   args: {
@@ -759,19 +746,6 @@ export const getByTeacher = query({
     return await ctx.db
       .query("students")
       .withIndex("by_created_by", (q) => q.eq("createdBy", args.teacherId))
-      .collect();
-  },
-});
-
-// Query to get students for a guardian
-export const getByGuardianId = query({
-  args: {
-    guardianId: v.id("users"),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("students")
-      .withIndex("by_guardian_id", (q) => q.eq("guardianId", args.guardianId))
       .collect();
   },
 });
