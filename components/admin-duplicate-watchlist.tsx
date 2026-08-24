@@ -21,6 +21,14 @@ interface AdminDuplicateWatchlistProps {
   onClose: () => void;
 }
 
+/** Candidate in a merge: either the flagged student or one of its duplicates */
+interface MergeCandidate {
+  id: Id<"students">;
+  name: string;
+  studentId: string;
+  grade?: string;
+}
+
 /**
  * ADMIN DUPLICATE WATCHLIST DASHBOARD
  * Review and manage potential duplicate students
@@ -67,6 +75,83 @@ export function AdminDuplicateWatchlist({
   // Mutations
   const dismissDuplicate = useMutation(api.duplicateDetection.dismissDuplicate);
   const markAsReviewed = useMutation(api.duplicateDetection.markAsReviewed);
+  const mergeDuplicates = useMutation(
+    api.duplicateDetection.mergeDuplicateStudents,
+  );
+
+  // Merge dialog state (#136): which entry is being merged + chosen survivor
+  const [mergeEntryId, setMergeEntryId] =
+    useState<Id<"duplicateWatchlist"> | null>(null);
+  const [survivorId, setSurvivorId] = useState<Id<"students"> | null>(null);
+  const [mergeError, setMergeError] = useState<string | null>(null);
+  const [isMerging, setIsMerging] = useState(false);
+
+  // The entry currently opened in the merge dialog (from already-loaded data)
+  const mergeEntry = pendingEntries?.find((e) => e._id === mergeEntryId);
+  const mergeCandidates: MergeCandidate[] = mergeEntry
+    ? [
+        ...(mergeEntry.student
+          ? [
+              {
+                id: mergeEntry.student._id,
+                name: `${mergeEntry.student.firstName} ${mergeEntry.student.lastName ?? ""}`.trim(),
+                studentId: mergeEntry.student.studentId,
+                grade: mergeEntry.student.grade,
+              },
+            ]
+          : []),
+        ...mergeEntry.possibleDuplicates
+          .filter((dup): dup is NonNullable<typeof dup> => dup !== null)
+          .map((dup) => ({
+          id: dup._id,
+          name: `${dup.firstName} ${dup.lastName ?? ""}`.trim(),
+          studentId: dup.studentId,
+          grade: dup.grade,
+        })),
+      ]
+    : [];
+  const mergeTargets =
+    survivorId != null
+      ? mergeCandidates.filter((c) => c.id !== survivorId)
+      : [];
+
+  const openMergeDialog = (entryId: Id<"duplicateWatchlist">) => {
+    setMergeEntryId(entryId);
+    setSurvivorId(null);
+    setMergeError(null);
+  };
+
+  const closeMergeDialog = () => {
+    setMergeEntryId(null);
+    setSurvivorId(null);
+    setMergeError(null);
+    setIsMerging(false);
+  };
+
+  const handleMerge = async () => {
+    if (!mergeEntry || !survivorId) return;
+    const targets = mergeCandidates
+      .filter((c) => c.id !== survivorId)
+      .map((c) => c.id);
+    if (targets.length === 0) return;
+    setIsMerging(true);
+    setMergeError(null);
+    try {
+      await mergeDuplicates({
+        entryId: mergeEntry._id,
+        keepStudentId: survivorId,
+        deleteStudentIds: targets,
+        userId,
+        notes: "Merged via duplicate watchlist",
+      });
+      closeMergeDialog();
+    } catch (error) {
+      setMergeError(
+        error instanceof Error ? error.message : "Merge failed unexpectedly",
+      );
+      setIsMerging(false);
+    }
+  };
 
   // Filter entries by search term
   const filteredEntries = pendingEntries?.filter((entry) => {
@@ -365,6 +450,13 @@ export function AdminDuplicateWatchlist({
                         {entry.status === "pending" && (
                           <>
                             <button
+                              onClick={() => openMergeDialog(entry._id)}
+                              className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors flex items-center gap-1"
+                            >
+                              <GitMerge className="w-4 h-4" />
+                              {t("Merge", "รวม")}
+                            </button>
+                            <button
                               onClick={() => handleMarkReviewed(entry._id)}
                               className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
                             >
@@ -418,6 +510,128 @@ export function AdminDuplicateWatchlist({
             {t("Close", "ปิด")}
           </button>
         </div>
+
+        {/* Merge Dialog (#136): pick survivor → confirm redirect scope */}
+        {mergeEntry && (
+          <div className="absolute inset-0 z-10 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                {t("Confirm Student Merge", "ยืนยันการรวมนักเรียน")}
+              </h3>
+
+              {/* Step 1: pick the surviving record */}
+              {survivorId == null ? (
+                <>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {t(
+                      "Select which record to keep as the survivor. All others will be merged into it.",
+                      "เลือกรายการที่จะเก็บไว้ รายการอื่นจะถูกรวมเข้าไป",
+                    )}
+                  </p>
+                  <div className="space-y-2 mb-4">
+                    {mergeCandidates.map((candidate) => (
+                      <label
+                        key={candidate.id}
+                        className="flex items-center gap-3 border border-gray-200 rounded p-3 cursor-pointer hover:bg-gray-50"
+                      >
+                        <input
+                          type="radio"
+                          name="merge-survivor"
+                          checked={false}
+                          onChange={() => setSurvivorId(candidate.id)}
+                          className="accent-green-600"
+                        />
+                        <span className="text-sm font-medium text-gray-900">
+                          {candidate.name}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          ({candidate.studentId}
+                          {candidate.grade ? ` · ${candidate.grade}` : ""})
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {t(
+                      "All data below will be redirected to the surviving record. Merged records are soft-deleted (never renamed or forked). This action is logged in the audit trail.",
+                      "ข้อมูลทั้งหมดด้านล่างจะถูกโอนไปยังรายการที่เก็บไว้ รายการที่รวมจะถูกลบแบบ soft-delete (ไม่มีการเปลี่ยนชื่อ) และบันทึกในประวัติการตรวจสอบ",
+                    )}
+                  </p>
+
+              {/* Survivor */}
+              <div className="border border-green-200 bg-green-50 rounded p-3 mb-3">
+                <p className="text-xs font-medium text-green-700 uppercase mb-1">
+                  {t("Survivor (kept)", "ผู้ถูกเก็บไว้")}
+                </p>
+                <p className="font-semibold text-gray-900">
+                  {
+                    mergeCandidates.find((c) => c.id === survivorId)
+                      ?.name
+                  }{" "}
+                  <span className="text-xs text-gray-500">
+                    ({mergeCandidates.find((c) => c.id === survivorId)?.studentId})
+                  </span>
+                </p>
+              </div>
+
+              {/* Redirected data */}
+              <div className="mb-4">
+                <p className="text-xs font-medium text-gray-500 uppercase mb-2">
+                  {t("Data to redirect", "ข้อมูลที่จะโอนย้าย")} (
+                  {mergeTargets.length}{" "}
+                  {t("record(s) merged", "รายการที่รวม")}):
+                </p>
+                <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                  {mergeTargets.map((target) => (
+                    <li key={target.id}>
+                      {target.name}{" "}
+                      <span className="text-xs text-gray-500">
+                        ({target.studentId})
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-xs text-gray-500 mt-2">
+                  {t(
+                    "Redirected: classes & schedules, class rosters, post-class notes, teacher logs, recent-student shortcuts, other watchlist entries.",
+                    "โอนย้าย: คลาสและตารางเรียน, รายชื่อคลาส, บันทึกหลังคลาส, บันทึกของครู, รายการนักเรียนล่าสุด, รายการตรวจสอบอื่นๆ",
+                  )}
+                </p>
+              </div>
+
+              {mergeError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded p-3 mb-4">
+                  {mergeError}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={closeMergeDialog}
+                  disabled={isMerging}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors disabled:opacity-50"
+                >
+                  {t("Cancel", "ยกเลิก")}
+                </button>
+                <button
+                  onClick={handleMerge}
+                  disabled={isMerging || mergeTargets.length === 0}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  <GitMerge className="w-4 h-4" />
+                  {isMerging
+                    ? t("Merging...", "กำลังรวม...")
+                    : t("Merge students", "รวมนักเรียน")}
+                </button>
+              </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

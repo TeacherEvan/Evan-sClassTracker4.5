@@ -1,6 +1,11 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Id, Doc } from "./_generated/dataModel";
+import {
+  logAudit,
+  AuditActions,
+  AuditTargetTypes,
+} from "./auditHelpers";
 
 /**
  * Duplicate Detection System
@@ -317,6 +322,15 @@ export const dismissDuplicate = mutation({
 });
 
 // Mutation to merge duplicate students
+//
+// #136 Student Merge/Sync/Soft-delete:
+// - Survivor-wins conflict policy: the kept student's fields are authoritative;
+//   differing fields on merged students are discarded (recorded in the audit log).
+// - No renaming or forking: student identity fields on the survivor are never modified.
+// - ALL references to each merged student are redirected across every table that
+//   stores a student id, then the non-survivor is soft-deleted (isDeleted +
+//   mergedIntoId) so history remains auditable. Hard deletes remain admin-only
+//   via students.remove.
 export const mergeDuplicateStudents = mutation({
   args: {
     entryId: v.id("duplicateWatchlist"),
@@ -344,41 +358,165 @@ export const mergeDuplicateStudents = mutation({
       throw new Error("Cannot merge a student into itself");
     }
     // Validate: keepStudentId must be related to this watchlist entry
-    if (
-      entry.studentId !== args.keepStudentId &&
-      !(
-        entry.possibleDuplicateIds &&
-        entry.possibleDuplicateIds.includes(args.keepStudentId)
-      )
-    ) {
+    const entryDuplicateSet: Id<"students">[] = [
+      entry.studentId,
+      ...(entry.possibleDuplicateIds ?? []),
+    ];
+    if (!entryDuplicateSet.includes(args.keepStudentId)) {
       throw new Error("Keep student must be part of this duplicate set");
     }
-    // Merge logic: Reassign all classes from deleted students to kept student
+    // Validate: every merged student must also be part of this duplicate set
     for (const deleteId of args.deleteStudentIds) {
-      // Get all classes for the student being deleted
-      const classes = await ctx.db
+      if (!entryDuplicateSet.includes(deleteId)) {
+        throw new Error(
+          "Merge student is not part of this duplicate set - no renaming/forking permitted",
+        );
+      }
+    }
+
+    const keepStudent = await ctx.db.get(args.keepStudentId);
+    if (!keepStudent) {
+      throw new Error("Keep student not found");
+    }
+    if (keepStudent.isDeleted) {
+      throw new Error("Keep student is already deleted");
+    }
+
+    // Aggregate redirect counts for the audit trail
+    const redirectCounts = {
+      classes: 0,
+      classRosters: 0,
+      postClassNotes: 0,
+      teacherLogs: 0,
+      userRecentStudents: 0,
+      watchlistEntries: 0,
+    };
+    const mergedStudents: {
+      mergedId: Id<"students">;
+      name: string;
+      studentCode: string;
+    }[] = [];
+
+    for (const deleteId of args.deleteStudentIds) {
+      const deleteStudent = await ctx.db.get(deleteId);
+      if (!deleteStudent) {
+        throw new Error(`Student to merge not found: ${deleteId}`);
+      }
+      if (deleteStudent.isDeleted) {
+        throw new Error(`Student to merge is already deleted: ${deleteId}`);
+      }
+
+      // 1. classes.studentId — reassign primary ownership
+      const ownedClasses = await ctx.db
         .query("classes")
         .withIndex("by_student", (q) => q.eq("studentId", deleteId))
         .collect();
+      for (const cls of ownedClasses) {
+        await ctx.db.patch(cls._id, { studentId: args.keepStudentId });
+      }
+      redirectCounts.classes += ownedClasses.length;
 
-      // Reassign classes to the kept student
-      for (const cls of classes) {
+      // 2. classes.additionalStudentIds — remove from old rosters, add to survivor
+      //    (no index on additionalStudentIds; full scan keeps this correct)
+      const rosterClasses = (await ctx.db.query("classes").collect()).filter(
+        (cls) => (cls.additionalStudentIds ?? []).includes(deleteId),
+      );
+      for (const cls of rosterClasses) {
+        const nextRoster = (cls.additionalStudentIds ?? [])
+          .filter((id) => id !== deleteId)
+          .filter((id) => id !== args.keepStudentId);
         await ctx.db.patch(cls._id, {
-          studentId: args.keepStudentId,
+          additionalStudentIds: [
+            ...new Set([args.keepStudentId, ...nextRoster]),
+          ],
         });
       }
+      redirectCounts.classRosters += rosterClasses.length;
 
-      // Soft delete the duplicate student (mark as deleted for audit purposes)
-      // See Pattern #8: Soft deletes required for students. This preserves audit trail.
+      // 3. postClassNotes.studentId — note history follows the survivor
+      const notes = await ctx.db
+        .query("postClassNotes")
+        .withIndex("by_student", (q) => q.eq("studentId", deleteId))
+        .collect();
+      for (const note of notes) {
+        await ctx.db.patch(note._id, { studentId: args.keepStudentId });
+      }
+      redirectCounts.postClassNotes += notes.length;
+
+      // 4. teacherLogs.relatedStudentId — historical logs point at survivor
+      //    (no index on relatedStudentId; filter scan)
+      const logs = (
+        await ctx.db.query("teacherLogs").collect()
+      ).filter((log) => log.relatedStudentId === deleteId);
+      for (const log of logs) {
+        await ctx.db.patch(log._id, { relatedStudentId: args.keepStudentId });
+      }
+      redirectCounts.teacherLogs += logs.length;
+
+      // 5. users.wizardPreferences.recentStudentIds — drop stale shortcut entries
+      //    pointing at the merged student; substitute the survivor so UX keeps working
+      const usersWithRecent = (await ctx.db.query("users").collect()).filter(
+        (u) => (u.wizardPreferences?.recentStudentIds ?? []).includes(deleteId),
+      );
+      for (const u of usersWithRecent) {
+        const recent = (u.wizardPreferences?.recentStudentIds ?? [])
+          .filter((id) => id !== deleteId)
+          .filter((id) => id !== args.keepStudentId);
+        await ctx.db.patch(u._id, {
+          wizardPreferences: {
+            ...u.wizardPreferences,
+            recentStudentIds: [args.keepStudentId, ...recent].slice(0, 5),
+          },
+        });
+      }
+      redirectCounts.userRecentStudents += usersWithRecent.length;
+
+      // 6. duplicateWatchlist — other entries referencing the merged student are
+      //    redirected so future reviews resolve to the survivor (the current
+      //    entry is finalized below instead)
+      const watchlistEntries = (
+        await ctx.db.query("duplicateWatchlist").collect()
+      ).filter(
+        (e) =>
+          e._id !== args.entryId &&
+          (e.studentId === deleteId ||
+            (e.possibleDuplicateIds ?? []).includes(deleteId) ||
+            e.mergedIntoId === deleteId),
+      );
+      for (const e of watchlistEntries) {
+        const nextDuplicates = [
+          ...new Set(
+            (e.possibleDuplicateIds ?? [])
+              .filter((id) => id !== deleteId)
+              .concat(args.keepStudentId),
+          ),
+        ].filter((id) => id !== e.studentId);
+        await ctx.db.patch(e._id, {
+          studentId: e.studentId === deleteId ? args.keepStudentId : e.studentId,
+          possibleDuplicateIds: nextDuplicates,
+          mergedIntoId: e.mergedIntoId === deleteId ? args.keepStudentId : e.mergedIntoId,
+        });
+      }
+      redirectCounts.watchlistEntries += watchlistEntries.length;
+
+      // Soft-delete the merged student (Pattern #8): preserves audit trail and
+      // records which record absorbed it. See #136.
       await ctx.db.patch(deleteId, {
         isDeleted: true,
         deletedAt: Date.now(),
         deletedBy: args.userId,
         deletionReason: "Merged into another student record",
+        mergedIntoId: args.keepStudentId,
+      });
+
+      mergedStudents.push({
+        mergedId: deleteId,
+        name: `${deleteStudent.firstName} ${deleteStudent.lastName ?? ""}`.trim(),
+        studentCode: deleteStudent.studentId,
       });
     }
 
-    // Update watchlist entry
+    // Finalize the watchlist entry that drove this merge
     await ctx.db.patch(args.entryId, {
       status: "merged",
       reviewedBy: args.userId,
@@ -388,9 +526,34 @@ export const mergeDuplicateStudents = mutation({
       notesTh: args.notesTh,
     });
 
+    // Audit trail (#136): one summary entry per merge operation. Survivor-wins
+    // policy means conflicting field values on merged students were discarded;
+    // the discarded records' identities are preserved here and via soft deletes.
+    const keepSchoolId = keepStudent.schoolId;
+    await logAudit(ctx, {
+      userId: args.userId,
+      action: AuditActions.MERGE_STUDENTS,
+      targetType: AuditTargetTypes.STUDENTS,
+      targetId: args.keepStudentId,
+      targetName: `${keepStudent.firstName} ${keepStudent.lastName ?? ""}`.trim(),
+      reason: args.notes ?? "Merged duplicate students",
+      affectedCount: mergedStudents.length,
+      schoolId: keepSchoolId,
+      details: {
+        conflictPolicy: "survivor_wins_with_audit",
+        keptStudentId: args.keepStudentId,
+        keptStudentName: `${keepStudent.firstName} ${keepStudent.lastName ?? ""}`.trim(),
+        mergedStudents,
+        redirects: redirectCounts,
+        watchlistEntryId: args.entryId,
+      },
+    });
+
     return {
       success: true,
       message: `Successfully merged ${args.deleteStudentIds.length} duplicate(s) into student ${args.keepStudentId}`,
+      redirects: redirectCounts,
+      mergedStudentIds: mergedStudents.map((m) => m.mergedId),
     };
   },
 });
