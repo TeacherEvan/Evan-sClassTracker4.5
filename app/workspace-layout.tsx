@@ -105,6 +105,16 @@ const AdminAnalyticsDashboard = lazy(() =>
     default: m.AdminAnalyticsDashboard,
   })),
 );
+const ModeratorAnalyticsView = lazy(() =>
+  import("@/components/moderator-analytics-view").then((m) => ({
+    default: m.ModeratorAnalyticsView,
+  })),
+);
+const FlaggedClassesReview = lazy(() =>
+  import("@/components/flagged-classes-review").then((m) => ({
+    default: m.FlaggedClassesReview,
+  })),
+);
 const EventManagement = lazy(() =>
   import("@/components/event-management").then((m) => ({
     default: m.EventManagement,
@@ -148,6 +158,7 @@ export type ViewType =
   | "locations"
   | "resources"
   | "analytics"
+  | "class_review"
   | "providers"
   | "notifications"
   | "users"
@@ -305,16 +316,26 @@ export default function WorkspaceLayout({
         // Moderators see their school analytics, Admins see all schools analytics
         if (userRole === "moderator" && userSchoolId) {
           return (
-            <LazyErrorBoundary componentName="SimpleAnalytics">
-              <Suspense fallback={<LoadingFallback />}>
-                <SimpleAnalytics
-                  schoolId={userSchoolId}
-                  currentUserId={userId}
-                  currentUserRole={userRole}
-                  currentUser={currentUser}
-                />
-              </Suspense>
-            </LazyErrorBoundary>
+            <>
+              <LazyErrorBoundary componentName="SimpleAnalytics">
+                <Suspense fallback={<LoadingFallback />}>
+                  <SimpleAnalytics
+                    schoolId={userSchoolId}
+                    currentUserId={userId}
+                    currentUserRole={userRole}
+                    currentUser={currentUser}
+                  />
+                </Suspense>
+              </LazyErrorBoundary>
+              {/* #141: School-scoped class review controls (flag/include-exclude) */}
+              <div className="mt-6">
+                <LazyErrorBoundary componentName="ModeratorAnalyticsView">
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ModeratorAnalyticsView currentUser={currentUser} />
+                  </Suspense>
+                </LazyErrorBoundary>
+              </div>
+            </>
           );
         }
         // Admin analytics - show class analytics modal or admin-specific view
@@ -326,6 +347,20 @@ export default function WorkspaceLayout({
                   userId={userId}
                   currentUser={currentUser}
                 />
+              </Suspense>
+            </LazyErrorBoundary>
+          );
+        }
+        return null;
+
+      case "class_review":
+        // #141: Separate bilingual review list for flagged classes,
+        // scoped to the moderator's school on the server
+        if (userRole === "admin" || userRole === "moderator") {
+          return (
+            <LazyErrorBoundary componentName="FlaggedClassesReview">
+              <Suspense fallback={<LoadingFallback />}>
+                <FlaggedClassesReview currentUser={currentUser} />
               </Suspense>
             </LazyErrorBoundary>
           );
