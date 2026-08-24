@@ -191,6 +191,7 @@ export const AuditActions = {
   UPDATE_STUDENT: "update_student",
   DELETE_STUDENT: "delete_student",
   BULK_DELETE_STUDENTS: "bulk_delete_students",
+  MERGE_STUDENTS: "merge_students", // #136: soft-delete duplicates + redirect references
 
   // Location Management
   CREATE_LOCATION: "create_location",

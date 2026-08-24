@@ -245,6 +245,7 @@ export default defineSchema({
     deletedAt: v.optional(v.number()), // Timestamp when deleted
     deletedBy: v.optional(v.id("users")), // User who deleted
     deletionReason: v.optional(v.string()), // Reason for deletion
+    mergedIntoId: v.optional(v.id("students")), // If soft-deleted via merge (#136), the surviving student
   })
     .index("by_student_id", ["studentId"])
     .index("by_school", ["schoolId"])

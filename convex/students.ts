@@ -582,20 +582,13 @@ export const remove = mutation({
     }
 
     // ✅ SECURITY: Role-based access control
-    if (user.role === "teacher" || user.role === "moderator") {
-      // Teachers/moderators can only delete students from their school
-      if (!student.schoolId || student.schoolId !== user.schoolId) {
-        throw new Error(
-          "Unauthorized: Cannot delete students from other schools",
-        );
-      }
-    } else if (user.role === "guardian") {
-      // Guardians can only delete their own students
-      if (student.guardianId !== user._id) {
-        throw new Error("Unauthorized: Can only delete your own students");
-      }
-    } else if (user.role !== "admin") {
-      throw new Error("Unauthorized: Insufficient permissions");
+    // #136: ONLY admins may hard-delete students. Teachers/moderators/guardians
+    // must use the duplicate-merge flow (soft delete + reference redirect) so the
+    // audit trail and all references stay intact.
+    if (user.role !== "admin") {
+      throw new Error(
+        "Unauthorized: Only admins can hard-delete students. Use merge/soft-delete instead.",
+      );
     }
 
     // Check for active classes with this student
