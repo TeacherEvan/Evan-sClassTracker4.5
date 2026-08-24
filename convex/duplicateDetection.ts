@@ -1,11 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Id, Doc } from "./_generated/dataModel";
-import {
-  logAudit,
-  AuditActions,
-  AuditTargetTypes,
-} from "./auditHelpers";
+import { logAudit, AuditActions, AuditTargetTypes } from "./auditHelpers";
 
 /**
  * Duplicate Detection System
@@ -445,9 +441,9 @@ export const mergeDuplicateStudents = mutation({
 
       // 4. teacherLogs.relatedStudentId — historical logs point at survivor
       //    (no index on relatedStudentId; filter scan)
-      const logs = (
-        await ctx.db.query("teacherLogs").collect()
-      ).filter((log) => log.relatedStudentId === deleteId);
+      const logs = (await ctx.db.query("teacherLogs").collect()).filter(
+        (log) => log.relatedStudentId === deleteId,
+      );
       for (const log of logs) {
         await ctx.db.patch(log._id, { relatedStudentId: args.keepStudentId });
       }
@@ -492,9 +488,11 @@ export const mergeDuplicateStudents = mutation({
           ),
         ].filter((id) => id !== e.studentId);
         await ctx.db.patch(e._id, {
-          studentId: e.studentId === deleteId ? args.keepStudentId : e.studentId,
+          studentId:
+            e.studentId === deleteId ? args.keepStudentId : e.studentId,
           possibleDuplicateIds: nextDuplicates,
-          mergedIntoId: e.mergedIntoId === deleteId ? args.keepStudentId : e.mergedIntoId,
+          mergedIntoId:
+            e.mergedIntoId === deleteId ? args.keepStudentId : e.mergedIntoId,
         });
       }
       redirectCounts.watchlistEntries += watchlistEntries.length;
@@ -535,14 +533,16 @@ export const mergeDuplicateStudents = mutation({
       action: AuditActions.MERGE_STUDENTS,
       targetType: AuditTargetTypes.STUDENTS,
       targetId: args.keepStudentId,
-      targetName: `${keepStudent.firstName} ${keepStudent.lastName ?? ""}`.trim(),
+      targetName:
+        `${keepStudent.firstName} ${keepStudent.lastName ?? ""}`.trim(),
       reason: args.notes ?? "Merged duplicate students",
       affectedCount: mergedStudents.length,
       schoolId: keepSchoolId,
       details: {
         conflictPolicy: "survivor_wins_with_audit",
         keptStudentId: args.keepStudentId,
-        keptStudentName: `${keepStudent.firstName} ${keepStudent.lastName ?? ""}`.trim(),
+        keptStudentName:
+          `${keepStudent.firstName} ${keepStudent.lastName ?? ""}`.trim(),
         mergedStudents,
         redirects: redirectCounts,
         watchlistEntryId: args.entryId,
