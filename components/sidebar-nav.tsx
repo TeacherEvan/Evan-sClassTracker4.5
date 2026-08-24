@@ -8,6 +8,7 @@ import {
   BookOpen,
   Calendar,
   CalendarDays,
+  Flag,
   FolderOpen,
   MapPin,
   MessageSquare,
@@ -102,6 +103,13 @@ const navItems: NavItem[] = [
     labelEn: "Analytics",
     labelTh: "การวิเคราะห์",
     roles: ["admin", "moderator", "teacher"],
+  },
+  {
+    id: "class_review",
+    icon: Flag,
+    labelEn: "Class Review",
+    labelTh: "รายการตรวจสอบคลาส",
+    roles: ["admin", "moderator"],
   },
   {
     id: "providers",

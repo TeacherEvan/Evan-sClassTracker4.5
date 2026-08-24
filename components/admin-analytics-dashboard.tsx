@@ -37,6 +37,10 @@ export function AdminAnalyticsDashboard({
     Id<"schools"> | "all"
   >("all");
 
+  // #141: District/province drop-down filters with bilingual (EN/TH) labels
+  const [districtFilter, setDistrictFilter] = useState("all");
+  const [provinceFilter, setProvinceFilter] = useState("all");
+
   // Fetch all schools for admin overview
   const schools = useQuery(api.schools.list, {});
 
@@ -115,6 +119,60 @@ export function AdminAnalyticsDashboard({
       classesBySchool,
     };
   }, [schools, teachers, allClasses, thirtyDaysAgo]);
+
+  // #141: Bilingual district filter options derived from schools
+  const districtOptions = useMemo(() => {
+    if (!schools) return [];
+    const byEnglishName = new Map<string, string>();
+    for (const school of schools) {
+      if (school.district && !byEnglishName.has(school.district)) {
+        byEnglishName.set(
+          school.district,
+          school.districtTh || school.district,
+        );
+      }
+    }
+    return [...byEnglishName.entries()]
+      .map(([en, th]) => ({ en, th }))
+      .sort((a, b) => a.en.localeCompare(b.en));
+  }, [schools]);
+
+  // #141: Bilingual province filter options derived from schools
+  const provinceOptions = useMemo(() => {
+    if (!schools) return [];
+    const byEnglishName = new Map<string, string>();
+    for (const school of schools) {
+      if (school.province && !byEnglishName.has(school.province)) {
+        byEnglishName.set(
+          school.province,
+          school.provinceTh || school.province,
+        );
+      }
+    }
+    return [...byEnglishName.entries()]
+      .map(([en, th]) => ({ en, th }))
+      .sort((a, b) => a.en.localeCompare(b.en));
+  }, [schools]);
+
+  // #141: Schools table rows filtered by selected district/province
+  const filteredClassesBySchool = useMemo(() => {
+    if (!stats) return [];
+    return stats.classesBySchool.filter((item) => {
+      if (
+        provinceFilter !== "all" &&
+        (item.school.province ?? "") !== provinceFilter
+      ) {
+        return false;
+      }
+      if (
+        districtFilter !== "all" &&
+        (item.school.district ?? "") !== districtFilter
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [stats, districtFilter, provinceFilter]);
 
   // Export CSV
   const handleExportCSV = () => {
@@ -309,7 +367,7 @@ export function AdminAnalyticsDashboard({
 
       {/* Schools Table */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center gap-3">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <Building2 className="w-5 h-5 text-gray-500" />
             {t(
@@ -317,6 +375,35 @@ export function AdminAnalyticsDashboard({
               "คลาสตามโรงเรียน (30 วันที่ผ่านมา)",
             )}
           </h2>
+          {/* #141: Bilingual district/province drop-down filters */}
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <select
+              value={provinceFilter}
+              onChange={(e) => setProvinceFilter(e.target.value)}
+              aria-label={t("Filter by province", "กรองตามจังหวัด")}
+              className="text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1.5"
+            >
+              <option value="all">{t("All Provinces", "ทุกจังหวัด")}</option>
+              {provinceOptions.map((p) => (
+                <option key={p.en} value={p.en}>
+                  {language === "en" ? p.en : p.th}
+                </option>
+              ))}
+            </select>
+            <select
+              value={districtFilter}
+              onChange={(e) => setDistrictFilter(e.target.value)}
+              aria-label={t("Filter by district", "กรองตามอำเภอ")}
+              className="text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1.5"
+            >
+              <option value="all">{t("All Districts", "ทุกอำเภอ")}</option>
+              {districtOptions.map((d) => (
+                <option key={d.en} value={d.en}>
+                  {language === "en" ? d.en : d.th}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -341,7 +428,7 @@ export function AdminAnalyticsDashboard({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {stats.classesBySchool.length === 0 ? (
+              {filteredClassesBySchool.length === 0 ? (
                 <tr>
                   <td
                     colSpan={5}
@@ -351,7 +438,7 @@ export function AdminAnalyticsDashboard({
                   </td>
                 </tr>
               ) : (
-                stats.classesBySchool.map((item) => (
+                filteredClassesBySchool.map((item) => (
                   <tr
                     key={item.school._id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"

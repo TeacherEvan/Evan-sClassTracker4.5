@@ -39,7 +39,11 @@ async function seedMergeScenario(t: ReturnType<typeof convexTest>) {
     );
     const teacherUserId = await ctx.db.insert(
       "users",
-      createTestUser({ username: "teacher", role: "teacher", schoolId }) as never,
+      createTestUser({
+        username: "teacher",
+        role: "teacher",
+        schoolId,
+      }) as never,
     );
 
     const survivorId = await ctx.db.insert(
@@ -247,24 +251,22 @@ describe("#136 mergeDuplicateStudents", () => {
       // second watchlist entry redirected to survivor
       const otherEntry = await ctx.db.get(s.otherEntryId as never);
       expect(
-        (otherEntry as { possibleDuplicateIds: TestId[] })
-          .possibleDuplicateIds,
+        (otherEntry as { possibleDuplicateIds: TestId[] }).possibleDuplicateIds,
       ).toContain(s.survivorId);
       expect(
-        (otherEntry as { possibleDuplicateIds: TestId[] })
-          .possibleDuplicateIds,
+        (otherEntry as { possibleDuplicateIds: TestId[] }).possibleDuplicateIds,
       ).not.toContain(s.dupeId);
 
       // non-survivor soft-deleted with mergedIntoId (never hard-deleted)
       const merged = await ctx.db.get(s.dupeId as never);
       expect(merged).not.toBeNull();
       expect((merged as { isDeleted?: boolean }).isDeleted).toBe(true);
-      expect(
-        (merged as { mergedIntoId?: TestId }).mergedIntoId,
-      ).toBe(s.survivorId);
-      expect(
-        (merged as { deletionReason?: string }).deletionReason,
-      ).toContain("Merged");
+      expect((merged as { mergedIntoId?: TestId }).mergedIntoId).toBe(
+        s.survivorId,
+      );
+      expect((merged as { deletionReason?: string }).deletionReason).toContain(
+        "Merged",
+      );
 
       // driving entry finalized
       const entry = await ctx.db.get(s.entryId as never);
@@ -275,9 +277,9 @@ describe("#136 mergeDuplicateStudents", () => {
 
       // survivor untouched (survivor-wins, no rename)
       const survivor = await ctx.db.get(s.survivorId as never);
-      expect(
-        (survivor as { studentId: string }).studentId,
-      ).toBe("STU-SURVIVOR");
+      expect((survivor as { studentId: string }).studentId).toBe(
+        "STU-SURVIVOR",
+      );
       expect((survivor as { isDeleted?: boolean }).isDeleted).toBeFalsy();
 
       // audit trail written

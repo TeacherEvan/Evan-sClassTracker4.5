@@ -1,6 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck
-// TODO: This component is under development - api.classReview is not yet exported from Convex
 "use client";
 
 import { api } from "@/convex/_generated/api";
@@ -9,7 +6,7 @@ import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { User } from "@/lib/types";
 import { useMutation, useQuery } from "convex/react";
-import { CheckSquare, Flag, Square, MapPin } from "lucide-react";
+import { CheckSquare, Flag, MapPin, Square } from "lucide-react";
 import { useMemo, useState } from "react";
 
 interface ModeratorAnalyticsViewProps {
@@ -32,8 +29,8 @@ export function ModeratorAnalyticsView({
   const schoolId =
     currentUser.role === "moderator" ? currentUser.schoolId : null;
   const school = useQuery(
-    schoolId ? api.schools.getById : ("skip" as any),
-    schoolId ? { id: schoolId } : ({} as any),
+    api.schools.getById,
+    schoolId ? { id: schoolId } : "skip",
   );
 
   // Fetch analytics data
@@ -49,34 +46,31 @@ export function ModeratorAnalyticsView({
     endDate: dateRange.endDate,
   });
 
-  // Get all classes for the school
-  const allClasses = useQuery(api.classes.list, {});
+  // Get all classes for this school only (#141: moderators are school-scoped)
+  const schoolClassesAll = useQuery(
+    api.classes.list,
+    schoolId ? { schoolId } : {},
+  );
 
-  // Filter classes for this school
+  // Filter classes for the selected date range
   const schoolClasses = useMemo(() => {
-    if (!allClasses || !schoolId) return [];
-    return allClasses.filter(
+    if (!schoolClassesAll || !schoolId) return [];
+    return schoolClassesAll.filter(
       (c) =>
-        c.schoolId === schoolId &&
         c.scheduledDate >= dateRange.startDate &&
         c.scheduledDate <= dateRange.endDate,
     );
-  }, [allClasses, schoolId, dateRange]);
+  }, [schoolClassesAll, schoolId, dateRange]);
 
-  // Mutations for class management
-  // TODO: Uncomment when api.classReview is added to Convex exports
-  // const flagClass = useMutation(api.classReview.flagForReview);
-  // const toggleIncludeInReports = useMutation(api.classReview.toggleIncludeInReports);
-  const flagClass = async (_args: any) => {
-    throw new Error(
-      "Feature not yet implemented - api.classReview not exported from Convex",
-    );
-  };
-  const toggleIncludeInReports = async (_args: any) => {
-    throw new Error(
-      "Feature not yet implemented - api.classReview not exported from Convex",
-    );
-  };
+  // Mutations for class review management (#141)
+  const flagClass = useMutation(api.classReview.flagForReview);
+  const toggleIncludeInReports = useMutation(
+    api.classReview.toggleIncludeInReports,
+  );
+
+  // Review note entered in English only (bilingual display happens in the
+  // separate flagged-classes review list)
+  const [flagNote, setFlagNote] = useState("");
 
   // Only moderators and admins can use this component
   if (currentUser.role !== "moderator" && currentUser.role !== "admin") {
@@ -97,27 +91,14 @@ export function ModeratorAnalyticsView({
     );
   }
 
-  // TODO: Feature not yet implemented
-  if (true) {
-    // Always return early until classReview API is exported
-    return (
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-        <p className="text-sm text-blue-800">
-          {t(
-            "⚠️ This feature is under development. The classReview API is not yet exported from Convex.",
-            "⚠️ ฟีเจอร์นี้อยู่ระหว่างการพัฒนา classReview API ยังไม่ได้ถูก export จาก Convex",
-          )}
-        </p>
-      </div>
-    );
-  }
-
   const handleFlagClass = async (classId: Id<"classes">) => {
     try {
       await flagClass({
         classId,
         userId: currentUser._id,
+        reviewNotes: flagNote.trim() ? flagNote.trim() : undefined,
       });
+      setFlagNote("");
 
       toast.success(
         "Class flagged for review",
@@ -266,12 +247,25 @@ export function ModeratorAnalyticsView({
 
       {/* Classes list with management controls */}
       <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <h3 className="mb-4 text-lg font-semibold text-gray-900">
-          {t(
-            `Classes (${schoolClasses.length})`,
-            `คลาส (${schoolClasses.length})`,
-          )}
-        </h3>
+        <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="text-lg font-semibold text-gray-900">
+            {t(
+              `Classes (${schoolClasses.length})`,
+              `คลาส (${schoolClasses.length})`,
+            )}
+          </h3>
+          <input
+            type="text"
+            value={flagNote}
+            maxLength={1000}
+            onChange={(e) => setFlagNote(e.target.value)}
+            placeholder={t(
+              "Review note for next flag (English only)",
+              "บันทึกสำหรับการทำเครื่องหมายถัดไป (อังกฤษเท่านั้น)",
+            )}
+            className="w-full max-w-sm rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+          />
+        </div>
 
         {schoolClasses.length === 0 ? (
           <p className="text-center text-sm text-gray-600">

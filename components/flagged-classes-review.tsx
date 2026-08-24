@@ -1,12 +1,11 @@
-/* eslint-disable */
-// @ts-nocheck
-// TODO: This component is under development - api.classReview is not yet exported from Convex
 "use client";
 
+import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useLanguage } from "@/lib/language-context";
 import { toast } from "@/lib/toast";
 import type { User } from "@/lib/types";
+import { useMutation, useQuery } from "convex/react";
 import {
   Calendar,
   Clock,
@@ -15,7 +14,7 @@ import {
   MapPin,
   User as UserIcon,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 interface FlaggedClassesReviewProps {
   currentUser: User;
@@ -32,38 +31,13 @@ export function FlaggedClassesReview({
   // Get school ID (moderators use their assigned school)
   const schoolId = currentUser.schoolId!;
 
-  // Fetch flagged classes
-  // TODO: Uncomment when api.classReview is added to Convex exports
-  // const flaggedClasses = useQuery(
-  //     schoolId ? api.classReview.getFlaggedClasses : "skip",
-  //     schoolId ? { schoolId, userId: currentUser._id } : "skip"
-  // );
-  const flaggedClasses:
-    | Array<{
-        classId: string;
-        status: string;
-        locationName: string;
-        locationNameTh: string;
-        reviewNotes: string;
-        reviewNotesTh: string;
-        flaggedBy: string;
-        flaggedAt: number;
-        includeInReports: boolean;
-        scheduledDate: number;
-        duration: number;
-        teacherName: string;
-        studentName: string;
-        studentGrade: string;
-        studentClass: string;
-      }>
-    | undefined = undefined;
+  // Fetch flagged classes for this school (#141: separate bilingual review list)
+  const flaggedClasses = useQuery(
+    api.classReview.getFlaggedClasses,
+    schoolId ? { schoolId, userId: currentUser._id } : "skip",
+  );
 
-  // const unflagClass = useMutation(api.classReview.unflagClass);
-  const unflagClass = async (_args: any) => {
-    throw new Error(
-      "Feature not yet implemented - api.classReview not exported from Convex",
-    );
-  };
+  const unflagClass = useMutation(api.classReview.unflagClass);
 
   // Group classes by status
   type FlaggedClass = typeof flaggedClasses extends (infer U)[] ? U : never;
@@ -102,21 +76,6 @@ export function FlaggedClassesReview({
           {t(
             "You must be assigned to a school to view flagged classes.",
             "คุณต้องได้รับมอบหมายให้เป็นของโรงเรียนเพื่อดูคลาสที่ถูกทำเครื่องหมาย",
-          )}
-        </p>
-      </div>
-    );
-  }
-
-  // TODO: Feature not yet implemented
-  if (true) {
-    // Always return early until classReview API is exported
-    return (
-      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-        <p className="text-sm text-blue-800">
-          {t(
-            "⚠️ This feature is under development. The classReview API is not yet exported from Convex.",
-            "⚠️ ฟีเจอร์นี้อยู่ระหว่างการพัฒนา classReview API ยังไม่ได้ถูก export จาก Convex",
           )}
         </p>
       </div>

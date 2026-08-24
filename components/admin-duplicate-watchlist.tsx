@@ -103,11 +103,11 @@ export function AdminDuplicateWatchlist({
         ...mergeEntry.possibleDuplicates
           .filter((dup): dup is NonNullable<typeof dup> => dup !== null)
           .map((dup) => ({
-          id: dup._id,
-          name: `${dup.firstName} ${dup.lastName ?? ""}`.trim(),
-          studentId: dup.studentId,
-          grade: dup.grade,
-        })),
+            id: dup._id,
+            name: `${dup.firstName} ${dup.lastName ?? ""}`.trim(),
+            studentId: dup.studentId,
+            grade: dup.grade,
+          })),
       ]
     : [];
   const mergeTargets =
@@ -561,72 +561,74 @@ export function AdminDuplicateWatchlist({
                     )}
                   </p>
 
-              {/* Survivor */}
-              <div className="border border-green-200 bg-green-50 rounded p-3 mb-3">
-                <p className="text-xs font-medium text-green-700 uppercase mb-1">
-                  {t("Survivor (kept)", "ผู้ถูกเก็บไว้")}
-                </p>
-                <p className="font-semibold text-gray-900">
-                  {
-                    mergeCandidates.find((c) => c.id === survivorId)
-                      ?.name
-                  }{" "}
-                  <span className="text-xs text-gray-500">
-                    ({mergeCandidates.find((c) => c.id === survivorId)?.studentId})
-                  </span>
-                </p>
-              </div>
-
-              {/* Redirected data */}
-              <div className="mb-4">
-                <p className="text-xs font-medium text-gray-500 uppercase mb-2">
-                  {t("Data to redirect", "ข้อมูลที่จะโอนย้าย")} (
-                  {mergeTargets.length}{" "}
-                  {t("record(s) merged", "รายการที่รวม")}):
-                </p>
-                <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
-                  {mergeTargets.map((target) => (
-                    <li key={target.id}>
-                      {target.name}{" "}
+                  {/* Survivor */}
+                  <div className="border border-green-200 bg-green-50 rounded p-3 mb-3">
+                    <p className="text-xs font-medium text-green-700 uppercase mb-1">
+                      {t("Survivor (kept)", "ผู้ถูกเก็บไว้")}
+                    </p>
+                    <p className="font-semibold text-gray-900">
+                      {mergeCandidates.find((c) => c.id === survivorId)?.name}{" "}
                       <span className="text-xs text-gray-500">
-                        ({target.studentId})
+                        (
+                        {
+                          mergeCandidates.find((c) => c.id === survivorId)
+                            ?.studentId
+                        }
+                        )
                       </span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="text-xs text-gray-500 mt-2">
-                  {t(
-                    "Redirected: classes & schedules, class rosters, post-class notes, teacher logs, recent-student shortcuts, other watchlist entries.",
-                    "โอนย้าย: คลาสและตารางเรียน, รายชื่อคลาส, บันทึกหลังคลาส, บันทึกของครู, รายการนักเรียนล่าสุด, รายการตรวจสอบอื่นๆ",
+                    </p>
+                  </div>
+
+                  {/* Redirected data */}
+                  <div className="mb-4">
+                    <p className="text-xs font-medium text-gray-500 uppercase mb-2">
+                      {t("Data to redirect", "ข้อมูลที่จะโอนย้าย")} (
+                      {mergeTargets.length}{" "}
+                      {t("record(s) merged", "รายการที่รวม")}):
+                    </p>
+                    <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+                      {mergeTargets.map((target) => (
+                        <li key={target.id}>
+                          {target.name}{" "}
+                          <span className="text-xs text-gray-500">
+                            ({target.studentId})
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {t(
+                        "Redirected: classes & schedules, class rosters, post-class notes, teacher logs, recent-student shortcuts, other watchlist entries.",
+                        "โอนย้าย: คลาสและตารางเรียน, รายชื่อคลาส, บันทึกหลังคลาส, บันทึกของครู, รายการนักเรียนล่าสุด, รายการตรวจสอบอื่นๆ",
+                      )}
+                    </p>
+                  </div>
+
+                  {mergeError && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded p-3 mb-4">
+                      {mergeError}
+                    </div>
                   )}
-                </p>
-              </div>
 
-              {mergeError && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded p-3 mb-4">
-                  {mergeError}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={closeMergeDialog}
-                  disabled={isMerging}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors disabled:opacity-50"
-                >
-                  {t("Cancel", "ยกเลิก")}
-                </button>
-                <button
-                  onClick={handleMerge}
-                  disabled={isMerging || mergeTargets.length === 0}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-                >
-                  <GitMerge className="w-4 h-4" />
-                  {isMerging
-                    ? t("Merging...", "กำลังรวม...")
-                    : t("Merge students", "รวมนักเรียน")}
-                </button>
-              </div>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={closeMergeDialog}
+                      disabled={isMerging}
+                      className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors disabled:opacity-50"
+                    >
+                      {t("Cancel", "ยกเลิก")}
+                    </button>
+                    <button
+                      onClick={handleMerge}
+                      disabled={isMerging || mergeTargets.length === 0}
+                      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                    >
+                      <GitMerge className="w-4 h-4" />
+                      {isMerging
+                        ? t("Merging...", "กำลังรวม...")
+                        : t("Merge students", "รวมนักเรียน")}
+                    </button>
+                  </div>
                 </>
               )}
             </div>
