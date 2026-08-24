@@ -66,24 +66,29 @@ async function seedTwoSchoolScenario(t: ReturnType<typeof convexTest>) {
       createTestClass({
         schoolId: schoolBId,
         teacherId: teacherBId,
-        studentId: (
-          await ctx.db.insert(
-            "students",
-            createTestStudent({
-              firstName: "B",
-              lastName: "Student",
-              studentId: "STU-B",
-              schoolId: schoolBId,
-              grade: "K1",
-              createdBy: teacherBId,
-            }) as never,
-          )
-        ) as never,
+        studentId: (await ctx.db.insert(
+          "students",
+          createTestStudent({
+            firstName: "B",
+            lastName: "Student",
+            studentId: "STU-B",
+            schoolId: schoolBId,
+            grade: "K1",
+            createdBy: teacherBId,
+          }) as never,
+        )) as never,
       }) as never,
     );
 
     void now;
-    return { schoolAId, schoolBId, moderatorAId, teacherAId, teacherBId, classBId };
+    return {
+      schoolAId,
+      schoolBId,
+      moderatorAId,
+      teacherAId,
+      teacherBId,
+      classBId,
+    };
   });
 }
 

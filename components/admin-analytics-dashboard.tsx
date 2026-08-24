@@ -126,7 +126,10 @@ export function AdminAnalyticsDashboard({
     const byEnglishName = new Map<string, string>();
     for (const school of schools) {
       if (school.district && !byEnglishName.has(school.district)) {
-        byEnglishName.set(school.district, school.districtTh || school.district);
+        byEnglishName.set(
+          school.district,
+          school.districtTh || school.district,
+        );
       }
     }
     return [...byEnglishName.entries()]
@@ -140,7 +143,10 @@ export function AdminAnalyticsDashboard({
     const byEnglishName = new Map<string, string>();
     for (const school of schools) {
       if (school.province && !byEnglishName.has(school.province)) {
-        byEnglishName.set(school.province, school.provinceTh || school.province);
+        byEnglishName.set(
+          school.province,
+          school.provinceTh || school.province,
+        );
       }
     }
     return [...byEnglishName.entries()]
@@ -377,9 +383,7 @@ export function AdminAnalyticsDashboard({
               aria-label={t("Filter by province", "กรองตามจังหวัด")}
               className="text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1.5"
             >
-              <option value="all">
-                {t("All Provinces", "ทุกจังหวัด")}
-              </option>
+              <option value="all">{t("All Provinces", "ทุกจังหวัด")}</option>
               {provinceOptions.map((p) => (
                 <option key={p.en} value={p.en}>
                   {language === "en" ? p.en : p.th}
