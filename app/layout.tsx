@@ -10,6 +10,17 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Class Tracker - Notification System",
   description: "Bilingual English/Thai class tracker for teachers and schools",
+  metadataBase: new URL("http://localhost:3000"),
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [{ url: "/favicon.ico" }],
+    apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "ClassTracker",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {
