@@ -25,7 +25,6 @@ import {
 } from "lucide-react";
 import { memo, useState } from "react";
 import { HierarchicalStudentSelector } from "../hierarchical-student-selector";
-import { QuickActionButton } from "../quick-action-button";
 import type { ClassItemDisplayProps } from "./types";
 
 /**

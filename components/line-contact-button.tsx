@@ -25,7 +25,7 @@ export function LineContactButton({
   variant = "floating",
   showLabel = true,
 }: LineContactButtonProps) {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const lineUrl = "https://lin.ee/oaXgLED";
