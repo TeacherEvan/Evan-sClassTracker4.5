@@ -47,3 +47,4 @@ next-env.d.ts
 
 # V2 surgical-implementation audit scratch (local-only)
 docs/.scratch-audit/
+docs/.scratch-audit/
